@@ -1,6 +1,7 @@
-import type { Scalar } from 'yaml';
+import type { Node, Scalar } from 'yaml';
 import type { z } from 'zod';
 
+import type { SERVICE_SECURITY_RULES } from '#cli/config/configurations/docker.ts';
 import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/github-actions.ts';
 import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
@@ -40,3 +41,7 @@ export type ParsedHeadersFile = { blocks: HeaderBlock[]; errors: NumberedLine[] 
 export type SupabaseProjectFile = z.infer<typeof supabaseProjectFileSchema>;
 
 export type FunctionEntrypoint = { path: string; importMap?: string | undefined };
+
+export type ComposeHit = { kind: keyof typeof SERVICE_SECURITY_RULES; node: Node };
+
+export type DirectiveScan = { token: string | undefined; end: number };

@@ -1,4 +1,4 @@
-import { RULES as GENERATOR_OUTPUT_RULES, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { GENERATOR_OUTPUT_RULES, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const SYNTAX_EXPLANATIONS = {

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { GENERATED_FILE_FINDINGS } from '#cli/config/configurations/structure.ts';
+import { GENERATED_FILE_FINDINGS } from '#cli/config/configurations/gspot.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';

@@ -1,6 +1,6 @@
 import { join, posix } from 'node:path';
 
-import { GENERATOR_IGNORED_FOLDERS, RULES } from '#cli/config/configurations/shared.ts';
+import { GENERATOR_IGNORED_FOLDERS, GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/shared.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
@@ -31,7 +31,7 @@ function listMissingOutputs(session: CheckSession, outputs: GeneratorOutput[], c
         .map((output) => ({
             file: output.path,
             line: 1,
-            rule: RULES.missing,
+            rule: GENERATOR_OUTPUT_RULES.missing,
             message: `The file ${output.path} does not exist; run ${commandText} and commit what it writes.`,
         }));
 }
@@ -53,7 +53,7 @@ function listUntrackedOutputs(
               .map((path) => ({
                   file: path,
                   line: 1,
-                  rule: RULES.untracked,
+                  rule: GENERATOR_OUTPUT_RULES.untracked,
                   message: `${path} is not tracked. Commit it, so the other checks and this check can read it.`,
               }));
 }
@@ -171,7 +171,7 @@ export async function checkGeneratorOutputs(session: CheckSession, planned: Plan
         .map((path) => ({
             file: path,
             line: 1,
-            rule: RULES.stale,
+            rule: GENERATOR_OUTPUT_RULES.stale,
             message: `Running ${commandText} changes this generated file; commit what it writes.`,
         }));
 }

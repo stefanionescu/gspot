@@ -1,11 +1,10 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
+import { SETTINGS_PAGE_SENTENCE, SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
 import { findSetting, listWrittenKeys } from '#cli/settings/inherit.ts';
 import { isReasonedValue } from '#cli/settings/lookup.ts';
 import { safeParseSettings } from '#cli/settings/parse.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
-import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';

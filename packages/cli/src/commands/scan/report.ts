@@ -1,6 +1,5 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
-    BYTES_PER_MEGABYTE,
     SCAN_BUILT_IN_TOOL,
     SCAN_CARRYOVER_TITLE,
     SCAN_CATEGORIES,
@@ -15,9 +14,9 @@ import {
     SCAN_NOT_RUN_TITLE,
     SCAN_PLAN_TITLE,
     SCAN_RULES_SHOWN,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/setup.ts';
 import { INCOMPLETE_STATUSES, RAN_STATUSES } from '#cli/config/engine.ts';
-import { GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { BYTES_PER_MEGABYTE, GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';

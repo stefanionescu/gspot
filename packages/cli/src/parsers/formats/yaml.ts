@@ -1,7 +1,7 @@
 import { parse, parseAllDocuments } from 'yaml';
 import type { z } from 'zod';
 
-import { MESSAGE_END } from '#cli/config/parsers/formats.ts';
+import { MESSAGE_END, YAML_OPTIONS } from '#cli/config/parsers/formats.ts';
 import { GspotError, parseFileFields } from '#cli/system/errors.ts';
 
 export function parseYamlFile(path: string, text: string): unknown;
@@ -11,7 +11,7 @@ export function parseYamlFile<Value>(path: string, text: string, schema: z.ZodTy
 export function parseYamlFile(path: string, text: string, schema?: z.ZodType): unknown {
     let value: unknown;
     try {
-        value = parse(text, { merge: true, logLevel: 'error' }) as unknown;
+        value = parse(text, YAML_OPTIONS) as unknown;
     } catch (error) {
         const syntaxError = error as Error;
         const detail = syntaxError.message.split('\n', 1).join('').replace(MESSAGE_END, '');
@@ -21,7 +21,7 @@ export function parseYamlFile(path: string, text: string, schema?: z.ZodType): u
 }
 
 export function parseYamlDocuments(path: string, text: string): unknown[] {
-    const documents = parseAllDocuments(text, { merge: true, logLevel: 'error' });
+    const documents = parseAllDocuments(text, YAML_OPTIONS);
     return documents.map((document) => {
         const error = document.errors[0];
         if (error !== undefined)

@@ -1,7 +1,11 @@
 import type { z } from 'zod';
 
-import { WEAKENING_FIXES, WEAKENING_IGNORE_HELP, WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
+import {
+    EVERY_CHECK,
+    WEAKENING_FIXES,
+    WEAKENING_IGNORE_HELP,
+    WEAKENING_RULES,
+} from '#cli/config/configurations/gspot.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
@@ -29,7 +33,7 @@ function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weake
         const name = [record.check ?? EVERY_CHECK, ...(record.rule === undefined ? [] : [record.rule])].join(' ');
         return [
             {
-                rule: 'ignore',
+                rule: WEAKENING_RULES.ignore,
                 file: SETTINGS_FILE,
                 change: `An ignore of ${name} covers ${added.join(', ')}`,
                 reason: record.reason,

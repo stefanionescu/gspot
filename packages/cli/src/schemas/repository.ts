@@ -71,3 +71,5 @@ export const lintCommandSchema = z.strictObject({
 });
 
 export const pushSkipSchema = z.strictObject({ ref: z.string(), hash: z.string(), reason: z.enum(PUSH_SKIP_REASONS) });
+
+export const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() });

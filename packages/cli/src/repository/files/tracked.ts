@@ -1,8 +1,8 @@
 import { lstatSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
-import { EXECUTABLE_BITS, EXECUTABLE_FILE, GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
+import { GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
+import { EXECUTABLE_BITS, EXECUTABLE_FILE, INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';

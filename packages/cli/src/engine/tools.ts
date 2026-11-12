@@ -1,7 +1,8 @@
 import semver from 'semver';
 
+import { TYPESCRIPT_ESLINT_TOOL, TYPESCRIPT_PACKAGE } from '#cli/config/engine.ts';
 import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/programs.ts';
 import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
 import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
@@ -16,10 +17,6 @@ import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
-
-const TYPESCRIPT_PACKAGE = 'typescript';
-
-const TYPESCRIPT_ESLINT_TOOL = 'typescript-eslint';
 
 /**
 Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every

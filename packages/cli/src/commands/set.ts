@@ -1,9 +1,17 @@
 import { parse } from '@decimalturn/toml-patch';
 
 import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
-import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/commands/edits.ts';
+import {
+    BOOLEAN_WORDS,
+    ENTRY_REASON_MESSAGE,
+    NUMBER_TEXT,
+    PREVIOUS_VALUE_LENGTH,
+    REASON_IGNORE_RULES,
+    TOML_COMPOUND_START,
+    TOML_QUOTES,
+    TOOL_RULES_KEY,
+} from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { WEAKENING_RULES } from '#cli/config/configurations/structure.ts';
 import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
@@ -27,18 +35,6 @@ import type {
 import type { Check, Setting } from '#cli/types/manifests.ts';
 import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-const PREVIOUS_VALUE_LENGTH = 80;
-
-const TOOL_RULES_KEY = /^tools\.(?<tool>[^.]+)\.rules$/u;
-
-// These keys hold no reason, so the record of why they changed is an ignore of the weakening that the change reports.
-const REASON_IGNORE_RULES: Readonly<Record<string, string>> = {
-    level: WEAKENING_RULES.level,
-    'hooks.enabled': WEAKENING_RULES.hooks,
-    'rule_files.enabled': WEAKENING_RULES.ruleFiles,
-    'rule_files.exclude': WEAKENING_RULES.ruleFiles,
-};
 
 function parseInlineValue(text: string): unknown {
     try {
@@ -163,7 +159,7 @@ function buildSettingChange(
     if (setting.reason_values === true && options.reason === undefined)
         throw new GspotError(
             'arguments',
-            `${options.key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
+            ENTRY_REASON_MESSAGE.replace('{key}', () => options.key),
         );
     const change: ParsedSettingValue =
         setting.reason_values === true

@@ -6,24 +6,22 @@ import { runPushCheck } from '#cli/commands/check/push.ts';
 import { formatAnnotations } from '#cli/commands/check/report.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import {
-    BASE_OPTION,
     CHECK_INPUT_HOOKS,
     CHECK_STAGES,
     CHECK_STOPPED_MESSAGE,
     COMMIT_FILE_MESSAGE,
+    EMPTY_CHECKS_MESSAGE,
     GIT_SETUP_FILES_ARGUMENTS,
     GIT_STAGED_SETTINGS_ARGUMENTS,
-    HOOK_OPTION,
     HOOK_REFUSAL_REASONS,
     NOTHING_STAGED_MESSAGE,
-    ONLY_OPTION,
     PUSH_INPUT_MESSAGE,
     PUSH_STDIN_MESSAGE,
     SETUP_PATHS,
-    SKIP_OPTION,
     STAGE_SETUP_MESSAGE,
     UNSTAGED_TOOLS_NOTE,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/check.ts';
+import { BASE_OPTION, HOOK_OPTION, ONLY_OPTION, SKIP_OPTION } from '#cli/config/commands/help.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
 import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -47,8 +45,6 @@ import type {
     CommandLocation,
 } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
 
 async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
     cancelSignal.throwIfAborted();

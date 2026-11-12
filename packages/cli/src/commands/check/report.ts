@@ -1,22 +1,28 @@
 import { randomUUID } from 'node:crypto';
 import { styleText } from 'node:util';
 
-import { CODE_MARK } from '#cli/config/commands/help.ts';
 import {
+    ANNOTATION_ESCAPES,
+    ANNOTATION_MESSAGE_CHARACTERS,
+    ANNOTATION_PROPERTY_CHARACTERS,
     CANCELED_RUN_MESSAGE,
     CHECK_STATUS_COLORS,
     FINDINGS_SHOWN,
     FIX_LABEL,
+    FIX_SENTENCE,
     FIXER_ERROR_PREFIX,
+    GITHUB_ANNOTATION_LIMIT,
     INSTALL_REMINDER,
     NOTE_STATUSES,
     RERUN_LABEL,
     SENTENCE_END,
     STANDARD_INSTALL_HELP,
     STATUS_LABEL_WIDTH,
+    SUMMARY_STATUSES,
     UNCHANGED_FIX_MESSAGE,
-} from '#cli/config/commands/reports.ts';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
+} from '#cli/config/commands/check.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
+import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
@@ -25,24 +31,6 @@ import { print, printWarning } from '#cli/system/terminal.ts';
 import { formatCount, formatScopePrefix, formatSeconds, quoteArgument } from '#cli/system/text.ts';
 import type { CheckCommandJson } from '#cli/types/commands.ts';
 import type { CheckResult, CheckStatus, Finding, FixReport, RunReport } from '#cli/types/engine/run.ts';
-
-const GITHUB_ANNOTATION_LIMIT = 10;
-
-const ANNOTATION_ESCAPES: Readonly<Record<string, string>> = {
-    '%': '%25',
-    '\r': '%0D',
-    '\n': '%0A',
-    ':': '%3A',
-    ',': '%2C',
-};
-
-const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
-
-const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
-
-const FIX_SENTENCE = /^Run the fix: command that the report prints[^.,;]*(?:\.|, then |; )\s*/u;
-
-const SUMMARY_STATUSES: readonly CheckStatus[] = ['failed', 'error', 'canceled', 'missing', 'passed', 'skipped'];
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];

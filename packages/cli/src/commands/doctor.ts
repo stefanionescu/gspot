@@ -5,16 +5,17 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import {
     CI_FILE_SUFFIXES,
     CI_OFF_NOTES,
+    HOOK_PROGRAM,
+    LABEL_WIDTH,
     ORIGIN_URL_SETTING,
     REMOTE_URL_SCHEME,
     REMOTE_URL_USER,
     TOOL_STATE_COLORS,
     VERSION_GAP,
-} from '#cli/config/commands/reports.ts';
-import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+} from '#cli/config/commands/lookup.ts';
 import { CI_FILES } from '#cli/config/generation/files.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { EXIT_FINDINGS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import {
     AVAILABLE_TOOL_STATES,
@@ -52,10 +53,6 @@ type DoctorStates = {
     toolsWithoutMise: ReadonlySet<string>;
     pinNotes: string[];
 };
-
-const LABEL_WIDTH = 9;
-
-const HOOK_PROGRAM = `${NODE_MODULES}/.bin/gspot`;
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';

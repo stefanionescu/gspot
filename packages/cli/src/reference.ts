@@ -1,6 +1,7 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { GROUP_LABELS, HOOK_PROGRAM_MISSING } from '#cli/config/generation/files.ts';
+import { GROUP_LABELS } from '#cli/config/commands/setup.ts';
+import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/files.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/package-managers.ts';

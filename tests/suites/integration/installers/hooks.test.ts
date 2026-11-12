@@ -6,11 +6,11 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { GSPOT_MISE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { MISE_TRUST, TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
+import { MISE_TRUST } from '#tests/config/setup/sandboxes.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -178,11 +178,11 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
 });
 
 async function writeRuntimePins(root: string): Promise<void> {
-    if (!existsSync(join(root, TOOL_PINS_FILE))) {
-        const pins = await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8');
+    if (!existsSync(join(root, MISE_CONFIG_FILE))) {
+        const pins = await readFile(join(REPOSITORY_ROOT, MISE_CONFIG_FILE), 'utf8');
         const { tools } = runtimePinsSchema.parse(parse(pins));
-        await writeFile(join(root, TOOL_PINS_FILE), stringify({ tools }));
+        await writeFile(join(root, MISE_CONFIG_FILE), stringify({ tools }));
     }
-    const trusted = await runCommand([...MISE_TRUST, TOOL_PINS_FILE], { cwd: root });
+    const trusted = await runCommand([...MISE_TRUST, MISE_CONFIG_FILE], { cwd: root });
     if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
 }

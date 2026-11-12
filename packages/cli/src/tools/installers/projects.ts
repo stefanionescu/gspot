@@ -2,7 +2,13 @@ import { join } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { MISE_TOOL, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG, UV_TOOL } from '#cli/config/tools/installers.ts';
+import {
+    MISE_TOOL,
+    UV_CHECK_FLAG,
+    UV_PROJECT_INSTALL_ARGUMENTS,
+    UV_REINSTALL_FLAG,
+    UV_TOOL,
+} from '#cli/config/tools/installers.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -43,8 +49,6 @@ import type {
     ToolInstall,
     ToolProjectsInstall,
 } from '#cli/types/tools.ts';
-
-const UV_CHECK_FLAG = '--check';
 
 function findStaleMiseLockfile(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;

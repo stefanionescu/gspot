@@ -3,9 +3,11 @@ import {
     LIST_ARGUMENT,
     LIST_KINDS,
     NOT_SET,
+    REASON_CONDITIONS,
     REASON_HEADER,
+    SCOPES_NAMED,
     VALUE_WIDTH,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/lookup.ts';
 import { isRepositoryRun, isRootOnlyCheck } from '#cli/engine/files.ts';
 import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -22,10 +24,6 @@ import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const SCOPES_NAMED = 3;
-
-const REASON_CONDITIONS = { adding: 'you add items', lowering: 'you lower it', raising: 'you raise it' } as const;
 
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scopePath) => scopePath !== '');

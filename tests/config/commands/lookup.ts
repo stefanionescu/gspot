@@ -1,11 +1,3 @@
-export const FAILED_NPM_VERSION = {
-    code: 7,
-    missing: false,
-    duration: 0,
-    stdout: '',
-    stderr: 'version lookup failed',
-} as const;
-
 export const LIST_SCOPE_SETTINGS = `level = "all"
 configurations = ["bash", "format", "dependencies"]
 test_files = ["checks/**"]
@@ -36,8 +28,6 @@ check = "bash/shfmt"
 reason = "Review this separately."
 `,
 } as const;
-
-export const ROOT_EDITORCONFIG = 'root = true\n';
 
 export const RULE_PAGES = [
     ['javascript/eslint', 'no-var', 'https://eslint.org/docs/latest/rules/no-var'],

@@ -5,8 +5,7 @@ import { stripVTControlCharacters } from 'node:util';
 
 import type { Node } from '@pgsql/types';
 
-import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { DENO_CONFIG_FILES, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import {
     DENO_CHECK_COMMAND,
     DENO_CHECK_FAILED_MESSAGE,

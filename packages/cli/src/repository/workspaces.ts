@@ -4,7 +4,6 @@ import { dirname, join, posix, relative, resolve } from 'node:path';
 import { InvalidMonorepoError, LernaTool, PnpmTool, RushTool } from '@manypkg/tools';
 import { globSync } from 'tinyglobby';
 import { YAMLError } from 'yaml';
-import { z } from 'zod';
 
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/repository/package-managers.ts';
@@ -14,6 +13,7 @@ import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
+import { workspaceGlobsSchema } from '#cli/schemas/repository.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
@@ -22,8 +22,6 @@ import { convertToPosixPath, extractParentFolder, isInScope, listEnclosingFolder
 import { compareText } from '#cli/system/text.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
-
-const workspaceGlobsSchema = z.object({ packages: z.string().array().optional() });
 
 /**
 List the folders that workspace globs match and that hold a package.json, as the workspace tools do. gspot reads each

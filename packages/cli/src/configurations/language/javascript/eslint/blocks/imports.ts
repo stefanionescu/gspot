@@ -10,9 +10,9 @@ import {
     IMPORT_BOUNDARY_FOLDERS,
     IMPORT_EXTENSIONS,
     NODE_SCRIPT_PATTERNS,
-    PATH_SEPARATOR_PATTERN,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/configurations/eslint/blocks.ts';
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/language.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {

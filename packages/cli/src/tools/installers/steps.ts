@@ -1,8 +1,7 @@
 import http from 'node:http';
 
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { MILLISECONDS_PER_DAY, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import {
-    MILLISECONDS_PER_DAY,
     NETWORK_ADVICE,
     NODE_PROXY_ADVICE,
     NOT_FOUND_STATUS,

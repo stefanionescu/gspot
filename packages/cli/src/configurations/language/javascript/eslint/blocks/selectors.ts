@@ -2,7 +2,7 @@ import {
     ALIAS_IMPORT_SELECTORS,
     BASE_SELECTORS,
     ENVIRONMENT_SELECTOR,
-} from '#cli/config/configurations/eslint/blocks.ts';
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { escapeGlob } from '#cli/system/paths.ts';

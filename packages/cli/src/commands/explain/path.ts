@@ -6,8 +6,8 @@ import {
     MISSING_SETTINGS_MESSAGE,
     UNCHECKED_REASON,
     VENDORED_ELIGIBLE_MESSAGE,
-} from '#cli/config/commands/reports.ts';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
+} from '#cli/config/commands/lookup.ts';
+import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
 import { selectScope } from '#cli/repository/scopes.ts';

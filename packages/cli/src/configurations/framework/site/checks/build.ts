@@ -1,7 +1,7 @@
 import { lstatSync, realpathSync, statSync } from 'node:fs';
 import { join, normalize, relative } from 'node:path';
 
-import { BUILD_RULE, UNBUILT_SITE_NOTE } from '#cli/config/configurations/site.ts';
+import { BUILD_RULE, BUILD_SCRIPT, UNBUILT_SITE_NOTE } from '#cli/config/configurations/site.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
@@ -20,8 +20,6 @@ import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types
 const SITE_BUILDS = Symbol('site builds');
 
 const BUILT_FILES = Symbol('built files');
-
-const BUILD_SCRIPT = ['run', 'build'] as const;
 
 // The build script runs with the package manager of the repository when the settings name no command.
 function detectBuildCommand(repository: CheckSession['repository']): string[] {

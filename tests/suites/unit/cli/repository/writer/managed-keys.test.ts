@@ -5,7 +5,7 @@ import { parse as parseToml } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { CHECK_COMMAND } from '#cli/config/engine.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { planManagedKeys, writePlans } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -61,7 +61,7 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
     await using sandbox = await testdir({ 'broken.toml': '[tasks\n' });
 
     const writer = openFiles(sandbox.path);
-    const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: CHECK_COMMAND }];
+    const changes = [{ key: ['tasks', 'gspot:check', 'run'], value: GSPOT_CHECK }];
     expect(() => planManagedKeys(writer, 'broken.toml', changes)).toThrow(
         matchFields<GspotError>({
             name: 'GspotError',
@@ -72,8 +72,8 @@ test('managed TOML keys refuse a malformed file, create missing tables, and writ
     expect(await readFile(join(sandbox.path, 'broken.toml'), 'utf8')).toBe('[tasks\n');
     writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     const installed = await readFile(join(sandbox.path, 'mise.toml'), 'utf8');
-    expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: CHECK_COMMAND } } });
-    await writeFile(join(sandbox.path, 'mise.toml'), installed.replace(CHECK_COMMAND, 'authored check'));
+    expect(parseToml(installed)).toStrictEqual({ tasks: { 'gspot:check': { run: GSPOT_CHECK } } });
+    await writeFile(join(sandbox.path, 'mise.toml'), installed.replace(GSPOT_CHECK, 'authored check'));
     writePlans(writer, [planManagedKeys(writer, 'mise.toml', changes)]);
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe(installed);
 });
@@ -103,9 +103,7 @@ test('setting a TOML key to the value it holds keeps the bytes and mode', async 
     await createFileTree(sandbox.path, { 'package.toml': content });
     await chmod(join(sandbox.path, 'package.toml'), 0o640);
     const writer = openFiles(sandbox.path);
-    writePlans(writer, [
-        planManagedKeys(writer, 'package.toml', [{ key: ['scripts', 'check'], value: CHECK_COMMAND }]),
-    ]);
+    writePlans(writer, [planManagedKeys(writer, 'package.toml', [{ key: ['scripts', 'check'], value: GSPOT_CHECK }])]);
     expect(await readFile(join(sandbox.path, 'package.toml'), 'utf8')).toBe(content);
     const metadata = await stat(join(sandbox.path, 'package.toml'));
     expect(metadata.mode & 0o777).toBe(isWindows ? 0o666 : 0o640);

@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/eslint/blocks.ts';
+import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import {
     buildExtensionGlob,
     buildNodePatterns,

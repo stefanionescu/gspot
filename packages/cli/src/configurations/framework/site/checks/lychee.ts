@@ -1,6 +1,6 @@
 import { pathToFileURL } from 'node:url';
 
-import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
+import { EXCLUDE_FLAG } from '#cli/config/configurations/shared.ts';
 import {
     HTML_EXTENSION,
     LYCHEE_ARGUMENTS,

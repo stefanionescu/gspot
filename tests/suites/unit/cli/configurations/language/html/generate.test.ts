@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { type ConfigData, HtmlValidate } from 'html-validate';
 import { parse } from 'jsonc-parser';
 
-import { SITE_CONFIGURATION } from '#cli/config/configurations/site.ts';
+import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';

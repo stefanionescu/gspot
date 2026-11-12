@@ -1,16 +1,16 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
-    EXIT_FINDINGS,
     FAILED_STATUSES,
     INCOMPLETE_STATUSES,
     NO_FILES_MESSAGE,
     PROGRESS_INTERVAL_MILLISECONDS,
     REPORT_STAGES,
+    RUNNING_CHECKS_SHOWN,
     SHORT_HASH_LENGTH,
     STAGED_FILES,
     WORKING_TREE,
 } from '#cli/config/engine.ts';
-import { EXIT_ERROR } from '#cli/config/system.ts';
+import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/system.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { rewriteProgress, writeProgress } from '#cli/system/terminal.ts';
@@ -24,8 +24,6 @@ import type {
     RunReport,
 } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const RUNNING_CHECKS_SHOWN = 3;
 
 function formatRunningChecks(running: Array<Pick<CheckResult, 'check' | 'scope'>>): string {
     const names = running

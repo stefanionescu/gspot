@@ -1,4 +1,4 @@
-import { TRANSLATION_RULES } from '#cli/config/configurations/framework.ts';
+import { TRANSLATION_RULES } from '#cli/config/configurations/library.ts';
 import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 

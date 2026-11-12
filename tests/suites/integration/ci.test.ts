@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { LINE_BREAK } from '#tests/config/setup/sandboxes.ts';
 import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';

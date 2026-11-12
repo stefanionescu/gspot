@@ -9,12 +9,12 @@ import {
     TEMPLATE_OPEN_ESCAPED,
     TEST_BOUNDARY_CATEGORY,
     TEST_IMPORT_POLICY,
-    TRPC_CONFIGURATION,
     TRPC_SERVER_CATEGORY,
     TRPC_SERVER_VALUE_POLICY,
     UNKNOWN_IMPORT_POLICIES,
-} from '#cli/config/configurations/eslint/blocks.ts';
-import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
+import { TRPC_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
 import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { listCodePatterns, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';

@@ -4,8 +4,7 @@ import { dirname, join } from 'node:path';
 import { patch } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import {
     GITHUB_RATE_LIMIT,
     GITHUB_TOKEN_MESSAGE,

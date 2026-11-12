@@ -1,7 +1,7 @@
 import { formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION, REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
-import { EVERY_CHECK } from '#cli/config/engine.ts';
+import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';

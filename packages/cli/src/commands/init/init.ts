@@ -1,18 +1,16 @@
 import { formatDetection } from '#cli/commands/init/report.ts';
+import { CONFIGURATIONS_OPTION, FROM_OPTION, LEVEL_OPTION } from '#cli/config/commands/help.ts';
 import {
-    CONFIGURATIONS_OPTION,
     FROM_CONFLICT_MESSAGE,
-    FROM_OPTION,
     INIT_STOPPED_MESSAGE,
-    LEVEL_OPTION,
     NEXT_PIN_MESSAGE,
     NEXT_STEPS_MESSAGE,
     SETTINGS_EXIST_MESSAGE,
     WROTE_PLAN_MESSAGE,
-} from '#cli/config/commands/edits.ts';
-import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+} from '#cli/config/commands/setup.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { EXIT_FINDINGS } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';

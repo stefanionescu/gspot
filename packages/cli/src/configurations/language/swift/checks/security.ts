@@ -9,8 +9,9 @@ import {
     SECRET_PLIST_KEY,
     SECRET_VALUE,
     SECRET_WORD,
+    SQL_INTERPOLATION_FINDING,
+    SQLITE_FUNCTIONS,
     SWIFT_SECRET_FINDINGS,
-    SWIFT_SECURITY_RULES,
     UNSAFE_SWIFT_NAMES,
     USER_DEFAULTS_DECLARATION,
     USER_DEFAULTS_RECEIVER,
@@ -21,21 +22,6 @@ import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const SQLITE_FUNCTIONS: ReadonlySet<string> = new Set([
-    'sqlite3_exec',
-    'sqlite3_prepare',
-    'sqlite3_prepare_v2',
-    'sqlite3_prepare_v3',
-    'sqlite3_prepare16',
-    'sqlite3_prepare16_v2',
-    'sqlite3_prepare16_v3',
-]);
-
-const SQL_INTERPOLATION_FINDING = {
-    rule: SWIFT_SECURITY_RULES.sqlInterpolation,
-    message: 'Write `?` in the SQL text, and pass the value with a `sqlite3_bind` function.',
-};
 
 function listCallValues(call: Node): Node[] {
     return listSwiftCallArguments(call).flatMap((node) => node.childForFieldName('value') ?? []);

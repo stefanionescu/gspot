@@ -1,3 +1,7 @@
+// eslint base block
+
+export const CONSOLE_RULES = { 'no-console': 'error' } as const;
+
 export const JAVASCRIPT_RULES = {
     'no-implied-eval': 'error',
     'no-throw-literal': 'error',
@@ -20,7 +24,7 @@ export const JAVASCRIPT_RULES = {
 
 export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
 
-export const CONSOLE_RULES = { 'no-console': 'error' } as const;
+// eslint plan
 
 const ESLINT_RULES = {
     'array-callback-return': 'error',
@@ -55,80 +59,15 @@ const ESLINT_RULES = {
     'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' }],
 } as const;
 
-const SORTING_RULES = {
-    'perfectionist/sort-imports': [
-        'error',
-        {
-            type: 'alphabetical',
-            ignoreCase: false,
-            groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'unknown'],
-            newlinesBetween: 1,
-            useExperimentalDependencyDetection: false,
-        },
-    ],
-    'perfectionist/sort-named-imports': ['error', { type: 'alphabetical', ignoreCase: false }],
-    'perfectionist/sort-exports': [
-        'error',
-        {
-            type: 'line-length',
-            groups: ['singleline-export', 'multiline-export'],
-            newlinesBetween: 1,
-            ignoreCase: false,
-        },
-    ],
-    'perfectionist/sort-named-exports': ['error', { type: 'line-length', ignoreCase: false }],
-} as const;
-
-const UNICORN_RULES = {
-    'unicorn/name-replacements': 'off',
-    'unicorn/filename-case': 'off',
-    'unicorn/no-null': 'off',
-    'unicorn/no-useless-undefined': 'off',
-    'unicorn/import-style': 'off',
-    'unicorn/prefer-export-from': 'off',
-    'unicorn/no-unnecessary-array-flat-map': 'off',
-    'unicorn/no-abusive-eslint-disable': 'off',
-
-    'unicorn/prefer-ternary': 'off',
-    'unicorn/prefer-await': 'off',
-    'unicorn/no-negated-array-predicate': 'off',
-    'unicorn/prefer-simple-condition-first': 'off',
-    'unicorn/prefer-combined-guards': 'off',
-    'unicorn/expiring-todo-comments': 'off',
-    'unicorn/consistent-boolean-name': [
-        'error',
-        {
-            checkFunctions: 'never',
-            ignore: ['^_', '^(?:enabled|active|retryable)$'],
-            prefixes: {
-                are: false,
-                have: false,
-                should: false,
-                was: false,
-                were: false,
-                does: false,
-                did: false,
-                will: false,
-                requires: false,
-            },
-        },
-    ],
-} as const;
-
-const SECURITY_RULES = {
-    'security/detect-disable-mustache-escape': 'error',
-    'security/detect-eval-with-expression': 'off',
-    'security/detect-new-buffer': 'off',
-    'security/detect-non-literal-regexp': 'off',
-    'security/detect-non-literal-require': 'off',
-    'security/detect-pseudoRandomBytes': 'off',
-    'import-x/no-dynamic-require': 'error',
-    'security/detect-unsafe-regex': 'off',
-    'security/detect-object-injection': 'off',
-    'security/detect-non-literal-fs-filename': 'off',
-
-    'security/detect-child-process': 'error',
-    'security/detect-possible-timing-attacks': 'error',
+const IMPORT_X_RULES = {
+    'import-x/export': 'error',
+    'import-x/no-self-import': 'error',
+    'import-x/no-useless-path-segments': 'error',
+    'import-x/no-empty-named-blocks': 'error',
+    'import-x/no-duplicates': 'error',
+    'import-x/no-mutable-exports': 'error',
+    'import-x/no-relative-packages': 'error',
+    'import-x/no-default-export': 'error',
 } as const;
 
 const JSDOC_RULES = {
@@ -189,15 +128,80 @@ const REGEXP_RULES = {
     'regexp/no-unused-capturing-group': 'error',
 } as const;
 
-const IMPORT_X_RULES = {
-    'import-x/export': 'error',
-    'import-x/no-self-import': 'error',
-    'import-x/no-useless-path-segments': 'error',
-    'import-x/no-empty-named-blocks': 'error',
-    'import-x/no-duplicates': 'error',
-    'import-x/no-mutable-exports': 'error',
-    'import-x/no-relative-packages': 'error',
-    'import-x/no-default-export': 'error',
+const SECURITY_RULES = {
+    'security/detect-disable-mustache-escape': 'error',
+    'security/detect-eval-with-expression': 'off',
+    'security/detect-new-buffer': 'off',
+    'security/detect-non-literal-regexp': 'off',
+    'security/detect-non-literal-require': 'off',
+    'security/detect-pseudoRandomBytes': 'off',
+    'import-x/no-dynamic-require': 'error',
+    'security/detect-unsafe-regex': 'off',
+    'security/detect-object-injection': 'off',
+    'security/detect-non-literal-fs-filename': 'off',
+
+    'security/detect-child-process': 'error',
+    'security/detect-possible-timing-attacks': 'error',
+} as const;
+
+const SORTING_RULES = {
+    'perfectionist/sort-imports': [
+        'error',
+        {
+            type: 'alphabetical',
+            ignoreCase: false,
+            groups: ['builtin', 'external', 'internal', ['parent', 'sibling', 'index'], 'unknown'],
+            newlinesBetween: 1,
+            useExperimentalDependencyDetection: false,
+        },
+    ],
+    'perfectionist/sort-named-imports': ['error', { type: 'alphabetical', ignoreCase: false }],
+    'perfectionist/sort-exports': [
+        'error',
+        {
+            type: 'line-length',
+            groups: ['singleline-export', 'multiline-export'],
+            newlinesBetween: 1,
+            ignoreCase: false,
+        },
+    ],
+    'perfectionist/sort-named-exports': ['error', { type: 'line-length', ignoreCase: false }],
+} as const;
+
+const UNICORN_RULES = {
+    'unicorn/name-replacements': 'off',
+    'unicorn/filename-case': 'off',
+    'unicorn/no-null': 'off',
+    'unicorn/no-useless-undefined': 'off',
+    'unicorn/import-style': 'off',
+    'unicorn/prefer-export-from': 'off',
+    'unicorn/no-unnecessary-array-flat-map': 'off',
+    'unicorn/no-abusive-eslint-disable': 'off',
+
+    'unicorn/prefer-ternary': 'off',
+    'unicorn/prefer-await': 'off',
+    'unicorn/no-negated-array-predicate': 'off',
+    'unicorn/prefer-simple-condition-first': 'off',
+    'unicorn/prefer-combined-guards': 'off',
+    'unicorn/expiring-todo-comments': 'off',
+    'unicorn/consistent-boolean-name': [
+        'error',
+        {
+            checkFunctions: 'never',
+            ignore: ['^_', '^(?:enabled|active|retryable)$'],
+            prefixes: {
+                are: false,
+                have: false,
+                should: false,
+                was: false,
+                were: false,
+                does: false,
+                did: false,
+                will: false,
+                requires: false,
+            },
+        },
+    ],
 } as const;
 
 export const BASE_RULES = {

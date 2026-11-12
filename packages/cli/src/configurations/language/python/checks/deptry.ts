@@ -1,16 +1,16 @@
 import { join, posix } from 'node:path';
 
-import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/eslint/blocks.ts';
+import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/language.ts';
 import {
     DEPTRY_COMMAND,
     DEPTRY_EXCLUDE_FLAG,
     DEPTRY_FIRST_PARTY_FLAG,
     NO_PYPROJECT_NOTE,
-    PYTHON_NAME_SEPARATORS,
+    PROJECT_NAME_SEPARATORS,
     PYTHON_SOURCE_FOLDER,
     UV_RUN_ARGUMENTS,
 } from '#cli/config/configurations/python.ts';
-import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/structure.ts';
+import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { UV_FLAGS, UV_TOOL } from '#cli/config/tools/installers.ts';
@@ -38,7 +38,7 @@ function listFirstPartyPackages(session: Session, planned: PlannedCheck, project
         .map((path) => posix.dirname(path))
         .filter((folder) => posix.dirname(folder) === sources)
         .map((folder) => posix.basename(folder));
-    const projectName = project.project.name?.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '_');
+    const projectName = project.project.name?.toLowerCase().replaceAll(PROJECT_NAME_SEPARATORS, '_');
     return [
         ...new Set([
             ...(projectName === undefined ? [] : [projectName]),

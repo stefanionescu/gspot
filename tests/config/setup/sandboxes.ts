@@ -62,8 +62,6 @@ export const TOOL_PATHS_FILE = 'tool-paths.txt';
 
 export const GSPOT_LAUNCHER_PATH = 'bin/gspot';
 
-export const TOOL_PINS_FILE = 'mise.toml';
-
 export const MISE_TRUST = ['mise', 'trust'] as const;
 
 export const PACKED_PACKAGES_FILE = 'packages.json';
@@ -71,8 +69,6 @@ export const PACKED_PACKAGES_FILE = 'packages.json';
 export const CHILD_WAIT_MILLISECONDS = 15_000;
 
 export const AUTHENTICATION_REQUIRED_MESSAGE = 'Authentication required';
-
-export const LINE_BREAK = /\r?\n/u;
 
 export const NPM_INSTALL_FLAGS = ['--ignore-scripts', '--no-audit', '--no-fund'] as const;
 

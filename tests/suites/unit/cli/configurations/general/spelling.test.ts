@@ -32,3 +32,11 @@ test('typos.toml lists each allowed word once and keeps quoted paths', async () 
     expect(excluded.slice(-paths.length)).toStrictEqual(paths);
     expect(excluded).not.toContain('**');
 });
+
+test('typos.toml excludes *.lock once and no named lockfile', async () => {
+    const parsed = parse(
+        await buildGeneratedFile(buildSandboxSettings(['spelling']), getManifestTarget('spelling', 'typos.toml'), {}),
+    ) as { files: { 'extend-exclude': string[] } };
+    const lockPatterns = parsed.files['extend-exclude'].filter((pattern) => pattern.endsWith('.lock'));
+    expect(lockPatterns).toStrictEqual(['**/*.lock']);
+});

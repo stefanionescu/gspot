@@ -1,38 +1,37 @@
-export const PYTHON_CONFIGURATION = 'python';
+// deptry check
 
-export const COVERAGE_INI_SECTION = /^[\t ]*\[coverage:run\][\t ]*\r?$/mu;
+export const DEPTRY_COMMAND = ['deptry', '.', '--no-ansi'] as const;
 
-export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
+export const DEPTRY_EXCLUDE_FLAG = '--extend-exclude';
 
-export const BASEDPYRIGHT_OPTIONS = {
-    strictParameterNoneValue: false,
-    enableTypeIgnoreComments: true,
-    deprecateTypingAliases: false,
-    failOnWarnings: false,
-    reportUnusedImport: 'none',
-    reportUnusedVariable: 'none',
-    reportRedeclaration: 'none',
-    reportPrivateUsage: 'none',
-    reportSelfClsParameterName: 'none',
-    reportUndefinedVariable: 'none',
-    reportIgnoreCommentWithoutRule: 'none',
-    reportMissingTypeStubs: 'none',
-    reportWildcardImportFromLibrary: 'none',
-    reportTypeCommentUsage: 'none',
-    reportPrivateImportUsage: 'none',
-    reportMissingSuperCall: 'none',
-    reportMissingParameterType: 'none',
-    reportMissingTypeArgument: 'none',
-    reportCallInDefaultInitializer: 'none',
-    reportImplicitStringConcatenation: 'none',
-    reportUnusedCallResult: 'none',
-    reportAny: 'none',
-    reportExplicitAny: 'none',
-    reportPrivateLocalImportUsage: 'none',
-    reportImplicitRelativeImport: 'none',
-    reportUnusedParameter: 'none',
-    reportUnannotatedClassAttribute: 'none',
+export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
+
+export const NO_PYPROJECT_NOTE = 'This scope has no pyproject.toml for deptry to read.';
+
+export const PROJECT_NAME_SEPARATORS = /[-.]+/gu;
+
+export const PYTHON_SOURCE_FOLDER = 'src';
+
+export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
+
+// function-size check
+
+export const PYTHON_RULES = {
+    functionLines: 'function-lines',
+    requirementsFile: 'requirements-file',
+    pipInstall: 'pip-install',
+    placeholderDocstring: 'placeholder-docstring',
+    unreachableCode: 'unreachable-code',
 } as const;
+
+// generated config
+
+export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
+    reportUnusedClass: 'none',
+    reportUnusedFunction: 'none',
+} as const;
+
+export const BASEDPYRIGHT_CHECK = 'python/basedpyright';
 
 export const BASEDPYRIGHT_DEFAULT_OPTIONS = {
     reportPropertyTypeMismatch: 'error',
@@ -70,42 +69,52 @@ export const BASEDPYRIGHT_DEFAULT_OPTIONS = {
     reportEmptyAbstractUsage: 'error',
 } as const;
 
-export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
-    reportUnusedClass: 'none',
-    reportUnusedFunction: 'none',
+export const BASEDPYRIGHT_LEVELS = { basic: 'recommended', all: 'all' } as const;
+
+export const BASEDPYRIGHT_OPTIONS = {
+    strictParameterNoneValue: false,
+    enableTypeIgnoreComments: true,
+    deprecateTypingAliases: false,
+    failOnWarnings: false,
+    reportUnusedImport: 'none',
+    reportUnusedVariable: 'none',
+    reportRedeclaration: 'none',
+    reportPrivateUsage: 'none',
+    reportSelfClsParameterName: 'none',
+    reportUndefinedVariable: 'none',
+    reportIgnoreCommentWithoutRule: 'none',
+    reportMissingTypeStubs: 'none',
+    reportWildcardImportFromLibrary: 'none',
+    reportTypeCommentUsage: 'none',
+    reportPrivateImportUsage: 'none',
+    reportMissingSuperCall: 'none',
+    reportMissingParameterType: 'none',
+    reportMissingTypeArgument: 'none',
+    reportCallInDefaultInitializer: 'none',
+    reportImplicitStringConcatenation: 'none',
+    reportUnusedCallResult: 'none',
+    reportAny: 'none',
+    reportExplicitAny: 'none',
+    reportPrivateLocalImportUsage: 'none',
+    reportImplicitRelativeImport: 'none',
+    reportUnusedParameter: 'none',
+    reportUnannotatedClassAttribute: 'none',
 } as const;
 
-export const PYTHON_FILES = ['**/*.py'] as const;
-
-export const FASTAPI_CONFIGURATION = 'fastapi';
-
-export const PYTHON_SOURCE_FOLDER = 'src';
-
-export const PYTHON_NAME_SEPARATORS = /[-.]+/gu;
+export const MINIMUM_PYTHON = /(?:>=|~=|==)\s*(?<version>\d+\.\d+)/u;
 
 export const PYDANTIC_PACKAGE = 'pydantic';
 
-export const RUFF_RUNTIME_TYPES = {
-    'runtime-evaluated-base-classes': ['pydantic.BaseModel', 'pydantic_settings.BaseSettings'],
-    'runtime-evaluated-decorators': ['fastapi.FastAPI', 'fastapi.APIRouter'].flatMap((owner) =>
-        ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'api_route', 'websocket'].map(
-            (method) => `${owner}.${method}`,
-        ),
-    ),
-} as const;
+export const PYTHON_FILES = ['**/*.py'] as const;
+
+export const RUFF_CHECK = 'python/ruff';
+
+export const RUFF_CONSOLE_RULES = ['T20'] as const;
 
 export const RUFF_ISORT = {
     'length-sort': true,
     'length-sort-straight': true,
     'force-sort-within-sections': true,
-} as const;
-
-export const RUFF_TIDY_IMPORTS = {
-    'ban-relative-imports': 'parents',
-    'banned-api': {
-        'importlib.import_module': { msg: 'Import the module by name at the top of the file.' },
-        'builtins.__import__': { msg: 'Import the module by name at the top of the file.' },
-    },
 } as const;
 
 export const RUFF_PATH_RULES = {
@@ -116,44 +125,63 @@ export const RUFF_PATH_RULES = {
     '**/__main__.py': ['T20'],
 } as const;
 
-export const RUFF_CONSOLE_RULES = ['T20'] as const;
-
-export const BASEDPYRIGHT_CHECK = 'python/basedpyright';
-
-export const SQLFLUFF_CAPITALISATION = {
-    'capitalisation.keywords': { capitalisation_policy: 'upper' },
-    'capitalisation.identifiers': { extended_capitalisation_policy: 'lower' },
-    'capitalisation.functions': { extended_capitalisation_policy: 'lower' },
-    'capitalisation.literals': { capitalisation_policy: 'upper' },
-    'capitalisation.types': { extended_capitalisation_policy: 'upper' },
+export const RUFF_RUNTIME_TYPES = {
+    'runtime-evaluated-base-classes': ['pydantic.BaseModel', 'pydantic_settings.BaseSettings'],
+    'runtime-evaluated-decorators': ['fastapi.FastAPI', 'fastapi.APIRouter'].flatMap((owner) =>
+        ['get', 'post', 'put', 'patch', 'delete', 'head', 'options', 'api_route', 'websocket'].map(
+            (method) => `${owner}.${method}`,
+        ),
+    ),
 } as const;
 
-export const SQL_FILE_EXTENSIONS = '.sql,.pgsql,.psql';
+export const RUFF_TIDY_IMPORTS = {
+    'ban-relative-imports': 'parents',
+    'banned-api': {
+        'importlib.import_module': { msg: 'Import the module by name at the top of the file.' },
+        'builtins.__import__': { msg: 'Import the module by name at the top of the file.' },
+    },
+} as const;
 
-export const SQL_FILES = ['**/*.sql', '**/*.pgsql', '**/*.psql'] as const;
+// F401 reports a side-effect import as unused, such as import readline, and its fix deletes the import.
+export const RUFF_UNFIXABLE = ['F401'];
 
-export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
-
-export const DEPTRY_COMMAND = ['deptry', '.', '--no-ansi'] as const;
-
-export const DEPTRY_EXCLUDE_FLAG = '--extend-exclude';
-
-export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
+// pip-installs check
 
 export const INSTALL_FILE_SUFFIXES = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'] as const;
 
+export const NO_LOCKFILE_NOTE = 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.';
+
 export const PIP_INSTALL = /\bpip3? install\b/u;
+
+export const PIP_INSTALL_MESSAGE = 'Add the package to pyproject.toml and install it from the lockfile.';
+
+export const REQUIREMENTS_FILE_MESSAGE =
+    'A hand-kept requirements file is a second owner of the dependencies. Export it from the lockfile and declare it generated, or delete it.';
+
+export const REQUIREMENTS_FOLDER_FILE = /(?:^|\/)requirements\/[^/]+\.txt$/u;
+
+// placeholder-docstrings check
+
+export const CLASS_DOCSTRING_OPENING = /^(?:class that|class for|a class)\b/u;
 
 export const NON_WORD_RUN = /[^a-z\d]+/gu;
 
 export const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
 
-export const CLASS_DOCSTRING_OPENING = /^(?:class that|class for|a class)\b/u;
+// pydoclint check
 
 export const GOOGLE_DOCSTRING =
     /^[ \t]*(?:Args|Arguments|Keyword Args|Keyword Arguments|Attributes|Returns|Yields|Raises):[ \t]*$/mu;
 
 export const NUMPY_DOCSTRING = /^[ \t]*Parameters[ \t]*\r?\n[ \t]*-{3,}[ \t]*$/mu;
+
+export const PYDOCLINT_ALL_LEVEL_OPTIONS = ['skip-checking-short-docstrings'] as const;
+
+export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'] as const;
+
+export const PYDOCLINT_DEFAULT_STYLE = 'numpy';
+
+export const PYDOCLINT_STYLE_FLAG = '--style';
 
 export const PYDOCLINT_TYPE_OPTIONS = [
     'arg-type-hints-in-docstring',
@@ -161,16 +189,23 @@ export const PYDOCLINT_TYPE_OPTIONS = [
     'check-yield-types',
 ] as const;
 
-export const PYDOCLINT_ALL_LEVEL_OPTIONS = ['skip-checking-short-docstrings'] as const;
+export const RAISES_MISMATCH_HELP =
+    'Under `Raises:`, list each name that the finding prints for the body. pydoclint reads the name that follows `raise`, so for `raise build_error(...)` or `raise error` it expects the function or the variable, not the exception class.';
 
-export const PYDOCLINT_COMMAND = ['pydoclint', '--allow-init-docstring', 'true', '--quiet', '{files}'] as const;
+export const RAISES_MISMATCH_RULE = 'DOC503';
 
-export const PYDOCLINT_STYLE_FLAG = '--style';
+// pytest
 
-export const PYDOCLINT_DEFAULT_STYLE = 'numpy';
+export const COVERAGE_INI_SECTION = /^[\t ]*\[coverage:run\][\t ]*\r?$/mu;
 
-export const VULTURE_FINDING =
-    /^(?<file>.+?):(?<line>\d+): (?:unused (?<kind>attribute|class|function|method|property) '(?<name>[^']+)'|unreachable code after '(?<statement>[^']+)') \(\d+% confidence/u;
+export const NON_PYTHON_TEST_PATTERNS: ReadonlySet<string> = new Set([
+    '**/*.test.*',
+    '**/*.spec.*',
+    '**/*Tests.swift',
+    '**/__tests__/**',
+]);
+
+// vulture check
 
 export const VULTURE_COMMAND = [
     'vulture',
@@ -180,23 +215,5 @@ export const VULTURE_COMMAND = [
 
 export const VULTURE_DEAD_CODE = 3;
 
-export const NO_LOCKFILE_NOTE = 'This check needs uv.lock, poetry.lock, or pdm.lock in this scope.';
-
-export const REQUIREMENTS_FILE_MESSAGE =
-    'A hand-kept requirements file is a second owner of the dependencies. Export it from the lockfile and declare it generated, or delete it.';
-
-export const PIP_INSTALL_MESSAGE = 'Add the package to pyproject.toml and install it from the lockfile.';
-
-export const NO_PYPROJECT_NOTE = 'This scope has no pyproject.toml for deptry to read.';
-
-export const PYTHON_RULES = {
-    functionLines: 'function-lines',
-    requirementsFile: 'requirements-file',
-    pipInstall: 'pip-install',
-    placeholderDocstring: 'placeholder-docstring',
-    unreachableCode: 'unreachable-code',
-} as const;
-
-export const REQUIREMENTS_FOLDER_FILE = /(?:^|\/)requirements\/[^/]+\.txt$/u;
-
-export const RUFF_CHECK = 'python/ruff';
+export const VULTURE_FINDING =
+    /^(?<file>.+?):(?<line>\d+): (?:unused (?<kind>attribute|class|function|method|property) '(?<name>[^']+)'|unreachable code after '(?<statement>[^']+)') \(\d+% confidence/u;

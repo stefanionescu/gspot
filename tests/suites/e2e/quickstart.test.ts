@@ -6,10 +6,10 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
+import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { UV_TOOL } from '#cli/config/tools/installers.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
-import { TOOL_PINS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
@@ -41,7 +41,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
         // The quickstart page pins Node.js, so the version that the CI job on the minimum Node.js sets does not apply.
         MISE_NODE_VERSION: undefined,
     };
-    const pins = await readFile(join(REPOSITORY_ROOT, TOOL_PINS_FILE), 'utf8');
+    const pins = await readFile(join(REPOSITORY_ROOT, MISE_CONFIG_FILE), 'utf8');
     const runtimePins = runtimePinsSchema.parse(parse(pins)).tools;
     const uvPin = String(getTool(readConfigurations().values(), UV_TOOL).version);
     for (const command of [

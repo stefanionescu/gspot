@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
-import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { REST_SEGMENT } from '#cli/config/configurations/naming.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';

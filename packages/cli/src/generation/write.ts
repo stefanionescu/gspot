@@ -9,9 +9,8 @@ import {
 } from '#cli/config/generation/files.ts';
 import { GENERATED_FILE_NOUN } from '#cli/config/generation/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
-import { INSTALLED_TOOL_FOLDERS, OWNER_WRITABLE_FILE, TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { INSTALLED_TOOL_FOLDERS, TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
+import { EXECUTABLE_FILE, GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';

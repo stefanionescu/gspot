@@ -6,7 +6,8 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { MANAGED_KEYS_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/commands/edits.ts';
+import { TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';

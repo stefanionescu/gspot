@@ -12,8 +12,7 @@ import {
 import { cp } from 'node:fs/promises';
 import { basename, dirname, join, posix, relative } from 'node:path';
 
-import { JSCONFIG_FILE } from '#cli/config/engine.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
 import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';

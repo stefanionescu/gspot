@@ -1,11 +1,13 @@
 import {
-    DEFAULT_QUOTES,
     EDITORCONFIG_FIXED_SECTIONS,
     EDITORCONFIG_ROOT_LINE,
     PRETTIER_CHECK,
     PRETTIER_MARKDOWN_OVERRIDE,
+    SHFMT_CONFIGURATION,
+    SHFMT_EDITORCONFIG_OPTIONS,
     UNREPRESENTABLE_SELECTOR,
 } from '#cli/config/configurations/general.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { commentSectionTitle, keepFirstPatterns, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
@@ -22,11 +24,6 @@ import { type FormatOverride, type ScopeFormat, type WrittenFormat } from '#cli/
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Settings } from '#cli/types/settings.ts';
-
-const SHFMT_CONFIGURATION = 'bash';
-
-// shfmt reads these keys, and no other tool does. They sit under [*] because shell scripts may have no extension.
-const SHFMT_EDITORCONFIG_OPTIONS = { switch_case_indent: true, simplify: true } as const;
 
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))

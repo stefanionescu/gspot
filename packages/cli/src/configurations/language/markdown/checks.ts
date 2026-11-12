@@ -6,7 +6,9 @@ import {
     ANGLE_PLACEHOLDER,
     CAMEL_CASE_BOUNDARY,
     ELLIPSIS_ARGUMENTS,
+    ELLIPSIS_LINE,
     EMPTY_ARGUMENTS,
+    EXCERPT_FORMS,
     FENCE_PARSERS,
     JSON_FENCE_OPTIONS,
     PLACEHOLDER_VALUE,
@@ -29,27 +31,6 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const ELLIPSIS_LINE = /^[\s#/]*\.\.\.\s*$/u;
-
-const EXPRESSION_FORMS = [
-    ['(\n', '\n)'],
-    ['({\n', '\n})'],
-] as const;
-
-const TYPE_FORMS = [
-    ['type Fragment =\n', '\n;'],
-    ['type Fragment = {\n', '\n};'],
-] as const;
-
-// Documentation often shows an expression, an object member, a type, or a call signature instead of a whole program.
-const EXCERPT_FORMS: Readonly<Record<GrammarFenceParser, ReadonlyArray<readonly [string, string]>>> = {
-    bash: [],
-    javascript: EXPRESSION_FORMS,
-    typescript: [...EXPRESSION_FORMS, ...TYPE_FORMS],
-    tsx: [...EXPRESSION_FORMS, ...TYPE_FORMS],
-    python: [['(\n', '\n)']],
-};
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];

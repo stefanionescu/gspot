@@ -1,12 +1,8 @@
 import { stringify } from '@decimalturn/toml-patch';
 
+import { TAPLO_FORMATTING } from '#cli/config/configurations/language.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
-
-const TAPLO_FORMATTING = {
-    array_auto_expand: false,
-    array_auto_collapse: false,
-} as const;
 
 export const TOML_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
     'toml/taplo.toml': (planned) => {

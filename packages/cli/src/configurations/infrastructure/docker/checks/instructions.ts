@@ -6,12 +6,14 @@ import {
     DOCKER_INSTRUCTION,
     EXEC_FORM_START,
     INSTRUCTION_MESSAGES,
+    INSTRUCTION_PATTERNS,
     INSTRUCTION_RULES,
     LOCKED_INSTALLS,
     NGINX_IMAGE,
     NPM_COMMAND,
     NPM_INSTALL_VERBS,
     PATCH_LEVEL_VERSION,
+    SECOND_INDEX_FLAG,
 } from '#cli/config/configurations/docker.ts';
 import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
 import { LINE_CONTINUATION } from '#cli/config/parsers/projects.ts';
@@ -24,17 +26,6 @@ import type { DockerInstruction } from '#cli/types/configurations/infrastructure
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const SECOND_INDEX_FLAG = /^--extra-index-url(?:=|$)/u;
-
-/**
-Instructions that a pattern of their text reports: an `ADD` of a URL without `--checksum`, and the Docker socket as a
-`VOLUME`.
-*/
-const INSTRUCTION_PATTERNS: ReadonlyArray<{ name: string; hit: keyof typeof INSTRUCTION_RULES; pattern: RegExp }> = [
-    { name: 'ADD', hit: 'remoteAdd', pattern: /^(?!.*--checksum=).*\bhttps?:\/\//u },
-    { name: 'VOLUME', hit: 'dockerSocket', pattern: /docker\.sock/u },
-];
 
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);

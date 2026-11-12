@@ -1,12 +1,11 @@
-import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 import {
     COMMONJS_FILES,
     COMMONJS_PACKAGE_TYPE,
     ESLINT_BROWSER_CONFIGURATIONS,
-    ESLINT_SETTINGS_TABLE,
     TYPELESS_JAVASCRIPT_FILES,
-} from '#cli/config/configurations/javascript.ts';
-import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/nextjs.ts';
+} from '#cli/config/configurations/javascript/eslint-config.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
+import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listScriptFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { findNearestPackageJson } from '#cli/repository/dependencies.ts';
 import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';

@@ -1,9 +1,9 @@
 import type { Node } from 'web-tree-sitter';
 
 import {
-    COMMENT_LINE,
     DISABLED_TEST_MESSAGE,
     DISABLED_TEST_RULE,
+    REASON_COMMENT_LINE,
     REASON_GROUP_INDEX,
     SKIP_REASON_ARGUMENT,
     SWIFT_STRING_LITERAL,
@@ -45,7 +45,7 @@ function listUnexplainedSkips(syntaxRoot: Node, lines: string[]): Node[] {
             return false;
         const reasonArgument =
             attribute.namedChildren.find((node) => node.text === 'message')?.nextNamedSibling ?? undefined;
-        return !hasReason(reasonArgument) && !COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '');
+        return !hasReason(reasonArgument) && !REASON_COMMENT_LINE.test(lines[attribute.startPosition.row - 1] ?? '');
     });
     return [...calls, ...attributes];
 }

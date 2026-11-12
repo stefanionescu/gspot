@@ -1,10 +1,12 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
+    BIN_FOLDER_START,
     COMMIT_MESSAGE_PATH_LINES,
     HOOK_PROGRAM_MISSING,
     LFS_MISSING_GUARD,
     PUSH_INPUT_REPLAY,
     PUSH_INPUT_SAVE,
+    YARN_PNP_FILE,
 } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
@@ -12,12 +14,6 @@ import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { StartRunner } from '#cli/types/repository.ts';
 import type { GeneratedFile, HookName } from '#cli/types/tools.ts';
-
-// Yarn Plug'n'Play keeps packages out of node_modules, so its loader file shows that the project is installed.
-const YARN_PNP_FILE = '.pnp.cjs';
-
-// Starting a package manager costs a hook about 150 ms. This assignment finds gspot and gives a command check the same PATH.
-const BIN_FOLDER_START = { program: 'node', prefix: 'PATH="$PWD/node_modules/.bin:$PATH" ', command: 'gspot' };
 
 function buildInstallGuard(name: Exclude<StartRunner['name'], 'mise'>): string {
     const pnp = name === 'yarn' ? `test -f ${YARN_PNP_FILE} || ` : '';

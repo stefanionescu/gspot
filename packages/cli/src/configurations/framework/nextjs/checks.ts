@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
     CAUSE_MARKS,
     CI_ENVIRONMENT,
@@ -9,6 +8,7 @@ import {
     NEXT_TYPEGEN_COMMAND,
     SHOWN_LINES,
 } from '#cli/config/configurations/nextjs.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import { runTsc } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';

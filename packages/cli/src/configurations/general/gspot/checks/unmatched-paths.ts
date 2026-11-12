@@ -1,4 +1,4 @@
-import { BRACKET_HELP, GSPOT_RULES, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/structure.ts';
+import { BRACKET_HELP, GSPOT_RULES, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { readSettingsText } from '#cli/settings/file.ts';

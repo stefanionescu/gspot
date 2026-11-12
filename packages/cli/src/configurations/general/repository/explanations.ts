@@ -1,4 +1,4 @@
-import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/config/configurations/structure.ts';
+import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/config/configurations/general.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const ENCODING_EXPLANATIONS = {

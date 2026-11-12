@@ -1,4 +1,4 @@
-import { SQL_FILE_EXTENSIONS, SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/python.ts';
+import { SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/language.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
@@ -10,7 +10,7 @@ function buildSqlfluffFile(planned: PlannedConfig): string {
         sqlfluff: {
             dialect: getTable(planned.scope.settings, 'sql').dialect,
             templater: 'raw',
-            sql_file_exts: SQL_FILE_EXTENSIONS,
+            sql_file_exts: planned.configuration.files.extensions.join(','),
             max_line_length: format.print_width,
             large_file_skip_byte_limit: 0,
             exclude_rules: off,

@@ -1,4 +1,4 @@
-import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/general.ts';
+import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/structure.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/scopes.ts';

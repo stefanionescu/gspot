@@ -6,7 +6,8 @@ import {
     PRETTIER_FILES_MESSAGE,
     TEST_FILES_MESSAGE,
     TOOL_PINS,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/lookup.ts';
+import { GSPOT_ADD } from '#cli/config/manifests.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { formatDetectionConditions } from '#cli/manifests/reference.ts';
@@ -23,7 +24,7 @@ function listConfigurationRemovals(session: Session | undefined, name: string): 
         .map(({ scope, reason }) => ({
             scope,
             reason,
-            command: ['gspot add', name, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
+            command: [GSPOT_ADD, name, ...(scope === '' ? [] : ['--scope', quoteArgument(scope)])].join(' '),
         }));
 }
 

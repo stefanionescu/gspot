@@ -4,8 +4,8 @@ import {
     TOOLS_CHANGED_MESSAGE,
     TOOLS_INSTALLED_MESSAGE,
     TOOLS_MISSING_MESSAGE,
-} from '#cli/config/commands/edits.ts';
-import { EXIT_FINDINGS } from '#cli/config/engine.ts';
+} from '#cli/config/commands/setup.ts';
+import { EXIT_FINDINGS } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { listGeneratedChangeLines, writeEveryGeneratedFile } from '#cli/generation/write.ts';

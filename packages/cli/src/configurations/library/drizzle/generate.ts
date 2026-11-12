@@ -1,4 +1,4 @@
-import { DRIZZLE_RULES } from '#cli/config/configurations/framework.ts';
+import { DRIZZLE_RULES } from '#cli/config/configurations/library.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import {
     type ConfigurationBlocks,

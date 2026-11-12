@@ -3,12 +3,13 @@ import { setImmediate } from 'node:timers/promises';
 
 import {
     BASE_FLAG,
-    CHECK_COMMAND,
     HOOK_FLAG,
     INCOMPLETE_STATUSES,
+    ONLY_FLAG,
     SHORT_HASH_LENGTH,
     STAGED_FLAG,
 } from '#cli/config/engine.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
@@ -183,9 +184,9 @@ export function formatReproduceCommand(
     const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
     const targets = isScopeTarget ? [scopeArgument] : paths;
     const words = [
-        CHECK_COMMAND,
+        GSPOT_CHECK,
         ...targets.map((path) => quoteArgument(buildDashSafePath(path))),
-        '--only',
+        ONLY_FLAG,
         quoteArgument(checkId),
         ...listSelectionArguments(selection),
     ];

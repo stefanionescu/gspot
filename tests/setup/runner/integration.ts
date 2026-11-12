@@ -4,13 +4,9 @@ import { delimiter, dirname, join } from 'node:path';
 import { afterAll } from 'bun:test';
 import { testdir } from 'testdirs';
 
+import { LINE_BREAK } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import {
-    GSPOT_LAUNCHER_PATH,
-    LINE_BREAK,
-    PACKED_PACKAGES_FILE,
-    TOOL_PATHS_FILE,
-} from '#tests/config/setup/sandboxes.ts';
+import { GSPOT_LAUNCHER_PATH, PACKED_PACKAGES_FILE, TOOL_PATHS_FILE } from '#tests/config/setup/sandboxes.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { prepareRunFolders, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';

@@ -11,7 +11,7 @@ import {
     TRIVIAL_FILES_RULE,
     TRIVIAL_FUNCTIONS_RULE,
     TYPED_LANGUAGES,
-} from '#cli/config/configurations/eslint/blocks.ts';
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     buildExtensionGlob,

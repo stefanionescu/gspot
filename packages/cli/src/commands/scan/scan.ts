@@ -4,11 +4,12 @@ import { join } from 'node:path';
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import {
     GIT_UNBORN_HEAD_ARGUMENTS,
+    SCAN_LEFT_OUT_NEEDS,
     SCAN_LOCKFILE_MESSAGE,
     SCAN_NO_FILES_MESSAGE,
     SCAN_SETTINGS_MESSAGE,
     SCAN_STOPPED_MESSAGE,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/setup.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
@@ -33,8 +34,6 @@ import type { CommandDefinition, ScanReport } from '#cli/types/commands.ts';
 import type { RunResult } from '#cli/types/engine/run.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const SCAN_LEFT_OUT_NEEDS = new Set(['build', 'project-code']);
 
 function listCodeRunners(session: Session): string[] {
     const checks = session.scopes.flatMap((scope) => scope.configurations.flatMap(({ checks }) => checks));

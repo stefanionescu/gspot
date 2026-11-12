@@ -3,6 +3,7 @@ import { stripVTControlCharacters, styleText } from 'node:util';
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
     EXIT_ERROR,
+    PROGRESS_CLEAR,
     RESULT_JSON_INDENT,
     SIGNAL_EXIT_CODES,
     TERMINAL_COLOR_SEQUENCE,
@@ -17,8 +18,6 @@ import type {
     OutputOptions,
     OutputState,
 } from '#cli/types/system.ts';
-
-const PROGRESS_CLEAR = '\r\u{1B}[2K';
 
 const options: OutputState = { isJson: false, isVerbose: false, notes: [] };
 

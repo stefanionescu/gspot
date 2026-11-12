@@ -1,7 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
 
-import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';

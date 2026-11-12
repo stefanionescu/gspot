@@ -24,8 +24,6 @@ import type {
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { CancelableSpawnOptions, Files, RunCache } from '#cli/types/system.ts';
 
-export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: string };
-
 export type Host = { platform: string; arch: string };
 
 export type ScopeCheck = {

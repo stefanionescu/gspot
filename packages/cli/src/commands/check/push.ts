@@ -1,5 +1,5 @@
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { EMPTY_PUSH_MESSAGE, NO_PENDING_REFS } from '#cli/config/commands/reports.ts';
+import { EMPTY_PUSH_MESSAGE, NO_PENDING_REFS } from '#cli/config/commands/check.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { NO_CHANGES_REASON, NO_SETTINGS_REASON } from '#cli/config/repository/git.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';

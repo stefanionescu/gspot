@@ -1,4 +1,4 @@
-import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
+import { CONFIG_BOUND_RUNNERS, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import { buildPlanInventory, isRepositoryRun, isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
 import { findTool, findToolName, readConfigurations } from '#cli/manifests/read.ts';
@@ -18,8 +18,6 @@ import type {
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { ScopeCheck, Session } from '#cli/types/tools.ts';
-
-const CONFIG_BOUND_RUNNERS = new Set(['vitest', 'jest']);
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';

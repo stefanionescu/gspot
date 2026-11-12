@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { PATH_ROLES } from '#cli/config/manifests.ts';
-import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
+import { CATEGORY_PARENTS, NAMING_KEY_LENGTH } from '#cli/config/settings/validation.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { commandCheckSchema, ignoreSchema, scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -11,8 +11,6 @@ import { isTable } from '#cli/system/tables.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { ReasonedValue } from '#cli/types/settings.ts';
-
-const NAMING_KEY_LENGTH = 4;
 
 export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
     Object.entries({

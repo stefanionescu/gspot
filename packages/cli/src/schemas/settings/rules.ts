@@ -2,23 +2,21 @@ import semver from 'semver';
 import { z } from 'zod';
 
 import {
+    COMMITLINT_ENUM_SETTINGS,
     ESLINT_PLUGIN_MODULE,
     ESLINT_PLUGIN_NAME,
     ESLINT_SEVERITIES,
+    MATCHING_PROPERTY_NAME,
     NPM_PACKAGE_NAME,
     PLUGIN_SOURCE_REFUSAL,
     RULE_CONDITIONS,
+    VENDOR_PREFIX_RULE,
 } from '#cli/config/settings/schema.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { quoteArgument } from '#cli/system/text.ts';
-
-const COMMITLINT_ENUM_SETTINGS = new Map([
-    ['type-enum', 'commits.types'],
-    ['scope-enum', 'commits.scopes'],
-]);
 
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {
@@ -168,10 +166,6 @@ const stylelintTupleSchema = z.tuple([
     z.union([stylelintValueSchema, z.json().array()]),
     stylelintOptionsSchema.optional(),
 ]);
-
-const VENDOR_PREFIX_RULE = 'property-no-vendor-prefix';
-
-const MATCHING_PROPERTY_NAME = /^[-/]/u;
 
 /**
 Stylelint compares each `ignoreProperties` name with the property as the stylesheet writes it, prefix included. A

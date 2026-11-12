@@ -11,7 +11,7 @@ import { createFileTree } from 'testdirs';
 import { executableLayout } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import plugin from '#eslint-plugin/plugin.ts';
-import { RULE_PAGE_SETTINGS, RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/reports.ts';
+import { RULE_PAGE_SETTINGS, RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';

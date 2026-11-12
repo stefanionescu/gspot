@@ -1,8 +1,6 @@
-import {
-    REACT_DOM_RULE_OPTIONS,
-    REACT_FILES,
-    REACT_NATIVE_CONFIGURATION,
-} from '#cli/config/configurations/framework.ts';
+import { REACT_DOM_RULE_OPTIONS } from '#cli/config/configurations/framework.ts';
+import { REACT_FILES } from '#cli/config/configurations/shared.ts';
+import { REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import {
     type ConfigurationBlocks,
     type EslintBlockBuilder,

@@ -1,4 +1,4 @@
-import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';

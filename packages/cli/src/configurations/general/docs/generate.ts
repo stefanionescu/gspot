@@ -8,7 +8,7 @@ import {
     LYCHEE_ROOT_NOTE,
     LYCHEE_SITE_NOTE,
 } from '#cli/config/configurations/docs.ts';
-import { SITE_CONFIGURATION } from '#cli/config/configurations/site.ts';
+import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';

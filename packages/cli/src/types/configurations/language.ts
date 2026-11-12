@@ -1,12 +1,13 @@
 import type { MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import type { Node } from 'web-tree-sitter';
+import type { CST } from 'yaml';
 import type { z } from 'zod';
 
 import type { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
 import type { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
 import type { deptrySchema, xccovSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { ScriptSyntax } from '#cli/types/parsers.ts';
+import type { ParsedTsconfig, ScriptSyntax } from '#cli/types/parsers.ts';
 import type { Files } from '#cli/types/system.ts';
 
 export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
@@ -92,3 +93,9 @@ export type StylelintComponent = {
 };
 
 export type MarkdownlintFormatterInput = { results: unknown; logMessage: (message: string) => void };
+
+export type TsconfigProject = { path: string; parsed: ParsedTsconfig };
+
+export type YamlFinding = { offset: number; rule: string; message: string };
+
+export type YamlAnchorToken = Pick<CST.SourceToken, 'offset' | 'source'>;

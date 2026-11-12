@@ -1,26 +1,17 @@
-export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
+// checks
 
-export const HTML_VALIDATE_RULES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
-    html: {
-        'doctype-style': 'off',
-        'void-style': 'off',
-        'attr-quotes': 'off',
-        'attr-case': 'off',
-        'element-case': 'off',
-        'no-trailing-whitespace': 'off',
-        'require-sri': ['error', { target: 'crossorigin' }],
-    },
-    site: {
-        'no-inline-style': 'off',
-        'no-raw-characters': 'off',
-        'void-style': 'off',
-        'doctype-style': 'off',
-        'no-trailing-whitespace': 'off',
-        'valid-id': ['error', { relaxed: true }],
-    },
-};
+export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
 
-export const SURROUNDING_QUOTES = /^["']|["']$/gu;
+export const DOCUMENT_URL_ATTRIBUTES: ReadonlyMap<string, readonly string[]> = new Map([
+    ['a', ['href', 'xlink:href']],
+    ['area', ['href']],
+    ['iframe', ['src']],
+    ['frame', ['src']],
+    ['object', ['data']],
+    ['embed', ['src']],
+]);
+
+export const EVENT_ATTRIBUTE = /^on[a-z]+$/u;
 
 export const EXECUTABLE_SCRIPT_TYPES: ReadonlySet<string> = new Set([
     '',
@@ -43,29 +34,55 @@ export const EXECUTABLE_SCRIPT_TYPES: ReadonlySet<string> = new Set([
     'text/x-javascript',
 ]);
 
-export const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'background']);
-
-export const DOCUMENT_URL_ATTRIBUTES: ReadonlyMap<string, readonly string[]> = new Map([
-    ['a', ['href', 'xlink:href']],
-    ['area', ['href']],
-    ['iframe', ['src']],
-    ['frame', ['src']],
-    ['object', ['data']],
-    ['embed', ['src']],
-]);
-
-export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
-
-export const EVENT_ATTRIBUTE = /^on[a-z]+$/u;
-
-export const SCRIPT_SCHEMES = new Set(['javascript:', 'vbscript:']);
-
-export const RELATIVE_URL_BASE = 'https://example.invalid';
-
-export const INLINE_SCRIPT_MESSAGE = 'Move executable inline script to a script file.';
-
 export const HTML_RULES = {
     scriptLink: 'script-link',
     inlineScript: 'inline-script',
     handlerAttribute: 'handler-attribute',
 } as const;
+
+export const INLINE_SCRIPT_MESSAGE = 'Move executable inline script to a script file.';
+
+export const RELATIVE_URL_BASE = 'https://example.invalid';
+
+export const SCRIPT_SCHEMES = new Set(['javascript:', 'vbscript:']);
+
+export const SURROUNDING_QUOTES = /^["']|["']$/gu;
+
+export const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'background']);
+
+// generated config
+
+export const GENERATED_MARKUP_PACKAGES: ReadonlySet<string> = new Set([
+    '@astrojs/starlight',
+    'astro-expressive-code',
+    'expressive-code',
+]);
+
+export const GENERATED_MARKUP_RULES = [
+    'element-permitted-content',
+    'no-implicit-button-type',
+    'text-content',
+    'unique-landmark',
+] as const;
+
+export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
+
+export const HTML_VALIDATE_RULES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+    html: {
+        'doctype-style': 'off',
+        'void-style': 'off',
+        'attr-quotes': 'off',
+        'attr-case': 'off',
+        'element-case': 'off',
+        'no-trailing-whitespace': 'off',
+        'require-sri': ['error', { target: 'crossorigin' }],
+    },
+    site: {
+        'no-inline-style': 'off',
+        'no-raw-characters': 'off',
+        'void-style': 'off',
+        'doctype-style': 'off',
+        'no-trailing-whitespace': 'off',
+        'valid-id': ['error', { relaxed: true }],
+    },
+};

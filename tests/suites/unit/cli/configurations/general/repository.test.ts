@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';

@@ -1,17 +1,10 @@
+import { BATS_EXTENSION, BATS_FLAG, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/bash.ts';
 import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
 import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
-
-const BATS_EXTENSION = '.bats';
-
-// bats runs each test in a subshell, defines tests below the helpers they call, and reads variables from loaded
-// helpers, so these warnings misread a bats file.
-const BATS_FLAG = '--exclude=SC2030,SC2031,SC2034,SC2218';
-
-const SHELLCHECK_DIALECT_FLAG = '--shell=';
 
 /**
 Runs ShellCheck. It passes a dialect only for scripts without a shebang, and leaves out the warnings that do not fit

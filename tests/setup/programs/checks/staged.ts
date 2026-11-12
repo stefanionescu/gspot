@@ -1,7 +1,7 @@
 import { statSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
-import { EXECUTABLE_BITS } from '#cli/config/repository/files.ts';
+import { EXECUTABLE_BITS } from '#cli/config/system.ts';
 import { splitAssignment } from '#tests/setup/system/programs.ts';
 
 const CHECK_STAGED_COPY_OPTIONS = {

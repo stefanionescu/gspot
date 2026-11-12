@@ -13,7 +13,6 @@ import {
     PNPM_WORKSPACE_FILE,
     YARN_BERRY_MAJOR,
 } from '#cli/config/repository/package-managers.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import {
     CI_NODE,
     DEFAULT_JSON_INDENT,
@@ -27,6 +26,7 @@ import {
     SETUP_NODE_VERSION,
     START_RUNNERS,
 } from '#cli/config/repository/version-pin.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';

@@ -3,7 +3,7 @@ import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { EXECUTABLE_FILE } from '#cli/config/system.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

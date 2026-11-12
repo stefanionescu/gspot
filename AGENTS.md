@@ -98,7 +98,7 @@ Do not edit the files that gspot writes. `gspot/generated-files` reports an edit
 ## Folders
 
 These rules apply to `packages/cli/src/`, `packages/eslint-plugin/src/`, `docs/src/`, and `tests/`. Here they override
-four shipped rules:
+five shipped rules:
 
 - NAMING.md says "Prefer feature folders to top-level type buckets."
 - ZOD.md says "Put a runtime schema with the feature that owns the contract."
@@ -106,18 +106,29 @@ four shipped rules:
   `tests/setup/`, one subfolder per job.
 - WORKING.md says "Keep one implementation of each concept, and one copy of each table of values, in the module that
   uses it." Here a fixed value sits in `config/`, also when one module reads it.
+- COMMENTS.md says a comment explains why, and lists when to add one. Here a file in `config/` also labels its
+  subjects.
 
 ### Values, types, and schemas
 
 - Keep each fixed value, type, and runtime schema in `config/`, `types/`, or `schemas/`, also when one module reads
   it. A value computed at import time stays with the behavior that uses it.
+- A subject is what its values describe: the input of one module or step, such as `init report`, or one concept that
+  several modules read, such as `units`.
+- In a file of `config/` with more than one subject, the values of each subject sit together under a label comment.
+- The label names the subject in one to five words, such as `// init report`, and stands on its own line between blank
+  lines. A file with one subject has no label.
+- Order the subjects of a file by label, and the values of a subject by name, both alphabetically. A value that another
+  value of the file reads comes before it. A subject that holds a value another subject reads comes before that
+  subject.
+- A label names its subject and gives no reason. A reason for one value stays in a comment directly above it.
 - Each of those folders holds one file per layer, such as `config/<layer>.ts`:
     - The CLI layers follow the folders under "Commands and layers." Layer `main` serves `main.ts`, `bin.ts`, and
       `reference.ts`.
     - The layers of `tests/` follow the CLI layers of `tests/suites/unit/cli/`, and add `eslint-plugin`, `integration`,
       `e2e`, and `setup`.
     - The ESLint plugin and the docs site form one layer each, with one file per topic.
-- A value that several layers read sits in the file of the lowest layer that all of them may import, which in `tests/`
+- A value that several layers read sits in the file of the highest layer that all of them may import, which in `tests/`
   means `setup`. Values of one subject stay together, in the lowest layer that any of them needs.
 - A tool's rule table that a settings schema reads sits in the `manifest.toml` of the configuration that owns the tool.
 - A file splits only when it passes the file length limit. It then becomes a folder `<layer>/` with one file per topic,

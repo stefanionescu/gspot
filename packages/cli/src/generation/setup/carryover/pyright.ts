@@ -1,6 +1,12 @@
+import { NEGATED_PATTERN } from '#cli/config/configurations/gspot.ts';
 import { BASEDPYRIGHT_CHECK } from '#cli/config/configurations/python.ts';
-import { NEGATED_PATTERN } from '#cli/config/configurations/structure.ts';
-import { CARRYOVER_ROW_START, EMPTY_CARRYOVER, IGNORE_REASON_START } from '#cli/config/generation/setup.ts';
+import { PYRIGHT_CONFIG_FILE } from '#cli/config/generation/files.ts';
+import {
+    CARRYOVER_ROW_START,
+    EMPTY_CARRYOVER,
+    IGNORE_REASON_START,
+    PYRIGHT_TABLES,
+} from '#cli/config/generation/setup.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
@@ -10,10 +16,6 @@ import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
-
-const PYRIGHT_CONFIG_FILE = 'pyrightconfig.json';
-
-const PYRIGHT_TABLES = ['basedpyright', 'pyright'] as const;
 
 function readPyrightOptions(
     root: string,

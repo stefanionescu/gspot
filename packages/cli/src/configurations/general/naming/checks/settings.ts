@@ -1,3 +1,4 @@
+import { SHARED_NAMING_LANGUAGES } from '#cli/config/configurations/naming.ts';
 import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
 import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
@@ -14,9 +15,6 @@ import type {
     ParsedNamingLanguageFields,
 } from '#cli/types/configurations/general.ts';
 import type { Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
-
-// JavaScript files follow the naming table of TypeScript, so one set of naming.typescript settings covers both.
-const SHARED_NAMING_LANGUAGES: Readonly<Record<string, string>> = { javascript: 'typescript' };
 
 function compileException(exception: NamingException): CompiledException {
     const [languages, categories, allowedNames] = [

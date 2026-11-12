@@ -1,11 +1,9 @@
-import { SCRIPT_EXTENSIONS } from '#cli/config/generation/setup.ts';
+import { SCRIPT_EXTENSIONS, TAB_STEP } from '#cli/config/generation/setup.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-
-const TAB_STEP = 'tab';
 
 export const SCRIPT_FILES = SCRIPT_EXTENSIONS.map((extension) => `**/*${extension}`);
 

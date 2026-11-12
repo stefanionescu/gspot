@@ -1,4 +1,4 @@
-import { CODE_LANGUAGES } from '#cli/config/configurations/eslint/blocks.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';

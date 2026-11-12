@@ -1,8 +1,9 @@
 import { isUtf8 } from 'node:buffer';
 import { posix } from 'node:path';
 
-import { BYTES_PER_KILOBYTE, FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE, ROOT_RUNS } from '#cli/config/engine.ts';
+import { FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE, ROOT_RUNS } from '#cli/config/engine.ts';
 import { SETTINGS_FILE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { isOutsideChildScopes, joinScope, listNestedScopes, selectScope } from '#cli/repository/scopes.ts';

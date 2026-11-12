@@ -10,7 +10,7 @@ import {
     SWIFT_EXTENSION,
     TAG_GRAMMARS,
 } from '#cli/config/parsers/code.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { GRAMMAR_TOOL_NOUN } from '#cli/config/tools/installers.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';

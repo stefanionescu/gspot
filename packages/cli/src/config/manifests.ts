@@ -1,35 +1,34 @@
 import cliPackage from '#cli-package' with { type: 'json' };
+import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
-export const MISE_CONFIG_FILE = 'mise.toml';
+// check output defaults
 
-export const MISE_LOCKFILE = 'mise.lock';
+export const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
 
-export const UV_LOCKFILE = 'uv.lock';
+export const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
 
-export const GSPOT_PATHS = {
-    configurations: `${GSPOT_FOLDER}/configurations`,
-    rules: `${GSPOT_FOLDER}/rules`,
-    hooks: `${GSPOT_FOLDER}/hooks`,
-    gitignore: `${GSPOT_FOLDER}/.gitignore`,
-    miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
-    miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCKFILE}`,
-    npmProject: `${GSPOT_FOLDER}/package.json`,
-    nodeModules: `${GSPOT_FOLDER}/${NODE_MODULES}`,
-    pythonProject: `${GSPOT_FOLDER}/pyproject.toml`,
-    pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
-    uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
-    valePackages: `${GSPOT_FOLDER}/vale`,
-    valeReleases: `${GSPOT_FOLDER}/vale/releases.json`,
-    valeConfig: `${GSPOT_FOLDER}/configurations/prose/vale.ini`,
-    valeMessageConfig: `${GSPOT_FOLDER}/configurations/prose/commit-message.ini`,
+export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
+
+export const MAX_EXIT_CODE = 255;
+
+// detection labels
+
+export const DETECTION_LABELS = {
+    extensions: ['a file extension', 'file extensions'],
+    filenames: ['a filename', 'filenames'],
+    dependencies: ['a dependency on', 'a dependency on'],
+    runtimes: ['a JavaScript runtime', 'JavaScript runtimes'],
+    tags: ['a file with a shebang for', 'files with a shebang for'],
+    paths: ['a file path', 'file paths'],
+    project_files: ['a project file', 'project files'],
 } as const;
 
-export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;
-
-const SCHEMA_FILE = 'gspot.schema.json';
+// docs links
 
 const REFERENCE_URL = `${cliPackage.homepage}/reference/`;
+
+const SCHEMA_FILE = 'gspot.schema.json';
 
 export const DOCS_PATHS = {
     reference: REFERENCE_URL,
@@ -44,21 +43,109 @@ export const DOCS_PATHS = {
     schema: `${cliPackage.homepage}/${SCHEMA_FILE}`,
 } as const;
 
-export const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
+// gspot command lines
 
-export const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
+export const GSPOT_ADD = 'gspot add';
 
-export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
+export const GSPOT_CHECK = 'gspot check';
 
-export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
+export const GSPOT_IGNORE = 'gspot ignore';
 
-export const MAX_EXIT_CODE = 255;
+export const GSPOT_INSTALL = 'gspot install';
 
-export const VALID_UNICODE_MESSAGE = 'Use a valid Unicode regular expression.';
+export const GSPOT_REMOVE = 'gspot remove';
+
+// gspot paths
+
+export const MISE_CONFIG_FILE = 'mise.toml';
+
+export const MISE_LOCKFILE = 'mise.lock';
+
+export const UV_LOCKFILE = 'uv.lock';
+
+export const GSPOT_PATHS = {
+    configurations: `${GSPOT_FOLDER}/configurations`,
+    rules: `${GSPOT_FOLDER}/rules`,
+    hooks: `${GSPOT_FOLDER}/hooks`,
+    gitignore: `${GSPOT_FOLDER}/.gitignore`,
+    miseProject: `${GSPOT_FOLDER}/${MISE_CONFIG_FILE}`,
+    miseLockfile: `${GSPOT_FOLDER}/${MISE_LOCKFILE}`,
+    npmProject: `${GSPOT_FOLDER}/${PACKAGE_JSON}`,
+    nodeModules: `${GSPOT_FOLDER}/${NODE_MODULES}`,
+    pythonProject: `${GSPOT_FOLDER}/${PYPROJECT_TOML}`,
+    pythonEnvironment: `${GSPOT_FOLDER}/${PYTHON_ENVIRONMENT_FOLDER}`,
+    uvLockfile: `${GSPOT_FOLDER}/${UV_LOCKFILE}`,
+    valePackages: `${GSPOT_FOLDER}/vale`,
+    valeReleases: `${GSPOT_FOLDER}/vale/releases.json`,
+    valeConfig: `${GSPOT_FOLDER}/configurations/prose/vale.ini`,
+    valeMessageConfig: `${GSPOT_FOLDER}/configurations/prose/commit-message.ini`,
+} as const;
+
+// manifest field patterns
+
+export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
+
+export const INSTALLER_VERSION_MESSAGE = 'This installer needs an exact version.';
+
+export const MINIMUM_VERSION_PATTERN = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
 
 export const NAME_PATTERN = /^[a-z0-9-]+$/u;
 
+export const NUMERIC_MINIMUM_MESSAGE = 'Use a numeric minimum version.';
+
 export const RULE_FILE_PATTERN = /^[A-Z0-9-]+\.md$/u;
+
+export const RULE_PLACEHOLDER = '{rule}';
+
+export const SHEBANG_TAG = 'shebang:';
+
+export const SHIPPED_CHECKSUM_PATTERN = /^sha256:[a-f0-9]{64}$/u;
+
+export const VALID_UNICODE_MESSAGE = 'Use a valid Unicode regular expression.';
+
+// manifest field values
+
+export const CASE_NAMES = [
+    'camel',
+    'camel-acronym',
+    'pascal',
+    'pascal-acronym',
+    'pascal-extension',
+    'kebab',
+    'snake',
+    'upper-snake',
+    'timestamp-snake',
+] as const;
+
+export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
+
+export const CHECK_NEEDS = [
+    'build',
+    'dependencies',
+    'docker',
+    'network',
+    'project-code',
+    'python-environment',
+] as const;
+
+export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
+
+export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
+
+export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;
+
+export const GROUPS = [
+    'language',
+    'framework',
+    'platform',
+    'database',
+    'testing',
+    'infrastructure',
+    'library',
+    'general',
+] as const;
+
+export const LEVELS = ['basic', 'all'] as const;
 
 export const NAMED_CATEGORIES = [
     'schemas',
@@ -86,89 +173,39 @@ export const NAMED_CATEGORIES = [
     'path_parameters',
 ] as const;
 
-export const CASE_NAMES = [
-    'camel',
-    'camel-acronym',
-    'pascal',
-    'pascal-acronym',
-    'pascal-extension',
-    'kebab',
-    'snake',
-    'upper-snake',
-    'timestamp-snake',
-] as const;
+export const PATH_ROLES = ['source', 'destination', 'build'] as const;
+
+export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
+
+export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
+
+export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
+
+export const TOOL_KINDS = ['program', 'package'] as const;
+
+// manifest files
+
+export const CONFIGURATIONS_FOLDER = 'src/configurations';
+
+export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
 
 export const MANIFEST_FILE = 'manifest.toml';
 
 export const RULES_FOLDER = 'rules';
 
-export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
-
-export const CONFIGURATIONS_FOLDER = 'src/configurations';
-
-export const GROUPS = [
-    'language',
-    'framework',
-    'platform',
-    'database',
-    'testing',
-    'infrastructure',
-    'library',
-    'general',
-] as const;
-
-export const LEVELS = ['basic', 'all'] as const;
-
-export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
-
-export const IGNORE_COMMAND = 'gspot ignore';
-
-export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
-
-export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
-
-export const CHECK_NEEDS = [
-    'build',
-    'dependencies',
-    'docker',
-    'network',
-    'project-code',
-    'python-environment',
-] as const;
-
-export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
-
-export const TOOL_KINDS = ['program', 'package'] as const;
-
-export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
-
 export const SHIPPED_FILES_FOLDER = 'files';
 
-export const MINIMUM_VERSION_PATTERN = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
+export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
 
-export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
+// setting reasons
 
-export const INSTALLER_VERSION_MESSAGE = 'This installer needs an exact version.';
+export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
 
-export const NUMERIC_MINIMUM_MESSAGE = 'Use a numeric minimum version.';
-
-export const SHIPPED_CHECKSUM_PATTERN = /^sha256:[a-f0-9]{64}$/u;
-
-export const RULE_PLACEHOLDER = '{rule}';
+export const BOUND_REASON_DESCRIPTION =
+    'Why this code needs a weaker bound than the default; required when you weaken it.';
 
 export const REASON_DESCRIPTIONS = {
     raising: 'Why this code needs more than the default; required when you raise the value.',
     lowering: 'Why this code needs less than the default; required when you lower the value.',
     adding: 'Why these entries belong; required when you add an entry.',
 } as const;
-
-export const BOUND_REASON_DESCRIPTION =
-    'Why this code needs a weaker bound than the default; required when you weaken it.';
-
-export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
-
-export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
-
-export const PATH_ROLES = ['source', 'destination', 'build'] as const;
-
-export const SHEBANG_TAG = 'shebang:';

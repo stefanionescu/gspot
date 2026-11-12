@@ -1,4 +1,3 @@
-import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import {
     BANNED_WORD_FORMS,
     CAMEL_ACRONYM_WORD,
@@ -8,10 +7,10 @@ import {
     DIGITS_ONLY,
     LAST_EXTENSION,
     LOWER_WORD,
+    NAMING_RULES,
     PASCAL_ACRONYM_WORD,
     PASCAL_WORD,
     RUFF_CATEGORIES,
-    RULES,
     SILENT_E,
     SWIFTLINT_CATEGORIES,
     TEST_WORD_LIST,
@@ -21,6 +20,7 @@ import {
     WORD_FORM_CONSONANT,
     WORD_FORM_SUFFIXES,
 } from '#cli/config/configurations/naming.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { NUMERIC_WORDS } from '#cli/config/system.ts';
 import { formatNameList, splitWords } from '#cli/system/text.ts';
 import type {
@@ -99,7 +99,7 @@ function validateCase(checked: CheckedIdentifier, name: string, limits: Category
         ? undefined
         : {
               ...checked.place,
-              rule: RULES.case,
+              rule: NAMING_RULES.case,
               message: `${checked.prefix}expected ${formatNameList(limits.cases, 'disjunction')} case.`,
           };
 }
@@ -112,7 +112,7 @@ function validateDigits(checked: CheckedIdentifier, words: string[], exceptions:
         return undefined;
     return {
         ...checked.place,
-        rule: RULES.digits,
+        rule: NAMING_RULES.digits,
         message: `${checked.prefix}a digit is not a word.`,
     };
 }
@@ -121,7 +121,7 @@ function validateLength(checked: CheckedIdentifier, name: string, limits: Catego
     if (limits.maxCharacters <= 0 || name.length <= limits.maxCharacters) return undefined;
     return {
         ...checked.place,
-        rule: RULES.length,
+        rule: NAMING_RULES.length,
         message: `${checked.prefix}${String(name.length)} characters is over the limit of ${String(limits.maxCharacters)}.`,
     };
 }
@@ -130,7 +130,7 @@ function validateWordCount(checked: CheckedIdentifier, words: string[], limits: 
     if (limits.maxWords <= 0 || words.length <= limits.maxWords) return undefined;
     return {
         ...checked.place,
-        rule: RULES.words,
+        rule: NAMING_RULES.words,
         message: `${checked.prefix}${String(words.length)} words is over the limit of ${String(limits.maxWords)}.`,
     };
 }
@@ -142,7 +142,7 @@ function validateRepeatedWords(checked: CheckedIdentifier, words: string[], exce
         ? undefined
         : {
               ...checked.place,
-              rule: RULES.duplicateWords,
+              rule: NAMING_RULES.duplicateWords,
               message: `${checked.prefix}"${repeated}" repeats.`,
           };
 }
@@ -193,7 +193,7 @@ function validateBannedWords(checked: CheckedIdentifier, nameWords: string[]): C
     const advice = banned.replacement === undefined ? '' : ` Use "${banned.replacement}".`;
     return {
         ...checked.place,
-        rule: RULES.bannedWord,
+        rule: NAMING_RULES.bannedWord,
         message: `${checked.prefix}"${banned.word}" is banned (${banned.setting}).${advice}`,
     };
 }

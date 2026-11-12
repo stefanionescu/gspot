@@ -4,8 +4,8 @@ import {
     readConfigurationEditContext,
     writeSettingsEdit,
 } from '#cli/commands/edits.ts';
-import { GSPOT_REMOVE } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { GSPOT_REMOVE } from '#cli/config/manifests.ts';
 import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { findRequirementChain, formatRequiredRemoval } from '#cli/manifests/select.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';

@@ -1,8 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { CODE_LANGUAGES } from '#cli/config/configurations/eslint/blocks.ts';
-import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
-import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { COMPONENT_CONFIGURATIONS, MISE_TASKS_GLOB } from '#cli/config/configurations/javascript/eslint-config.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';

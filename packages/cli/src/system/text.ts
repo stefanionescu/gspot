@@ -1,6 +1,9 @@
 import { splitByCase } from 'scule';
 
 import {
+    CONFLICT_END,
+    CONFLICT_SEPARATOR,
+    CONFLICT_START,
     DIGIT_BOUNDARY,
     LIST_LIMIT,
     MILLISECONDS_PER_SECOND,
@@ -15,12 +18,6 @@ import {
     WORD_SEPARATORS,
 } from '#cli/config/system.ts';
 import type { TextPosition, TextRange } from '#cli/types/system.ts';
-
-const CONFLICT_START = /^<{7}(?: |$)/u;
-
-const CONFLICT_SEPARATOR = /^={7}(?: |$)/u;
-
-const CONFLICT_END = /^>{7}(?: |$)/u;
 
 function measureEditDistance(from: string, to: string): number {
     const targets = [...to];

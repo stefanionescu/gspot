@@ -4,6 +4,7 @@ import {
     CI_LABEL,
     DETECTION_GAP_WIDTH,
     DETECTION_LABEL_WIDTH,
+    GROUP_LABELS,
     HOOKS_LABEL,
     LEAVES_LABEL,
     LINT_FOLDERS_LABEL,
@@ -13,8 +14,7 @@ import {
     PROJECT_FILE_NOTE,
     REPLACES_LABEL,
     UNCHECKED_FILES_SHOWN,
-} from '#cli/config/commands/edits.ts';
-import { GROUP_LABELS } from '#cli/config/generation/files.ts';
+} from '#cli/config/commands/setup.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { extractExtension } from '#cli/system/paths.ts';

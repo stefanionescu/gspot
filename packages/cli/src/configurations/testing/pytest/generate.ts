@@ -1,4 +1,4 @@
-import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/framework.ts';
+import { NON_PYTHON_TEST_PATTERNS } from '#cli/config/configurations/python.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildCoverageFile(planned: PlannedConfig): string {

@@ -1,4 +1,3 @@
-import { REACT_FILES } from '#cli/config/configurations/framework.ts';
 import {
     NEXT_PACKAGE,
     NEXT_PAGES_FOLDERS,
@@ -6,6 +5,7 @@ import {
     NEXT_RULES,
     NEXT_SERVER_FILES,
 } from '#cli/config/configurations/nextjs.ts';
+import { REACT_FILES } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
 import {

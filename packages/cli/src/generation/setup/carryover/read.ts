@@ -5,14 +5,15 @@ import { RUFF_CHECK } from '#cli/config/configurations/python.ts';
 import {
     CARRIED_TOOLS,
     CARRYOVER_ROW_START,
-    COMMITLINT_CHECK_ID,
+    COMMITLINT_CHECK,
     COMMITLINT_CONFIG_PATH,
     COMMITLINT_TARGET,
     EDITORCONFIG_FILE,
+    EDITORCONFIG_WORDS,
     EMPTY_CARRYOVER,
     IGNORE_REASON_START,
     MARKDOWNLINT_ALIASES,
-    MARKDOWNLINT_CHECK_ID,
+    MARKDOWNLINT_CHECK,
     MARKDOWNLINT_CONFIG_FILES,
     MARKDOWNLINT_RETIRED_RULES,
     MARKDOWNLINT_RUNNER_FILE,
@@ -25,6 +26,7 @@ import {
     RUFF_STYLE_KEYS,
     SCAN_FIRST_MESSAGE,
     UNREAD_CONFIG_MESSAGE,
+    UNREAD_TYPOS_MESSAGE,
     UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/generation/setup.ts';
 import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
@@ -62,17 +64,6 @@ import type {
     RuleTable,
     ToolCarryoverInput,
 } from '#cli/types/generation.ts';
-
-const UNREAD_TYPOS_MESSAGE =
-    'its words and settings; keep a word with gspot set spelling.allowed_words <word> --reason "<why>"';
-
-const EDITORCONFIG_WORDS: Readonly<Record<string, string>> = {
-    tabWidth: 'indent_size',
-    printWidth: 'max_line_length',
-    useTabs: 'indent_style',
-    singleQuote: 'quote_type',
-    [PRETTIER_OVERRIDES_KEY]: 'sections',
-};
 
 function readRuffCarryover(input: CarryoverInput): CarryoverSection {
     const { repository, tools, session } = input;
@@ -172,14 +163,14 @@ function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInpu
             .map(([rule, value]) => [rule, convertRule(value, false)]),
     );
     const compared = compareRules({
-        check: MARKDOWNLINT_CHECK_ID,
+        check: MARKDOWNLINT_CHECK,
         user,
         lookup: (rule) =>
             MARKDOWNLINT_RETIRED_RULES.has(rule) ? undefined : convertRule(document[rule] ?? true, false),
     });
     return buildToolCarryover({
         setting: 'markdownlint',
-        check: MARKDOWNLINT_CHECK_ID,
+        check: MARKDOWNLINT_CHECK,
         tool: 'markdownlint-cli2',
         path: found.path,
         compared,
@@ -201,13 +192,13 @@ async function readCommitlintCarryover({ repository, session, tools }: Carryover
     if (user === undefined) return EMPTY_CARRYOVER;
     const shipped = parseGeneratedConfig(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
     const compared = compareRules({
-        check: COMMITLINT_CHECK_ID,
+        check: COMMITLINT_CHECK,
         user,
         lookup: (rule) => (shipped[rule] === undefined ? undefined : convertRule(shipped[rule], true)),
     });
     return buildToolCarryover({
         setting: 'commitlint',
-        check: COMMITLINT_CHECK_ID,
+        check: COMMITLINT_CHECK,
         tool: 'commitlint',
         path: config.path,
         compared,

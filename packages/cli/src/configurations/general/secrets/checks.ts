@@ -4,9 +4,13 @@ import {
     ENV_KEY_LINE,
     ENVIRONMENT_DEFAULT_RULE,
     ENVIRONMENT_READ_LANGUAGES,
+    GITLEAKS_FILES_MODE,
+    GITLEAKS_GIT_MODE,
     GITLEAKS_LOG_FLAG,
     GITLEAKS_LOG_OPTIONS,
+    GITLEAKS_STAGED_FLAG,
     MISSING_KEY_RULE,
+    ROOT_PLACEHOLDER,
     SECRET_KEY_NAME,
 } from '#cli/config/configurations/general.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
@@ -35,14 +39,6 @@ import {
 } from '#cli/types/engine/run.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const GITLEAKS_GIT_MODE = 'git';
-
-const GITLEAKS_FILES_MODE = 'dir';
-
-const GITLEAKS_STAGED_FLAG = '--staged';
-
-const ROOT_PLACEHOLDER = '{root}';
 
 const ENVIRONMENT_READS_KEY = Symbol('environment reads');
 

@@ -5,13 +5,13 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, type TestdirResult } from 'testdirs';
 
-import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/edits.ts';
+import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import * as processes from '#cli/system/processes.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { FAILED_NPM_VERSION } from '#tests/config/commands/reports.ts';
+import { FAILED_NPM_VERSION } from '#tests/config/commands/setup.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';

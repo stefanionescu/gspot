@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript.ts';
+import { PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript/eslint-config.ts';
 import { ASTRO_BLOCK_BUILDERS } from '#cli/configurations/framework/astro/generate.ts';
 import { NESTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nestjs/generate.ts';
 import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/generate.ts';

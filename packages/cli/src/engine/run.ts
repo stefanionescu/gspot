@@ -6,15 +6,17 @@ import pLimit from 'p-limit';
 
 import {
     CANCELED_CHECK_NOTE,
-    CHECK_COMMAND,
     DOCKER_DAEMON_NOTE,
     DOCKER_MISSING_MESSAGE,
     DOCKER_TOOL,
     FAILED_STATUSES,
     FIX_FLAG,
+    GSPOT_CHECK_PREFIX,
+    ONLY_FLAG,
     PROGRESS_INTERVAL_MILLISECONDS,
     RAN_STATUSES,
 } from '#cli/config/engine.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
 import { assertShippedCheck, isActive, planChecks } from '#cli/engine/plan.ts';
@@ -49,8 +51,6 @@ import type { Session } from '#cli/types/tools.ts';
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 
 const WRITTEN_FILES = Symbol('written files');
-
-const GSPOT_CHECK_PREFIX = 'gspot/';
 
 async function findMissingDocker(
     session: CheckSession,
@@ -168,7 +168,7 @@ function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCo
     const conflicted = new Set(listConflictedPaths(session.root, fixable));
     const files = new Set(fixable.filter((file) => !conflicted.has(file)));
     if (files.size === 0) return {};
-    const command = [CHECK_COMMAND, FIX_FLAG, '--only', quoteArgument(result.check)];
+    const command = [GSPOT_CHECK, FIX_FLAG, ONLY_FLAG, quoteArgument(result.check)];
     const isEveryFileChecked = options.paths === undefined && options.selection?.paths === undefined;
     if (isEveryFileChecked && result.findings.every(({ file }) => files.has(file)))
         return { fixCommand: command.join(' ') };

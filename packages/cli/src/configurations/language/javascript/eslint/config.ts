@@ -1,15 +1,17 @@
 import { basename, dirname, join, relative } from 'node:path/posix';
 
-import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/eslint/blocks.ts';
+import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import {
     BOUNDARIES_PLUGIN_PACKAGE,
     CONFIGURATION_BLOCKS_SUFFIX,
     ESLINT_CONFIG_API,
+    ESLINT_FIXES_FILE,
     ESLINT_FUNCTIONS_FILE,
     ESLINT_NAMED_IMPORTS,
     ESLINT_PLUGIN_PACKAGES,
     LEVEL_ALL_PLUGIN_PACKAGE,
-} from '#cli/config/configurations/javascript.ts';
+    UNICORN_PLUGIN_PACKAGE,
+} from '#cli/config/configurations/javascript/eslint-config.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
@@ -25,10 +27,6 @@ import type { BlockWriter, EslintFileWriter, PlannedEslintBlock } from '#cli/typ
 import type { ConfigBuilder, ConfigOutput, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { GeneratedFile } from '#cli/types/tools.ts';
-
-const UNICORN_PLUGIN_PACKAGE = 'eslint-plugin-unicorn';
-
-const ESLINT_FIXES_FILE = 'fixes.mjs';
 
 function serializeImports(
     { functions, packages, modules, constants }: EslintFileWriter,

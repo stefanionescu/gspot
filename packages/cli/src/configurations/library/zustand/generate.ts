@@ -1,4 +1,4 @@
-import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/configurations/framework.ts';
+import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/configurations/library.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import {
     type ConfigurationBlocks,

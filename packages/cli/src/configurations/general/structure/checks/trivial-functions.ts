@@ -2,7 +2,7 @@ import { basename } from 'node:path';
 
 import type { Node } from 'web-tree-sitter';
 
-import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/bash.ts';
+import { BASH_SOURCE_COMMANDS, PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
 import {
     BARE_NAME_NODES,
     BASH_COMMAND_NODES,
@@ -10,9 +10,9 @@ import {
     DECORATED_PYTHON_NODE,
     FORWARDING_NODES,
     FUNCTION_LABEL,
+    LANGUAGE_NAME_NODES,
     ONE_STATEMENT,
     PYTHON_EXPORT_LIST,
-    PYTHON_PACKAGE_FILE,
     SWIFT_ACCESSOR_NODES,
     SWIFT_ACCESSOR_OWNERS,
     SWIFT_FUNCTION_LABELS,
@@ -28,19 +28,10 @@ import { isDocstring } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { ParsedLanguage, ParsedSource } from '#cli/types/configurations/general.ts';
+import type { ParsedLanguage, ParsedSource, TrivialFunction } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-type TrivialFunction = { finding: CheckFinding; key?: string };
-
-// The syntax node of a name in a call, a reference, or a definition; a Bash function runs as a command word.
-const NAME_NODES: Readonly<Record<ParsedLanguage, string>> = {
-    python: 'identifier',
-    swift: 'simple_identifier',
-    bash: 'word',
-};
 
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;
@@ -195,7 +186,7 @@ async function countNameUses(
         const definitions = new Set(
             (source.captures.get(FUNCTION_LABEL) ?? []).map((node) => node.childForFieldName('name')?.id),
         );
-        const nameNodes = source.rootNode.descendantsOfType(NAME_NODES[source.language]);
+        const nameNodes = source.rootNode.descendantsOfType(LANGUAGE_NAME_NODES[source.language]);
         for (const node of nameNodes) {
             const key = `${source.language} ${node.text}`;
             if (keys.has(key) && !definitions.has(node.id) && !isImportedName(node))

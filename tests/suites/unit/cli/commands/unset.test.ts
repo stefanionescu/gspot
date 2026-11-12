@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation/files.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/commands/edits.ts';
 import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
 import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';

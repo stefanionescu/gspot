@@ -3,7 +3,7 @@ import {
     GSPOT_RULES,
     WEAKENING_FIXES,
     WEAKENING_RULES,
-} from '#cli/config/configurations/structure.ts';
+} from '#cli/config/configurations/gspot.ts';
 import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 export const WEAKENING_EXPLANATIONS = {

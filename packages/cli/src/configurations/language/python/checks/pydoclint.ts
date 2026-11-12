@@ -6,6 +6,8 @@ import {
     PYDOCLINT_DEFAULT_STYLE,
     PYDOCLINT_STYLE_FLAG,
     PYDOCLINT_TYPE_OPTIONS,
+    RAISES_MISMATCH_HELP,
+    RAISES_MISMATCH_RULE,
 } from '#cli/config/configurations/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
@@ -20,11 +22,6 @@ import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Level } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const RAISES_MISMATCH_RULE = 'DOC503';
-
-const RAISES_MISMATCH_HELP =
-    'Under `Raises:`, list each name that the finding prints for the body. pydoclint reads the name that follows `raise`, so for `raise build_error(...)` or `raise error` it expects the function or the variable, not the exception class.';
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
     const module = await parsePythonModule(path, readText(session.cache, path), session);

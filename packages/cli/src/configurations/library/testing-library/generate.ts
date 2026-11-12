@@ -3,7 +3,7 @@ import {
     TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_SCOPE,
     TESTING_LIBRARY_SETTINGS,
-} from '#cli/config/configurations/framework.ts';
+} from '#cli/config/configurations/library.ts';
 import {
     type ConfigurationBlocks,
     type EslintBlockBuilder,

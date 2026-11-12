@@ -7,7 +7,6 @@ import {
     EDITORCONFIG_COMMENT,
     EDITORCONFIG_FILE,
     EDITORCONFIG_SECTION,
-    FORMAT_CONFIGURATION,
     FORMATTER_DEFAULTS,
     PRETTIER_DEFAULTS,
     PRETTIER_FILE_FORMATS,
@@ -20,6 +19,7 @@ import {
     UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/generation/setup.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { FORMAT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { detectScriptIndent, SCRIPT_FILES } from '#cli/generation/setup/script-indent.ts';
 import { getTool } from '#cli/manifests/read.ts';

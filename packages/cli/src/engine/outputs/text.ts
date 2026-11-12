@@ -2,15 +2,13 @@ import { realpathSync } from 'node:fs';
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
+import { FILE_LINK, LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 import type { CheckOutput } from '#cli/types/manifests.ts';
-
-const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];

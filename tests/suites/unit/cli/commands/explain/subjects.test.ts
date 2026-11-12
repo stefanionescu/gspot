@@ -11,7 +11,7 @@ import {
     PATH_IGNORES,
     SYNTAX_CHECK_TABLES,
     UNKNOWN_SUBJECT_CASES,
-} from '#tests/config/commands/reports.ts';
+} from '#tests/config/commands/lookup.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { pathOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';

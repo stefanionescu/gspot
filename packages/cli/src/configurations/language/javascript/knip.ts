@@ -8,10 +8,9 @@ import {
     KNIP_JAVASCRIPT_ENTRY_FILES,
     PACKAGE_RUNNERS,
     UNQUOTED_COMMENT,
-} from '#cli/config/configurations/javascript.ts';
-import { COMMAND_SEPARATORS } from '#cli/config/repository/setup.ts';
+} from '#cli/config/configurations/javascript/tools.ts';
+import { COMMAND_SEPARATORS, MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';

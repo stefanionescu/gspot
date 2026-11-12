@@ -8,7 +8,6 @@ import {
     CI_BASE_VARIABLE,
     CI_CHECK_COMMAND,
     CI_DIFF_LINES,
-    CI_INSTALL_COMMAND,
     CI_JOB_NAME,
     CI_PACKAGE_RUNNER,
     CI_STEP_NAMES,
@@ -27,6 +26,7 @@ import {
     GITLAB_VARIABLES,
     GITLAB_WORKFLOW,
 } from '#cli/config/generation/files.ts';
+import { GSPOT_INSTALL } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
@@ -97,7 +97,7 @@ function buildJob(
             ...(pipeline.projectInstall.length === 0
                 ? []
                 : [{ name: CI_STEP_NAMES.projectInstall, run: pipeline.projectInstall.join('\n') }]),
-            { name: CI_STEP_NAMES.install, run: [CI_INSTALL_COMMAND, ...CI_DIFF_LINES.github].join('\n') },
+            { name: CI_STEP_NAMES.install, run: [GSPOT_INSTALL, ...CI_DIFF_LINES.github].join('\n') },
             {
                 name: CI_STEP_NAMES.check,
                 env: { [CI_BASE_VARIABLE]: GITHUB_BASE_EXPRESSION },
@@ -197,7 +197,7 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
             variables: GITLAB_VARIABLES,
             cache: GITLAB_CACHE,
             rules: GITLAB_RULES,
-            script: [STRICT_MODE, ...install, ...setup, CI_INSTALL_COMMAND, ...CI_DIFF_LINES.gitlab, check],
+            script: [STRICT_MODE, ...install, ...setup, GSPOT_INSTALL, ...CI_DIFF_LINES.gitlab, check],
         },
     });
     return { path: GITLAB_WORKFLOW, content: `${formatHeader(GITLAB_WORKFLOW)}${content}` };

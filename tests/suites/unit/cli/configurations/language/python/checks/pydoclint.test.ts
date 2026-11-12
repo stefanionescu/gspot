@@ -5,7 +5,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { EXECUTABLE_FILE } from '#cli/config/repository/files.ts';
+import { EXECUTABLE_FILE } from '#cli/config/system.ts';
 import { CHECK_CODE } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';

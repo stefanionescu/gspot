@@ -1,18 +1,15 @@
 import { readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
+import {
+    EMPTY_FOLDER_RULE,
+    NO_EMPTY_FOLDERS_FLAG,
+    PLACEHOLDER_FILES,
+    UNTRACKED_FOLDERS_ARGUMENTS,
+} from '#cli/config/configurations/structure.ts';
 import { readGitPaths } from '#cli/repository/git/run.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-
-const EMPTY_FOLDER_RULE = 'empty-folder';
-
-const PLACEHOLDER_FILES: ReadonlySet<string> = new Set(['.gitkeep', '.keep']);
-
-// Git lists a folder with untracked files under both forms of this command, and an empty one only without the flag.
-const UNTRACKED_FOLDERS_ARGUMENTS = ['ls-files', '--others', '--directory', '--exclude-standard', '-z'] as const;
-
-const NO_EMPTY_FOLDERS_FLAG = '--no-empty-directory';
 
 async function listEmptyFolders({ toolsRoot, cancelSignal }: CheckSession): Promise<CheckFinding[]> {
     const options = { cancelSignal };

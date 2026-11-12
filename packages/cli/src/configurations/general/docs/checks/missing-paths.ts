@@ -17,6 +17,7 @@ import {
     RELATIVE_PATH_PREFIXES,
     REMOTE_ARGUMENTS,
     RUN_COMMAND,
+    TASK_FILE,
     TITLE_ATTRIBUTE,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
@@ -25,7 +26,8 @@ import { MISE_FILES } from '#cli/config/configurations/general.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { MISE_TASK_FOLDERS, TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
+import { TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
@@ -45,8 +47,6 @@ import type { PathIndex, ProseLine, TaskNames } from '#cli/types/configurations/
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(?:^|\/)\.?mise(?:-tasks)?\//u;
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];

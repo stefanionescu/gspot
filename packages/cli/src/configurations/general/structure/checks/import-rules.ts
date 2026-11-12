@@ -2,14 +2,11 @@ import { posix } from 'node:path';
 
 import type { Node } from 'web-tree-sitter';
 
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
-import { PYTHON_CONFIGURATION } from '#cli/config/configurations/python.ts';
+import { ESLINT_SETTINGS_TABLE, IMPORT_RULE_CATEGORY, NODE_SHEBANG_TAG } from '#cli/config/configurations/shared.ts';
 import {
     CONFIG_PATTERNS,
-    IMPORT_RULE_CATEGORY,
     IMPORT_RULE_CHECK_RULES,
     IMPORT_RULE_EXTENSIONS,
-    NODE_SHEBANG_TAG,
     PYTHON_EXTENSIONS,
     PYTHON_FROM_STATEMENT,
     PYTHON_IMPORT_STATEMENT,
@@ -19,7 +16,7 @@ import {
     UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
-import { SWIFT_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { PYTHON_CONFIGURATION, SWIFT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';

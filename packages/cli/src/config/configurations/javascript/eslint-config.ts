@@ -1,7 +1,18 @@
-import { REACT_FILES, REACT_RULES } from '#cli/config/configurations/framework.ts';
+import { REACT_FILES } from '#cli/config/configurations/shared.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
 import type { PluginRuleBlock } from '#cli/types/configurations/javascript.ts';
 
-export const TSC_UNFORMATTED_OUTPUT = ['--pretty', 'false'] as const;
+// eslint config
+
+export const BOUNDARIES_PLUGIN_PACKAGE = 'eslint-plugin-boundaries';
+
+export const CONFIGURATION_BLOCKS_SUFFIX = 'Blocks';
+
+export const ESLINT_CONFIG_API = 'eslint/config';
+
+export const ESLINT_FIXES_FILE = 'fixes.mjs';
+
+export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
 
 export const ESLINT_PLUGIN_PACKAGES = [
     '@gspothq/eslint-plugin',
@@ -14,39 +25,31 @@ export const ESLINT_PLUGIN_PACKAGES = [
 
 export const LEVEL_ALL_PLUGIN_PACKAGE = 'eslint-plugin-perfectionist';
 
-export const BOUNDARIES_PLUGIN_PACKAGE = 'eslint-plugin-boundaries';
+export const UNICORN_PLUGIN_PACKAGE = 'eslint-plugin-unicorn';
 
-export const ESLINT_FUNCTIONS_FILE = 'functions.mjs';
+// eslint block-calls
 
-export const CONFIGURATION_BLOCKS_SUFFIX = 'Blocks';
-
-export const PACKAGE_SCOPE_MARK = /^@/u;
-
-export const NAME_SEPARATOR = /[-/.](?<letter>[a-z0-9])/gu;
-
-export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
-
-export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
+export const ESLINT_NAMED_IMPORTS: Readonly<Record<string, string | undefined>> = {
+    'eslint-import-resolver-typescript': 'createTypeScriptImportResolver',
+    [ESLINT_CONFIG_API]: 'defineConfig',
+};
 
 export const ESLINT_PACKAGE_IMPORTERS: Readonly<Record<string, string | undefined>> = {
     'eslint-plugin-astro': 'importAstroPlugin',
     'svelte-eslint-parser': 'importSvelteParser',
 };
 
+export const ESLINT_RUNTIMES_CONSTANT = 'runtimeDeclarations';
+
+export const NAME_SEPARATOR = /[-/.](?<letter>[a-z0-9])/gu;
+
+export const PACKAGE_SCOPE_MARK = /^@/u;
+
 export const SHARED_LIST_MARK = '@shared:';
 
 export const SHARED_LIST_REFERENCE = /"@shared:(?<name>\w+)"/gu;
 
-export const ESLINT_RUNTIMES_CONSTANT = 'runtimeDeclarations';
-
-export const BOUNDARY_FOLDERS_CONSTANT = 'importBoundaryFolders';
-
-export const ESLINT_CONFIG_API = 'eslint/config';
-
-export const ESLINT_NAMED_IMPORTS: Readonly<Record<string, string | undefined>> = {
-    'eslint-import-resolver-typescript': 'createTypeScriptImportResolver',
-    [ESLINT_CONFIG_API]: 'defineConfig',
-};
+// eslint configurations block
 
 const EXPO_RULES = {
     'expo/no-env-var-destructuring': 'error',
@@ -56,21 +59,6 @@ const EXPO_RULES = {
 } as const;
 
 const EXPRESS_RULES = { 'security/detect-no-csrf-before-method-override': 'error' } as const;
-
-const REACT_NATIVE_RULES = {
-    '@react-native/platform-colors': 'error',
-    '@react-native/no-deep-imports': 'error',
-} as const;
-
-const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
-
-const ZOD_RULES = {
-    'zod/consistent-import': ['error', { syntax: 'named' }],
-    'zod/prefer-strict-object': 'error',
-    'zod/prefer-meta-last': 'error',
-} as const;
-
-const JSX_FILES = ['**/*.{jsx,tsx}'] as const;
 
 const JEST_GLOBAL_PACKAGE = '@jest/globals';
 
@@ -86,6 +74,21 @@ const JEST_RULE_NAMES = [
     'valid-title',
 ];
 
+const JSX_FILES = ['**/*.{jsx,tsx}'] as const;
+
+const REACT_NATIVE_RULES = {
+    '@react-native/platform-colors': 'error',
+    '@react-native/no-deep-imports': 'error',
+} as const;
+
+const REACT_RULES = {
+    '@eslint-react/no-missing-component-display-name': 'error',
+    '@eslint-react/no-array-index-key': 'error',
+    '@eslint-react/dom-no-dangerously-set-innerhtml': 'error',
+    '@eslint-react/no-unstable-context-value': 'error',
+    '@eslint-react/no-unstable-default-props': 'error',
+} as const;
+
 const TEST_RULE_NAMES = [
     'no-focused-tests',
     'no-disabled-tests',
@@ -99,6 +102,8 @@ const TEST_RULE_NAMES = [
     'prefer-strict-equal',
 ] as const;
 
+const TRANSLATIONS_RULES = { 'i18next/no-literal-string': ['error', { mode: 'jsx-text-only' }] } as const;
+
 export const VAGUE_TEST_TITLE_WORDS = [
     'works',
     'happy path',
@@ -111,6 +116,12 @@ export const VAGUE_TEST_TITLE_WORDS = [
     'deprecated',
     'legacy',
 ] as const;
+
+const ZOD_RULES = {
+    'zod/consistent-import': ['error', { syntax: 'named' }],
+    'zod/prefer-strict-object': 'error',
+    'zod/prefer-meta-last': 'error',
+} as const;
 
 export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     jest: {
@@ -179,73 +190,22 @@ export const PLUGIN_RULE_BLOCKS: Readonly<Record<string, PluginRuleBlock>> = {
     },
 };
 
-export const COMMONJS_FILES = '**/*.{cjs,cts}';
+// eslint files
 
-export const TYPELESS_JAVASCRIPT_FILES = '**/*.{js,jsx}';
+export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
+
+export const MISE_TASKS_GLOB = `{${MISE_TASK_FOLDERS.join(',')}}/**`;
+
+// eslint plan
+
+export const BOUNDARY_FOLDERS_CONSTANT = 'importBoundaryFolders';
+
+// eslint runtimes
+
+export const COMMONJS_FILES = '**/*.{cjs,cts}';
 
 export const COMMONJS_PACKAGE_TYPE = 'commonjs';
 
 export const ESLINT_BROWSER_CONFIGURATIONS = ['react', 'vue', 'svelte'] as const;
 
-export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
-
-export const JAVASCRIPT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx'] as const;
-
-export const JAVASCRIPT_IGNORED_GLOBS = [
-    '**/eslint.config.mjs',
-    '**/eslint.config.js',
-    '**/eslint.config.cjs',
-] as const;
-
-export const STANDALONE_OPTIONS = {
-    target: 'ES2022',
-    module: 'NodeNext',
-    moduleResolution: 'NodeNext',
-    jsx: 'preserve',
-    resolveJsonModule: true,
-} as const;
-
-export const JAVASCRIPT_OPTIONS = {
-    checkJs: true,
-    strict: true,
-    allowImportingTsExtensions: true,
-    maxNodeModuleJsDepth: 0,
-} as const;
-
-export const SOURCE_SELECTION_FIELDS = ['files', 'include'] as const;
-
-export const KNIP_JAVASCRIPT_ENTRY_FILES = [
-    '{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}',
-    'src/{index,cli,main}.{js,mjs,cjs,jsx,ts,tsx,mts,cts}',
-] as const;
-
-export const HIDDEN_FILE_GLOB = /^\.[^.]+(?:\.\*)?$/u;
-
-export const KNIP_IGNORED_DEPENDENCIES = ['@gspothq/cli'] as const;
-
-export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
-    bunx: [],
-    npx: [],
-    bun: ['x'],
-    npm: ['exec'],
-    pnpm: ['exec', 'dlx'],
-    yarn: ['exec', 'dlx'],
-};
-
-export const KNIP_ESLINT_CONFIG = 'eslint.config.mjs';
-
-export const KNIP_CHECK = 'javascript/knip';
-
-export const BIOME_TYPESCRIPT_FILES = ['**/*.{ts,tsx,mts,cts,astro,vue,svelte}'];
-
-export const UNQUOTED_COMMENT = /('[^']*'|"(?:[^"\\]|\\.)*")|(?<![^\s;&|()])#.*/gu;
-
-export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p'] as const;
-
-export const JSCONFIG_TSBUILDINFO = 'jsconfig.check.tsbuildinfo';
-
-export const LOCAL_PATH_PREFIX = './';
-
-export const PATHS_BASE_OPTION = 'pathsBasePath';
-
-export const IMPORT_CONDITIONS = new Set(['node', 'import', 'default']);
+export const TYPELESS_JAVASCRIPT_FILES = '**/*.{js,jsx}';

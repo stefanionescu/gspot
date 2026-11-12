@@ -14,6 +14,7 @@ import {
     LINT_STAGED_KEY,
     MISE_RUNNER,
     MISE_TASK_FOLDER,
+    MISE_TASKS_KEY,
     OTHER_FORMATTER_MESSAGE,
     OVERLAPPING_TOOLS,
     PRE_COMMIT_TOOL,
@@ -23,6 +24,7 @@ import {
     RUNNER_NAMES,
     SIMPLE_GIT_HOOKS_KEY,
     TASK_AFTER_RUN,
+    TASK_NAME_SEPARATOR,
     YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
@@ -41,10 +43,6 @@ import type {
     LintCommandPlace,
     LintCommandSearch,
 } from '#cli/types/repository.ts';
-
-const MISE_TASKS_KEY = 'tasks';
-
-const TASK_NAME_SEPARATOR = ':';
 
 function findCalledTool(command: string, search: CommandSearch, seen = new Set<string>()): string | undefined {
     const words = command

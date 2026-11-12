@@ -7,14 +7,22 @@ import {
     GIT_HASH_EXISTS_ARGUMENTS,
     GIT_LOCAL_BRANCHES_ARGUMENTS,
     GIT_MERGE_BASE_ARGUMENTS,
+    GIT_NO_OPTIONAL_LOCKS,
     GIT_REF_NAME_ARGUMENTS,
     GIT_REMOTE_HEADS_ARGUMENTS,
+    GIT_STATUS_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
     HASH_PATTERN,
     ORIGIN_REMOTE,
+    REMOTE_HEAD,
     REMOTE_HEAD_FIELD_COUNT,
+    REMOTE_HEAD_HELP,
     REMOTES_PREFIX,
+    SHALLOW_CLONE_HELP,
+    STATUS_PATH_START,
+    UNCHANGED_STATUS,
+    UNTRACKED_STATUS,
 } from '#cli/config/repository/git.ts';
 import { decodeGitPath } from '#cli/repository/git/output.ts';
 import {
@@ -30,33 +38,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { ChangedPaths, MergeBase, TreeStatus } from '#cli/types/repository.ts';
-
-// Git opens a submodule only to find dirty content, which no check reads, and that step fails on a gitlink path that
-// is a link. The recorded commit of a submodule still counts.
-const GIT_STATUS_ARGUMENTS = [
-    'status',
-    '--porcelain=v1',
-    '-z',
-    '--no-renames',
-    '--untracked-files=all',
-    '--ignore-submodules=dirty',
-] as const;
-
-const GIT_NO_OPTIONAL_LOCKS = { GIT_OPTIONAL_LOCKS: '0' } as const;
-
-const SHALLOW_CLONE_HELP =
-    ' This clone is shallow and lacks older commits. Fetch the full history with git fetch --unshallow, or set the fetch depth of the checkout to 0.';
-
-const STATUS_PATH_START = 3;
-
-const UNCHANGED_STATUS = ' ';
-
-const UNTRACKED_STATUS = '?';
-
-const REMOTE_HEAD = 'origin/HEAD';
-
-const REMOTE_HEAD_HELP =
-    ' A clone sets origin/HEAD, and git remote add does not, so run git remote set-head origin --auto. Before the first push to an empty remote, that command fails, so run gspot check --only push.';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (HASH_PATTERN.test(compared)) {

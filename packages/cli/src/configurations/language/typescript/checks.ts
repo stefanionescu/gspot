@@ -1,14 +1,14 @@
 import { join, posix, relative } from 'node:path';
 
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { PARENT_TSCONFIG_SKIP, TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import {
     MISSING_TSCONFIG_HELP,
     MISSING_TSCONFIG_MESSAGE,
     MISSING_TSCONFIG_RULE,
     OPTION_HELP,
-    PARENT_TSCONFIG_SKIP,
     STRICT_FAMILY_OPTIONS,
     TSCONFIG_NAME,
+    UNREADABLE_TSCONFIG_HELP,
     UNREADABLE_TSCONFIG_RULE,
 } from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
@@ -19,15 +19,10 @@ import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfi
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { TsconfigProject } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-type TsconfigProject = { path: string; parsed: ParsedTsconfig };
-
-const UNREADABLE_TSCONFIG_HELP =
-    'Install the package that the tsconfig extends, or correct the file. For a template that nobody installs, run gspot ignore typescript/tsconfig with its paths and a reason.';
 
 function listUnreadableTsconfigs(session: Session, planned: PlannedCheck): CheckFinding[] {
     const paths = new Set([

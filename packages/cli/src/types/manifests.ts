@@ -73,3 +73,5 @@ export type Setting = {
     description: string;
     languages?: readonly string[];
 };
+
+export type RequirementWalk = { errors: string[]; order: Configuration[]; seen: Set<string> };

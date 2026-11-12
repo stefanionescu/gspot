@@ -1,8 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/validation.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { GspotError } from '#cli/system/errors.ts';

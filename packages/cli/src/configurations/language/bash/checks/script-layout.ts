@@ -1,6 +1,5 @@
 import {
     BASH_SHEBANGS,
-    BASH_SOURCE_COMMANDS,
     EXECUTABLE_BIT_MESSAGE,
     LIBRARY_COMMAND_FINDINGS,
     LIBRARY_DECLARATIONS,
@@ -13,6 +12,7 @@ import {
     SCRIPT_LAYOUT_RULES,
     STRICT_MODE,
 } from '#cli/config/configurations/bash.ts';
+import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { SCRIPT_LAYOUT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
 import { listCodeLines } from '#cli/parsers/code/bash/script.ts';

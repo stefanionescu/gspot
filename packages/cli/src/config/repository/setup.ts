@@ -1,6 +1,22 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
-import { MISE_TASK_FOLDERS, TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system.ts';
+import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system.ts';
+
+// config conflicts
+
+export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
+
+export const JSON_EXTENSION = '.json';
+
+export const TOML_EXTENSION = '.toml';
+
+export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
+
+// file writes
+
+export const AGENTS_FILE = 'AGENTS.md';
+
+export const EMPTY_JSON_TEXT = '{}\n';
 
 export const INSTALLED_TOOL_FOLDERS = {
     npm: GSPOT_PATHS.nodeModules,
@@ -8,29 +24,31 @@ export const INSTALLED_TOOL_FOLDERS = {
     vale: GSPOT_PATHS.valePackages,
 } as const;
 
-export const OWNER_WRITABLE_FILE = 0o644;
+export const LEADING_PATH_SEGMENTS = 2;
 
-export const AGENTS_FILE = 'AGENTS.md';
+export const TEMPORARY_FILE_NAME = new RegExp(
+    `^\\${TEMPORARY_FILE_PREFIX}(?:(?<pid>[1-9]\\d{0,8})-)?[\\da-f-]{36}\\${TEMPORARY_FILE_SUFFIX}$`,
+    'u',
+);
 
-export const LFS_HOOKS = ['pre-push', 'post-checkout', 'post-commit', 'post-merge'] as const;
+export const TOML_BARE_KEY = /^[\w-]+$/u;
 
-export const LFS_GUARD_PREFIX = 'command -v git-lfs >/dev/null 2>&1 || ';
+export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
 
-export const HOOK_SHEBANG = '#!/bin/sh';
+export const VALE_INSTALL_PREFIX = 'vale-';
 
-export const ESLINT_MANIFEST_TOOL = 'eslint';
+export const VALE_TEMPORARY_NAME = new RegExp(
+    String.raw`^${VALE_INSTALL_PREFIX}(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$`,
+    'u',
+);
 
-export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
+// setup scan
 
-export const JSON_EXTENSION = '.json';
+export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
 
 const ALL_FILES_GLOB = '**/*';
 
 export const EVERY_FILE_GLOBS = ['**', ALL_FILES_GLOB] as const;
-
-export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
-
-export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
 
 export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
@@ -40,46 +58,64 @@ export const FOREIGN_CI_FILES = new Set([
     '.buildkite/pipeline.yml',
 ]);
 
-export const TASK_AFTER_RUN = 2;
-
-export const MISE_RUNNER = 'mise';
-
-export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, MISE_RUNNER];
-
-export const GITLAB_CI_FILE = '.gitlab-ci.yml';
-
-export const GITHUB_WORKFLOWS_FOLDER = '.github/workflows/';
-
-export const GITLAB_CI_FOLDER = '.gitlab/ci/';
-
-export const COMMAND_SEPARATORS = /[\s;&|()]+/u;
-
-export const BIN_FOLDER_PREFIX = /^.*node_modules\/\.bin\//u;
-
-export const LINT_PACKAGE = /eslint|stylelint|prettier/u;
-
-export const QUOTE_MARK = /["'`,]/gu;
-
-export const COMMENT_LINE = /^\s*#/u;
-
-export const HOOK_ID_SEPARATOR = /-/gu;
-
-export const COMMAND_KEYS: ReadonlySet<string> = new Set(['run', 'script', 'before_script', 'after_script']);
-
-export const PYGREP_LANGUAGE = 'pygrep';
-
-export const PRE_COMMIT_TOOL = 'pre-commit';
-
-export const LINT_STAGED_KEY = 'lint-staged';
-
 export const HUSKY_PATH = '.husky';
 
 export const FOREIGN_HOOK_FOLDERS = ['.githooks', HUSKY_PATH, '.git-hooks'] as const;
+
+export const GITHUB_WORKFLOWS_FOLDER = '.github/workflows/';
+
+export const GITLAB_CI_FILE = '.gitlab-ci.yml';
+
+export const GITLAB_CI_FOLDER = '.gitlab/ci/';
+
+export const HOOKS_PATH_SETTING = 'core.hooksPath';
+
+export const HOOK_SHEBANG = '#!/bin/sh';
+
+export const KEPT_DOT_FILE = '.gitkeep';
+
+export const LEFTHOOK_EXTENSIONS = ['yml', 'yaml', 'toml', 'json', 'jsonc'] as const;
+
+export const LEFTHOOK_NAMES = ['lefthook', 'lefthook-local'] as const;
+
+export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
+
+export const LFS_GUARD_PREFIX = 'command -v git-lfs >/dev/null 2>&1 || ';
+
+export const LFS_HOOKS = ['pre-push', 'post-checkout', 'post-commit', 'post-merge'] as const;
+
+export const LFS_PUSH_CALLS: ReadonlySet<string> = new Set([
+    'git lfs pre-push "$@"',
+    'git lfs push --stdin "$@"',
+    'git lfs push --stdin $*',
+]);
+
+export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
+
+export const PRE_COMMIT_FILE = '.pre-commit-config.yaml';
+
+export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
+
+export const SAMPLE_HOOK_SUFFIX = '.sample';
+
+export const SIMPLE_GIT_HOOKS_KEY = 'simple-git-hooks';
+
+// lint commands
+
+export const BIN_FOLDER_PREFIX = /^.*node_modules\/\.bin\//u;
 
 export const HOOK_FOLDER_PATH = new RegExp(
     `^(?:${FOREIGN_HOOK_FOLDERS.map((folder) => folder.replaceAll('.', '[.]')).join('|')})/`,
     'u',
 );
+
+export const MISE_TASK_FOLDERS = [
+    'mise-tasks',
+    '.mise-tasks',
+    'mise/tasks',
+    '.mise/tasks',
+    '.config/mise/tasks',
+] as const;
 
 export const MISE_TASK_FOLDER = new RegExp(
     `^(?:${MISE_TASK_FOLDERS.map((folder) => folder.replaceAll('.', '[.]')).join('|')})/`,
@@ -97,10 +133,26 @@ export const COMMAND_FILES = [
     { path: /^(?:\.gitlab-ci\.yml|\.gitlab\/ci\/.+\.ya?ml|\.github\/workflows\/.+\.ya?ml)$/u, source: 'ci' },
 ] as const;
 
+export const COMMAND_KEYS: ReadonlySet<string> = new Set(['run', 'script', 'before_script', 'after_script']);
+
+export const COMMAND_SEPARATORS = /[\s;&|()]+/u;
+
+export const COMMENT_LINE = /^\s*#/u;
+
 export const FORMAT_SCRIPT = /^(?:format|fmt)(?::.*)?$/u;
 
-export const OTHER_FORMATTER_MESSAGE =
-    'This script also formats these files. To keep it, run gspot ignore format/prettier --reason "<why>".';
+export const HOOK_ID_SEPARATOR = /-/gu;
+
+export const LINT_COMMAND_FIXES = {
+    script: 'Replace the lint and format parts of this script with gspot check.',
+    'mise-task': 'Replace the lint and format parts of this task with gspot check.',
+    ci: 'gspot check installs and runs this tool. Run gspot check in CI instead of this line.',
+    hook: 'Delete this line: the hooks of gspot run the checks.',
+    'lint-staged': 'Delete this entry: the hooks of gspot run the checks.',
+    'pre-commit': 'Delete this entry: the hooks of gspot run the checks.',
+    dependency: 'Delete this line: gspot installs its own copy in .gspot/.',
+    settings: 'Delete these settings: gspot runs a tool that covers this one.',
+} as const;
 
 export const LINT_COMMAND_NAMES = {
     script: 'This script',
@@ -113,16 +165,16 @@ export const LINT_COMMAND_NAMES = {
     settings: 'This section',
 } as const;
 
-export const LINT_COMMAND_FIXES = {
-    script: 'Replace the lint and format parts of this script with gspot check.',
-    'mise-task': 'Replace the lint and format parts of this task with gspot check.',
-    ci: 'gspot check installs and runs this tool. Run gspot check in CI instead of this line.',
-    hook: 'Delete this line: the hooks of gspot run the checks.',
-    'lint-staged': 'Delete this entry: the hooks of gspot run the checks.',
-    'pre-commit': 'Delete this entry: the hooks of gspot run the checks.',
-    dependency: 'Delete this line: gspot installs its own copy in .gspot/.',
-    settings: 'Delete these settings: gspot runs a tool that covers this one.',
-} as const;
+export const LINT_PACKAGE = /eslint|stylelint|prettier/u;
+
+export const LINT_STAGED_KEY = 'lint-staged';
+
+export const MISE_RUNNER = 'mise';
+
+export const MISE_TASKS_KEY = 'tasks';
+
+export const OTHER_FORMATTER_MESSAGE =
+    'This script also formats these files. To keep it, run gspot ignore format/prettier --reason "<why>".';
 
 export const OVERLAPPING_TOOLS = [
     { name: 'black', owner: 'ruff', files: [], sections: [['pyproject.toml', 'tool.black']] },
@@ -158,47 +210,16 @@ export const OVERLAPPING_TOOLS = [
     { name: 'markdownlint', owner: 'markdownlint-cli2', files: [], sections: [] },
 ] as const;
 
+export const PRE_COMMIT_TOOL = 'pre-commit';
+
+export const PYGREP_LANGUAGE = 'pygrep';
+
+export const QUOTE_MARK = /["'`,]/gu;
+
+export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, MISE_RUNNER];
+
 export const RUN_WORD = 'run';
 
-export const KEPT_DOT_FILE = '.gitkeep';
+export const TASK_AFTER_RUN = 2;
 
-export const SIMPLE_GIT_HOOKS_KEY = 'simple-git-hooks';
-
-export const LEFTHOOK_NAMES = ['lefthook', 'lefthook-local'] as const;
-
-export const LEFTHOOK_EXTENSIONS = ['yml', 'yaml', 'toml', 'json', 'jsonc'] as const;
-
-export const LEFTHOOK_PREFIXES = ['', '.', '.config/'] as const;
-
-export const PRE_COMMIT_FILE = '.pre-commit-config.yaml';
-
-export const HOOKS_PATH_SETTING = 'core.hooksPath';
-
-export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
-
-export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
-
-export const SAMPLE_HOOK_SUFFIX = '.sample';
-
-export const LFS_PUSH_CALLS: ReadonlySet<string> = new Set([
-    'git lfs pre-push "$@"',
-    'git lfs push --stdin "$@"',
-    'git lfs push --stdin $*',
-]);
-
-export const TOML_EXTENSION = '.toml';
-
-export const EMPTY_JSON_TEXT = '{}\n';
-
-export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
-
-export const TOML_BARE_KEY = /^[\w-]+$/u;
-
-export const TEMPORARY_FILE_NAME = new RegExp(
-    `^\\${TEMPORARY_FILE_PREFIX}(?:(?<pid>[1-9]\\d{0,8})-)?[\\da-f-]{36}\\${TEMPORARY_FILE_SUFFIX}$`,
-    'u',
-);
-
-export const VALE_TEMPORARY_NAME = /^vale-(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$/u;
-
-export const LEADING_PATH_SEGMENTS = 2;
+export const TASK_NAME_SEPARATOR = ':';

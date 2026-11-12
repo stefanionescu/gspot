@@ -3,8 +3,9 @@ import { resolve } from 'node:path';
 
 import { z } from 'zod';
 
-import { LEADING_COMMENTS, LOCAL_RECORDS } from '#cli/config/generation/setup.ts';
+import { LEADING_COMMENTS, LOCAL_RECORDS, UNREAD_SETTING_NOTE } from '#cli/config/generation/setup.ts';
 import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
+import { SETTINGS_PREFACE_LINES } from '#cli/config/settings/validation.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { listAlwaysSelected, listUnknownConfigurations, selectConfigurations } from '#cli/manifests/select.ts';
@@ -25,8 +26,6 @@ import { isTable } from '#cli/system/tables.ts';
 import type { InitOptions, LeftOutSetting, SettingsDraft, Template } from '#cli/types/generation.ts';
 import type { ProposedConfigurations, Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-
-const UNREAD_SETTING_NOTE = 'no selected configuration reads it';
 
 function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlTable {
     const selected = {
@@ -176,10 +175,7 @@ function readTemplateBytes(file: string, cwd: string): Buffer {
 export function buildInitSettings(draft: SettingsDraft, repository: Repository): string {
     const document = buildSettingsTable(draft, repository);
     delete document['ci'];
-    return `${[
-        '# Change these settings with `gspot set`, `unset`, `ignore`, or `unignore`, and the configurations with `gspot add` or `remove`.',
-        '# Run gspot list settings to see each setting. Records such as [[scope]] and [[command_check]] are written by hand.',
-    ].join('\n')}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
+    return `${SETTINGS_PREFACE_LINES.join('\n')}\n${buildSettingsText(draft.base, stripDefaults(document))}`;
 }
 
 export function buildSettingsDraft(

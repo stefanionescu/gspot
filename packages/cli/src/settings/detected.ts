@@ -8,13 +8,14 @@ import {
     CLOUDFLARE_CONFIGURATION,
     IMPORT_EXTENSION_SETTING,
     JAVASCRIPT_CONFIGURATION,
-    MESSAGES_FILE_SUFFIX,
+    MESSAGE_FILE_SUFFIX,
     MESSAGES_FOLDER,
     OPENAPI_CONFIGURATION,
     OPENNEXT_PACKAGE,
     OPENNEXT_TYPE_DEFAULTS,
     SWIFT_CONFIGURATION,
     TRANSLATIONS_CONFIGURATION,
+    TS_SUFFIX_IMPORT,
     XCODE_DESTINATIONS,
 } from '#cli/config/settings/detected.ts';
 import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
@@ -31,8 +32,6 @@ import { requireTypescript } from '#cli/system/typescript.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import type { DetectedScopes, ImportExtensionStyle, ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
 import type { RunCache } from '#cli/types/system.ts';
-
-const TS_SUFFIX_IMPORT = /(?:\bfrom|\bimport)\s*(?:\(\s*)?["']\.{1,2}\/[^"']*\.[cm]?tsx?["']/u;
 
 function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
     const openapi = selection.selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);
@@ -71,7 +70,7 @@ function buildTranslationsTable(selection: ScopeConfigurations, { repository }: 
     if (selection.selected.every(({ name }) => name !== TRANSLATIONS_CONFIGURATION)) return {};
     const folder = joinScope(selection.scopePath, MESSAGES_FOLDER);
     const hasMessages = repository.files.some(
-        ({ path }) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGES_FILE_SUFFIX),
+        ({ path }) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX),
     );
     return hasMessages ? { translations: { messages_folder: folder } } : {};
 }

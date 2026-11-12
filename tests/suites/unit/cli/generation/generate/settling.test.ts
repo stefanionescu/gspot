@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { TOOL_LOCKFILES } from '#cli/config/configurations/structure.ts';
+import { TOOL_LOCKFILES } from '#cli/config/configurations/gspot.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/generate.ts';

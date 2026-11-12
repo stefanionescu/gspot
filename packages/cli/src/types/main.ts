@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import type cliPackage from '#cli-package';
-import type { GROUP_LABELS } from '#cli/config/generation/files.ts';
+import type { GROUP_LABELS } from '#cli/config/commands/setup.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
 import type { DOCS_PATHS } from '#cli/config/manifests.ts';
 import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';

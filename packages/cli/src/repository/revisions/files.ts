@@ -3,15 +3,18 @@ import { join } from 'node:path';
 
 import { GIT_INDEX_FILES_ARGUMENTS, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
 import {
+    CRLF_INDEX_LINE,
     GIT_BLOBS_ARGUMENTS,
     GIT_CHANGED_PATHS_ARGUMENTS,
     GIT_COMMITTED_PATHS_ARGUMENTS,
     GIT_HEAD_ARGUMENTS,
+    GIT_LINE_ENDINGS_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
     GIT_WRITE_TREE_ARGUMENTS,
     INDEX_LINE,
+    PRIVATE_INDEX_FILE,
     READ_COMMITTED_MESSAGE,
     TRAILING_NEWLINE,
     TREE_LINE,
@@ -24,12 +27,6 @@ import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
-
-const PRIVATE_INDEX_FILE = 'index';
-
-const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
-
-const CRLF_INDEX_LINE = /^i\/(?:crlf|mixed)\s/u;
 
 export async function listRevisionFiles(
     root: string,

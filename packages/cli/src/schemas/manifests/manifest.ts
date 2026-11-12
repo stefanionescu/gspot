@@ -9,8 +9,8 @@ import {
     CHECK_RUNS,
     FILE_KINDS,
     GROUPS,
+    GSPOT_IGNORE,
     GSPOT_PATHS,
-    IGNORE_COMMAND,
     NAME_PATTERN,
     RULE_FILE_PATTERN,
     SETTING_LANGUAGES,
@@ -160,8 +160,8 @@ export const checkFieldsSchema = z.strictObject({
     summary: nonemptyStringSchema,
     example: z.string().trim().min(1),
     why: nonemptyStringSchema,
-    help: nonemptyStringSchema.refine((help) => !help.includes(IGNORE_COMMAND), {
-        error: `A check's help gives the fix alone. Remove ${IGNORE_COMMAND}: gspot explain names it.`,
+    help: nonemptyStringSchema.refine((help) => !help.includes(GSPOT_IGNORE), {
+        error: `A check's help gives the fix alone. Remove ${GSPOT_IGNORE}: gspot explain names it.`,
     }),
 });
 

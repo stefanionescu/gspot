@@ -2,7 +2,13 @@ import { isDeepStrictEqual } from 'node:util';
 
 import picomatch from 'picomatch';
 
-import { ESLINT_INDENT, GSPOT_PRESET_LEVELS } from '#cli/config/configurations/eslint/blocks.ts';
+import {
+    EMPTY_LIST,
+    ESLINT_INDENT,
+    GSPOT_PRESET_LEVELS,
+    IDENTIFIER_SEPARATOR,
+    SHARED_LIST_SUFFIX,
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import {
     ESLINT_NAMED_IMPORTS,
     ESLINT_PACKAGE_IMPORTERS,
@@ -11,7 +17,7 @@ import {
     PACKAGE_SCOPE_MARK,
     SHARED_LIST_MARK,
     SHARED_LIST_REFERENCE,
-} from '#cli/config/configurations/javascript.ts';
+} from '#cli/config/configurations/javascript/eslint-config.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
@@ -19,16 +25,9 @@ import type {
     EslintCallArgument,
     EslintFileWriter,
     EslintReference,
+    ListCounts,
     PlannedEslintBlock,
 } from '#cli/types/configurations/javascript.ts';
-
-const IDENTIFIER_SEPARATOR = /[^\w$]/gu;
-
-const SHARED_LIST_SUFFIX = 'List';
-
-const EMPTY_LIST = '[]';
-
-type ListCounts = Map<string, { key: string; count: number }>;
 
 const compiledGlobs = new Map<string, string>();
 

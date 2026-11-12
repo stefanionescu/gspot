@@ -13,6 +13,7 @@ import {
     PYTHON_DECLARATION_NODES,
     PYTHON_IMPORT_NODES,
     PYTHON_LITERAL_NODES,
+    PYTHON_RAW_STRING_PREFIX,
     PYTHON_SCOPE_NODES,
     PYTHON_STRING_ESCAPE,
     PYTHON_STRING_ESCAPES,
@@ -166,7 +167,7 @@ function findEnvironmentKeyNode(node: Node): Node | null | undefined {
 
 function decodePythonKey(literal: Node): string | undefined {
     const value = literal.namedChildren.find((child) => child.type === 'string_content')?.text;
-    if (value === undefined || /^[BFTU]*R[BFRTU]*["']/iu.test(literal.text)) return value;
+    if (value === undefined || PYTHON_RAW_STRING_PREFIX.test(literal.text)) return value;
     return value.replaceAll(
         PYTHON_STRING_ESCAPE,
         (

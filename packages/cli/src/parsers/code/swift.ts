@@ -3,6 +3,7 @@ import { posix } from 'node:path';
 import type { Node } from 'web-tree-sitter';
 
 import {
+    PRIVATE_SWIFT_VISIBILITIES,
     SWIFT_ATTRIBUTE_NODE,
     SWIFT_CALL_NODE,
     SWIFT_IDENTIFIER_NODE,
@@ -18,8 +19,6 @@ import {
 } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-
-const PRIVATE_SWIFT_VISIBILITIES: ReadonlySet<string> = new Set(['private', 'fileprivate']);
 
 /**
 Identify Swift imports, test declarations, and package targets without matching comment or string text.

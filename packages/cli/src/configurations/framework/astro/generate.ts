@@ -1,11 +1,6 @@
-import {
-    ASTRO_FILES,
-    ASTRO_RULE_OPTIONS,
-    ASTRO_RULES,
-    ASTRO_SCRIPT_FILES,
-    ASTRO_TYPED_RULES,
-} from '#cli/config/configurations/framework.ts';
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
+import { ASTRO_RULE_OPTIONS, ASTRO_RULES, ASTRO_TYPED_RULES } from '#cli/config/configurations/framework.ts';
+import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/shared.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import {
     type ConfigurationBlocks,
     type EslintBlockBuilder,

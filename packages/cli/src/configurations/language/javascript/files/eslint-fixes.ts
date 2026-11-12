@@ -1,33 +1,24 @@
 import { createRequire } from 'node:module';
 
-import type { JavascriptBlock } from '#cli/types/configurations/javascript.ts';
-
-type RuleReport = {
-    data?: Record<string, unknown>;
-    fix?: (fixer: unknown) => Array<{ text: string; [field: string]: unknown }> | undefined;
-    [field: string]: unknown;
-};
-
-type RuleContext = { options: unknown[]; report: (report: RuleReport) => void };
-
-type RuleModule = { create: (context: RuleContext) => unknown; [field: string]: unknown };
-
-type UnicornPlugin = {
-    rules: Record<'consistent-boolean-name' | 'no-asterisk-prefix-in-documentation-comments', RuleModule> &
-        Record<string, RuleModule>;
-    configs: Record<string, JavascriptBlock>;
-    [field: string]: unknown;
-};
+import type {
+    EslintRuleContext,
+    EslintRuleModule,
+    EslintRuleReport,
+    EslintUnicornPlugin,
+} from '#cli/types/configurations/javascript.ts';
 
 // ESLint freezes the context of a rule, so the rule gets a stand-in that forwards every other member to it.
-function changeReports(rule: RuleModule, change: (report: RuleReport, context: RuleContext) => RuleReport): RuleModule {
+function changeReports(
+    rule: EslintRuleModule,
+    change: (report: EslintRuleReport, context: EslintRuleContext) => EslintRuleReport,
+): EslintRuleModule {
     return {
         ...rule,
         create(context) {
             const changed = new Proxy(
                 {
                     options: context.options,
-                    report: (finding: RuleReport) => {
+                    report: (finding: EslintRuleReport) => {
                         context.report(change(finding, context));
                     },
                 },
@@ -46,7 +37,7 @@ function changeReports(rule: RuleModule, change: (report: RuleReport, context: R
 
 // The fix puts the first prefix before the name. After a prefix that the options turn off, such as `was`, the new
 // name reads wrong and the rule accepts it, so the finding stays for a rename by hand.
-function dropPrefixedRename(report: RuleReport, context: RuleContext): RuleReport {
+function dropPrefixedRename(report: EslintRuleReport, context: EslintRuleContext): EslintRuleReport {
     const prefixes = (context.options[0] as { prefixes?: Record<string, boolean> } | undefined)?.prefixes;
     if (prefixes === undefined) return report;
     const name = String(report.data?.['name']).replace(/^_+/u, '');
@@ -63,7 +54,7 @@ function dropPrefixedRename(report: RuleReport, context: RuleContext): RuleRepor
 
 // The fix of an indented comment leaves the indentation on each line that held only an asterisk, and no formatter
 // changes the text of a comment.
-function trimBlankLines(report: RuleReport): RuleReport {
+function trimBlankLines(report: EslintRuleReport): EslintRuleReport {
     return {
         ...report,
         fix: (fixer) =>
@@ -76,12 +67,12 @@ Read eslint-plugin-unicorn from the generated tool project, and keep two of its 
 reports afterwards: a boolean name with two prefixes, and a line of spaces in a documentation comment. Each finding
 stays. Its presets name the returned plugin, because ESLint refuses two objects under one prefix.
 */
-export function limitUnicornFixes(): UnicornPlugin {
+export function limitUnicornFixes(): EslintUnicornPlugin {
     const module: unknown = createRequire(import.meta.url)('eslint-plugin-unicorn');
     const plugin = (
         typeof module === 'object' && module !== null && 'default' in module ? module.default : module
-    ) as UnicornPlugin;
-    const limited: UnicornPlugin = {
+    ) as EslintUnicornPlugin;
+    const limited: EslintUnicornPlugin = {
         ...plugin,
         rules: {
             ...plugin.rules,

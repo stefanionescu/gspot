@@ -1,4 +1,4 @@
-import { OWN_FILES_ONLY } from '#cli/config/settings/validation.ts';
+import { OWN_FILES_ONLY } from '#cli/config/configurations/structure.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
 
 export function listAllowedRules(rules: ImportRule[], index: number): string[] {

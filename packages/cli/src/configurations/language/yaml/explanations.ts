@@ -1,4 +1,4 @@
-import { YAML_MESSAGES, YAML_RULES } from '#cli/config/configurations/yaml.ts';
+import { YAML_MESSAGES, YAML_RULES } from '#cli/config/configurations/language.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const YAML_EXPLANATIONS = {

@@ -1,16 +1,17 @@
 import { stringify } from '@decimalturn/toml-patch';
 
-import { MESSAGE_FILE_SUFFIX } from '#cli/config/configurations/framework.ts';
 import {
+    ENGLISH_LOCALE_GLOBS,
     EXTEND_EXCLUDE_LINE,
     LOCKFILE_EXTENSION,
     LOCKFILE_GLOB,
+    MESSAGE_FILES_TITLE,
     TYPOS_CHECK,
     TYPOS_FORMAT_GLOBS,
     TYPOS_IGNORE_PATTERNS,
     TYPOS_LOCKFILE_GLOBS,
-} from '#cli/config/configurations/prose.ts';
-import { TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
+} from '#cli/config/configurations/general.ts';
+import { MESSAGE_FILE_SUFFIX, TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import {
     commentSectionTitle,
@@ -22,10 +23,6 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { ConfigBuilder, IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
-
-const ENGLISH_LOCALE_GLOBS = ['en', 'en[-_]*'] as const;
-
-const MESSAGE_FILES_TITLE = 'Message files of other languages than English';
 
 // typos reads every file as English. The section comes first, so that a later path that you ignore still wins.
 function listMessageSections({ scope }: PlannedConfig): IgnoreSection[] {

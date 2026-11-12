@@ -8,14 +8,13 @@ import {
     EMPTY_JSON_TEXT,
     INSTALLED_TOOL_FOLDERS,
     LEADING_PATH_SEGMENTS,
-    OWNER_WRITABLE_FILE,
     TEMPORARY_FILE_NAME,
     TOML_BARE_KEY,
     TOML_EXTENSION,
     TRAILING_BLANK_LINE,
     VALE_TEMPORARY_NAME,
 } from '#cli/config/repository/setup.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { findBlockBody, findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml.ts';

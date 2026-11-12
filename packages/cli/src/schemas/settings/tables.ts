@@ -10,6 +10,7 @@ import {
     GITHUB_ONLY_CI_KEYS,
     NAMING_LANGUAGE_CATEGORIES,
     NAMING_TABLE_CATEGORIES,
+    NAMING_TERM,
 } from '#cli/config/settings/schema.ts';
 import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
@@ -22,8 +23,6 @@ import {
 } from '#cli/schemas/settings/fields.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { ImportRule, NamingCategory, SettingsError } from '#cli/types/settings.ts';
-
-const TERM = /^[\p{L}\p{N}]+(?:[ -][\p{L}\p{N}]+)*$/u;
 
 export const ciFields = {
     enabled: z.boolean().default(false).meta({
@@ -241,7 +240,7 @@ const lists = {
         }),
     terms: z
         .record(
-            z.string().regex(TERM, 'Use words separated by spaces, without a regular expression pattern.'),
+            z.string().regex(NAMING_TERM, 'Use words separated by spaces, without a regular expression pattern.'),
             z.string(),
         )
         .default({})

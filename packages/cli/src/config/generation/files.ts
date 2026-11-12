@@ -1,59 +1,54 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { BASE_FLAG } from '#cli/config/engine.ts';
+import { GSPOT_CHECK, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
 import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
-import { LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
+import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FOLDER, LFS_GUARD_PREFIX } from '#cli/config/repository/setup.ts';
+import type { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import type { Group } from '#cli/types/manifests.ts';
 
-export const GITHUB_WORKFLOW = '.github/workflows/gspot.yml';
+// agent rule files
 
-export const GITLAB_WORKFLOW = '.gitlab/ci/gspot.yml';
+export const ALL_LEVEL_MARKER = '<!-- level: all -->';
 
-export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const;
+export const BLANK_LINE = '\n\n';
 
-export const CI_TIMEOUT_MINUTES = 60;
+export const COMMANDS_HEADING = '## Commands';
 
-export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
+export const FOLDER_RULE_LINE = 'A rule marked `in <folder>/` applies only to files in that folder.';
 
-export const CI_JOB_NAME = 'lint';
+export const MARKDOWN_HEADING = /^(#{1,5}) /u;
 
-export const CI_TESTS_JOB_NAME = 'tests';
+export const RULES_HEADING = '# Rules';
+
+export const RULE_OPENING_PREFIX = 'Read this rule ';
+
+// ci workflow
 
 export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false } as const;
 
-export const GITHUB_BASE_EXPRESSION = `\${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}`;
+export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 
-export const GITHUB_PUSH_CONDITION =
-    "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
+export const CI_CHECK_COMMAND = `${GSPOT_CHECK} ${BASE_FLAG} "\${${CI_BASE_VARIABLE}}"`;
 
-export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
+const CI_DIFF_MESSAGE = 'gspot install changed files. Run gspot install, then commit the files that it changed.';
 
-export const GITHUB_CONCURRENCY = {
-    group: `\${{ github.workflow }}-\${{ github.event_name == 'pull_request' && github.ref || github.run_id }}`,
-    'cancel-in-progress': `\${{ github.event_name == 'pull_request' }}`,
+export const CI_DIFF_LINES = {
+    github: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`],
+    gitlab: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`],
 } as const;
 
-export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
+export const GITHUB_WORKFLOW = `${GITHUB_WORKFLOWS_FOLDER}gspot.yml`;
 
-export const GITLAB_MISE_IMAGE = 'ghcr.io/jdx/mise';
+export const GITLAB_WORKFLOW = `${GITLAB_CI_FOLDER}gspot.yml`;
 
-const GITLAB_MISE_FOLDER = '.cache/mise';
+export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as const satisfies Record<
+    (typeof CI_PROVIDERS)[number],
+    string
+>;
 
-export const GITLAB_VARIABLES = {
-    GIT_DEPTH: '0',
-    MISE_DATA_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/data`,
-    MISE_CACHE_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/cache`,
-} as const;
+export const CI_JOB_NAME = 'lint';
 
-export const GITLAB_CACHE = {
-    key: { files: [GSPOT_PATHS.miseProject, GSPOT_PATHS.miseLockfile] },
-    paths: [`${GITLAB_MISE_FOLDER}/`],
-} as const;
-
-export const GITLAB_RULES = [
-    { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
-    { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
-] as const;
+export const CI_PACKAGE_RUNNER = 'npx --no --';
 
 export const CI_STEP_NAMES = {
     checkout: 'Check out source',
@@ -65,41 +60,77 @@ export const CI_STEP_NAMES = {
     gspot: 'Install gspot',
 } as const;
 
-export const CI_PACKAGE_RUNNER = 'npx --no --';
+export const CI_SYSTEMS_SETTING = 'ci.operating_systems';
 
-const CI_DIFF_MESSAGE = 'gspot install changed files. Run gspot install, then commit the files that it changed.';
+export const CI_TESTS_JOB_NAME = 'tests';
 
-export const CI_DIFF_LINES = {
-    github: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`],
-    gitlab: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`],
+export const CI_TIMEOUT_MINUTES = 60;
+
+export const GITHUB_BASE_EXPRESSION = `\${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}`;
+
+export const GITHUB_CONCURRENCY = {
+    group: `\${{ github.workflow }}-\${{ github.event_name == 'pull_request' && github.ref || github.run_id }}`,
+    'cancel-in-progress': `\${{ github.event_name == 'pull_request' }}`,
 } as const;
 
-export const CI_INSTALL_COMMAND = 'gspot install';
-
-export const CI_CHECK_COMMAND = `gspot check --base "\${${CI_BASE_VARIABLE}}"`;
+export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 
 export const GITHUB_EXPRESSION_MESSAGE =
     'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
 
-export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
+export const GITHUB_PUSH_CONDITION =
+    "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
 
-export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
+export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
 
-export const GIT_ATTRIBUTES_BLOCK = `* text=auto eol=lf
-${GSPOT_FOLDER}/** linguist-generated
-${GSPOT_FOLDER}/hooks/** linguist-generated=false`;
+const GITLAB_MISE_FOLDER = '.cache/mise';
 
-export const JSON_EXTENSIONS = new Set(['.json']);
+export const GITLAB_CACHE = {
+    key: { files: [GSPOT_PATHS.miseProject, GSPOT_PATHS.miseLockfile] },
+    paths: [`${GITLAB_MISE_FOLDER}/`],
+} as const;
 
-export const SLASH_COMMENT_EXTENSIONS = new Set(['.mjs', '.jsonc']);
+export const GITLAB_MISE_IMAGE = 'ghcr.io/jdx/mise';
 
-export const SLASH_COMMENT_FILES = new Set(['pyrightconfig.json']);
+export const GITLAB_RULES = [
+    { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
+    { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
+] as const;
+
+export const GITLAB_VARIABLES = {
+    GIT_DEPTH: '0',
+    MISE_DATA_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/data`,
+    MISE_CACHE_DIR: `$CI_PROJECT_DIR/${GITLAB_MISE_FOLDER}/cache`,
+} as const;
+
+// config targets
+
+export const CONFIG_SCOPES_FOLDER = 'scopes';
+
+export const OVERRIDES_PLACEHOLDER = '{overrides_json}';
+
+export const TARGET_MODULE_PLACEHOLDER = '{target_module}';
+
+export const TARGET_PLACEHOLDER = /\{target_(?:json|module)\}/gu;
+
+export const TS_EXTENSION = '.ts';
+
+// generated header
 
 export const GENERATED_HEADER_TEXT = `${GENERATED_HEADER_MARK}. Do not edit this file; change gspot.toml, then run gspot install.`;
 
-export const PUSH_INPUT_SAVE = 'input=$(cat)';
+export const JSON_EXTENSIONS = new Set(['.json']);
 
-export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
+export const PYRIGHT_CONFIG_FILE = 'pyrightconfig.json';
+
+export const SLASH_COMMENT_EXTENSIONS = new Set(['.mjs', '.jsonc']);
+
+export const SLASH_COMMENT_FILES = new Set([PYRIGHT_CONFIG_FILE]);
+
+// git hooks
+
+// Starting a package manager costs a hook about 150 ms. This assignment finds gspot and gives a command check the same PATH.
+export const BIN_FOLDER_START = { program: 'node', prefix: 'PATH="$PWD/node_modules/.bin:$PATH" ', command: 'gspot' };
 
 export const COMMIT_MESSAGE_PATH_LINES = [
     'case "$1" in /*|[A-Za-z]:*) message=$1 ;; *) message="$PWD/$1" ;; esac',
@@ -107,50 +138,29 @@ export const COMMIT_MESSAGE_PATH_LINES = [
     'set -- "$message"',
 ] as const;
 
+export const HOOK_PROGRAM_MISSING =
+    "<program> is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add <program>'s folder to its PATH.";
+
 export const LFS_MISSING_GUARD = `${LFS_GUARD_PREFIX}{ echo 'This repository uses Git LFS. Install git-lfs, then run git lfs install --skip-repo.' >&2; exit 2; }`;
 
-export const DIFF_CONTEXT_LINES = 3;
+export const PUSH_INPUT_REPLAY = String.raw`printf '%s\n' "$input" | `;
 
-export const ON_DISK_LABEL = 'on disk';
+export const PUSH_INPUT_SAVE = 'input=$(cat)';
 
-export const RULES_HEADING = '# Rules';
+// Yarn Plug'n'Play keeps packages out of node_modules, so its loader file shows that the project is installed.
+export const YARN_PNP_FILE = '.pnp.cjs';
 
-export const ALL_LEVEL_MARKER = '<!-- level: all -->';
+// gitattributes
 
-export const BLANK_LINE = '\n\n';
+export const ATTRIBUTE_GLOB_CHARACTERS = /[\\*?[]/gu;
 
-export const RULE_OPENING_PREFIX = 'Read this rule ';
+export const ATTRIBUTE_QUOTED_CHARACTERS = /[\s"]/u;
 
-export const MARKDOWN_HEADING = /^(#{1,5}) /u;
+export const GIT_ATTRIBUTES_BLOCK = `* text=auto eol=lf
+${GSPOT_FOLDER}/** linguist-generated
+${GSPOT_PATHS.hooks}/** linguist-generated=false`;
 
-export const CI_SYSTEMS_SETTING = 'ci.operating_systems';
-
-export const COMMANDS_HEADING = '## Commands';
-
-export const FOLDER_RULE_LINE = 'A rule marked `in <folder>/` applies only to files in that folder.';
-
-export const MANAGED_KEYS_NOTE =
-    'Keys that gspot no longer manages stay in your files. Review your shared tool configs after you remove a configuration.';
-
-export const TOOLS_CHANGED_NOTE =
-    'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
-
-export const STALE_LOCKFILE_NOTE =
-    'The tool lockfile is absent or stale. Run gspot install; until then gspot/generated-files fails on it.';
-
-export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
-
-export const CHANGE_LABEL_WIDTH = 9;
-
-export const TOOL_PROJECT_FILES: readonly string[] = [
-    GSPOT_PATHS.npmProject,
-    GSPOT_PATHS.pythonProject,
-    GSPOT_PATHS.miseProject,
-];
-
-export const TS_EXTENSION = '.ts';
-
-export const CONFIG_SCOPES_FOLDER = 'scopes';
+// ignored paths
 
 export const BUILD_OUTPUT_FOLDERS: ReadonlySet<string> = new Set(['.build', 'DerivedData']);
 
@@ -158,22 +168,26 @@ export const BUILD_OUTPUT_PATTERNS = ['dist/', 'build/', 'coverage/'] as const;
 
 export const GSPOT_FOLDER_PATTERNS = [`${GSPOT_FOLDER}/**`, `${COPIES_FOLDER}/**`] as const;
 
-export const TARGET_PLACEHOLDER = /\{target_(?:json|module)\}/gu;
+// stale files
 
-export const TARGET_MODULE_PLACEHOLDER = '{target_module}';
+export const DIFF_CONTEXT_LINES = 3;
 
-export const OVERRIDES_PLACEHOLDER = '{overrides_json}';
+export const ON_DISK_LABEL = 'on disk';
 
-export const GROUP_LABELS = {
-    language: 'Languages',
-    framework: 'Frameworks',
-    platform: 'Platforms',
-    database: 'Databases',
-    testing: 'Testing',
-    infrastructure: 'Infrastructure',
-    library: 'Libraries',
-    general: 'General',
-} as const satisfies Record<Group, string>;
+// write notes
 
-export const HOOK_PROGRAM_MISSING =
-    "<program> is not on the PATH that this Git client gives hooks ($PATH). Start the client from a terminal, or add <program>'s folder to its PATH.";
+export const CHANGE_LABEL_WIDTH = 9;
+
+export const HOOKS_CHANGED_NOTE = 'Git hooks changed. Run gspot install.';
+
+export const STALE_LOCKFILE_NOTE =
+    'The tool lockfile is absent or stale. Run gspot install; until then gspot/generated-files fails on it.';
+
+export const TOOLS_CHANGED_NOTE =
+    'The tools changed. Run gspot install; until then gspot/generated-files fails on the tool lockfile.';
+
+export const TOOL_PROJECT_FILES: readonly string[] = [
+    GSPOT_PATHS.npmProject,
+    GSPOT_PATHS.pythonProject,
+    GSPOT_PATHS.miseProject,
+];

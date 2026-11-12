@@ -11,13 +11,11 @@ import {
 } from '#cli/parsers/code/environment.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { ParsedLanguage } from '#cli/types/configurations/general.ts';
+import type { ParsedLanguage, ReaderNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-type ReaderNames = { environmentFunctions: string[]; readerVariables: Set<string> };
 
 const ENVIRONMENT_READS: Record<ParsedLanguage, (syntaxRoot: Node, names: ReaderNames) => EnvironmentRead[]> = {
     python: (syntaxRoot, { environmentFunctions }) => listPythonEnvironmentReads(syntaxRoot, environmentFunctions),

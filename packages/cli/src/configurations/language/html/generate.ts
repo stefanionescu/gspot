@@ -1,21 +1,13 @@
-import { HTML_VALIDATE_EXTENDS, HTML_VALIDATE_RULES } from '#cli/config/configurations/html.ts';
+import {
+    GENERATED_MARKUP_PACKAGES,
+    GENERATED_MARKUP_RULES,
+    HTML_VALIDATE_EXTENDS,
+    HTML_VALIDATE_RULES,
+} from '#cli/config/configurations/html.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-
-const GENERATED_MARKUP_PACKAGES: ReadonlySet<string> = new Set([
-    '@astrojs/starlight',
-    'astro-expressive-code',
-    'expressive-code',
-]);
-
-const GENERATED_MARKUP_RULES = [
-    'element-permitted-content',
-    'no-implicit-button-type',
-    'text-content',
-    'unique-landmark',
-] as const;
 
 /**
 Build html-validate.json: the HTML validation rules for source files or built site pages. A site built with Starlight

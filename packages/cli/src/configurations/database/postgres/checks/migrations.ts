@@ -1,13 +1,14 @@
 import { posix } from 'node:path';
 
-import { SQL_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 import {
     DOWN_MIGRATION_SUFFIX,
     MIGRATION_DOWN,
     MIGRATION_SYNTAX_SKIP,
+    MIGRATION_VERSION,
+    PRISMA_MIGRATION_FILE,
     SQUAWK_CHECK,
 } from '#cli/config/configurations/postgres.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { SQL_EXTENSION, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
@@ -21,10 +22,6 @@ import type { Migration, MigrationRead } from '#cli/types/configurations/databas
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const MIGRATION_VERSION = /^V?(?<version>\d+(?:[._]\d+)*)/u;
-
-const PRISMA_MIGRATION_FILE = 'migration.sql';
 
 const MIGRATIONS = Symbol('migrations');
 

@@ -1,4 +1,4 @@
-import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript.ts';
+import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/eslint-config.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Level, Scope, ScopeSettings, Settings, WrittenSettings } from '#cli/types/settings.ts';
@@ -203,4 +203,23 @@ export type ScopeOverride<Value, Block> = {
     base?: Scope;
     read: (scope: Scope) => Value;
     build: (change: { scope: Scope; parent: Scope | undefined; value: Value; ignores: string[] }) => Block[];
+};
+
+export type ListCounts = Map<string, { key: string; count: number }>;
+
+export type EslintRuleReport = {
+    data?: Record<string, unknown>;
+    fix?: (fixer: unknown) => Array<{ text: string; [field: string]: unknown }> | undefined;
+    [field: string]: unknown;
+};
+
+export type EslintRuleContext = { options: unknown[]; report: (report: EslintRuleReport) => void };
+
+export type EslintRuleModule = { create: (context: EslintRuleContext) => unknown; [field: string]: unknown };
+
+export type EslintUnicornPlugin = {
+    rules: Record<'consistent-boolean-name' | 'no-asterisk-prefix-in-documentation-comments', EslintRuleModule> &
+        Record<string, EslintRuleModule>;
+    configs: Record<string, JavascriptBlock>;
+    [field: string]: unknown;
 };

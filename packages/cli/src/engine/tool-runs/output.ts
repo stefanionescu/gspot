@@ -3,7 +3,9 @@ import { isAbsolute, join, relative } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import {
+    BROKEN_TOOL_ADVICE,
     FILE_PLACEHOLDER,
+    MODULE_FAILURE,
     NO_ERROR_OUTPUT_MESSAGE,
     OUT_OF_MEMORY,
     OUT_OF_MEMORY_MESSAGE,
@@ -27,12 +29,6 @@ import type {
 } from '#cli/types/engine/tool-runs.ts';
 import type { Check, Tool } from '#cli/types/manifests.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-
-// Node prints one of these when a module fails to resolve or parse, before the tool runs.
-const MODULE_FAILURE =
-    /\b(?:ERR_MODULE_NOT_FOUND|MODULE_NOT_FOUND|ERR_REQUIRE_ESM|ERR_PACKAGE_PATH_NOT_EXPORTED|ERR_UNSUPPORTED_DIR_IMPORT|ERR_INVALID_PACKAGE_CONFIG)\b|Cannot find (?:module|package)|does not provide an export named|^SyntaxError: /mu;
-
-const BROKEN_TOOL_ADVICE = `A tool in ${GSPOT_PATHS.nodeModules} failed to load. Run gspot install.`;
 
 /**
 End a crash message with the install command when a module under the tool folder failed to load, because install

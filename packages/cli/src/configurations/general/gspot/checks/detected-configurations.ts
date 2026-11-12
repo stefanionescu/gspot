@@ -1,4 +1,4 @@
-import { GSPOT_RULES } from '#cli/config/configurations/structure.ts';
+import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { stripIgnoredFiles } from '#cli/engine/files.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';

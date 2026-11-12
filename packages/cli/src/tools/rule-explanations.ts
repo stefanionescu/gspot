@@ -4,16 +4,19 @@ import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
 import { GSPOT_PATHS, RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/repository/setup.ts';
 import {
     ESLINT_BUILTIN_RULES,
+    ESLINT_MANIFEST_TOOL,
     INSTALL_FOR_RULES_MESSAGE,
     MARKDOWNLINT_RULE_DESCRIPTION,
     MARKDOWNLINT_RULE_SCHEMA,
+    RUFF_SUMMARY_FIELD,
     SHELLCHECK_RULE_IDENTIFIER,
     STYLELINT_MANIFEST_TOOL,
     SWIFTLINT_RULE_ARGUMENTS,
     SWIFTLINT_RULE_IDENTIFIER,
+    SWIFTLINT_UNKNOWN_RULE,
+    UNDEFINED_NAME_FIX,
 } from '#cli/config/tools/programs.ts';
 import { VALE_PACKAGES_MESSAGE, VALE_RULE_IDENTIFIER, VALE_STYLES_PATH, VALE_TOOL } from '#cli/config/tools/vale.ts';
 import { findTool, getTool, readConfigurations } from '#cli/manifests/read.ts';
@@ -31,14 +34,6 @@ import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/l
 import { runTool } from '#cli/tools/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, RuleToolSearch } from '#cli/types/tools.ts';
-
-// ESLint cannot name the gspot setting that declares the global names of another runtime.
-const UNDEFINED_NAME_FIX =
-    'Declare or import the name. For a global name of another runtime, such as `document` in a browser script, write a [[tools.eslint.override]] record in gspot.toml with the paths of the files and runtime = "browser", then run gspot install.';
-
-const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
-
-const SWIFTLINT_UNKNOWN_RULE = 'No rule with identifier';
 
 function extractRulePrefix(rule: string): string | undefined {
     const prefixes = readConfigurations()

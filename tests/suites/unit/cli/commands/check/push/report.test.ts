@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { CHECK_COMMAND } from '#cli/config/engine.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
@@ -44,7 +44,7 @@ test('the pre-push report prints a command that reproduces the same findings', a
             'rerun',
             process.execPath,
             CLI_BIN,
-            reproduction[0]!.replace(CHECK_COMMAND, 'gspot check --json'),
+            reproduction[0]!.replace(GSPOT_CHECK, 'gspot check --json'),
         ],
         { cwd: checkout.path },
     );

@@ -9,7 +9,7 @@ import {
     JSCPD_REPORT_FILE,
     JSCPD_TOOL,
     OUTPUT_FLAG,
-} from '#cli/config/configurations/general.ts';
+} from '#cli/config/configurations/structure.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
 import { buildMissingFileStop } from '#cli/engine/tool-runs/check.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';

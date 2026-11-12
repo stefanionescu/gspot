@@ -1,6 +1,6 @@
 import { dirname, join, relative } from 'node:path';
 
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
+import { MISSING_MODULE_RULE, QUOTED_MODULE, TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
@@ -16,10 +16,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const MISSING_MODULE_RULE = 'TS2307';
-
-const QUOTED_MODULE = /'(?<name>[^']+)'/u;
 
 function addUnbuiltPackageNote(session: CheckSession, result: CheckResult): CheckResult {
     const missing = result.findings.flatMap(({ rule, message }) =>

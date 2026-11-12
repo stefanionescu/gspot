@@ -1,5 +1,5 @@
 import { VUE_FILES, VUE_RULES, VUE_SCOPE_RULES } from '#cli/config/configurations/framework.ts';
-import { TYPESCRIPT_CONFIGURATION } from '#cli/config/configurations/typescript.ts';
+import { TYPESCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { type EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
 
 export const VUE_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {

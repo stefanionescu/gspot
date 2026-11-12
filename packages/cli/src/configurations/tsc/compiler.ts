@@ -3,8 +3,9 @@ import { isAbsolute, join, relative, resolve } from 'node:path';
 
 import type ts from 'typescript';
 
-import { PATHS_BASE_OPTION, TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/javascript.ts';
 import {
+    PARENT_TSCONFIG_SKIP,
+    PATHS_BASE_OPTION,
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_COMPILER_INPUT_PATHS,
@@ -12,9 +13,9 @@ import {
     TSC_PROJECT_COMMAND,
     TSC_REFERENCE_BUNDLE,
     TSC_REFERENCE_OUTPUT_FOLDER,
+    TSC_UNFORMATTED_OUTPUT,
     TSCONFIG_TSBUILDINFO,
 } from '#cli/config/configurations/shared.ts';
-import { PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
 import { listEnforcedTsconfigOptions, writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';

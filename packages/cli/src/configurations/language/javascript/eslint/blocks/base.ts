@@ -18,9 +18,9 @@ import {
     ROOT_PACKAGE_JSON_RULES,
     RUNTIME_GLOBALS,
     TEST_RULES,
-} from '#cli/config/configurations/eslint/blocks.ts';
-import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/eslint/rules.ts';
-import { DENO_CONFIG_FILES } from '#cli/config/configurations/infrastructure.ts';
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
+import { DENO_CONFIG_FILES } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {

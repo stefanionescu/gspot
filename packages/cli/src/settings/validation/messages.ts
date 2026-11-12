@@ -1,14 +1,11 @@
 import { z } from 'zod';
 
-import cliPackage from '#cli-package' with { type: 'json' };
-import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
+import { SETTINGS_PAGE_SENTENCE, TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { getSettingType, unwrapSettingInput } from '#cli/settings/lookup.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';
-
-export const SETTINGS_PAGE_SENTENCE = `${cliPackage.homepage}/reference/gspot-toml/ lists every setting.`;
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,

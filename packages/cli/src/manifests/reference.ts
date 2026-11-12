@@ -1,21 +1,11 @@
 import { posix } from 'node:path';
 
-import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
+import { DETECTION_LABELS, GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
 import { SWIFT_IMPORT_TAG, SWIFT_TEST_TAG, SWIFT_TEST_TARGET_TAG } from '#cli/config/parsers/code.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
-
-const DETECTION_LABELS = {
-    extensions: ['a file extension', 'file extensions'],
-    filenames: ['a filename', 'filenames'],
-    dependencies: ['a dependency on', 'a dependency on'],
-    runtimes: ['a JavaScript runtime', 'JavaScript runtimes'],
-    tags: ['a file with a shebang for', 'files with a shebang for'],
-    paths: ['a file path', 'file paths'],
-    project_files: ['a project file', 'project files'],
-} as const;
 
 function formatListCondition(kind: keyof typeof DETECTION_LABELS, patterns: readonly string[]): string | undefined {
     const names = patterns

@@ -1,86 +1,67 @@
-import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { TYPE_NODES } from '#cli/config/configurations/general.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
-import { GSPOT_FOLDER, MISE_TASK_FOLDERS } from '#cli/config/system.ts';
-import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
+import type { ParsedLanguage } from '#cli/types/configurations/general.ts';
 
-export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE]);
-
-export const GENERATED_FILE_FINDINGS = {
-    changed: { message: 'This generated file is out of date.', help: INSTALL_HELP },
-    absent: { message: 'This generated file is absent.', help: INSTALL_HELP },
-    stray: {
-        message: 'gspot wrote this file, and no selected configuration writes it now.',
-        help: 'Run gspot install to delete it.',
-    },
-} as const;
-
-export const REASON_ABOVE = /^(?:\/\/|\/\*|#|--|<!--)\s*reason:\s*(?<reason>\S.*)$/u;
-
-export const SUPPRESSION_KIND_MESSAGES = {
-    all: 'This comment turns off every rule, including the size limits. Name the rules and give a reason.',
-    limit: 'Split the code by its steps, or ask the user to raise the limit in gspot.toml.',
-} as const;
-
-export const SETTINGS_REASON = /\breason\s*=\s*"(?<reason>(?:[^"\\]|\\.)*)"/gu;
-
-export const NEGATED_PATTERN = /^!/u;
-
-export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;
-
-export const BRACKET_HELP = String.raw` If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`;
-
-export const GSPOT_RULES = {
-    unmatchedPath: 'unmatched-path',
-    conflictingConfig: 'conflicting-config',
-    detectedConfiguration: 'detected-configuration',
-    lintCommand: 'lint-command',
-} as const;
-
-export const WEAKENING_RULES = {
-    configuration: 'configuration',
-    hooks: 'hooks',
-    level: 'level',
-    ruleFiles: 'rule-files',
-    setting: 'setting',
-} as const;
-
-export const WEAKENING_FIXES = {
-    [WEAKENING_RULES.configuration]: 'Run `gspot remove <configuration> --reason "<why>"`, or select it again.',
-    [WEAKENING_RULES.setting]:
-        'Run `gspot set <key> <value> --reason "<why>"`, or restore the value of the base revision.',
-} as const;
-
-export const WEAKENING_IGNORE_HELP =
-    'Undo the change, or run `gspot ignore gspot/weakenings --rule {rule} --reason "<why>"`.';
-
-export const REPOSITORY_RULES = {
-    pathEncoding: 'path-encoding',
-    absoluteLink: 'absolute-link',
-    outwardLink: 'outward-link',
-    conflictMarker: 'conflict-marker',
-    encoding: 'encoding',
-    size: 'size',
-    trackedFile: 'tracked-file',
-} as const;
-
-export const ABSOLUTE_LINK_HELP = 'Use a relative link target inside the repository.';
-
-export const OUTWARD_LINK_HELP = 'Replace the link with the file or folder it points to, or delete it.';
-
-export const BARE_BLOCK_RULE = 'bare-block';
+// bare-blocks check
 
 export const BARE_BLOCK_MESSAGE =
     'A do block without catch hides a step. Name the step as a function, or remove the do.';
 
-export const UNNAMED_VARIABLE_LABEL = 'An environment variable';
+export const BARE_BLOCK_RULE = 'bare-block';
+
+// empty-folders check
+
+export const EMPTY_FOLDER_RULE = 'empty-folder';
+
+export const NO_EMPTY_FOLDERS_FLAG = '--no-empty-directory';
+
+export const PLACEHOLDER_FILES: ReadonlySet<string> = new Set(['.gitkeep', '.keep']);
+
+// Git lists a folder with untracked files under both forms of this command, and an empty one only without the flag.
+export const UNTRACKED_FOLDERS_ARGUMENTS = ['ls-files', '--others', '--directory', '--exclude-standard', '-z'] as const;
+
+// environment-readers check
 
 export const READ_OUTSIDE_READER_RULE = 'read-outside-reader';
 
+export const UNNAMED_VARIABLE_LABEL = 'An environment variable';
+
+// file-folder-clashes check
+
 export const FILE_FOLDER_CLASH_RULE = 'file-folder-clash';
 
+export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE]);
+
+// function-order check
+
+export const DEFAULT_EXPORT_NAME = 'default';
+
+export const FUNCTION_ORDER_RULE = 'private-below-public';
+
+export const REFERENCE_TYPES = ['identifier', 'simple_identifier'];
+
+export const SCRIPT_FUNCTION_DECLARATIONS: ReadonlySet<string> = new Set([
+    'function_declaration',
+    'generator_function_declaration',
+]);
+
+export const SCRIPT_FUNCTION_VALUES: ReadonlySet<string> = new Set([
+    'arrow_function',
+    'function_expression',
+    'generator_function',
+]);
+
+// import-rules check
+
+export const CAPITALIZED_NAME = /^\p{Lu}/u;
+
 export const CONFIG_PATTERNS = ['**/*.config.*', '**/.*rc.*', '**/Package.swift', '**/setup.py'] as const;
+
+export const DECLARATION_NODES = [...TYPE_NODES, 'associatedtype_declaration', 'type_parameter'];
+
+export const IMPORT_RULE_CHECK_RULES = { uncoveredFile: 'uncovered-file', refusedImport: 'refused-import' } as const;
 
 export const IMPORT_RULE_EXTENSIONS = [
     '.ts',
@@ -96,26 +77,70 @@ export const IMPORT_RULE_EXTENSIONS = [
     '.swift',
 ] as const;
 
-export const UNCOVERED_FILE_MESSAGE =
-    'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
+export const MEMBER_DOT = '.';
 
-export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
+// A capitalized identifier under one of these parents names a label, binding, enum case, macro, module, or build flag.
+export const NON_USE_PARENTS: ReadonlySet<string> = new Set([
+    'directive',
+    'enum_entry',
+    'identifier',
+    'macro_invocation',
+    'parameter',
+    'pattern',
+    'value_argument_label',
+]);
+
+export const OWN_FILES_ONLY = 'only its own files';
 
 export const PYTHON_EXTENSIONS = ['.py', '.pyi'] as const;
 
-export const PYTHON_MODULE_SUFFIXES = ['.py', '.pyi', '/__init__.py', '/__init__.pyi'] as const;
+export const PYTHON_FROM_STATEMENT = 'import_from_statement';
 
 export const PYTHON_IMPORT_STATEMENT = 'import_statement';
 
-export const PYTHON_FROM_STATEMENT = 'import_from_statement';
+export const PYTHON_MODULE_SUFFIXES = ['.py', '.pyi', '/__init__.py', '/__init__.pyi'] as const;
+
+export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
 
 export const RELATIVE_IMPORT = 'relative_import';
 
-export const IMPORT_RULE_CHECK_RULES = { uncoveredFile: 'uncovered-file', refusedImport: 'refused-import' } as const;
+export const UNCOVERED_FILE_MESSAGE =
+    'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
+
+export const USE_NODES = ['type_identifier', 'simple_identifier'];
+
+// jscpd check
+
+export const CLONE_RULE = 'clone';
+
+export const JSCPD_ARGUMENTS = ['--reporters', 'json', '--silent'] as const;
+
+export const JSCPD_CHECK = 'structure/jscpd';
+
+export const JSCPD_CONFIG_FILE = 'jscpd.json';
+
+export const JSCPD_IGNORED = ['**/*.md', '**/*.mdx'] as const;
+
+export const JSCPD_IMPORT_PATTERNS = [
+    String.raw`import\s[^;]*?from\s*['"][^'"]+['"]\s*;`,
+    String.raw`(?:^|\n)[\t ]*(?:from[\t ]+(?:\\\r?\n[\t ]*)*[\w.]+[\t ]+(?:\\\r?\n[\t ]*)*)?import[\t ]+(?:\\\r?\n[\t ]*)*(?:\([^;)]*\)|(?:\\\r?\n|[^;\r\n])*)`,
+] as const;
+
+export const JSCPD_REPORT_FILE = 'jscpd-report.json';
+
+export const JSCPD_TOOL = 'jscpd';
+
+export const OUTPUT_FLAG = '--output';
+
+// lone-files check
 
 export const LONE_FILE_RULE = 'lone-file';
 
+// long-files check
+
 export const FILE_LINES_RULE = 'file-lines';
+
+// parsed-sources check
 
 export const SOURCE_QUERIES = {
     bash: `(function_definition) @function
@@ -126,9 +151,13 @@ export const SOURCE_QUERIES = {
 (do_statement) @block`,
 } as const;
 
+// pass-through-folders check
+
 export const PASS_THROUGH_FOLDER_RULE = 'pass-through-folder';
 
-export const SPEC_SUFFIX = /\.spec$/u;
+// shared-prefixes check
+
+export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|mock|bench)$/u;
 
 const MISE_HOOKS_PATH = '.mise/tasks/hook';
 
@@ -136,15 +165,15 @@ export const HOOK_FOLDERS = [GSPOT_PATHS.hooks, MISE_HOOKS_PATH, ...FOREIGN_HOOK
 
 export const INDEX_BASE_NAMES = new Set(['index', 'mod', '__init__']);
 
-export const COMPANION_SUFFIX = /\.(?:test|spec|stories|story|module|styles?|mock|bench)$/u;
-
 export const SHARED_PREFIX_RULE = 'shared-prefix';
 
-export const PYTHON_PACKAGE_FILE = '__init__.py';
-
-export const DECORATED_PYTHON_NODE = 'decorated_definition';
+export const SPEC_SUFFIX = /\.spec$/u;
 
 export const TYPE_FILE_CASE = 'pascal';
+
+// swift-modules check
+
+export const NON_WORD_CHARACTERS = /\W/gu;
 
 export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {
     target: ['Sources', 'Source', 'src', 'srcs'],
@@ -154,19 +183,11 @@ export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>>
     plugin: ['Plugins'],
 };
 
-export const NON_WORD_CHARACTERS = /\W/gu;
-
-export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
-
-export const PYTHON_EXPORT_LIST = '__all__';
+// trivial-functions check
 
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);
 
-export const FORWARDING_NODES: ReadonlySet<string> = new Set(['future_import_statement', 'hash_bang_line']);
-
-export const TYPE_ALIAS_NODES = new Set(['type_alias_statement', 'typealias_declaration']);
-
-export const TYPE_REFERENCE_NODES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);
+export const BASH_COMMAND_NODES: ReadonlySet<string> = new Set(['command', 'declaration_command']);
 
 export const COUNTED_FUNCTION_NODES = new Set([
     'function_definition',
@@ -175,6 +196,31 @@ export const COUNTED_FUNCTION_NODES = new Set([
     'deinit_declaration',
     'lambda',
     'lambda_literal',
+    'computed_getter',
+    'computed_setter',
+    'computed_property',
+    'willset_clause',
+    'didset_clause',
+]);
+
+export const DECORATED_PYTHON_NODE = 'decorated_definition';
+
+export const FORWARDING_NODES: ReadonlySet<string> = new Set(['future_import_statement', 'hash_bang_line']);
+
+export const FUNCTION_LABEL = 'function';
+
+// The syntax node of a name in a call, a reference, or a definition; a Bash function runs as a command word.
+export const LANGUAGE_NAME_NODES: Readonly<Record<ParsedLanguage, string>> = {
+    python: 'identifier',
+    swift: 'simple_identifier',
+    bash: 'word',
+};
+
+export const ONE_STATEMENT = '1 statement';
+
+export const PYTHON_EXPORT_LIST = '__all__';
+
+export const SWIFT_ACCESSOR_NODES = new Set([
     'computed_getter',
     'computed_setter',
     'computed_property',
@@ -195,46 +241,11 @@ export const SWIFT_FUNCTION_LABELS: Readonly<Record<string, string>> = {
     didset_clause: 'didSet observer',
 };
 
-export const SWIFT_ACCESSOR_NODES = new Set([
-    'computed_getter',
-    'computed_setter',
-    'computed_property',
-    'willset_clause',
-    'didset_clause',
-]);
-
-export const FUNCTION_LABEL = 'function';
-
-export const ONE_STATEMENT = '1 statement';
-
 export const TRIVIAL_FILE_MESSAGE =
     'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.';
 
 export const TRIVIAL_FUNCTION_RULES = { trivialFunction: 'trivial-function', trivialFile: 'trivial-file' } as const;
 
-export const FUNCTION_ORDER_RULE = 'private-below-public';
+export const TYPE_ALIAS_NODES = new Set(['type_alias_statement', 'typealias_declaration']);
 
-export const SCRIPT_FUNCTION_DECLARATIONS: ReadonlySet<string> = new Set([
-    'function_declaration',
-    'generator_function_declaration',
-]);
-
-export const SCRIPT_FUNCTION_VALUES: ReadonlySet<string> = new Set([
-    'arrow_function',
-    'function_expression',
-    'generator_function',
-]);
-
-export const DEFAULT_EXPORT_NAME = 'default';
-
-// ESLint's message template prints a category whole, so a category opens the quote that formatRefusedImport closes.
-export const IMPORT_RULE_CATEGORY = 'rule "';
-
-export const TOOL_LOCKFILES = new Set([
-    ...LOCKFILES.map(({ file }) => `${GSPOT_FOLDER}/${file}`),
-    GSPOT_PATHS.miseLockfile,
-]);
-
-export const MISE_TASKS_GLOB = `{${MISE_TASK_FOLDERS.join(',')}}/**`;
-
-export const NODE_SHEBANG_TAG = `${SHEBANG_TAG}node`;
+export const TYPE_REFERENCE_NODES = new Set(['type', 'user_type', 'identifier', 'type_identifier']);

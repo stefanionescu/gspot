@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
-import { EXCLUDE_FLAG } from '#cli/config/configurations/framework.ts';
+import { EXCLUDE_FLAG } from '#cli/config/configurations/shared.ts';
 import { listOwnTestScopes, selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';

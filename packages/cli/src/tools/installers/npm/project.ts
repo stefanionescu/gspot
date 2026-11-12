@@ -5,12 +5,13 @@ import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { CI_NODE, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import {
+    DELETED_LOCKFILE_MESSAGE,
     INSTALL_FAILURE,
+    LOCK_ONLY_FLAG,
     LOCKFILE_CREDENTIAL_MESSAGE,
     LOCKFILE_FAILURE,
     NODE_MISSING_MESSAGE,
@@ -23,6 +24,7 @@ import {
     NPMRC_FILE,
     PACKAGE_MANAGER_ARGUMENTS,
     PACKAGE_MANAGER_SETTINGS_NAME,
+    PACKAGE_MANAGER_UPGRADES,
     RELEASE_AGE_VERSIONS,
 } from '#cli/config/tools/installers.ts';
 import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
@@ -39,7 +41,7 @@ import { extractRegistryCredentials, writeNpmrc } from '#cli/tools/installers/np
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
 import { explainReleaseAgeHold, runInstallStep } from '#cli/tools/installers/steps.ts';
 import { listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
-import type { PackageManagerCommand, ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
+import type { PackageManagerCommand, ReplacementRequest } from '#cli/types/repository.ts';
 import type {
     GeneratedFile,
     NpmToolInstall,
@@ -50,17 +52,6 @@ import type {
     ToolPackageManager,
     ToolRelease,
 } from '#cli/types/tools.ts';
-
-const LOCK_ONLY_FLAG = '--package-lock-only';
-
-const PACKAGE_MANAGER_UPGRADES: Record<ToolPackageManagerName, string> = {
-    npm: 'npm install --global npm@latest',
-    pnpm: 'pnpm self-update',
-    bun: 'bun upgrade',
-};
-
-const DELETED_LOCKFILE_MESSAGE =
-    'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.';
 
 async function createNpmLockfile(
     install: NpmToolInstall,

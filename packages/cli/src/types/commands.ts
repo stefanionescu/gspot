@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
+import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/check.ts';
 import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/reports.ts';
 import type {
     checkExplanationSchema,
     checkIgnoreSchema,

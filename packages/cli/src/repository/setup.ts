@@ -3,7 +3,7 @@ import { basename, dirname, join, relative, resolve } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { EXECUTABLE_BITS, MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
+import { MARKDOWN_EXTENSION } from '#cli/config/repository/files.ts';
 import {
     AGENT_FILES,
     FOREIGN_CI_FILES,
@@ -28,7 +28,7 @@ import {
     SIMPLE_GIT_HOOKS_KEY,
     YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
-import { LINE_BREAK } from '#cli/config/system.ts';
+import { EXECUTABLE_BITS, LINE_BREAK } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';

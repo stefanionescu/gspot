@@ -2,44 +2,28 @@ import { posix } from 'node:path';
 
 import type { Node } from 'web-tree-sitter';
 
-import { TYPE_NODES } from '#cli/config/configurations/naming.ts';
-import { IMPORT_RULE_CATEGORY, IMPORT_RULE_CHECK_RULES } from '#cli/config/configurations/structure.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
+import {
+    CAPITALIZED_NAME,
+    DECLARATION_NODES,
+    IMPORT_RULE_CHECK_RULES,
+    MEMBER_DOT,
+    NON_USE_PARENTS,
+    USE_NODES,
+} from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { formatRefusedImport } from '#cli/configurations/general/structure/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type { RuleLookup } from '#cli/types/configurations/general.ts';
+import type { RuleLookup, SwiftDeclarations } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { SourceTree } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-// `owners` maps each type that other files can name to the rules that declare it. `hidden` maps each rule to the names
-// that its files declare for a narrower reach: inside a type, as a generic parameter, or as a private top-level type.
-type SwiftDeclarations = { owners: Map<string, Set<string>>; hidden: Map<string, Set<string>> };
-
-const CAPITALIZED_NAME = /^\p{Lu}/u;
-
-const DECLARATION_NODES = [...TYPE_NODES, 'associatedtype_declaration', 'type_parameter'];
-
-const USE_NODES = ['type_identifier', 'simple_identifier'];
-
-// A capitalized identifier under one of these parents names a label, binding, enum case, macro, module, or build flag.
-const NON_USE_PARENTS: ReadonlySet<string> = new Set([
-    'directive',
-    'enum_entry',
-    'identifier',
-    'macro_invocation',
-    'parameter',
-    'pattern',
-    'value_argument_label',
-]);
-
-const MEMBER_DOT = '.';
 
 function listRuleSwiftFiles(files: TrackedFile[], lookup: RuleLookup): Array<{ path: string; grammar: 'swift' }> {
     return files

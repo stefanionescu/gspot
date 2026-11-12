@@ -12,10 +12,13 @@ import {
     MISSING_CODE,
     OUTPUT_LIMIT,
     OUTPUT_POLL_MILLISECONDS,
+    OVER_LIMIT_COMPLETION,
     PATH_SEPARATORS,
     PATHEXT_DEFAULT,
     TEMPORARY_FILE_PREFIX,
     TEMPORARY_REMOVAL_OPTIONS,
+    UNSTARTED_COMPLETION,
+    UNSTOPPED,
 } from '#cli/config/system.ts';
 import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -32,17 +35,6 @@ import type {
     SpawnResult,
     StdoutReader,
 } from '#cli/types/system.ts';
-
-const UNSTARTED_COMPLETION = { failed: true, stdout: '', stderr: '' } as const;
-
-const UNSTOPPED = { timedOut: false, canceled: false } as const;
-
-const OVER_LIMIT_COMPLETION = {
-    failed: true,
-    code: 'ERR_OUTPUT_LIMIT',
-    stdout: '',
-    stderr: 'The command wrote more output than gspot reads from one command.',
-} as const;
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };

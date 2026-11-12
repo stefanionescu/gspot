@@ -1,4 +1,38 @@
-export const PARENT_TSCONFIG_SKIP = 'The tsconfig of a parent folder covers this project, and gspot checks it there.';
+// checks
+
+export const MISSING_TSCONFIG_HELP = 'Add a tsconfig.json that includes these files.';
+
+export const MISSING_TSCONFIG_MESSAGE =
+    'Add a tsconfig.json to this scope. ESLint reads the TypeScript files through it.';
+
+export const MISSING_TSCONFIG_RULE = 'missing';
+
+export const OPTION_HELP = 'Turn this compiler option on in this tsconfig.';
+
+export const STRICT_FAMILY_OPTIONS = [
+    'alwaysStrict',
+    'noImplicitAny',
+    'noImplicitThis',
+    'strictBindCallApply',
+    'strictBuiltinIteratorReturn',
+    'strictFunctionTypes',
+    'strictNullChecks',
+    'strictPropertyInitialization',
+    'useUnknownInCatchVariables',
+] as const;
+
+export const TSCONFIG_NAME = /^tsconfig\.(?:.+\.)?json$/u;
+
+export const UNREADABLE_TSCONFIG_HELP =
+    'Install the package that the tsconfig extends, or correct the file. For a template that nobody installs, run gspot ignore typescript/tsconfig with its paths and a reason.';
+
+export const UNREADABLE_TSCONFIG_RULE = 'unreadable';
+
+// generated config
+
+export const DEFAULT_PROJECT_FILE_LIMIT = 8;
+
+export const DEFAULT_PROJECT_LIMIT_OPTION = 'maximumDefaultProjectFileMatchCount_THIS_WILL_SLOW_DOWN_LINTING';
 
 export const TYPESCRIPT_RULES = {
     'no-const-assign': 'error',
@@ -74,30 +108,3 @@ export const TYPESCRIPT_TEST_RULES = {
     'gspot/no-magic-numbers': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
 } as const;
-
-export const TSCONFIG_NAME = /^tsconfig\.(?:.+\.)?json$/u;
-
-export const MISSING_TSCONFIG_RULE = 'missing';
-
-export const UNREADABLE_TSCONFIG_RULE = 'unreadable';
-
-export const MISSING_TSCONFIG_MESSAGE =
-    'Add a tsconfig.json to this scope. ESLint reads the TypeScript files through it.';
-
-export const MISSING_TSCONFIG_HELP = 'Add a tsconfig.json that includes these files.';
-
-export const OPTION_HELP = 'Turn this compiler option on in this tsconfig.';
-
-export const STRICT_FAMILY_OPTIONS = [
-    'alwaysStrict',
-    'noImplicitAny',
-    'noImplicitThis',
-    'strictBindCallApply',
-    'strictBuiltinIteratorReturn',
-    'strictFunctionTypes',
-    'strictNullChecks',
-    'strictPropertyInitialization',
-    'useUnknownInCatchVariables',
-] as const;
-
-export const TYPESCRIPT_CONFIGURATION = 'typescript';

@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 
 import ignore from 'ignore';
 
-import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { GITIGNORE_FILE, SKIPPED_PATTERN_STARTS } from '#cli/config/repository/files.ts';
 import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
@@ -12,8 +12,6 @@ import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
 import type { GitignoreMatcher } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
-
-const SKIPPED_PATTERN_STARTS = ['#', '!'] as const;
 
 /**
 Anchor one line of a .gitignore file at the folder of that file. A pattern with a slash before its end is relative to

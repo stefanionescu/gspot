@@ -14,44 +14,22 @@ import {
     visit,
 } from 'yaml';
 
-import { YAML_MESSAGES, YAML_RULES } from '#cli/config/configurations/yaml.ts';
+import {
+    YAML_COMMIT_USE,
+    YAML_GENERATED_ANCHOR,
+    YAML_LEADING_ZERO,
+    YAML_MESSAGES,
+    YAML_REQUIRED_NAMES,
+    YAML_RULES,
+    YAML_TRAILING_ZERO,
+    YAML_TRUTHY,
+    YAML_VERSION_COMMENT,
+} from '#cli/config/configurations/language.ts';
 import { YAML_EXPLANATIONS } from '#cli/configurations/language/yaml/explanations.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { YamlAnchorToken, YamlFinding } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
-
-type YamlFinding = { offset: number; rule: string; message: string };
-
-type YamlAnchorToken = Pick<CST.SourceToken, 'offset' | 'source'>;
-
-const YAML_REQUIRED_NAMES = new Set([
-    'action.yaml',
-    'analysis_options.yaml',
-    'Chart.yaml',
-    'compose.yaml',
-    'compose.override.yaml',
-    'docker-compose.yaml',
-    'docker-compose.override.yaml',
-    'kustomization.yaml',
-    'pnpm-lock.yaml',
-    'pnpm-workspace.yaml',
-    '.pre-commit-config.yaml',
-    '.pre-commit-hooks.yaml',
-    'pubspec.yaml',
-    'values.yaml',
-]);
-
-const YAML_TRUTHY = /^(?:[Yy][Ee][Ss]|[Nn][Oo]|[Oo][Nn]|[Oo][Ff][Ff]|True|TRUE|False|FALSE)$/u;
-
-const YAML_LEADING_ZERO = /^[+-]?(?:0\d+|0o[0-7]+)$/u;
-
-const YAML_TRAILING_ZERO = /^[+-]?\d+\.\d*0$/u;
-
-const YAML_GENERATED_ANCHOR = /^[a-z]?\d+$/iu;
-
-const YAML_COMMIT_USE = /^\s*(?:-\s+)?uses:\s*['"]?[^'"#\s]+@[\da-f]{40}['"]?\s*$/iu;
-
-const YAML_VERSION_COMMENT = /^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.-]+)?\s*$/u;
 
 function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
     if (node.type !== 'PLAIN' || node.tag !== undefined) return [];

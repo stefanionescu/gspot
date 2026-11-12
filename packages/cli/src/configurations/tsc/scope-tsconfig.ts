@@ -1,15 +1,17 @@
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
-import { NESTJS_CONFIGURATION, TSCONFIG_COPY_FOLDER, TYPESCRIPT_TAG } from '#cli/config/configurations/framework.ts';
 import {
     COMPILER_OPTIONS,
     DEFAULT_LEVEL_OPTIONS,
     NESTJS_COMPILER_OPTIONS,
+    TSCONFIG_COPY_FOLDER,
     TYPESCRIPT_DEFAULTS,
+    TYPESCRIPT_TAG,
     TYPESCRIPT_TSCONFIG_CHECK,
 } from '#cli/config/configurations/shared.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { NESTJS_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';

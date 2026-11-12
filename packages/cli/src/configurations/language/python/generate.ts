@@ -3,14 +3,13 @@ import { relative } from 'node:path/posix';
 
 import { stringify } from '@decimalturn/toml-patch';
 
-import { DEFAULT_QUOTES } from '#cli/config/configurations/general.ts';
 import {
     BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
     BASEDPYRIGHT_CHECK,
     BASEDPYRIGHT_DEFAULT_OPTIONS,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
-    FASTAPI_CONFIGURATION,
+    MINIMUM_PYTHON,
     PYDANTIC_PACKAGE,
     PYTHON_FILES,
     RUFF_CHECK,
@@ -19,9 +18,12 @@ import {
     RUFF_PATH_RULES,
     RUFF_RUNTIME_TYPES,
     RUFF_TIDY_IMPORTS,
+    RUFF_UNFIXABLE,
 } from '#cli/config/configurations/python.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { FASTAPI_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
@@ -35,11 +37,6 @@ import { findText } from '#cli/system/files/reads.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Pyproject } from '#cli/types/parsers.ts';
-
-const MINIMUM_PYTHON = /(?:>=|~=|==)\s*(?<version>\d+\.\d+)/u;
-
-// F401 reports a side-effect import as unused, such as import readline, and its fix deletes the import.
-const RUFF_UNFIXABLE = ['F401'];
 
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(planned.ignoreSections).filter(

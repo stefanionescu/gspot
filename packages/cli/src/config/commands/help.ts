@@ -1,10 +1,30 @@
-export const SCOPE_OPTION = '--scope <path>';
+import { BASE_FLAG, FIX_FLAG, HOOK_FLAG, ONLY_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+
+// options
+
+export const BASE_OPTION = `${BASE_FLAG} <ref>` as const;
+
+export const CONFIGURATIONS_OPTION = '--configurations <names>';
+
+export const FROM_OPTION = '--from <file>';
+
+export const HOOK_OPTION = `${HOOK_FLAG} <hook>` as const;
+
+export const LEVEL_OPTION = '--level <level>';
+
+export const ONLY_OPTION = `${ONLY_FLAG} <checks>` as const;
+
+export const PATHS_OPTION = '--paths <path>';
 
 export const REASON_OPTION = '--reason <text>';
 
 export const RULE_OPTION = '--rule <rule>';
 
-export const PATHS_OPTION = '--paths <path>';
+export const SCOPE_OPTION = '--scope <path>';
+
+export const SKIP_OPTION = '--skip <checks>';
+
+// command help
 
 const SCOPE_HELP = 'Apply to one project folder, by its path from the repository root, such as services/api';
 
@@ -32,10 +52,10 @@ export const COMMAND_HELP = {
             'Find the configurations this repository needs and print a plan. gspot writes gspot.toml and the generated files: config files for the tools, rule files for coding agents, and Git hooks. CI starts off; turn it on with `gspot set ci.enabled true`.\n\ninit deletes your tool configs that gspot replaces. Each one must be committed unchanged, so `git show HEAD:<path>` can restore it. Then init installs the tools and turns on the Git hooks, as `gspot install` does. It runs no checks. Its last line names the commands to run next.\n\nWith --from, init also selects the configurations of the gspot.toml of another repository, and copies its settings that fit any repository. The plan lists each one it leaves out.',
         arguments: {},
         options: {
-            '--from <file>': "Start from another repository's gspot.toml",
-            '--configurations <names>':
+            [FROM_OPTION]: "Start from another repository's gspot.toml",
+            [CONFIGURATIONS_OPTION]:
                 'Use these configurations at the root; repeat the flag or separate names with commas',
-            '--level <level>': 'Start at this level. Default: basic',
+            [LEVEL_OPTION]: 'Start at this level. Default: basic',
         },
         exitCodes: [
             ['0', 'The plan was written, and the tools are installed.'],
@@ -69,12 +89,12 @@ export const COMMAND_HELP = {
             '[paths...]': 'Files or folders to check, relative to the current folder (default: the whole repository)',
         },
         options: {
-            '--only <checks>':
+            [ONLY_OPTION]:
                 'Run only these checks, including checks off at your level. Separate several with commas, or repeat the option. commit or push alone runs the checks of that stage at your level',
-            '--skip <checks>': 'Run every check except these. Separate several with commas, or repeat the option',
-            '--staged': 'Check the files as you staged them. The pre-commit hook adds --only commit',
-            '--base <ref>': 'Check the files changed since this branch, tag, or commit',
-            '--fix': 'Run the fixers, then run the checks on the fixed files',
+            [SKIP_OPTION]: 'Run every check except these. Separate several with commas, or repeat the option',
+            [STAGED_FLAG]: 'Check the files as you staged them. The pre-commit hook adds --only commit',
+            [BASE_OPTION]: 'Check the files changed since this branch, tag, or commit',
+            [FIX_FLAG]: 'Run the fixers, then run the checks on the fixed files',
             '--verbose': 'Also print the passed and skipped checks, each command, and each ignore',
         },
         exitCodes: [
@@ -94,7 +114,7 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Configuration names, such as pytest. Run `gspot list` to see them',
         },
         options: {
-            '--scope <path>': SCOPE_HELP,
+            [SCOPE_OPTION]: SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The configurations were added, or they were already selected.'],
@@ -111,8 +131,8 @@ export const COMMAND_HELP = {
             '<configuration...>': 'Names from gspot list',
         },
         options: {
-            '--scope <path>': SCOPE_HELP,
-            '--reason <text>': 'Why you remove them (required)',
+            [SCOPE_OPTION]: SCOPE_HELP,
+            [REASON_OPTION]: 'Why you remove them (required)',
         },
         exitCodes: [
             ['0', 'The configurations were removed, or none of them was selected.'],
@@ -130,8 +150,8 @@ export const COMMAND_HELP = {
             '<values...>': 'The new value: every item of a list, or the table keys to add',
         },
         options: {
-            '--reason <text>': 'Why you change it. A value weaker than the shipped default needs one',
-            '--scope <path>': SCOPE_HELP,
+            [REASON_OPTION]: 'Why you change it. A value weaker than the shipped default needs one',
+            [SCOPE_OPTION]: SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The setting was written, or it already had this value.'],
@@ -149,7 +169,7 @@ export const COMMAND_HELP = {
             '[items...]': 'List items or table keys to remove (default: the whole value)',
         },
         options: {
-            '--scope <path>': SCOPE_HELP,
+            [SCOPE_OPTION]: SCOPE_HELP,
         },
         exitCodes: [
             ['0', 'The value was removed, or there was no value to remove.'],
@@ -166,9 +186,9 @@ export const COMMAND_HELP = {
             '[check]': 'The check, such as python/ruff. Leave it out to skip the --paths files in every check',
         },
         options: {
-            '--reason <text>': 'Why you ignore it (required)',
-            '--rule <rule>': 'Ignore only this lint rule, or the finding with this fingerprint',
-            '--paths <path>':
+            [REASON_OPTION]: 'Why you ignore it (required)',
+            [RULE_OPTION]: 'Ignore only this lint rule, or the finding with this fingerprint',
+            [PATHS_OPTION]:
                 'Ignore it for one path or glob relative to the current folder; repeat for more (default: every path)',
         },
         exitCodes: [
@@ -188,8 +208,8 @@ export const COMMAND_HELP = {
                 'The check, such as python/ruff. Leave it out and pass --paths to change the ignores that cover every check',
         },
         options: {
-            '--rule <rule>': 'Remove only the ignores of this lint rule',
-            '--paths <path>': 'Remove one path or glob relative to the current folder from ignores; repeat for more',
+            [RULE_OPTION]: 'Remove only the ignores of this lint rule',
+            [PATHS_OPTION]: 'Remove one path or glob relative to the current folder from ignores; repeat for more',
         },
         exitCodes: [
             ['0', 'The ignores were removed or changed, or no ignore matched.'],
@@ -246,5 +266,7 @@ export const COMMAND_HELP = {
         example: 'gspot doctor',
     },
 } as const;
+
+// text marks
 
 export const CODE_MARK = '`';

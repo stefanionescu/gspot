@@ -3,11 +3,12 @@ import { relative } from 'node:path';
 import {
     ADD_REMOVE_MESSAGE,
     FIX_INSTALL_MESSAGE,
+    MANAGED_KEYS_NOTE,
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import { MANAGED_KEYS_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/validation.ts';
 import { hasReleasedScanner } from '#cli/configurations/general/dependencies/generate.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
@@ -23,7 +24,6 @@ import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';

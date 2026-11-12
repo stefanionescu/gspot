@@ -1,11 +1,8 @@
+import { NESTED_AGENTS_MESSAGE, NESTED_AGENTS_RULE } from '#cli/config/configurations/general.ts';
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const NESTED_AGENTS_RULE = 'nested-agents-file';
-
-const NESTED_AGENTS_MESSAGE = 'Move these rules into the AGENTS.md at the root of the repository.';
 
 function checkNestedAgentsFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files

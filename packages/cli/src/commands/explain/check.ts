@@ -4,7 +4,7 @@ import {
     REPOSITORY_COMMAND,
     RUN_IN_COPY_MESSAGE,
     SELECTED_YES_MESSAGE,
-} from '#cli/config/commands/reports.ts';
+} from '#cli/config/commands/lookup.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';

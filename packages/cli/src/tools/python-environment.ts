@@ -4,15 +4,13 @@ import { join } from 'node:path';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { ACTIVE_ENVIRONMENT_VARIABLE, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { executableLayout } from '#cli/system/paths.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { ProcessFailure, ScopeCheck, Session } from '#cli/types/tools.ts';
-
-const ACTIVE_ENVIRONMENT_VARIABLE = 'VIRTUAL_ENV';
 
 /**
 Find the Python environment that the shell activated. Poetry, pip-tools, and conda keep it outside the project folder.

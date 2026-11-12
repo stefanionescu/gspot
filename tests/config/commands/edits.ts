@@ -1,14 +1,4 @@
-export const FORMAT_SETTINGS = `configurations = ["format"]
-[rule_files]
-enabled = false
-`;
-
-export const PRETTIER_PATH_IGNORE = `
-[[ignore]]
-check = "format/prettier"
-paths = ["**/*.json"]
-reason = "These files retain generated formatting."
-`;
+export const ROOT_EDITORCONFIG = 'root = true\n';
 
 export const UNKNOWN_IGNORE_ARGUMENTS = [
     'ignore',

@@ -8,42 +8,35 @@ import {
     ACRONYM_NAME,
     ACRONYM_PATTERN,
     ACRONYMS,
+    ALL_FILES_SECTION,
     BANNED_HEADING_MESSAGE,
     BANNED_HEADINGS,
+    BLOCK_IGNORES,
+    DIGIT_WORD_PATTERN,
     FILE_NAME_PATTERN,
     HEADING_CASE_STYLE,
     LENGTH_STYLES,
-    VALE_REGEX_SYMBOLS,
-} from '#cli/config/configurations/prose.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    ALL_FILES_SECTION,
-    BLOCK_IGNORES,
     MARKUP_RULES_COMMENT,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
     PROSE_GRAMMARS,
     STYLES_PATH_COMMENT,
+    TERMS_MESSAGE,
     TOKEN_IGNORES,
     VALE_COMMENT_RULES,
     VALE_MARKUP_FILES,
     VALE_MARKUP_RULES,
     VALE_OFF_RULES,
-    VALE_PACKAGE_URLS,
-    VALE_PACKAGES,
+    VALE_REGEX_SYMBOLS,
     VALE_SKIPPED_SCOPES,
-    VALE_STYLES_PATH,
     VOCAB_LINE,
-} from '#cli/config/tools/vale.ts';
+} from '#cli/config/configurations/prose.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { VALE_PACKAGE_URLS, VALE_PACKAGES, VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const TERMS_MESSAGE = "Use '%s' instead of '%s'.";
-
-// A word such as 3D starts with a digit, so Vale cannot read it as a capitalized first word.
-const DIGIT_WORD_PATTERN = String.raw`\b\d+[A-Z][A-Z\d]*\b`;
 
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]

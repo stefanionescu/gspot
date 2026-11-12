@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/javascript.ts';
+import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
 import {
     buildScopeOverrideBlocks,
     listJavascriptScopes,

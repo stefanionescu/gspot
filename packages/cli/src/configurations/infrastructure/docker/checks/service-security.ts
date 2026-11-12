@@ -1,17 +1,17 @@
-import { isMap, isScalar, isSeq, LineCounter, type Node, parseDocument, type YAMLMap } from 'yaml';
+import { isMap, isScalar, isSeq, LineCounter, parseDocument, type YAMLMap } from 'yaml';
 
-import { SERVICE_SECURITY_MESSAGES, SERVICE_SECURITY_RULES } from '#cli/config/configurations/docker.ts';
+import {
+    DOCKER_SOCKET,
+    SERVICE_SECURITY_MESSAGES,
+    SERVICE_SECURITY_RULES,
+    UNCONFINED_OPTION,
+} from '#cli/config/configurations/docker.ts';
 import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import type { ComposeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const DOCKER_SOCKET = /docker\.sock(?::|$)/u;
-
-const UNCONFINED_OPTION = /^(?:(?:seccomp|apparmor)[:=]unconfined|label[:=]disable)$/u;
-
-type ComposeHit = { kind: keyof typeof SERVICE_SECURITY_RULES; node: Node };
 
 function listVolumeHits(volumes: unknown): ComposeHit[] {
     if (!isSeq(volumes)) return [];

@@ -5,7 +5,13 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
 import { GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { AVAILABLE_TOOL_STATES, INSTALL_HELP, MISE_INSTALL_URL, ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
+import {
+    AVAILABLE_TOOL_STATES,
+    INSTALL_HELP,
+    MISE_INSTALL_URL,
+    PROJECT_DEPENDENCIES_MESSAGE,
+    ROOT_FOLDER_NAME,
+} from '#cli/config/tools/programs.ts';
 import { listProjectDependencyNames, readPackageJson } from '#cli/repository/dependencies.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
@@ -33,8 +39,6 @@ import type {
 } from '#cli/types/tools.ts';
 
 const TOOL_LOOKUPS = Symbol('tool lookups');
-
-const PROJECT_DEPENDENCIES_MESSAGE = 'Install the project dependencies first: node_modules is missing in {folder}.';
 
 function buildProjectInstallHelp(folders: ToolFolders, name: string): string {
     const { root, cwd } = folders;

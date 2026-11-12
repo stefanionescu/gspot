@@ -12,10 +12,10 @@ import { findNodeAtLocation, parseTree } from 'jsonc-parser/lib/esm/main.js';
 import {
     ARGUMENT_FORMATS,
     EMPTY_MESSAGE,
-    MESSAGE_FILE_SUFFIX,
     PLURAL_FORMAT,
     TRANSLATION_RULES,
-} from '#cli/config/configurations/framework.ts';
+} from '#cli/config/configurations/library.ts';
+import { MESSAGE_FILE_SUFFIX } from '#cli/config/settings/detected.ts';
 import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';

@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { REASON_VALUES } from '#tests/config/commands/reports.ts';
+import { REASON_VALUES } from '#tests/config/commands/lookup.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { settingOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';

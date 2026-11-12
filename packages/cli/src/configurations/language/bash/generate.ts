@@ -1,24 +1,6 @@
+import { SHELLCHECK_ALL_LEVEL_ON, SHELLCHECK_OPTIONS } from '#cli/config/configurations/bash.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-
-const SHELLCHECK_OPTIONS = [
-    ['source-path', 'SCRIPTDIR'],
-    ['external-sources', 'true'],
-] as const;
-
-const SHELLCHECK_ALL_LEVEL_ON = [
-    'add-default-case',
-    'avoid-negated-conditions',
-    'avoid-nullary-conditions',
-    'check-extra-masked-returns',
-    'check-set-e-suppressed',
-    'check-unassigned-uppercase',
-    'deprecate-which',
-    'quote-safe-variables',
-    'require-double-brackets',
-    'require-variable-braces',
-    'useless-use-of-cat',
-] as const;
 
 function buildShellcheckFile(planned: PlannedConfig): string {
     const disable = listDisabledRules(planned);
