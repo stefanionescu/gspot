@@ -63,13 +63,11 @@ extend-exclude = [
   "**/go.sum",
   "**/Package.resolved",
   # Paths that the tracked .gitignore files leave out
-  "**/*.log",
-  "packages/*/dist/**",
-  "docs/dist/**",
   "docs/.astro/**",
   "docs/.wrangler/**",
-  "PLAN.md",
-  "plan/**",
+  "docs/dist/**",
+  "packages/*/dist/**",
+  "**/*.log",
   # This literal supplies a deliberate misspelling to the spelling checks and their corrections.
   "tests/config/setup/configurations.ts",
 ]

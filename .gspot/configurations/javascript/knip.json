@@ -11,11 +11,10 @@
         "**/coverage/**",
         "**/.dev.vars.*",
         "**/.wrangler/**",
-        "packages/*/dist/**",
-        "docs/dist/**",
         "docs/.astro/**",
         "docs/.wrangler/**",
-        "plan/**"
+        "docs/dist/**",
+        "packages/*/dist/**"
     ],
     "ignoreDependencies": [
         "@gspothq/cli",

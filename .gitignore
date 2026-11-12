@@ -1,14 +1,11 @@
 node_modules/
 
+/docs/.astro/
+/docs/.wrangler/
+/docs/dist/
+/packages/*/dist/
+
 .env
 .env.*
 
 *.log
-
-/packages/*/dist/
-/docs/dist/
-/docs/.astro/
-/docs/.wrangler/
-
-/PLAN.md
-/plan/

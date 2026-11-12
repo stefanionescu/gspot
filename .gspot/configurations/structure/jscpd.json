@@ -34,12 +34,10 @@
         "**/.dev.vars.*",
         "**/.wrangler/**",
         "**/bun.lock",
-        "**/*.log",
-        "packages/*/dist/**",
-        "docs/dist/**",
         "docs/.astro/**",
         "docs/.wrangler/**",
-        "PLAN.md",
-        "plan/**"
+        "docs/dist/**",
+        "packages/*/dist/**",
+        "**/*.log"
     ]
 }

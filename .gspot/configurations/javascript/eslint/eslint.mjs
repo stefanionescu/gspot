@@ -373,13 +373,11 @@ export default setRuleOptions(defineConfig([
         "**/.dev.vars.*",
         "**/.wrangler/**",
         "**/bun.lock",
-        "**/*.log",
-        "packages/*/dist/**",
-        "docs/dist/**",
         "docs/.astro/**",
         "docs/.wrangler/**",
-        "PLAN.md",
-        "plan/**"
+        "docs/dist/**",
+        "packages/*/dist/**",
+        "**/*.log"
     ]
 },
     setLevelRules({"extends": [eslintJs["configs"]["recommended"]],
@@ -401,10 +399,9 @@ export default setRuleOptions(defineConfig([
             "[/\\\\]bower_components[/\\\\]",
             "[/\\\\]coverage[/\\\\]",
             "[/\\\\]\\.wrangler[/\\\\]",
-            "[/\\\\]docs[/\\\\]dist[/\\\\]",
             "[/\\\\]docs[/\\\\]\\.astro[/\\\\]",
             "[/\\\\]docs[/\\\\]\\.wrangler[/\\\\]",
-            "[/\\\\]plan[/\\\\]"
+            "[/\\\\]docs[/\\\\]dist[/\\\\]"
         ]
     },
     "rules": {
