@@ -24,6 +24,7 @@
 
 :root {
     --target-size: 44px;
+    --splash-width: 1200px;
 
     color-scheme: dark;
 
@@ -116,7 +117,7 @@ button {
 }
 
 html:not([data-has-sidebar]) .sl-container {
-    max-width: var(--home-width);
+    max-width: var(--splash-width);
 }
 
 html[data-has-hero] .content-panel {

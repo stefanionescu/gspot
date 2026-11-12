@@ -1,4 +1,5 @@
-import { findDisabledBucketOption } from '../../libraries/aws.ts';
+import { S3_TRANSPORT_CHECKS } from '../../config/aws.ts';
+import { listCdkTableIssues } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 
 export const awsInsecureBucketTransport = createRule<[], 'omitted' | 'authorized'>({
@@ -23,8 +24,7 @@ export const awsInsecureBucketTransport = createRule<[], 'omitted' | 'authorized
     create(context) {
         return {
             NewExpression(node) {
-                const issue = findDisabledBucketOption(context.sourceCode, node, 'enforceSSL');
-                if (issue)
+                for (const issue of listCdkTableIssues(context.sourceCode, node, S3_TRANSPORT_CHECKS))
                     context.report({
                         node: issue.node,
                         messageId: issue.kind === 'omitted' ? 'omitted' : 'authorized',

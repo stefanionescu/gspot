@@ -42,12 +42,10 @@ function readManifestDependencies(path: string): Array<[string, string]> {
 
 function bumpVersion(numbers: number[], kind: string): number[] {
     let position = numbers.length - 1;
-    if (kind === 'caret')
-        position = Math.max(
-            numbers.findIndex((value) => value > 0),
-            0,
-        );
-    else if (kind === 'tilde') position = Math.min(1, position);
+    if (kind === 'caret') {
+        const nonZero = numbers.findIndex((value) => value > 0);
+        position = nonZero === -1 ? numbers.length - 1 : nonZero;
+    } else if (kind === 'tilde') position = Math.min(1, position);
     return numbers.slice(0, position + 1).map((value, index) => (index === position ? value + 1 : value));
 }
 

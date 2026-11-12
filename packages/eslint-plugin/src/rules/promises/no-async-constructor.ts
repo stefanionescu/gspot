@@ -13,7 +13,9 @@ function getConstructorStatement(ancestors: readonly TSESTree.Node[]): TSESTree.
     const body = start === -1 ? [] : ancestors.slice(start + CONSTRUCTOR_BODY_DEPTH);
     return body.some((ancestor) => ASTUtils.isFunction(ancestor))
         ? undefined
-        : body.findLast((ancestor) => ancestor.type.endsWith('Statement'));
+        : body.findLast(
+              (ancestor) => ancestor.type.endsWith('Statement') || ancestor.type === AST_NODE_TYPES.VariableDeclaration,
+          );
 }
 
 function isAssignedToThis(call: TSESTree.CallExpression, statement: TSESTree.Node): boolean {

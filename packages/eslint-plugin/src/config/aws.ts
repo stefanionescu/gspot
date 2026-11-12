@@ -23,6 +23,14 @@ export const EFS_CHECKS = {
     'aws_cdk_lib.aws_efs.CfnFileSystem': [{ path: ['encrypted'], required: true, valid: [true] }],
 } as const;
 
+export const S3_TRANSPORT_CHECKS = {
+    'aws_cdk_lib.aws_s3.Bucket': [{ path: ['enforceSSL'], required: true, invalid: [false] }],
+} as const;
+
+export const S3_VERSIONING_CHECKS = {
+    'aws_cdk_lib.aws_s3.Bucket': [{ path: ['versioned'], required: true, invalid: [false] }],
+} as const;
+
 export const S3_DEPLOYMENT = 'aws_cdk_lib.aws_s3_deployment.BucketDeployment';
 
 export const ACCESS_CONTROL_PREFIX = 'aws_cdk_lib.aws_s3.BucketAccessControl.';

@@ -26,16 +26,15 @@ import { createRule } from '../../rule.ts';
 import type { ClearTextListener, ClearTextReport } from '../../types/security.ts';
 
 function getHost(url: string): { host: string; path: string | undefined } {
-    try {
+    if (URL.canParse(url)) {
         const parsed = new URL(url);
         return { host: parsed.hostname, path: parsed.pathname };
-    } catch {
-        const [authority = ''] = url
-            .slice(url.indexOf(PROTOCOL_SEPARATOR) + PROTOCOL_SEPARATOR.length)
-            .split(AUTHORITY_END);
-        const [host = ''] = authority.slice(authority.lastIndexOf('@') + 1).split(':', 1);
-        return { host, path: undefined };
     }
+    const [authority = ''] = url
+        .slice(url.indexOf(PROTOCOL_SEPARATOR) + PROTOCOL_SEPARATOR.length)
+        .split(AUTHORITY_END);
+    const [host = ''] = authority.slice(authority.lastIndexOf('@') + 1).split(':', 1);
+    return { host, path: undefined };
 }
 
 function isExemptUrl(url: string): boolean {

@@ -9,7 +9,8 @@ import type { TestCall } from '../../types/testing.ts';
 function listFollowingStatements(statement: TSESTree.Node): TSESTree.Node[] {
     const { parent } = statement;
     const isBlock = parent?.type === AST_NODE_TYPES.BlockStatement || parent?.type === AST_NODE_TYPES.Program;
-    const siblings: TSESTree.Node[] = isBlock ? parent.body : [];
+    const cases = parent?.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : [];
+    const siblings: TSESTree.Node[] = isBlock ? parent.body : cases;
     return siblings.slice(siblings.indexOf(statement) + 1);
 }
 

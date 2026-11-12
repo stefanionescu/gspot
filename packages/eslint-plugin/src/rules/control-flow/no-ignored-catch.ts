@@ -1,4 +1,4 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { COMPLEX_TRY_STATEMENTS } from '../../config/logic.ts';
 import { createRule } from '../../rule.ts';
@@ -11,6 +11,12 @@ function hasComplexTryBody(node: TSESTree.CatchClause): boolean {
     return COMPLEX_TRY_STATEMENTS.test(statement.type);
 }
 
+function hasUnusedParameter(node: TSESTree.CatchClause, source: TSESLint.SourceCode): boolean {
+    if (node.param === null) return true;
+    if (node.param.type !== AST_NODE_TYPES.Identifier) return false;
+    return ASTUtils.findVariable(source.getScope(node), node.param)?.references.length === 0;
+}
+
 export const noIgnoredCatch = createRule<[], 'exception'>({
     name: 'no-ignored-catch',
     meta: {
@@ -18,7 +24,8 @@ export const noIgnoredCatch = createRule<[], 'exception'>({
         type: 'problem',
         docs: {
             level: 'recommended',
-            description: 'Reports ignored catch parameters around multiple statements, blocks, loops, or switches.',
+            description:
+                'Reports ignored or omitted catch parameters around multiple statements, blocks, loops, or switches.',
             why: 'Discarding exceptions from a larger operation can hide which step failed and leave incomplete work.',
             fix: 'Handle or rethrow the exception, narrow the try body, or document why an empty catch intentionally ignores it.',
             example: '`catch (error) { report(error); }` handles the caught exception.',
@@ -31,9 +38,7 @@ export const noIgnoredCatch = createRule<[], 'exception'>({
     create(context) {
         return {
             CatchClause: (node) => {
-                if (node.param?.type !== AST_NODE_TYPES.Identifier) return;
-                const variable = ASTUtils.findVariable(context.sourceCode.getScope(node), node.param);
-                if (variable?.references.length !== 0 || !hasComplexTryBody(node)) return;
+                if (!hasUnusedParameter(node, context.sourceCode) || !hasComplexTryBody(node)) return;
                 if (
                     node.body.body.length === 0 &&
                     context.sourceCode.getCommentsInside(node.body).some((comment) => comment.value.trim().length > 0)

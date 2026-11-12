@@ -1,4 +1,5 @@
-import { findDisabledBucketOption } from '../../libraries/aws.ts';
+import { S3_VERSIONING_CHECKS } from '../../config/aws.ts';
+import { listCdkTableIssues } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 
 export const awsS3BucketVersioning = createRule<[], 'omitted' | 'unversioned'>({
@@ -23,8 +24,7 @@ export const awsS3BucketVersioning = createRule<[], 'omitted' | 'unversioned'>({
     create(context) {
         return {
             NewExpression(node) {
-                const issue = findDisabledBucketOption(context.sourceCode, node, 'versioned');
-                if (issue)
+                for (const issue of listCdkTableIssues(context.sourceCode, node, S3_VERSIONING_CHECKS))
                     context.report({
                         node: issue.node,
                         messageId: issue.kind === 'omitted' ? 'omitted' : 'unversioned',

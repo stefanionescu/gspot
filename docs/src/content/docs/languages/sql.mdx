@@ -30,8 +30,8 @@ path = "d1"
 sql.dialect = "sqlite"
 ```
 
-`naming/identifiers` reads SQL names with a Postgres parser. Under a dialect other than `ansi` or `postgres`, it checks
-the files that this parser can read, and reports no `syntax` finding for the others.
+`naming/identifiers` reads SQL names with a Postgres parser. Under a dialect other than `postgres`, which includes
+the default `ansi`, it checks the files that this parser can read, and reports no `syntax` finding for the others.
 
 ## Style
 

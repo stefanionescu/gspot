@@ -13,24 +13,25 @@ import {
 import { createRule } from '../../rule.ts';
 import type { ClientEnvironmentOptions } from '../../types/security.ts';
 
+function listPropertyReads(property: TSESTree.Property, source: TSESLint.SourceCode): TSESTree.Node[] {
+    if (property.value.type !== AST_NODE_TYPES.Identifier) return [property];
+    const variable = ASTUtils.findVariable(source.getScope(property.value), property.value);
+    return (variable?.references ?? [])
+        .filter((reference) => reference.isRead())
+        .map((reference) => reference.identifier);
+}
+
 function listHostEnvironmentReads(host: TSESTree.Identifier, source: TSESLint.SourceCode): TSESTree.Node[] {
     const { parent } = host;
     if (parent.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(parent) === ENVIRONMENT_PROPERTY)
         return [parent];
     if (parent.type !== AST_NODE_TYPES.VariableDeclarator || parent.init !== host) return [];
     if (parent.id.type === AST_NODE_TYPES.ObjectPattern)
-        return parent.id.properties.flatMap((property): TSESTree.Node[] => {
-            if (
-                property.type !== AST_NODE_TYPES.Property ||
-                ASTUtils.getPropertyName(property) !== ENVIRONMENT_PROPERTY
-            )
-                return [];
-            if (property.value.type !== AST_NODE_TYPES.Identifier) return [property];
-            const variable = ASTUtils.findVariable(source.getScope(property.value), property.value);
-            return (variable?.references ?? [])
-                .filter((reference) => reference.isRead())
-                .map((reference) => reference.identifier);
-        });
+        return parent.id.properties.flatMap((property) =>
+            property.type === AST_NODE_TYPES.Property && ASTUtils.getPropertyName(property) === ENVIRONMENT_PROPERTY
+                ? listPropertyReads(property, source)
+                : [],
+        );
     return source
         .getDeclaredVariables(parent)
         .flatMap((variable) => variable.references.filter((reference) => reference.isRead()))
@@ -47,7 +48,8 @@ function listGlobalEnvironmentReads(source: TSESLint.SourceCode): TSESTree.Node[
     const trace = Object.fromEntries(
         ENVIRONMENT_HOSTS.map((host) => [host, { [ENVIRONMENT_PROPERTY]: { [ASTUtils.ReferenceTracker.READ]: true } }]),
     );
-    for (const reference of tracker.iterateGlobalReferences(trace)) reads.push(reference.node);
+    for (const { node } of tracker.iterateGlobalReferences(trace))
+        reads.push(...(node.type === AST_NODE_TYPES.Property ? listPropertyReads(node, source) : [node]));
     return reads;
 }
 

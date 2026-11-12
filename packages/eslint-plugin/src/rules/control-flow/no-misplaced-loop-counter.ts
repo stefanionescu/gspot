@@ -16,8 +16,9 @@ function listAssignedNodes(node: TSESTree.Node): TSESTree.Node[] {
 function listCallTargets(node: TSESTree.Node): TSESTree.Node[] {
     if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression) return [];
     let target: TSESTree.Node = node.callee;
-    while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
-    return target.type === AST_NODE_TYPES.Identifier ? [target] : [];
+    while (target.type === AST_NODE_TYPES.MemberExpression && target.object.type !== AST_NODE_TYPES.ThisExpression)
+        target = target.object;
+    return target.type === AST_NODE_TYPES.Identifier || target.type === AST_NODE_TYPES.MemberExpression ? [target] : [];
 }
 
 function listDescendants(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
@@ -43,11 +44,10 @@ function listTestedNodes(test: TSESTree.Node, source: TSESLint.SourceCode): TSES
             const { parent } = node;
             return parent.type !== AST_NODE_TYPES.MemberExpression || parent.computed || parent.object === node;
         }
-        return (
-            node.type === AST_NODE_TYPES.MemberExpression &&
-            node.parent.type !== AST_NODE_TYPES.MemberExpression &&
-            node.parent.type !== AST_NODE_TYPES.CallExpression
-        );
+        if (node.type !== AST_NODE_TYPES.MemberExpression) return false;
+        const isOutermost =
+            node.parent.type !== AST_NODE_TYPES.MemberExpression && node.parent.type !== AST_NODE_TYPES.CallExpression;
+        return isOutermost || node.object.type === AST_NODE_TYPES.ThisExpression;
     });
 }
 

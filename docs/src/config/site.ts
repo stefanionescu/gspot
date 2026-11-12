@@ -74,9 +74,11 @@ export const SIDEBAR = [
         collapsed: false,
         items: [
             { slug: 'frameworks/astro' },
+            { slug: 'frameworks/django' },
             { slug: 'frameworks/expo' },
             { slug: 'frameworks/express' },
             { slug: 'frameworks/fastapi' },
+            { slug: 'frameworks/flask' },
             { slug: 'frameworks/nestjs' },
             { slug: 'frameworks/nextjs' },
             { slug: 'frameworks/react' },

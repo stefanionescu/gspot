@@ -8,7 +8,6 @@ import {
     POLICY_JSON_KEYS,
     POLICY_STATEMENT,
     POLICY_STATEMENTS_KEY,
-    S3_BUCKET,
 } from '../config/aws.ts';
 import { UNDEFINED_NAME } from '../config/plugin.ts';
 import { getExpressionValue, getOptionProperties, listArgumentValues } from '../language/expressions.ts';
@@ -175,27 +174,7 @@ export function findBucketOption(
     node: TSESTree.NewExpression,
     key: string,
 ): TSESTree.Property | null {
-    const options = getExpressionValue(node.arguments[CDK_PROPS_POSITION], source);
-    if (options?.type !== AST_NODE_TYPES.ObjectExpression) return null;
-    const property = options.properties.find(
-        (child): child is TSESTree.Property =>
-            child.type === AST_NODE_TYPES.Property && ASTUtils.isIdentifier(child.key) && child.key.name === key,
-    );
-    return property ?? null;
-}
-
-export function findDisabledBucketOption(
-    source: Readonly<TSESLint.SourceCode>,
-    node: TSESTree.NewExpression,
-    key: string,
-): CdkIssue | undefined {
-    if (getCdkName(source, node) !== S3_BUCKET) return undefined;
-    const option = findBucketOption(source, node, key);
-    if (option === null) return { node: node.callee, kind: 'omitted' };
-    const value = getExpressionValue(option.value, source);
-    return value?.type === AST_NODE_TYPES.Literal && value.value === false
-        ? { node: option, kind: 'invalid' }
-        : undefined;
+    return getOptionProperties(node.arguments[CDK_PROPS_POSITION], source).get(key) ?? null;
 }
 
 export function getCdkResult(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): CdkResult {

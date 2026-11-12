@@ -89,7 +89,9 @@ function listPermissiveServers(source: Readonly<TSESLint.SourceCode>, node: TSES
     const calls = callback ? listResponseCalls(source, callback, 'writeHead') : [];
     return calls
         .filter((call) => {
-            const origin = getOptionProperties(call.arguments[1], source).get('Access-Control-Allow-Origin');
+            const origin = [...getOptionProperties(call.arguments[1], source)].find(
+                ([key]) => key.toLowerCase() === ALLOW_ORIGIN_HEADER,
+            )?.[1];
             return getText(source, origin?.value) === '*';
         })
         .map(({ callee }) => callee);
