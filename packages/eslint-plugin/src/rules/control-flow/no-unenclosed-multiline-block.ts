@@ -68,13 +68,9 @@ export const noUnenclosedMultilineBlock = createRule<[], 'unenclosed'>({
     },
     create(context) {
         return {
-            Program: (node) => {
-                for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
-            },
-            BlockStatement: (node) => {
-                for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
-            },
-            TSModuleBlock: (node) => {
+            'Program, BlockStatement, TSModuleBlock'(
+                node: TSESTree.Program | TSESTree.BlockStatement | TSESTree.TSModuleBlock,
+            ) {
                 for (const issue of listUnenclosedStatements(node.body)) context.report(issue);
             },
         };

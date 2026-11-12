@@ -103,7 +103,7 @@ test('a number word such as base64 counts as one word', async () => {
 
 test('a name that breaks all five naming limits gets five findings, and the banned-word message names its word list', async () => {
     const { settings } = await readNaming('');
-    const findings = validateIdentifiers({ scope: { settings: { test_files: [] } } }, settings, [
+    const findings = validateIdentifiers({ ...settings, isTestFile: () => false }, [
         buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }),
     ]);
     expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
@@ -184,11 +184,9 @@ async function readNaming(tables: string): Promise<FileNaming> {
 }
 
 function listRules(identifier: Identifier, naming: FileNaming): Array<string | undefined> {
-    return validateIdentifiers(
-        { scope: { settings: { test_files: naming.isTestFile ? ['**'] : [] } } },
-        naming.settings,
-        [identifier],
-    ).map(({ rule }) => rule);
+    return validateIdentifiers({ ...naming.settings, isTestFile: () => naming.isTestFile }, [identifier]).map(
+        ({ rule }) => rule,
+    );
 }
 function buildFileNaming(settings: NamingSettings): FileNaming {
     return { settings, isTestFile: false };

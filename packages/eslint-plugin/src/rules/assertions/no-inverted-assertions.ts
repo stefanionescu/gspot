@@ -1,7 +1,8 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { ORDERED_ASSERTIONS, ORDERED_EXPECT_METHODS } from '../../config/assertions/styles.ts';
-import { isCallOf, listEnclosingTestCalls } from '../../libraries/testing.ts';
+import { getMemberRoot, isCallOf } from '../../language/syntax.ts';
+import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { OrderedArguments } from '../../types/assertions.ts';
 
@@ -22,8 +23,7 @@ function getAssertArguments(node: TSESTree.CallExpression): OrderedArguments | u
 function getExpectArguments(node: TSESTree.CallExpression): OrderedArguments | undefined {
     if (node.callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const method = ASTUtils.getPropertyName(node.callee) ?? '';
-    let value: TSESTree.Node = node.callee.object;
-    while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
+    const value = getMemberRoot(node.callee.object);
     const [first] = isCallOf(value, 'expect') ? value.arguments : [];
     const [second] = node.arguments;
     const isOrdered = ORDERED_EXPECT_METHODS.has(method) && first !== undefined && second !== undefined;

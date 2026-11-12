@@ -61,7 +61,7 @@ async function runXcodeCoverage(
     sandbox: TestdirResult,
     options: { tables: string; xcodebuild: string[]; xcrun: string[] },
 ): Promise<RunResult> {
-    using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
+    using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });
     await createFileTree(sandbox.path, {
         'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: options.tables }),
         'ExampleTests.swift': XCTEST_SOURCE,
@@ -73,7 +73,7 @@ async function runXcodeCoverage(
 }
 
 test('swift/tests: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
-    using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
+    using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: XCTEST_TABLES }),
         'ExampleTests.swift': XCTEST_SOURCE,
@@ -108,7 +108,7 @@ test('swift/tests: XCTest coverage refuses an external result link and removes a
 });
 
 test('Swift package coverage runs swift test, reads the custom target paths, and applies every target limit', async () => {
-    using _system = spyOn(environment, 'getOperatingSystem').mockReturnValue('macos');
+    using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });
     await using sandbox = await createGitSandbox({});
     await using _cache = await redirectCacheFolder();
     const reportPath = join(sandbox.path, 'coverage-input.json');

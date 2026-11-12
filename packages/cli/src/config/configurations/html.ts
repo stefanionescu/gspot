@@ -1,16 +1,15 @@
 export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
 
-export const HTML_VALIDATE_RULES = {
-    'doctype-style': 'off',
-    'void-style': 'off',
-    'attr-quotes': 'off',
-    'attr-case': 'off',
-    'element-case': 'off',
-    'no-trailing-whitespace': 'off',
-    'require-sri': ['error', { target: 'crossorigin' }],
-} as const;
-
-export const HTML_VALIDATE_OVERRIDES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+export const HTML_VALIDATE_RULES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
+    html: {
+        'doctype-style': 'off',
+        'void-style': 'off',
+        'attr-quotes': 'off',
+        'attr-case': 'off',
+        'element-case': 'off',
+        'no-trailing-whitespace': 'off',
+        'require-sri': ['error', { target: 'crossorigin' }],
+    },
     site: {
         'no-inline-style': 'off',
         'no-raw-characters': 'off',

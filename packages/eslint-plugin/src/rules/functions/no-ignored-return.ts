@@ -1,8 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { EARLY_EXIT_METHODS, PURE_METHODS, PURE_RECEIVER_SYMBOLS, REPLACE_METHOD } from '../../config/functions.ts';
 import { getTypes } from '../../language/checker.ts';
-import { listChildren } from '../../language/syntax.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 
@@ -12,14 +12,6 @@ function getReceiver(node: TSESTree.Node, types: TypeReader): string | undefined
     if (base === 'number' || base === 'string') return base;
     const name = type.getSymbol()?.getName();
     return name !== undefined && PURE_RECEIVER_SYMBOLS.has(name) ? name.toLowerCase() : undefined;
-}
-
-function hasAssignment(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    if (node.type === AST_NODE_TYPES.AssignmentExpression) return true;
-    return (
-        !ASTUtils.isFunction(node) &&
-        listChildren(node, source.visitorKeys).some((child) => hasAssignment(child, source))
-    );
 }
 
 function getPureMethod(callee: TSESTree.MemberExpression, types: TypeReader, source: TSESLint.SourceCode) {
@@ -33,7 +25,11 @@ function isIntended(method: string, node: TSESTree.CallExpression, types: TypeRe
     if (method === REPLACE_METHOD && second !== undefined) return types.get(second).getCallSignatures().length > 0;
     const isInline =
         first?.type === AST_NODE_TYPES.ArrowFunctionExpression || first?.type === AST_NODE_TYPES.FunctionExpression;
-    return EARLY_EXIT_METHODS.has(method) && isInline && hasAssignment(first.body, source);
+    return (
+        EARLY_EXIT_METHODS.has(method) &&
+        isInline &&
+        listBodyNodes(first.body, source).some((each) => each.type === AST_NODE_TYPES.AssignmentExpression)
+    );
 }
 
 export const noIgnoredReturn = createRule<[], 'ignored' | 'map'>({

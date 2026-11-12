@@ -7,7 +7,7 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
-import { detectScopeFolders, findProjectFolder } from '#cli/repository/scopes.ts';
+import { detectScopeFolders, findProjectFolder, joinScopeGlob, listOwnFiles } from '#cli/repository/scopes.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -24,6 +24,18 @@ import { runGitStep } from '#tests/setup/system/git.ts';
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
     expect(findProjectFolder(path, pattern)).toBe(folder);
+});
+
+test('joinScopeGlob escapes the glob characters of the scope path', () => {
+    expect(joinScopeGlob('app[1]', '**/*.ts')).toBe(String.raw`app\[1\]/**/*.ts`);
+    expect(joinScopeGlob('', '**/*.ts')).toBe('**/*.ts');
+});
+
+test('listOwnFiles keeps the files whose deepest scope is the named one', () => {
+    const files = [{ path: 'root.ts' }, { path: 'app/source.ts' }, { path: 'app/child/source.ts' }];
+    const scopes = [{ path: '' }, { path: 'app' }, { path: 'app/child' }];
+    expect(listOwnFiles(files, scopes, 'app')).toStrictEqual([{ path: 'app/source.ts' }]);
+    expect(listOwnFiles(files, scopes, '')).toStrictEqual([{ path: 'root.ts' }]);
 });
 
 test('broad workspace patterns skip .gspot/.venv and its outside interpreter link', async () => {

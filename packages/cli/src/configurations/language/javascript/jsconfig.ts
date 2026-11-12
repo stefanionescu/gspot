@@ -14,7 +14,7 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
@@ -61,15 +61,11 @@ function listTrackedDeclarationFiles(planned: PlannedConfig, authored: ParsedTsc
 }
 
 function hasExtensionlessSources(planned: PlannedConfig, importStyle: string): boolean {
-    const { files } = planned.session.repository;
-    const scopePath = planned.scope.path;
+    const { repository, scopes } = planned.session;
     return (
         importStyle === 'extensionless' &&
-        files.some(
-            (file) =>
-                file.kind === 'source' &&
-                file.tags.includes('javascript') &&
-                selectScopePath(file.path, planned.session.scopes) === scopePath,
+        listOwnFiles(repository.files, scopes, planned.scope.path).some(
+            (file) => file.kind === 'source' && file.tags.includes('javascript'),
         )
     );
 }

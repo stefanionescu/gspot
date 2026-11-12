@@ -3,7 +3,7 @@ import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 export type SuiteMember = {
     call: TSESTree.CallExpression;
     index: number;
-    kind: 'test' | 'suite' | 'hook';
+    kind: TestCall['kind'];
     isAfter: boolean;
 };
 
@@ -35,7 +35,5 @@ export type TestCall = TestCallee & {
 };
 
 export type QueryUse = { method: TSESTree.Identifier; isPresence: boolean };
-
-export type ExpectSubject = { value: TSESTree.CallExpressionArgument; isNegated: boolean };
 
 export type UiFrameworks = { hasCypress: boolean; hasPlaywright: boolean };

@@ -8,16 +8,20 @@ import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/gene
 import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
 import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
 import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
-import { buildTestFiles, listCodeTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    buildTestFiles,
+    listCodeTestFiles,
+    listNestedScopeGlobs,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
 import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
 import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
 import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
 import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentScope, getTable } from '#cli/settings/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
+import { joinTables } from '#cli/system/tables.ts';
 import type {
     ConfigurationBlocks,
     ConfigurationBuilder,
@@ -30,26 +34,26 @@ import type {
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
-const CONFIGURATION_BUILDERS: Readonly<Record<string, ConfigurationBuilder | undefined>> = {
-    ...Object.fromEntries(
+const CONFIGURATION_BUILDERS = joinTables<ConfigurationBuilder>([
+    Object.fromEntries(
         Object.entries(PLUGIN_RULE_BLOCKS).map(([name, declaration]) => [
             name,
             (scope: EslintScope) => buildPluginRuleBlocks(scope, declaration),
         ]),
     ),
-    ...ASTRO_BLOCK_BUILDERS,
-    ...DRIZZLE_BLOCK_BUILDERS,
-    ...NESTJS_BLOCK_BUILDERS,
-    ...NEXTJS_BLOCK_BUILDERS,
-    ...REACT_DOM_BLOCK_BUILDERS,
-    ...SVELTE_BLOCK_BUILDERS,
-    ...TESTING_LIBRARY_BLOCK_BUILDERS,
-    ...TYPESCRIPT_BLOCK_BUILDERS,
-    ...VITEST_BLOCK_BUILDERS,
-    ...VUE_BLOCK_BUILDERS,
-    ...ZUSTAND_BLOCK_BUILDERS,
-    supabase: buildSupabaseBlocks,
-};
+    ASTRO_BLOCK_BUILDERS,
+    DRIZZLE_BLOCK_BUILDERS,
+    NESTJS_BLOCK_BUILDERS,
+    NEXTJS_BLOCK_BUILDERS,
+    REACT_DOM_BLOCK_BUILDERS,
+    SVELTE_BLOCK_BUILDERS,
+    TESTING_LIBRARY_BLOCK_BUILDERS,
+    TYPESCRIPT_BLOCK_BUILDERS,
+    VITEST_BLOCK_BUILDERS,
+    VUE_BLOCK_BUILDERS,
+    ZUSTAND_BLOCK_BUILDERS,
+    { supabase: buildSupabaseBlocks },
+]);
 
 function buildConfigurationBlocks(
     builder: ConfigurationBuilder,
@@ -107,12 +111,10 @@ function buildScopeConfigurationBlocks(
         const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
         for (const { path, blocks } of scopeBlocks) {
             if (matching.has(path)) continue;
-            const excluded = listNestedScopes(
-                planned.session.scopes.map((each) => each.path),
+            const excluded = listNestedScopeGlobs(
+                planned.session.scopes.map((each) => each.path).filter((child) => !matching.has(child)),
                 path,
-            )
-                .filter((child) => !matching.has(child))
-                .map((child) => joinScope(escapeGlob(child), '**'));
+            );
             result.push({
                 configuration,
                 blocks: blocks.map((block) => ({ ...block, scope: { path, excluded } })),

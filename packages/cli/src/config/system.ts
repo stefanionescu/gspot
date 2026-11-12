@@ -117,6 +117,8 @@ export const GIT_METADATA_NAME = '.git';
 
 export const PATH_SEPARATORS = /[\\/]/u;
 
+export const NOT_LINE_BREAK = /[^\r\n]/gu;
+
 export const TASKKILL_PROGRAM = 'taskkill';
 
 export const TASKKILL_FLAGS = ['/T', '/F'] as const;

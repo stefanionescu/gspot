@@ -12,11 +12,11 @@ import {
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { FileBounds, Files } from '#cli/types/system.ts';
+import type { Files } from '#cli/types/system.ts';
 
-function createBoundedFolder(bounds: FileBounds, path: string): void {
+function createBoundedFolder(root: string, path: string): void {
     try {
-        const target = preparePath(bounds, path);
+        const target = preparePath(root, path);
         try {
             mkdirSync(target, { mode: PRIVATE_FOLDER });
         } catch (error) {
@@ -30,17 +30,17 @@ function createBoundedFolder(bounds: FileBounds, path: string): void {
     }
 }
 
-function deleteBoundedFile(bounds: FileBounds, path: string): void {
+function deleteBoundedFile(root: string, path: string): void {
     try {
-        unlinkSync(buildContainedPath(bounds, path));
+        unlinkSync(buildContainedPath(root, path));
     } catch (error) {
         throw buildWriteError(path, error);
     }
 }
 
-function listBoundedFolder(bounds: FileBounds, path: string): string[] {
+function listBoundedFolder(root: string, path: string): string[] {
     try {
-        const target = path === '' ? bounds.root : buildContainedPath(bounds, path);
+        const target = path === '' ? root : buildContainedPath(root, path);
         if (!lstatSync(target).isDirectory())
             throw new GspotError('filesystem', `${path || '.'} is not a folder. Choose a folder.`);
         return readdirSync(target).toSorted((left, right) => compareText(left, right));
@@ -51,11 +51,11 @@ function listBoundedFolder(bounds: FileBounds, path: string): string[] {
 }
 
 export function openFiles(root: string): Files {
-    const bounds: FileBounds = { root: realpathSync(root) };
+    const canonical = realpathSync(root);
     const files: Files = {
         deleteFolder(path) {
             try {
-                rmdirSync(buildContainedPath(bounds, path));
+                rmdirSync(buildContainedPath(canonical, path));
             } catch (error) {
                 throw buildWriteError(path, error);
             }
@@ -66,26 +66,26 @@ export function openFiles(root: string): Files {
                 if (stat?.isSymbolicLink() === true) throw new GspotError('filesystem', `${path} ${LINK_REFUSAL}`);
                 if (stat?.isDirectory() === false)
                     throw new GspotError('filesystem', `${path} is not a folder. Choose a folder.`);
-                if (stat !== undefined) rmSync(buildContainedPath(bounds, path), { recursive: true, force: true });
+                if (stat !== undefined) rmSync(buildContainedPath(canonical, path), { recursive: true, force: true });
             } catch (error) {
                 throw buildWriteError(path, error);
             }
         },
-        readCanonicalPath: (path) => (path === '' ? bounds.root : readContainedPath(bounds.root, path)),
-        list: (path) => listBoundedFolder(bounds, path),
+        readCanonicalPath: (path) => (path === '' ? canonical : readContainedPath(canonical, path)),
+        list: (path) => listBoundedFolder(canonical, path),
         findStats(path) {
             try {
-                return lstatSync(buildContainedPath(bounds, path));
+                return lstatSync(buildContainedPath(canonical, path));
             } catch (error) {
                 if (hasErrorCode(error, 'ENOENT')) return undefined;
                 throw error;
             }
         },
-        read: (path) => readBoundedFile(bounds, path),
-        readKeepingLinks: (path) => readBoundedKeepingLinks(bounds, path),
-        write: replaceBoundedFile.bind(undefined, bounds),
-        deleteFile: deleteBoundedFile.bind(undefined, bounds),
-        createPrivateFolder: createBoundedFolder.bind(undefined, bounds),
+        read: (path) => readBoundedFile(canonical, path),
+        readKeepingLinks: (path) => readBoundedKeepingLinks(canonical, path),
+        write: replaceBoundedFile.bind(undefined, canonical),
+        deleteFile: deleteBoundedFile.bind(undefined, canonical),
+        createPrivateFolder: createBoundedFolder.bind(undefined, canonical),
     };
     return files;
 }
@@ -98,6 +98,9 @@ export function deleteEmptyFolders(files: Files, path: string): void {
     }
 }
 
+/**
+Call canEnter for each entry below start. A true result enters the folder.
+*/
 export function walkFiles(files: Files, start: string, canEnter: (path: string) => boolean): void {
     const pending = [start];
     for (let folder = pending.pop(); folder !== undefined; folder = pending.pop()) {

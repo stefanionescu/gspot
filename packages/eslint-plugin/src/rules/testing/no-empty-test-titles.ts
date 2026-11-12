@@ -1,8 +1,8 @@
 import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
-import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
+import { TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { getTestCall, isRunningTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
 export const noEmptyTestTitles = createRule<[], 'empty'>({
@@ -25,8 +25,13 @@ export const noEmptyTestTitles = createRule<[], 'empty'>({
         return {
             'CallExpression[arguments.0.type=/^(Literal|TemplateLiteral)$/]'(node: TSESTree.CallExpression) {
                 const call = getTestCall(node, context.sourceCode);
-                const isRunning = call?.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier)) === true;
-                if (!isRunning || call.kind === 'hook' || call.callback === undefined) return;
+                if (
+                    call === undefined ||
+                    !isRunningTestCall(call) ||
+                    call.kind === 'hook' ||
+                    call.callback === undefined
+                )
+                    return;
                 const title = node.arguments.find(
                     (argument, index) => index === 0 && ASTUtils.getStringIfConstant(argument)?.trim() === '',
                 );

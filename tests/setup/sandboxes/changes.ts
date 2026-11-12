@@ -98,8 +98,7 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
 
 export async function applyGeneratedFiles(root: string): Promise<ApplyReport> {
     const session = await openSession(root);
-    const { report } = await writeEveryGeneratedFile(session, openFiles(root));
-    return report;
+    return writeEveryGeneratedFile(session, openFiles(root));
 }
 
 export async function writeSandboxChanges(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {

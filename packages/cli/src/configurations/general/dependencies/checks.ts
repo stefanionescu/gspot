@@ -226,13 +226,13 @@ function checkStaleLockfile(session: Session, planned: PlannedCheck): CheckFindi
     const manifest = readPackageJson(session.cache, packageJsonPath);
     if (manifest === undefined) return [];
     const specifiers = listSpecifiers(manifest, sections);
+    const relative = posix.relative(found.base, folder);
     let locked = new Map(
         SPECIFIER_PARSERS[found.lockfile](posix.join(found.base, found.lockfile), found.text).map(
             ([key, workspace]) => [key === PNPM_ROOT_IMPORTER ? '' : key, listSpecifiers(workspace, sections)],
         ),
-    ).get(posix.relative(found.base, folder));
+    ).get(relative);
     if (locked === undefined) {
-        const relative = posix.relative(found.base, folder);
         if (relative !== '' && !listWorkspaceFolders(join(session.root, found.base)).includes(relative)) return [];
         locked = new Map();
     }

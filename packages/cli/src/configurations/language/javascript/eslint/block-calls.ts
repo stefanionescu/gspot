@@ -13,8 +13,7 @@ import {
     SHARED_LIST_REFERENCE,
 } from '#cli/config/configurations/javascript.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
     EslintBlockFields,
     EslintCallArgument,
@@ -112,7 +111,7 @@ function buildScopeFields(writer: EslintFileWriter, block: PlannedEslintBlock): 
         ...(scope !== undefined && {
             files: (fields.files ?? writer.codeFiles).map((pattern) => [
                 ...(Array.isArray(pattern) ? pattern : [pattern]),
-                joinScope(escapeGlob(scope.path), '**/*'),
+                joinScopeGlob(scope.path, '**/*'),
             ]),
         }),
         ...(ignores.length > 0 && { ignores }),

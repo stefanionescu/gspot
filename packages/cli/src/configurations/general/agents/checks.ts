@@ -1,5 +1,3 @@
-import { posix } from 'node:path';
-
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
@@ -11,7 +9,7 @@ const NESTED_AGENTS_MESSAGE = 'Move these rules into the AGENTS.md at the root o
 
 function checkNestedAgentsFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files
-        .filter(({ path }) => path !== AGENTS_FILE && posix.basename(path) === AGENTS_FILE)
+        .filter(({ path }) => path !== AGENTS_FILE)
         .map(({ path }) => ({ file: path, line: 1, rule: NESTED_AGENTS_RULE, message: NESTED_AGENTS_MESSAGE }));
 }
 

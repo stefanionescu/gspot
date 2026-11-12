@@ -10,10 +10,10 @@ import {
 } from '../../config/functions.ts';
 import { COMPARISON_OPERATORS } from '../../config/logic.ts';
 import { getTypes } from '../../language/checker.ts';
-import { getLocalFunction } from '../../language/functions.ts';
+import { findEnclosingFunction, getLocalFunction } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
-import type { CallNode, ParameterNames, SwappedPair } from '../../types/functions.ts';
-import type { TypeReader } from '../../types/plugin.ts';
+import type { ParameterNames, SwappedPair } from '../../types/functions.ts';
+import type { CallNode, TypeReader } from '../../types/plugin.ts';
 
 function getParameterNames(
     call: CallNode,
@@ -101,7 +101,7 @@ function isCompared(call: CallNode, [first, second]: SwappedPair, source: TSESLi
 }
 
 function isComparatorReversal(call: CallNode, pair: SwappedPair, source: TSESLint.SourceCode): boolean {
-    const enclosing = source.getAncestors(call).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+    const enclosing = findEnclosingFunction(call, source);
     const names = (enclosing?.params ?? []).map((parameter) =>
         ASTUtils.isIdentifier(parameter) && parameter.name.length <= 1 ? parameter.name : '',
     );

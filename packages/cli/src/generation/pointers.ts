@@ -17,7 +17,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { isOutsideChildScopes, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isOutsideChildScopes, joinScope, listNestedScopes, listOwnFiles } from '#cli/repository/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
@@ -25,8 +25,8 @@ import {
     buildModuleSpecifier,
     escapeGlob,
     extractParentFolder,
-    findOutermostFolder,
     isInScope,
+    listEnclosingFolders,
 } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -119,17 +119,17 @@ export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
     const scopePath = scope.path;
     if (pointer.folders === undefined)
         return [config.per_scope && pointer.overrides !== true ? joinScope(scopePath, pointer.path) : pointer.path];
-    const children = listNestedScopes(
-        scopes.map((each) => each.path),
-        scopePath,
-    );
     const isMatch = buildPathMatcher(pointer.folders);
-    const owned = listCoveredFiles(configuration.files, repository.files, { ...scope, path: '' }).filter(
-        (file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children),
+    const owned = listOwnFiles(
+        listCoveredFiles(configuration.files, repository.files, { ...scope, path: '' }),
+        scopes,
+        scopePath,
     );
     const folders = new Set(
         owned.flatMap(({ path }) => {
-            const folder = findOutermostFolder(extractParentFolder(path), isMatch);
+            const folder = listEnclosingFolders(extractParentFolder(path)).findLast(
+                (enclosing) => enclosing !== '' && isMatch(enclosing),
+            );
             if (folder === undefined) return [];
             return [isInScope(folder, scopePath) ? folder : scopePath];
         }),

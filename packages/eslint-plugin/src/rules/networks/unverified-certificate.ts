@@ -1,7 +1,5 @@
-import { ASTUtils } from '@typescript-eslint/utils';
-
 import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
-import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
+import { getOptionValue, listOptionLiterals } from '../../language/expressions.ts';
 import { createRule } from '../../rule.ts';
 
 export const unverifiedCertificate = createRule<[], 'unverified'>({
@@ -26,8 +24,7 @@ export const unverifiedCertificate = createRule<[], 'unverified'>({
         return {
             CallExpression(node) {
                 for (const options of listOptionLiterals(node, source, TLS_OPTION_ARGUMENTS)) {
-                    const property = getOptionProperties(options, source).get('rejectUnauthorized');
-                    if (property && ASTUtils.getStaticValue(property.value, source.getScope(node))?.value === false)
+                    if (getOptionValue(options, 'rejectUnauthorized', source)?.value === false)
                         context.report({ node: node.callee, messageId: 'unverified' });
                 }
             },

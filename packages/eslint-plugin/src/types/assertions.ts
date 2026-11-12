@@ -20,19 +20,24 @@ export type AssertionPredicate = 'truthy' | 'falsy' | 'true' | 'false' | 'define
 
 export type AssertionComparison = 'strict' | 'deep' | 'loose';
 
-export type AssertionSubject = { received: TSESTree.Expression; negated: boolean };
+export type ExpectCall = { call: TSESTree.CallExpression; negated: boolean };
 
 type AssertionStyle = 'jest-like' | 'jasmine' | 'playwright' | 'chai-bdd' | 'chai-assert' | 'node-assert' | 'cypress';
 
-export type Assertion = AssertionSubject & { style: AssertionStyle; report: TSESTree.Node } & (
-        | { kind: 'predicate'; predicate: AssertionPredicate; node: TSESTree.Node }
-        | {
-              kind: 'comparison';
-              comparison: AssertionComparison;
-              expected: TSESTree.Expression;
-              node: TSESTree.CallExpression;
-          }
-    );
+export type Assertion = {
+    received: TSESTree.Expression;
+    negated: boolean;
+    style: AssertionStyle;
+    report: TSESTree.Node;
+} & (
+    | { kind: 'predicate'; predicate: AssertionPredicate; node: TSESTree.Node }
+    | {
+          kind: 'comparison';
+          comparison: AssertionComparison;
+          expected: TSESTree.Expression;
+          node: TSESTree.CallExpression;
+      }
+);
 
 export type AssertionChecks = {
     style: AssertionStyle;

@@ -3,8 +3,8 @@ import {
     BASE_SELECTORS,
     ENVIRONMENT_SELECTOR,
 } from '#cli/config/configurations/eslint/blocks.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
@@ -56,7 +56,7 @@ export function buildSelectorBlocks(
             .toArray();
         return {
             scopePath: scope.path,
-            ignoredScopes: listNestedScopes(scopePaths, scope.path),
+            ignoredScopes: listNestedScopeGlobs(scopePaths, scope.path),
             selectors: [...(level === 'all' ? BASE_SELECTORS : []), ...applied, ...listSettingSelectors(scope, level)],
         };
     });

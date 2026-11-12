@@ -62,9 +62,9 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
     }
 }
 
-function formatMiseFailure(command: readonly string[], result: SpawnResult): string {
+function formatMiseFailure(subcommand: string, result: SpawnResult): string {
     const detail = result.stderr.trim();
-    const failure = `mise ${String(command[1])} failed (exit ${String(result.code)})`;
+    const failure = `mise ${subcommand} failed (exit ${String(result.code)})`;
     return detail === '' ? `${failure}.` : `${failure}: ${detail}`;
 }
 
@@ -77,7 +77,7 @@ async function listSystemExecutablePaths(cwd: string, name: string, timeoutSecon
             const command = [mise, MISE_WHICH, name];
             const result = await runProcess(command, { cwd: cwd, env: TOOL_ENVIRONMENT, timeoutSeconds });
             const program = result.stdout.trim();
-            if (result.code !== 0) return { paths: [], failure: formatMiseFailure(['mise', MISE_WHICH], result) };
+            if (result.code !== 0) return { paths: [], failure: formatMiseFailure(MISE_WHICH, result) };
             return { paths: program === '' ? [] : [program] };
         }),
     );
@@ -134,7 +134,7 @@ export async function readMiseBinPaths(
     });
     return result.code === 0
         ? { folders: result.stdout.trim().split(LINE_BREAK).filter(Boolean) }
-        : { folders: [], failure: formatMiseFailure(command, result) };
+        : { folders: [], failure: formatMiseFailure(MISE_BIN_PATHS_ARGUMENTS[1], result) };
 }
 
 /**

@@ -1,15 +1,11 @@
 import { relative } from 'node:path';
 
-import { InvalidArgumentError } from '@commander-js/extra-typings';
-
 import {
     ADD_REMOVE_MESSAGE,
     FIX_INSTALL_MESSAGE,
-    NAME_LIST_SEPARATOR,
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import { PATHS_OPTION } from '#cli/config/commands/help.ts';
 import { MANAGED_KEYS_NOTE } from '#cli/config/generation/files.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { hasReleasedScanner } from '#cli/configurations/general/dependencies/generate.ts';
@@ -17,7 +13,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
-import { listCheckIds } from '#cli/manifests/read.ts';
 import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { selectScope } from '#cli/repository/scopes.ts';
@@ -26,19 +21,16 @@ import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
 import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
 import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { readSettings } from '#cli/settings/read.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';
-import { formatNameList, quoteArgument } from '#cli/system/text.ts';
+import { formatNameList, formatNameState, quoteArgument } from '#cli/system/text.ts';
 import type {
     CommandLocation,
-    CommandOption,
     ConfigurationChange,
     ConfigurationsOptions,
     IgnoreEditContext,
@@ -130,32 +122,6 @@ async function writeEditedFiles(
     }
 }
 
-function assertNoCheckPaths(context: IgnoreEditContext, paths: string[]): void {
-    const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
-    for (const path of paths)
-        if (checks.has(path))
-            throw new GspotError(
-                'arguments',
-                `--paths ${quoteArgument(path)} names a check. Give the check as a positional argument.`,
-            );
-}
-
-function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): void {
-    for (const selector of selectors) {
-        const path = selector.startsWith('!') ? selector.slice(1) : selector;
-        const isMatched = buildPathMatcher([path]);
-        if (
-            context.listing.files.every(
-                (file) => file.path !== path && !file.path.startsWith(`${path}/`) && !isMatched(file.path),
-            )
-        )
-            throw new GspotError(
-                'arguments',
-                `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
-            );
-    }
-}
-
 export async function readIgnoreEditContext(root: string, selecting?: readonly string[]): Promise<IgnoreEditContext> {
     const edit = readSettingsFile(root);
     const cache = createRunCache(root);
@@ -166,8 +132,7 @@ export async function readIgnoreEditContext(root: string, selecting?: readonly s
 }
 
 export async function readSettingsEditContext(
-    { root, cwd }: CommandLocation,
-    scopePath?: string,
+    { root, cwd, scopePath }: CommandLocation & { scopePath?: string | undefined },
     selecting?: readonly string[],
 ): Promise<SettingsEditContext> {
     if (scopePath?.startsWith('.') === true && relative(root, cwd) !== '')
@@ -184,17 +149,6 @@ export async function readSettingsEditContext(
     return { ...context, session, scopePath: path, scopeTable: addScopeTable(input.table, path) };
 }
 
-export function buildIgnorePaths(
-    context: IgnoreEditContext,
-    cwd: string,
-    paths: string[] | undefined,
-): string[] | undefined {
-    assertNoCheckPaths(context, paths ?? []);
-    const selectors = buildArgumentPaths(context.root, cwd, paths);
-    assertSelectorsMatch(context, selectors ?? []);
-    return selectors;
-}
-
 export async function readConfigurationEditContext(
     options: ConfigurationsOptions,
     selecting?: readonly string[],
@@ -204,7 +158,7 @@ export async function readConfigurationEditContext(
         selected: string[];
     }
 > {
-    const context = await readSettingsEditContext(options, options.scopePath, selecting);
+    const context = await readSettingsEditContext(options, selecting);
     const { settings, scopePath } = context;
     assertConfigurationsExist(options.configurations);
     assertConfigurationsEditable(options.configurations);
@@ -221,7 +175,7 @@ export async function readConfigurationEditContext(
 export function formatConfigurationChange({ action, changed, where, unchanged, state }: ConfigurationChange): string {
     const summary = `${action} ${formatNameList(changed)}${where}.`;
     if (unchanged.length === 0) return summary;
-    return `${summary} ${formatNameList(unchanged)} ${unchanged.length === 1 ? 'is' : 'are'} ${state}.`;
+    return `${summary} ${formatNameState(unchanged, state)}.`;
 }
 
 export function selectSettingToEdit(
@@ -294,24 +248,3 @@ export async function writeSettingsEdit(
 export function formatIgnoreSubject(check: string, rule: string | undefined): string {
     return rule === undefined ? check : `rule ${rule} of ${check}`;
 }
-
-/**
-Build the parser of an option that takes names separated by commas and may repeat.
-
-@param message the error for a value that names nothing.
-*/
-export function parseListOption(message: string): (value: string, previous: string[] | undefined) => string[] {
-    return (value, previous) => {
-        const names = value
-            .split(NAME_LIST_SEPARATOR)
-            .map((name) => name.trim())
-            .filter((name) => name !== '');
-        if (names.length === 0) throw new InvalidArgumentError(message);
-        return [...(previous ?? []), ...names];
-    };
-}
-
-export const pathsOption: CommandOption = {
-    flags: PATHS_OPTION,
-    parse: (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
-};

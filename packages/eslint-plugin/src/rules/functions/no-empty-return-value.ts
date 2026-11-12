@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/functions.ts';
-import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { getLocalFunction } from '../../language/functions.ts';
+import { getLocalFunction, listReturnedValues } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { LocalFunction } from '../../types/plugin.ts';
 
@@ -24,7 +23,7 @@ function isCallValueUsed(node: TSESTree.CallExpression | TSESTree.SequenceExpres
     }
 }
 
-function hasReturnValue(declaration: LocalFunction, returning: Set<TSESTree.Node>): boolean {
+function hasReturnValue(declaration: LocalFunction, source: TSESLint.SourceCode): boolean {
     if (declaration.type === AST_NODE_TYPES.TSDeclareFunction) {
         const annotation = declaration.returnType?.typeAnnotation.type;
         return annotation !== undefined && !EMPTY_RETURN_TYPES.has(annotation);
@@ -32,9 +31,9 @@ function hasReturnValue(declaration: LocalFunction, returning: Set<TSESTree.Node
     return (
         declaration.async ||
         declaration.generator ||
-        returning.has(declaration) ||
         declaration.body.type !== AST_NODE_TYPES.BlockStatement ||
-        declaration.body.body.length === 0
+        declaration.body.body.length === 0 ||
+        listReturnedValues(declaration, source).length > 0
     );
 }
 
@@ -57,23 +56,15 @@ export const noEmptyReturnValue = createRule<[], 'return'>({
     },
     create(context) {
         const calls = new Map<TSESTree.CallExpression, LocalFunction>();
-        const returning = new Set<TSESTree.Node>();
         return {
             CallExpression(node) {
                 if (node.callee.type !== AST_NODE_TYPES.Identifier || !isCallValueUsed(node)) return;
                 const declaration = getLocalFunction(node.callee, context.sourceCode);
                 if (declaration !== undefined) calls.set(node, declaration);
             },
-            ReturnStatement(node) {
-                if (node.argument === null) return;
-                const owner = context.sourceCode
-                    .getAncestors(node)
-                    .findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));
-                if (owner !== undefined) returning.add(owner);
-            },
             'Program:exit'() {
                 for (const [call, declaration] of calls) {
-                    if (hasReturnValue(declaration, returning)) continue;
+                    if (hasReturnValue(declaration, context.sourceCode)) continue;
                     context.report({ node: call.callee, messageId: 'return' });
                 }
             },

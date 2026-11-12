@@ -1,7 +1,6 @@
 import {
     buildUnchangedResult,
     formatIgnoreSubject,
-    pathsOption,
     readIgnoreEditContext,
     writeSettingsEdit,
 } from '#cli/commands/edits.ts';
@@ -11,7 +10,7 @@ import {
     NO_CHECK_IGNORE_TEXTS,
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import { RULE_OPTION } from '#cli/config/commands/help.ts';
+import { PATHS_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { assertCheckExists } from '#cli/manifests/read.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
@@ -72,9 +71,7 @@ function listEverywhereNotes(check: string | undefined, everywhere: IgnoreRecord
     });
 }
 
-async function runUnignoreCommand(
-    options: Pick<IgnoreOptions, 'root' | 'cwd' | 'check' | 'rule' | 'paths'>,
-): Promise<CommandResult> {
+async function runUnignoreCommand(options: Omit<IgnoreOptions, 'reason'>): Promise<CommandResult> {
     const context = await readIgnoreEditContext(options.root);
     const { edit: input, settings } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
@@ -106,14 +103,19 @@ async function runUnignoreCommand(
     return await writeSettingsEdit(context, { summary, notes });
 }
 
-export const UNIGNORE_COMMAND: CommandDefinition<[string | undefined], Partial<IgnoreFlags>> = {
+export const UNIGNORE_COMMAND: CommandDefinition<
+    [string | undefined],
+    Partial<IgnoreFlags>,
+    Omit<IgnoreOptions, 'root' | 'reason'>
+> = {
     name: 'unignore',
     arguments: [{ term: '[check]' }],
-    options: [{ flags: RULE_OPTION }, pathsOption],
-    run: async ({ arguments: commandArguments, flags: { rule, paths }, root, cwd }) => {
+    options: [{ flags: RULE_OPTION }, { flags: PATHS_OPTION, repeats: true }],
+    parse: ({ arguments: commandArguments, flags: { rule, paths }, cwd }) => {
         const [check] = commandArguments;
         if (check === undefined && rule !== undefined) throw new GspotError('arguments', RULE_WITHOUT_CHECK_MESSAGE);
         if (check === undefined && paths === undefined) throw new GspotError('arguments', BARE_UNIGNORE_MESSAGE);
-        return await runUnignoreCommand({ root, cwd, check, rule, paths });
+        return { cwd, check, rule, paths };
     },
+    run: runUnignoreCommand,
 };

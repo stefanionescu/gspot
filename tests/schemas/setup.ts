@@ -12,12 +12,13 @@ import {
     settingsEditReportSchema,
     settingsListSchema,
 } from '#cli/schemas/commands.ts';
+import type { CommandJson } from '#cli/types/system.ts';
 
 const commandFieldsSchema = z.strictObject({
     version: z.string(),
     exitCode: z.int(),
     notes: z.string().array(),
-});
+}) satisfies z.ZodType<CommandJson>;
 
 const EXPLAIN_OUTPUT_FIELDS = { ...commandFieldsSchema.shape, subject: z.string() };
 

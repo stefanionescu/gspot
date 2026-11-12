@@ -1,16 +1,16 @@
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
-import { readToolPackageManager } from '#cli/repository/package-manager.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { readHost } from '#cli/system/environment.ts';
+import { openFiles } from '#cli/system/files/open.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { buildToolAvailability, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
-import { assertPackageManagerVersion } from '#cli/tools/installers/npm/project.ts';
+import { assertPackageManagerVersion, readToolPackageManager } from '#cli/tools/installers/npm/project.ts';
 import {
     installNpmToolProject,
     installPythonToolProjects,
@@ -23,13 +23,7 @@ import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { readToolBinPaths } from '#cli/tools/locate.ts';
 import { buildToolProjects, findMisePin, findMissingBuild, findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import type { BrokenTool, InstallResult, Session, ToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
-
-async function readInstallPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
-    const pin = session.packageManager;
-    if (pin === undefined) return undefined;
-    return await readToolPackageManager(session.toolsRoot, pin, session.settings.tool_timeout_seconds, session.cache);
-}
+import type { BrokenTool, InstallResult, Session, ToolInstall } from '#cli/types/tools.ts';
 
 function writeToolProjects({ writer, generated }: ToolInstall): void {
     const requests = generated.files.map(({ path, content }) => ({
@@ -99,17 +93,18 @@ async function isEveryToolInstalled(install: ToolInstall): Promise<boolean> {
 
 export async function buildToolInstall(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'checkTools' | 'misePath' | 'runsProjectInstall'>,
+    input: Pick<ToolInstall, 'checkTools' | 'misePath' | 'runsProjectInstall'>,
 ): Promise<ToolInstall> {
     const configurations = session.toolConfigurations;
     const steps: Array<readonly string[]> = [];
     const tools = listDistinctTools(configurations);
     return {
         session,
-        packageManager: await readInstallPackageManager(session),
+        packageManager: await readToolPackageManager(session),
         pythonSettings: readPythonSettings(session.root),
         releaseAgeDays: getTable(getRootScope(session.scopes).settings, 'dependencies').min_release_age_days,
         ...input,
+        writer: openFiles(session.root),
         generated: { files: buildToolProjects(session) },
         tools,
         steps,
@@ -122,7 +117,7 @@ clone. When every tool already passes, install only adds the Vale packages and g
 */
 export async function installTools(
     session: Session,
-    input: Pick<ToolInstall, 'writer' | 'checkTools' | 'runsProjectInstall'>,
+    input: Pick<ToolInstall, 'checkTools' | 'runsProjectInstall'>,
 ): Promise<InstallResult> {
     const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
     const { steps } = context;

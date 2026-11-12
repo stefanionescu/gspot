@@ -21,7 +21,7 @@ import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
+import { joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
@@ -38,16 +38,16 @@ function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes 
     const openapi = selection.selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);
     if (openapi === undefined) return {};
     const isDocument = buildFilenameMatcher(openapi.detect.filenames);
-    const document = repository.files.find(
-        (file) => selectScopePath(file.path, scopes) === selection.scopePath && isDocument(file.path),
+    const document = listOwnFiles(repository.files, scopes, selection.scopePath).find((file) =>
+        isDocument(file.path),
     )?.path;
     return document === undefined ? {} : { openapi: { document } };
 }
 
 function buildSwiftTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
     if (selection.selected.every(({ name }) => name !== SWIFT_CONFIGURATION)) return {};
-    const file = repository.files.find(
-        ({ path }) => path.endsWith(PBXPROJ_SUFFIX) && selectScopePath(path, scopes) === selection.scopePath,
+    const file = listOwnFiles(repository.files, scopes, selection.scopePath).find(({ path }) =>
+        path.endsWith(PBXPROJ_SUFFIX),
     )?.path;
     if (file === undefined) return {};
     const text = findText(repository.root, file);

@@ -10,6 +10,7 @@ import {
     TOOL_DIRECTIVE_PREFIXES,
     TYPESCRIPT_DIRECTIVE,
 } from '../../config/structure.ts';
+import { isCallOf } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import { type RuleContext } from '../../types/plugin.ts';
 import { type ImportBlock } from '../../types/structure.ts';
@@ -36,13 +37,8 @@ function isImportLike(node: TSESTree.Statement, sourceType: RuleContext['languag
     );
 }
 
-function isRequireCall(node: TSESTree.Node | null | undefined): boolean {
-    return (
-        node?.type === AST_NODE_TYPES.CallExpression &&
-        node.callee.type === AST_NODE_TYPES.Identifier &&
-        node.callee.name === 'require' &&
-        node.arguments.length === 1
-    );
+function isRequireCall(node: TSESTree.Node | null): boolean {
+    return node !== null && isCallOf(node, 'require') && node.arguments.length === 1;
 }
 
 function listImportBlocks(
@@ -64,15 +60,15 @@ function listImportBlocks(
     return blocks;
 }
 
+function isLineStart(text: string, comment: TSESTree.Comment): boolean {
+    return BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]));
+}
+
 function mergeCommentLines(source: TSESLint.SourceCode, text: string): TSESTree.Comment[] {
     const blocks: TSESTree.Comment[] = [];
     let previous: TSESTree.Comment | undefined;
     for (const comment of source.getAllComments()) {
-        if (
-            comment.type !== AST_TOKEN_TYPES.Line ||
-            isToolDirective(comment) ||
-            !BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]))
-        ) {
+        if (comment.type !== AST_TOKEN_TYPES.Line || isToolDirective(comment) || !isLineStart(text, comment)) {
             blocks.push(comment);
             previous = undefined;
             continue;
@@ -112,11 +108,7 @@ function isLeading(
     comments: TSESTree.Comment[],
 ): boolean {
     const start = getStatementOffset(node);
-    if (
-        comment.range[1] > start ||
-        !BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0]))
-    )
-        return false;
+    if (comment.range[1] > start || !isLineStart(text, comment)) return false;
     const run = comments.filter((next) => next.range[0] >= comment.range[1] && next.range[1] <= start);
     return [comment, ...run].every((previous, index) => {
         const gap = text.slice(previous.range[1], run[index]?.range[0] ?? start);
@@ -128,11 +120,7 @@ function buildRemovalRange(source: TSESLint.SourceCode, text: string, comment: T
     const lineStart = source.getIndexFromLoc({ line: comment.loc.start.line, column: 0 });
     const newline = text.indexOf('\n', comment.range[1]);
     const end = newline === -1 ? text.length : newline;
-    if (
-        BLANK.test(text.slice(comment.range[0] - comment.loc.start.column, comment.range[0])) &&
-        BLANK.test(text.slice(comment.range[1], end))
-    )
-        return [lineStart, end + 1];
+    if (isLineStart(text, comment) && BLANK.test(text.slice(comment.range[1], end))) return [lineStart, end + 1];
     let start = comment.range[0];
     while (start > 0 && (text[start - 1] === ' ' || text[start - 1] === '\t')) start -= 1;
     return [start, comment.range[1]];

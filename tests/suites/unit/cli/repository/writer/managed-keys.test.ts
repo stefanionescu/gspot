@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { CHECK_COMMAND } from '#cli/config/engine.ts';
-import { hasManagedKeys, planManagedKeys, writePlans } from '#cli/repository/writer.ts';
+import { planManagedKeys, writePlans } from '#cli/repository/writer.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
@@ -22,7 +22,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     const changes = [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }];
     const firstWriter = openFiles(sandbox.path);
     writePlans(firstWriter, [planManagedKeys(firstWriter, path, changes)]);
-    expect(hasManagedKeys({ path, keys: changes }, firstWriter.read(path)!)).toBe(true);
+    expect(planManagedKeys(firstWriter, path, changes).status).toBe('unchanged');
     const installed = firstWriter.read(path)!.bytes.toString('utf8');
     expect(installed).toBe(
         previous.replace('{"rules":{"property-no-unknown":null}}', '{"extends":"./.stylelintrc.yml"}'),
@@ -30,7 +30,7 @@ test('managed JSON keys survive reopening and updates and keep other bytes and t
     await writeFile(join(sandbox.path, path), installed.replace('native-project', 'edited-project'));
     const writer = openFiles(sandbox.path);
     writePlans(writer, [planManagedKeys(writer, path, [{ key: ['stylelint'], value: { extends: './next.json' } }])]);
-    expect(hasManagedKeys({ path, keys: changes }, writer.read(path)!)).toBe(false);
+    expect(planManagedKeys(writer, path, changes).status).toBe('changed');
     expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(
         previous
             .replace('native-project', 'edited-project')
@@ -51,7 +51,7 @@ test('tool.jsonc key edits keep comments, containers and array order', async () 
         { key: ['kept', 'owned'], value: false },
     ];
     writePlans(writer, [planManagedKeys(writer, path, fields)]);
-    expect(hasManagedKeys({ path, keys: fields }, writer.read(path)!)).toBe(true);
+    expect(planManagedKeys(writer, path, fields).status).toBe('unchanged');
     const written =
         '// Keep this comment.\n{ "kept": {"owned": false}, "entries": [0, false, ""],"created": {"nested":{"owned":0}}, }\n';
     expect(writer.read(path)!.bytes.toString('utf8')).toBe(written);

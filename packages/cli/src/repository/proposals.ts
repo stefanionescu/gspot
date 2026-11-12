@@ -6,7 +6,7 @@ import {
     selectConfigurations,
 } from '#cli/manifests/select.ts';
 import { detectConfigurations } from '#cli/repository/detect.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -54,10 +54,8 @@ function detectScopeConfigurations(repository: Repository, scopePath: string): C
     if (scopePath !== '') return detectConfigurations(repository, scopePath);
     return detectConfigurations({
         ...repository,
-        files: repository.files.filter((file) => selectScopePath(file.path, repository.scopeFolders) === ''),
-        dependencyFiles: repository.dependencyFiles.filter(
-            (file) => selectScopePath(file.path, repository.scopeFolders) === '',
-        ),
+        files: listOwnFiles(repository.files, repository.scopeFolders, ''),
+        dependencyFiles: listOwnFiles(repository.dependencyFiles, repository.scopeFolders, ''),
     });
 }
 

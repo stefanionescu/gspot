@@ -12,9 +12,9 @@ import type { Session } from '#cli/types/tools.ts';
 
 function hasProjectCoverage(session: Session, scopePath: string): boolean {
     if (findText(session.cache, joinScope(scopePath, '.coveragerc')) !== undefined) return true;
-    const pyproject = findText(session.cache, joinScope(scopePath, PYPROJECT_TOML));
-    const project =
-        pyproject === undefined ? undefined : parseTomlFile(joinScope(scopePath, PYPROJECT_TOML), pyproject);
+    const pyprojectPath = joinScope(scopePath, PYPROJECT_TOML);
+    const pyproject = findText(session.cache, pyprojectPath);
+    const project = pyproject === undefined ? undefined : parseTomlFile(pyprojectPath, pyproject);
     if (isTable(project?.['tool']) && Object.hasOwn(project['tool'], 'coverage')) return true;
     return ['setup.cfg', 'tox.ini'].some((name) =>
         COVERAGE_INI_SECTION.test(findText(session.cache, joinScope(scopePath, name)) ?? ''),

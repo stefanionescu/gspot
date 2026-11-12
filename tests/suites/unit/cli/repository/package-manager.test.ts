@@ -7,17 +7,13 @@ import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { detectPackageManager, readToolPackageManager } from '#cli/repository/package-manager.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { createRunCache } from '#cli/system/cache.ts';
+import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import * as processes from '#cli/system/processes.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const PACKAGE_MANAGER_PIN_CASES = [
@@ -65,23 +61,6 @@ const UNSUPPORTED_PACKAGE_MANAGERS = [
         packageJson: { devEngines: { packageManager: { name: 'cnpm', version: '9.0.0' } } },
     },
 ] as const;
-
-test('without a packageManager field or Bun on PATH, the tool project uses npm at the version it prints', async () => {
-    await using sandbox = await createGitSandbox({});
-    await using bin = await testdir();
-    await writeProgramCommand(bin.path, 'npm', 'fakes/tool', '--line', '10.9.0');
-    using _environment = overrideEnvironment({ PATH: bin.path });
-    const installer = detectPackageManager(sandbox.path, []);
-    expect(installer).toStrictEqual({ name: 'npm' });
-    expect(
-        await readToolPackageManager(
-            sandbox.path,
-            installer,
-            rootSettingSchemas.tool_timeout_seconds.parse(undefined),
-            createRunCache(sandbox.path),
-        ),
-    ).toStrictEqual({ name: 'npm', version: '10.9.0', command: { name: 'npm' } });
-});
 
 test.each([...PACKAGE_MANAGER_PIN_CASES])(
     '%s names the package manager and its version',
@@ -170,18 +149,4 @@ test('the first nested package by name selects the package manager, in any order
         name: 'npm',
         version: '11.19.0',
     });
-});
-
-test('Yarn uses npm without querying Yarn', async () => {
-    await using sandbox = await testdir();
-    using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '11.19.0\n' }));
-    expect(
-        await readToolPackageManager(
-            sandbox.path,
-            { name: 'yarn', version: '0.0.0-test' },
-            30,
-            createRunCache(sandbox.path),
-        ),
-    ).toStrictEqual({ name: 'npm', version: '11.19.0', command: { name: 'npm' } });
-    expect(run.mock.calls.map(([command]) => command)).toStrictEqual([['npm', '--version']]);
 });

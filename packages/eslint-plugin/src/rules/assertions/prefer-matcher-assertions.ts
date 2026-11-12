@@ -5,9 +5,8 @@ import {
     BARE_RECEIVERS,
     BOOLEAN_KINDS,
     INVERTED_OPERATORS,
-    JASMINE_PACKAGES,
     JASMINE_SIZE_VERSION,
-    LOCATOR_FACTORIES,
+    JASMINE_VERSION_PACKAGES,
     LOCATOR_STATES,
     LOCATOR_VALUES,
     MATCHER_FAMILIES,
@@ -23,6 +22,7 @@ import {
 } from '../../config/assertions/matchers.ts';
 import { VERSION_ALTERNATIVES, VERSION_PATTERN, VERSION_SPACES, VERSION_WILDCARD } from '../../config/libraries.ts';
 import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
+import { PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
 import { compareVersions, readPackageFacts } from '../../libraries/packages.ts';
 import { createRule } from '../../rule.ts';
@@ -163,7 +163,7 @@ function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode, seen: Set<T
         return false;
     const { object: receiver } = node.callee;
     const isPage = receiver.type === AST_NODE_TYPES.Identifier && receiver.name === 'page';
-    const isFactory = LOCATOR_FACTORIES.has(ASTUtils.getPropertyName(node.callee));
+    const isFactory = PLAYWRIGHT_LOCATOR.test(ASTUtils.getPropertyName(node.callee) ?? '');
     return isFactory && (isPage || isLocator(receiver, source, seen));
 }
 
@@ -216,7 +216,7 @@ function requiresVersion(range: string, minimum: readonly number[]): boolean {
 
 function canUseJasmineSize(context: FileContext): boolean {
     const dependencies = readPackageFacts(context).dependencies;
-    const range = JASMINE_PACKAGES.map((name) => dependencies.get(name)).find((value) => value !== undefined);
+    const range = JASMINE_VERSION_PACKAGES.map((name) => dependencies.get(name)).find((value) => value !== undefined);
     return range !== undefined && requiresVersion(range, JASMINE_SIZE_VERSION);
 }
 

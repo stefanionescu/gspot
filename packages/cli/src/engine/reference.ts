@@ -1,8 +1,8 @@
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { findCommandTool } from '#cli/engine/plan.ts';
+import { canIgnoreRule } from '#cli/engine/results.ts';
 import { findToolName } from '#cli/manifests/read.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
@@ -19,12 +19,9 @@ function listCheckSystems(check: Check, tool: Tool | undefined): string[] | unde
 }
 
 function formatRuleIgnore(check: Check, explanations: CheckCode['explanations']): string | undefined {
+    if (!canIgnoreRule(check, explanations === undefined ? undefined : { explanations })) return undefined;
     const rule = explanations === undefined ? undefined : Object.keys(explanations).at(0);
-    if (rule !== undefined)
-        return `gspot ignore ${quoteArgument(check.id)} --rule ${quoteArgument(rule)} --reason "<why>"`;
-    return OUTPUT_FORMATS[check.output.format].namesRules(check.output)
-        ? `gspot ignore ${quoteArgument(check.id)} --rule <rule> --reason "<why>"`
-        : undefined;
+    return `gspot ignore ${quoteArgument(check.id)} --rule ${rule === undefined ? '<rule>' : quoteArgument(rule)} --reason "<why>"`;
 }
 
 export function describeCheck(

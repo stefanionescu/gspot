@@ -10,7 +10,6 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
@@ -34,8 +33,7 @@ test('at level basic install installs no Vale packages', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
 
     const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const context = await buildSandboxToolInstall(session, writer);
+    const context = await buildSandboxToolInstall(session);
     expect(await installValePackages(context, [])).toBe('');
 });
 
@@ -57,7 +55,7 @@ test('install reclaims interrupted Vale downloads while preserving live download
         return kill(pid, signal);
     });
     const session = await openSession(sandbox.path);
-    await installValePackages(await buildSandboxToolInstall(session, openFiles(sandbox.path)), []);
+    await installValePackages(await buildSandboxToolInstall(session), []);
     expect(existsSync(join(sandbox.path, stale))).toBe(false);
     expect(existsSync(join(sandbox.path, '.gspot/vale-ABCDEF'))).toBe(false);
     expect(existsSync(join(sandbox.path, `${active}/archive.zip`))).toBe(true);
@@ -80,8 +78,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
         String(tool.version),
     );
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     const error = await captureRejection(installValePackages(install, [miseBin]));
     expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(error.message).toContain('Google');
@@ -107,9 +104,8 @@ test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const
                 ]),
             ),
         });
-        const writer = openFiles(sandbox.path);
         using _request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
-        const install = await buildSandboxToolInstall(await openSession(sandbox.path), writer);
+        const install = await buildSandboxToolInstall(await openSession(sandbox.path));
         if (state !== 'the pinned releases') {
             const failure = await captureRejection(installValePackages(install, []));
             expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });

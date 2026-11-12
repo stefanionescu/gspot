@@ -2,6 +2,7 @@ import { expect, test } from 'bun:test';
 import { type ConfigData, HtmlValidate } from 'html-validate';
 import { parse } from 'jsonc-parser';
 
+import { SITE_CONFIGURATION } from '#cli/config/configurations/site.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -77,8 +78,8 @@ test.each([
     ['another site', '{"private":true}', ['no-implicit-button-type', 'unique-landmark']],
 ])('the built pages of %s report the markup that its packages write: %j', async (_name, packageJson, expected) => {
     const content = await buildGeneratedFile(
-        buildSandboxSettings(['html', 'site']),
-        getManifestTarget('site', 'html-validate.json'),
+        buildSandboxSettings(['html', SITE_CONFIGURATION]),
+        getManifestTarget(SITE_CONFIGURATION, 'html-validate.json'),
         { 'package.json': packageJson, 'index.html': '<!doctype html><title>Root</title>' },
     );
     const page =

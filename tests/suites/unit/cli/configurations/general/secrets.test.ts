@@ -16,10 +16,11 @@ import {
     SCOPE_READER_PROJECT_FILES,
     SCOPE_READER_PROJECT_TABLES,
 } from '#tests/config/configurations/secrets.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 
 test('keys read through Bun.env and environment functions are reported until the example file lists them', async () => {
     const options = buildRunOptions({ only: ['secrets/environment-examples'] });
@@ -141,4 +142,24 @@ test('environment-defaults reports a secret with a literal fallback in JavaScrip
         ['config.py', 2],
         ['config.py', 3],
     ]);
+});
+
+test('gitleaks-pushed passes without a run when no commit is pushed', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['secrets']),
+        'source.js': 'export const value = 1;\n',
+    });
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['gitleaks'], resources);
+    const spawn = resources.use(fakeCommands());
+    const result = await runChecks(
+        session,
+        buildRunOptions({
+            stage: 'push',
+            only: ['secrets/gitleaks-pushed'],
+            selection: { content: 'working-tree', commits: [] },
+        }),
+    );
+    expect(result.report.checks).toMatchObject([{ check: 'secrets/gitleaks-pushed', status: 'passed' }]);
+    expect(spawn).not.toHaveBeenCalled();
 });

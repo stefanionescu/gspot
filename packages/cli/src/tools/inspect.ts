@@ -66,10 +66,10 @@ function buildInstallHelp(tool: Tool, folders?: ToolFolders): string {
 }
 
 function buildLibraryInspection(inspected: InspectedTool, path: string, found: string): ToolInspection {
-    const { tool, help, want } = inspected;
+    const { tool, want } = inspected;
     const minimum = tool.min_version ?? tool.version ?? found;
     const state = tool.system !== true && tool.version === undefined ? 'ok' : classifyToolVersion(found, want, minimum);
-    return { name: tool.name, state, path, found, help, minimumVersion: minimum, want };
+    return { name: tool.name, state, path, found, minimumVersion: minimum, want };
 }
 
 async function inspectLibraryCommand(inspected: InspectedTool, command: string[]): Promise<ToolInspection> {
@@ -102,18 +102,17 @@ async function inspectPackage(inspected: InspectedTool): Promise<ToolInspection>
 }
 
 async function inspectExecutablePath(inspected: InspectedTool, path: string): Promise<ToolInspection> {
-    const { tool, help, want } = inspected;
+    const { tool, want } = inspected;
     if (want === undefined && tool.version_command === undefined && tool.min_version === undefined)
-        return { name: tool.name, state: 'system', path, help };
+        return { name: tool.name, state: 'system', path };
     const read = await readToolVersion(inspected, path);
-    if ('state' in read) return { name: tool.name, path, help, want, ...read };
+    if ('state' in read) return { name: tool.name, path, want, ...read };
     const minimum = tool.min_version ?? want;
     const state = classifyToolVersion(read.version, want, minimum);
     return {
         name: tool.name,
         state,
         path,
-        help,
         found: read.version,
         want,
         minimumVersion: minimum,
@@ -185,14 +184,12 @@ function buildInspectedTool(search: ToolSearch, tool: Tool): InspectedTool {
     const { root } = search;
     const cwd = search.cwd ?? root;
     const toolsRoot = search.toolsRoot ?? root;
-    const help = buildInstallHelp(tool, { root, cwd });
     const want = tool.system === true ? undefined : tool.version;
-    const missing: ToolInspection = { name: tool.name, state: 'missing', help, want };
+    const missing: ToolInspection = { name: tool.name, state: 'missing', want };
     return {
         root: toolsRoot,
         cwd: isInside(relative(root, cwd)) ? join(toolsRoot, relative(root, cwd)) : cwd,
         tool,
-        help,
         missing:
             search.miseFailure === undefined || findMisePin(tool) === undefined
                 ? missing
@@ -240,8 +237,9 @@ export function formatUnavailableNote(tool: Tool, inspection: ToolInspection): s
 export async function inspectTool(search: ToolSearch, tool: Tool): Promise<ToolInspection> {
     const inspected = buildInspectedTool(search, tool);
     const inspection = await (tool.kind === 'package' ? inspectPackage(inspected) : inspectExecutable(inspected));
-    if (inspection.state === 'ok') delete inspection.help;
-    return inspection;
+    return inspection.state === 'ok'
+        ? inspection
+        : { ...inspection, help: buildInstallHelp(tool, { root: search.root, cwd: search.cwd ?? search.root }) };
 }
 
 /**

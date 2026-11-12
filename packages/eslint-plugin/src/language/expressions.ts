@@ -40,6 +40,27 @@ export function getOptionProperties(
     return properties;
 }
 
+/**
+Read one option of an options object. The value is evaluated in the scope that writes it, which a call in another
+scope does not share.
+*/
+export function getOptionValue(
+    options: TSESTree.Node | undefined,
+    key: string,
+    source: TSESLint.SourceCode,
+): { property: TSESTree.Property; value: unknown; isKnown: boolean } | undefined {
+    const property = getOptionProperties(options, source).get(key);
+    if (property === undefined) return undefined;
+    const found = ASTUtils.getStaticValue(property.value, source.getScope(property.value));
+    return { property, value: found?.value, isKnown: found !== null };
+}
+
+export function getStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
+    const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
+    if (typeof evaluated?.value !== 'string') return undefined;
+    return evaluated.value;
+}
+
 export function getLiteralValue(
     node: TSESTree.Node | undefined,
     source: TSESLint.SourceCode,

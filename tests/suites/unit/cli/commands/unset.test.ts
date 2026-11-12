@@ -18,6 +18,13 @@ test('unset of an item of a setting that is not a list or a table exits 2, names
     expect(failure.message).toBe('level is not a list or a table, so it takes no items. Run gspot unset level.');
 });
 
+test('unset of a value that starts with a dash names the -- separator', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const refused = await runGspot(sandbox.path, ['unset', 'naming.banned_words', '-foo']);
+    expect(refused.code).toBe(2);
+    expect(refused.stderr).toContain('To pass a value that starts with -, put -- before it.');
+});
+
 test('unset says when an empty list turns a check off', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], { tables: '[licenses]\nallowed = ["MIT"]\n' }),

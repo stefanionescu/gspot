@@ -7,6 +7,7 @@ import {
     EFFECT_RETURN_BRANCH,
     MINIMUM_RETURNS,
 } from '../../config/functions.ts';
+import { getMemberRoot } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { ReturnScope } from '../../types/functions.ts';
 
@@ -29,9 +30,7 @@ function isChangedLater(reference: TSESLint.Scope.Reference): boolean {
     const action = getEnclosingAction(reference.identifier);
     if (reference.isWrite() || action?.type === AST_NODE_TYPES.CallExpression) return true;
     if (action?.type !== AST_NODE_TYPES.AssignmentExpression) return false;
-    let target: TSESTree.Node = action.left;
-    while (target.type === AST_NODE_TYPES.MemberExpression) target = target.object;
-    return Object.is(target, reference.identifier);
+    return Object.is(getMemberRoot(action.left), reference.identifier);
 }
 
 function getStableVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode) {

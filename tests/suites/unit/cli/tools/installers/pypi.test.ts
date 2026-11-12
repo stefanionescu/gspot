@@ -10,7 +10,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { UV_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import {
     installPythonProjects,
     installPythonTools,
@@ -50,9 +49,8 @@ test('a failed uv sync hides index passwords', async () => {
             }),
         );
     });
-    const writer = openFiles(sandbox.path);
     const install = installPythonTools(
-        await buildSandboxToolInstall(await openSession(sandbox.path), writer),
+        await buildSandboxToolInstall(await openSession(sandbox.path)),
         'unavailable-uv',
     );
     const installationError = await captureRejection(install);
@@ -69,7 +67,7 @@ test('a successful uv run refuses a password in its new lockfile and the saved o
         await writeFile(join(options.cwd, 'uv.lock'), `${PYTHON_TOOL_LOCKFILE}\n# test+password\n`);
         return buildProcessResult();
     });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     const lockfileError = await captureRejection(
         planPythonLockfile(install, { path: GSPOT_PATHS.pythonProject, content: PYTHON_TOOL_PROJECT }, 'synthetic-uv'),
     );
@@ -125,9 +123,8 @@ async function readInstalledSettings(root: string, releaseAgeDays: number): Prom
         settings.push(parse(readFileSync(file, 'utf8')));
         return Promise.resolve(buildProcessResult());
     });
-    const writer = openFiles(root);
     await installPythonTools(
-        { ...(await buildSandboxToolInstall(await openSession(root), writer)), releaseAgeDays },
+        { ...(await buildSandboxToolInstall(await openSession(root))), releaseAgeDays },
         'settings-uv',
     );
     expect(settings).toHaveLength(1);
@@ -188,7 +185,7 @@ test('install syncs each project that has a uv lockfile, and only those', async 
         'uv.lock': 'version = 1\n',
     });
     using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult()));
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     const lines = await installPythonProjects(install, 'project-uv');
     expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact']]);
     expect(lines).toStrictEqual(['installed the Python environment of the repository root']);
@@ -212,7 +209,7 @@ test.each([
         'uv.lock': 'version = 1\n',
     });
     using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult({ code: 1, stderr })));
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     const installationError = await captureRejection(installPythonProjects(install, 'project-uv'));
     expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(installationError.message.split('\n').at(-1)).toBe(advice);
@@ -238,7 +235,7 @@ test.each([
             return Promise.resolve(buildProcessResult({ stdout: action === 'ls' ? listed : '/pins/python\n' }));
         },
     );
-    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(session);
     await installPythonProjects({ ...install, misePath: 'project-mise' }, 'project-uv');
     expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact', ...flags]]);
 });

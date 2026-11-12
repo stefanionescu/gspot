@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 import type { CallText, RuleContext } from '../types/plugin.ts';
-import { unwrapExpression } from './syntax.ts';
+import { isCallOf, unwrapExpression } from './syntax.ts';
 
 function getImportSpecifier(node: TSESTree.ImportSpecifier, module: string): string | undefined {
     if (node.importKind === 'type') return undefined;
@@ -27,9 +27,9 @@ function getCalledModule(
     source: TSESLint.SourceCode,
     seen: Set<TSESTree.Node>,
 ): string | undefined {
-    if (node.callee.type !== AST_NODE_TYPES.Identifier || node.callee.name !== 'require')
-        return getModuleName(node.callee, source, seen);
-    const argument = node.arguments[0];
+    const { callee } = node;
+    if (!isCallOf(node, 'require')) return getModuleName(callee, source, seen);
+    const [argument] = node.arguments;
     return argument?.type === AST_NODE_TYPES.Literal && typeof argument.value === 'string' ? argument.value : undefined;
 }
 

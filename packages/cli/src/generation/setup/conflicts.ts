@@ -1,8 +1,7 @@
-import { DROPPED_LINE_SETTINGS, NAME_ONLY_FLAG, READ_COMMITTED_MESSAGE } from '#cli/config/generation/setup.ts';
+import { DROPPED_LINE_SETTINGS } from '#cli/config/generation/setup.ts';
 import { parsePrettierFile } from '#cli/generation/setup/format.ts';
 import { isEditedInPlace } from '#cli/repository/conflicts.ts';
-import { runGit } from '#cli/repository/git/run.ts';
-import { readHead } from '#cli/repository/revisions/files.ts';
+import { listCommittedPaths } from '#cli/repository/revisions/files.ts';
 import { writePlans } from '#cli/repository/writer.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
@@ -10,17 +9,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import type { ConflictingConfigs, ConflictSearch, InitPlan, PrettierScripts } from '#cli/types/generation.ts';
 import type { ConflictingConfig, RepositorySetup, WritePlan } from '#cli/types/repository.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
-
-async function listCommittedPaths(root: string, paths: string[]): Promise<Set<string>> {
-    if ((await readHead(root)) === undefined) return new Set();
-    const [tracked, changed] = await Promise.all([
-        runGit(root, ['ls-files', '-z', '--', ...paths], {}),
-        runGit(root, ['diff', NAME_ONLY_FLAG, '-z', 'HEAD', '--', ...paths], {}),
-    ]);
-    if (tracked.code !== 0 || changed.code !== 0) throw new GspotError('git', READ_COMMITTED_MESSAGE);
-    const modified = new Set(changed.stdout.split('\0'));
-    return new Set(tracked.stdout.split('\0').filter((path) => path !== '' && !modified.has(path)));
-}
 
 function addConflictingConfig(
     file: ConflictingConfig,

@@ -152,7 +152,6 @@ export const preferTestTable = createRule<[], 'table'>({
                 const groups = frames.values().flatMap((tests) => listSimilarGroups(tests, source));
                 for (const { base, count } of groups)
                     context.report({ node: base.title, messageId: 'table', data: { count: String(count) } });
-                frames.clear();
             },
         };
     },

@@ -43,3 +43,16 @@ export function getRequired<Key, Value>(map: ReadonlyMap<Key, Value | undefined>
     if (value === undefined) throw new Error(`Missing ${label}: ${String(key)}.`);
     return value;
 }
+
+/**
+Join the tables that the configurations export. Object spread lets the later of two equal keys replace the earlier one
+in silence, so a repeated key stops the program here.
+*/
+export function joinTables<Entry>(
+    tables: ReadonlyArray<Readonly<Record<string, Entry>>>,
+): Readonly<Record<string, Entry>> {
+    const entries = tables.flatMap((table) => Object.entries(table));
+    const repeated = entries.map(([key]) => key).filter((key, index, keys) => keys.indexOf(key) !== index);
+    if (repeated.length > 0) throw new Error(`Two registry tables hold ${repeated.join(', ')}.`);
+    return Object.fromEntries(entries);
+}

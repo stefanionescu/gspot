@@ -14,6 +14,11 @@ export const BINARY_BLOB = [0, LINE_FEED_BYTE, INVALID_UTF8_BYTE, CARRIAGE_RETUR
 
 export const INDEX_PATH = 'folder/a\n"é.sql';
 
+export const HASH_FORMATS = [
+    { format: 'sha1', hashLength: SHA1.length },
+    { format: 'sha256', hashLength: SHA256.length },
+] as const;
+
 export const INVALID_BLOBS = [
     { name: 'wrong blob terminator', output: `${SHA1} blob 1\nxX` },
     { name: 'missing header terminator', output: `${SHA1} blob 0` },

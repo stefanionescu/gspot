@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT, NO_ALGORITHM } from '../../config/security.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { getExpressionValue, getOptionProperties, getOptionValue } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 
@@ -29,9 +29,8 @@ function findUnsignedUse(
 ): 'unsignedSign' | 'unsignedVerify' | undefined {
     const name = getQualifiedName(node, source);
     if (name === JWT_FUNCTIONS.verify) return isUnsignedVerify(node, options, source) ? 'unsignedVerify' : undefined;
-    const algorithm = name === JWT_FUNCTIONS.sign ? getOptionProperties(options, source).get('algorithm') : undefined;
-    const value = algorithm && ASTUtils.getStaticValue(algorithm.value, source.getScope(node))?.value;
-    return value === NO_ALGORITHM ? 'unsignedSign' : undefined;
+    const algorithm = name === JWT_FUNCTIONS.sign ? getOptionValue(options, 'algorithm', source) : undefined;
+    return algorithm?.value === NO_ALGORITHM ? 'unsignedSign' : undefined;
 }
 
 export const insecureJwtToken = createRule<[], 'unsignedSign' | 'unsignedVerify'>({

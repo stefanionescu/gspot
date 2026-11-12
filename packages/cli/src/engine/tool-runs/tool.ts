@@ -2,7 +2,7 @@ import { basename, delimiter, dirname } from 'node:path';
 
 import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
 import { findCommandTool } from '#cli/engine/plan.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
+import { formatCommandFailure, formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
@@ -56,10 +56,7 @@ function findProcessFailure(
         return { status: 'missing', note: `gspot could not start ${name}: ${result.stderr.trim()}` };
     if (result.end === 'failed') return { status: 'error', note: `${name} could not run: ${result.stderr.trim()}` };
     if (exitCodes !== undefined && result.code !== 0 && !exitCodes.includes(result.code))
-        return {
-            status: 'error',
-            note: `The ${basename(name)} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`,
-        };
+        return { status: 'error', note: formatCommandFailure(basename(name), result) };
     return undefined;
 }
 

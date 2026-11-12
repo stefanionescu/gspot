@@ -206,15 +206,16 @@ export function formatOutputTail(
     return output.length === 0 ? emptyOutputText : output.join('\n');
 }
 
+export function formatCommandFailure(name: string, result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>): string {
+    return `The ${name} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`;
+}
+
 export function assertToolFindings(
     result: Pick<SpawnResult, 'code' | 'stdout' | 'stderr'>,
     findings: CheckFinding[],
     toolName: string,
 ): CheckFinding[] {
     if (result.code !== 0 && findings.length === 0)
-        throw new CheckStop(
-            'error',
-            `The ${toolName} command failed (exit ${String(result.code)}): ${formatOutputTail(result)}`,
-        );
+        throw new CheckStop('error', formatCommandFailure(toolName, result));
     return findings;
 }

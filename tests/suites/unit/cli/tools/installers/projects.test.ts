@@ -8,7 +8,6 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import {
     installNpmToolProject,
     installPythonToolProjects,
@@ -95,7 +94,7 @@ test('a changed npm tool lockfile installs into an empty node_modules, and a cur
         if (command.includes('--lockfile-only')) await writeFile(join(options.cwd, 'bun.lock'), lockfile);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '0.0.0-test\n' : '' });
     });
-    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(session);
     await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'dropped'))).toBe(false);
     await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
@@ -129,7 +128,7 @@ test.each([
             }
             return buildProcessResult();
         });
-        const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+        const install = await buildSandboxToolInstall(session);
         await installNpmToolProject(install);
         await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
         await installNpmToolProject(install);
@@ -153,7 +152,7 @@ test.each([
     });
     using _lookup = fakeExecutableLookup((name) => (name === 'uv' ? '/tools/uv' : undefined));
     using uv = fakeCommands('uv', () => Promise.resolve(buildProcessResult({ code })));
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     expect(await isEveryEnvironmentReady(install, [])).toBe(synced);
     expect(uv.mock.calls.map(([command]) => command)).toStrictEqual(
         venv ? [['/tools/uv', 'sync', '--locked', '--inexact', '--check']] : [],
@@ -162,7 +161,7 @@ test.each([
 
 test('a uv inside the repository never runs', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['python']) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     const folder = await writeProgramCommand(sandbox.path, 'bin/uv', 'fakes/tool', '--line', 'committed uv');
     using _environment = overrideEnvironment({ PATH: folder });
     const previous = process.cwd();

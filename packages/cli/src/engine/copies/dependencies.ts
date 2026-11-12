@@ -12,14 +12,13 @@ import {
 import { cp } from 'node:fs/promises';
 import { basename, dirname, join, posix, relative } from 'node:path';
 
-import { GIT_CHECK_IGNORE_ARGUMENTS, JSCONFIG_FILE } from '#cli/config/engine.ts';
+import { JSCONFIG_FILE } from '#cli/config/engine.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { buildGitError, runGit } from '#cli/repository/git/run.ts';
+import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { splitSystemPath } from '#cli/system/files/reads.ts';
-import { convertToPosixPath, extractExtension, isInScope, isInside } from '#cli/system/paths.ts';
+import { convertToPosixPath, extractExtension, isInScope, isInside, splitSystemPath } from '#cli/system/paths.ts';
 import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { GitFile } from '#cli/types/repository.ts';
@@ -110,16 +109,6 @@ export function linkEnvironments(root: string, target: string, scopes: string[])
         const output = join(target, scopePath, PYTHON_ENVIRONMENT_FOLDER);
         if (existsSync(installed) && !existsSync(output)) symlinkSync(installed, output, 'junction');
     }
-}
-
-export async function readIgnoredPaths(root: string, paths: string[], cancelSignal?: AbortSignal): Promise<string[]> {
-    if (paths.length === 0) return [];
-    const result = await runGit(root, GIT_CHECK_IGNORE_ARGUMENTS, {
-        stdin: paths.join('\0') + '\0',
-        cancelSignal,
-    });
-    if (result.code !== 0 && result.code !== 1) throw buildGitError(GIT_CHECK_IGNORE_ARGUMENTS, result);
-    return result.stdout.split('\0').filter((path) => path !== '');
 }
 
 export async function copyDependencies(

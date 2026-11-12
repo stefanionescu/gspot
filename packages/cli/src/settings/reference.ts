@@ -4,7 +4,7 @@ import { z } from 'zod';
 
 import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildAvailableSettings, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { ROOT_SETTINGS, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
@@ -46,9 +46,7 @@ function childSchemas(schema: z.ZodType): Array<[string, z.ZodType]> {
 function listSettingVariants(configurations: Configuration[]): SettingVariant[] {
     const variants: SettingVariant[] = [];
     const ownedSettings = [
-        ...buildAvailableSettings([], 'basic')
-            .settings.values()
-            .map((setting) => ({ setting, owner: 'gspot' })),
+        ...ROOT_SETTINGS.map((setting) => ({ setting, owner: 'gspot' })),
         ...configurations.flatMap((configuration) =>
             (SETTINGS_BY_CONFIGURATION.get(configuration.name) ?? []).map((setting) => ({
                 setting,

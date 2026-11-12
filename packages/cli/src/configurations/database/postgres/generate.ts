@@ -17,13 +17,12 @@ function buildSquawkFile(planned: PlannedConfig): string {
     const migrations = files.flatMap((file) =>
         file.path.endsWith(SQL_EXTENSION) && file.kind === 'source' ? file.path : [],
     );
+    const postgres = getTable(planned.scope.settings, 'postgres');
     const document = {
-        assume_in_transaction: getTable(planned.scope.settings, 'postgres').assume_in_transaction,
+        assume_in_transaction: postgres.assume_in_transaction,
         excluded_rules: off,
         ...(isAll && { included_rules: SQUAWK_ALL_LEVEL_ON.filter((rule) => !off.includes(rule)) }),
-        excluded_paths: [
-            ...selectFrozenMigrations(migrations, getTable(planned.scope.settings, 'postgres').frozen_through),
-        ],
+        excluded_paths: [...selectFrozenMigrations(migrations, postgres.frozen_through)],
     };
     return stringify(document, CONFIG_TOML_FORMAT);
 }

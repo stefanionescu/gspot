@@ -9,28 +9,21 @@ import {
     NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
     PACKAGE_MANAGERS,
-    VERSION_FLAG,
     YARN_BERRY_INSTALL,
     YARN_BERRY_MAJOR,
 } from '#cli/config/repository/package-managers.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { packageManagerPinSchema, packageManagerSchema } from '#cli/schemas/repository.ts';
-import { remember } from '#cli/system/cache.ts';
+import { packageManagerPinSchema } from '#cli/schemas/repository.ts';
 import { GspotError, tryParseFile } from '#cli/system/errors.ts';
-import { runProcess } from '#cli/system/processes.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import type {
-    PackageManager,
     PackageManagerCommand,
     PackageManagerField,
     PackageManagerPin,
     ToolPackageManagerName,
 } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
-
-const PACKAGE_MANAGER_VERSIONS = Symbol('package manager versions');
 
 function buildPackageManagerField(
     pin: { name: string | undefined; version: string | undefined },
@@ -73,36 +66,6 @@ function readFirstPackageManager(
     return { name: NPM_TOOL, version: undefined };
 }
 
-async function readPackageManagerVersion(
-    root: string,
-    packageManager: PackageManagerPin,
-    timeoutSeconds: number,
-    cache: RunCache,
-): Promise<PackageManager> {
-    const key = JSON.stringify([root, packageManager.name, packageManager.version]);
-    return await remember(cache, PACKAGE_MANAGER_VERSIONS, key, async (): Promise<PackageManager> => {
-        const { name, version } = packageManager;
-        if (version !== undefined) return { name, version };
-        const result = await runProcess([name, VERSION_FLAG], {
-            cwd: root,
-            timeoutSeconds,
-        });
-        if (result.code !== 0)
-            throw new GspotError(
-                'install',
-                `Cannot determine the ${name} version for the tool project. Check that ${name} --version runs in the repository, then run the command again.`,
-            );
-        const parsed = packageManagerSchema.safeParse({ name, version: result.stdout.trim() });
-        if (!parsed.success)
-            throw new GspotError(
-                'install',
-                `Cannot read the ${name} version for the tool project. Check that ${name} --version prints a version.`,
-                { cause: parsed.error },
-            );
-        return parsed.data;
-    });
-}
-
 export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
@@ -141,17 +104,6 @@ Select the package manager of the tool project. Yarn gives npm.
 */
 export function selectToolPackageManager(name: PackageManagerPin['name']): ToolPackageManagerName {
     return name === 'yarn' ? NPM_TOOL : name;
-}
-
-export async function readToolPackageManager(
-    root: string,
-    packageManager: PackageManagerPin,
-    timeoutSeconds: number,
-    cache: RunCache,
-): Promise<PackageManager & { name: ToolPackageManagerName; command: PackageManagerCommand }> {
-    const name = selectToolPackageManager(packageManager.name);
-    const selected = name === packageManager.name ? packageManager : { name };
-    return { ...(await readPackageManagerVersion(root, selected, timeoutSeconds, cache)), name, command: selected };
 }
 
 export function buildPackageManagerCommand(

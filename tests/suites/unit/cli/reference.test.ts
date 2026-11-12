@@ -5,7 +5,7 @@ import { CLI_REFERENCE } from '#cli/reference.ts';
 
 test('the reference lists every command of the program with its usage line', () => {
     const { commands } = CLI_REFERENCE;
-    const names = buildProgram(() => {}, process.cwd()).commands.map((command) => command.name());
+    const names = buildProgram(async () => {}).commands.map((command) => command.name());
     expect(commands.map(({ name }) => name)).toStrictEqual(names);
     expect(commands.map(({ usage }) => usage.split(' ').slice(0, 2).join(' '))).toStrictEqual(
         names.map((name) => `gspot ${name}`),

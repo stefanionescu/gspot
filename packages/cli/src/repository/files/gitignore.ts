@@ -3,8 +3,10 @@ import { posix } from 'node:path';
 import ignore from 'ignore';
 
 import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { buildGitError, runGit } from '#cli/repository/git/run.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
@@ -68,7 +70,7 @@ export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): 
             trackedPaths
                 .filter((path) => posix.basename(path) === GITIGNORE_FILE && !isGspotPath(path))
                 .flatMap((file) =>
-                    stripBlock(readText(cache, file), { path: file })
+                    stripBlock(readText(cache, file), file)
                         .split('\n')
                         .flatMap((line) => anchorPattern(line, extractParentFolder(file))),
                 ),
@@ -80,4 +82,14 @@ export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): 
         const matcher = ignore().add(pattern);
         return ignoredPaths.every((path) => !matcher.ignores(path));
     });
+}
+
+export async function readIgnoredPaths(root: string, paths: string[], cancelSignal?: AbortSignal): Promise<string[]> {
+    if (paths.length === 0) return [];
+    const result = await runGit(root, GIT_CHECK_IGNORE_ARGUMENTS, {
+        stdin: paths.join('\0') + '\0',
+        cancelSignal,
+    });
+    if (result.code !== 0 && result.code !== 1) throw buildGitError(GIT_CHECK_IGNORE_ARGUMENTS, result);
+    return result.stdout.split('\0').filter((path) => path !== '');
 }

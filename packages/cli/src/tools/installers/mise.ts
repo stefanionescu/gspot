@@ -116,9 +116,10 @@ function parseMiseLockfile(lockfile: string): MiseLockfile | undefined {
 }
 
 async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): Promise<void> {
+    const pins = listMisePins(install.session.toolConfigurations);
     const saved = install.writer.read(GSPOT_PATHS.miseLockfile);
     const savedText = saved?.bytes.toString('utf8');
-    if (isMiseLockfileFresh(listMisePins(install.session.toolConfigurations), savedText)) return;
+    if (isMiseLockfileFresh(pins, savedText)) return;
     using scratch = createTemporaryFolder();
     writeFileSync(join(scratch.path, MISE_CONFIG_FILE), project.content);
     if (savedText !== undefined && parseMiseLockfile(savedText) !== undefined)
@@ -139,13 +140,8 @@ async function writeMiseLockfile(install: ToolInstall, project: GeneratedFile): 
             'install',
             `The command ${MISE_LOCK_ARGUMENTS.join(' ')} failed (exit ${String(result.code)}):\n${output}${tokenAdvice}`,
         );
-    const content = writeChecksums(
-        readFileSync(join(scratch.path, MISE_LOCKFILE), 'utf8'),
-        listMisePins(install.session.toolConfigurations),
-    );
-    const missing = listMisePins(install.session.toolConfigurations).filter(
-        (pin) => !isMiseLockfileFresh([pin], content),
-    );
+    const content = writeChecksums(readFileSync(join(scratch.path, MISE_LOCKFILE), 'utf8'), pins);
+    const missing = pins.filter((pin) => !isMiseLockfileFresh([pin], content));
     const names = missing.map((pin) => `${pin.name} ${pin.version}`).join(', ');
     if (missing.length > 0)
         throw new GspotError('install', `mise lock did not lock ${names}.\n${output}${tokenAdvice}`);

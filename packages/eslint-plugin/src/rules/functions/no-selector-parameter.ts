@@ -52,16 +52,13 @@ export const noSelectorParameter = createRule<[], 'selector'>({
         if (types === undefined) return {};
         const bodies = new Set<TSESTree.Node>();
         const tests: TSESTree.Node[] = [];
-        const inspectFunction = (node: FunctionNode) => {
-            const isSkipped = node.type !== AST_NODE_TYPES.FunctionDeclaration && isCallbackArgument(node);
-            const statements = node.body.type === AST_NODE_TYPES.BlockStatement ? node.body.body : [];
-            const [statement] = statements;
-            if (!isSkipped && statement !== undefined && statements.length === 1) bodies.add(statement);
-        };
         return {
-            FunctionDeclaration: inspectFunction,
-            FunctionExpression: inspectFunction,
-            ArrowFunctionExpression: inspectFunction,
+            ':function'(node: FunctionNode) {
+                const isSkipped = node.type !== AST_NODE_TYPES.FunctionDeclaration && isCallbackArgument(node);
+                const statements = node.body.type === AST_NODE_TYPES.BlockStatement ? node.body.body : [];
+                const [statement] = statements;
+                if (!isSkipped && statement !== undefined && statements.length === 1) bodies.add(statement);
+            },
             ConditionalExpression: (node) => {
                 if (bodies.has(node.parent) && (hasSideEffects(node.consequent) || hasSideEffects(node.alternate)))
                     tests.push(node.test);

@@ -46,3 +46,20 @@ test('a scoped jsconfig anchors recursive excludes in its scope and other exclud
     expect(excluded).not.toContain(resolve('tests/docs/**'));
     expect(excluded).not.toContain(resolve('docs/**'));
 });
+
+test('the extensionless import options reach only the scope that holds JavaScript', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            scopes: [{ path: 'web' }],
+            tables: '[javascript]\nimport_extension = "extensionless"\n',
+        }),
+        'web/source.js': 'export const value = 1;\n',
+    });
+    const output = buildGeneratedFiles(await openSession(sandbox.path));
+    const selected = ['/scopes/web/jsconfig.json', getManifestTarget('javascript', 'jsconfig.json')].map((path) => {
+        const file = output.files.find((each) => each.path.endsWith(path))!;
+        const config = JSON.parse(file.content) as { compilerOptions: { moduleResolution: string } };
+        return config.compilerOptions.moduleResolution;
+    });
+    expect(selected).toStrictEqual(['Bundler', 'NodeNext']);
+});

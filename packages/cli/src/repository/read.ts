@@ -15,7 +15,16 @@ import {
     SETTINGS_FILE,
     VENDORED_ATTRIBUTE,
 } from '#cli/config/repository/files.ts';
-import { GIT_LOCALE, GIT_TOP_LEVEL_ARGUMENTS, INDEX_LINE, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import {
+    GIT_LOCALE,
+    GIT_TOP_LEVEL_ARGUMENTS,
+    INDEX_LINE,
+    NOT_REPOSITORY_CODE,
+    NOT_REPOSITORY_MESSAGE,
+    SPARSE_CHECKOUT_MESSAGE,
+    SPARSE_CHECKOUT_SETTING,
+    TRAILING_NEWLINE,
+} from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
@@ -28,7 +37,7 @@ import {
     parseListingLine,
     parsePathAttributes,
 } from '#cli/repository/git/output.ts';
-import { isOutsideRepository, readGitPaths, runGit } from '#cli/repository/git/run.ts';
+import { readGitFlag, readGitPaths, runGit } from '#cli/repository/git/run.ts';
 import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
@@ -89,7 +98,7 @@ export async function readRepository(
     const files = openFiles(root);
     const tracked: TrackedFile[] = [];
     for (const listedFile of listing.files) {
-        const file = classifyFile(root, listedFile, listedFile.prefix, { generatedPaths, attributes });
+        const file = classifyFile(root, listedFile, { generatedPaths, attributes });
         if (!listedFile.isSymlink && file.kind === 'source' && file.path.endsWith(SWIFT_EXTENSION)) {
             const tags = await detectSwiftTags(file.path, readText(cache, file.path));
             file.tags.push(...tags);
@@ -128,7 +137,7 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
                 .flatMap((path) => {
-                    const authored = stripBlock(readText(cache, path), { path });
+                    const authored = stripBlock(readText(cache, path), path);
                     return parseAttributePatterns(authored, posix.dirname(path))
                         .filter((rule) =>
                             Object.entries(mergeAttributes(rule.attributes)).some(
@@ -146,12 +155,16 @@ export function readLinguistPatterns(cache: RunCache, paths: string[]): string[]
 export async function readRepositoryRoot(start: string): Promise<string> {
     const folder = realpathSync(start);
     const top = await runGit(folder, GIT_TOP_LEVEL_ARGUMENTS, { env: GIT_LOCALE });
-    if (top.code === 0) return resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
-    if (isOutsideRepository(top)) throw new GspotError('git', NEEDS_GIT_MESSAGE);
-    if (top.stderr.includes('must be run in a work tree'))
+    if (top.code === NOT_REPOSITORY_CODE && top.stderr.startsWith(NOT_REPOSITORY_MESSAGE))
+        throw new GspotError('git', NEEDS_GIT_MESSAGE);
+    if (top.code !== 0)
         throw new GspotError(
             'git',
-            'This folder is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.',
+            top.stderr.includes('must be run in a work tree')
+                ? 'This folder is a bare repository or a Git folder, not a work tree. Run gspot in the work tree.'
+                : `Git could not open this folder: ${top.stderr.trim()}`,
         );
-    throw new GspotError('git', `Git could not open this folder: ${top.stderr.trim()}`);
+    const root = resolve(top.stdout.replace(TRAILING_NEWLINE, ''));
+    if (await readGitFlag(root, SPARSE_CHECKOUT_SETTING)) throw new GspotError('git', SPARSE_CHECKOUT_MESSAGE);
+    return root;
 }

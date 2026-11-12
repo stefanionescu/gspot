@@ -31,6 +31,7 @@ import { findText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { buildToolProjects } from '#cli/tools/pins.ts';
+import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { RuleFile } from '#cli/types/generation.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
 
@@ -63,15 +64,15 @@ function buildAttributePattern(path: string): string {
     return `"${quoted}"`;
 }
 
-function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation): void {
+function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation, configs: ConfigTargets): void {
     const { settings, cache } = session;
-    const generatedLines = listWrittenPaths(session, buildConfigs(session)).map(
+    const generatedLines = listWrittenPaths(session, configs).map(
         (path) => `${buildAttributePattern(path)} linguist-generated`,
     );
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: [GIT_ATTRIBUTES_BLOCK, ...generatedLines].join('\n') });
     if (!settings.rule_files.enabled) return;
     const agents = findText(cache, AGENTS_FILE) ?? '';
-    const agentsText = stripBlock(agents, { path: AGENTS_FILE });
+    const agentsText = stripBlock(agents, AGENTS_FILE);
     const block = buildAgentsBlock({
         hasOwnTitle: hasTopHeading(agentsText),
         startCommand: session.startRunner.command,
@@ -116,7 +117,7 @@ export function buildGeneratedFiles(session: Session): Generation {
     addWorkflow(session, generated);
     const rules = selectRuleFiles(session);
     generated.files.push(...rules.map(({ target: path, content }) => ({ path, content })));
-    addManagedBlocks(session, rules, generated);
+    addManagedBlocks(session, rules, generated, configs);
     generated.files = generated.files.toSorted((left, right) => compareText(left.path, right.path));
     return generated;
 }

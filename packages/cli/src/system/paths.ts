@@ -1,11 +1,13 @@
-import { isAbsolute, join, posix, relative, resolve, sep } from 'node:path';
+import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 
 import {
     DECLARATION_EXTENSIONS,
     EXECUTABLE_LAYOUTS,
     GLOB_SPECIAL_CHARACTERS,
     INSTALLED_DEPENDENCY_FOLDERS,
-    PYTHON_EXECUTABLE,
+    PATH_SEPARATORS,
+    RESERVED_SEGMENTS,
+    UNSAFE_PATH_MESSAGE,
 } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 
@@ -73,13 +75,6 @@ export function listExecutableNames(name: string): string[] {
     return executableLayout.executableSuffixes.map((suffix) => name + suffix);
 }
 
-export function buildVenvPythonPath(folder: string): string {
-    return join(
-        join(folder, executableLayout.environmentFolder),
-        PYTHON_EXECUTABLE + executableLayout.environmentSuffix,
-    );
-}
-
 export function listEnclosingFolders(folder: string): string[] {
     let walked = folder === '.' ? '' : folder;
     const folders = [walked];
@@ -98,12 +93,6 @@ export function findEnclosingFolder(path: string, folders: ReadonlySet<string>):
     return undefined;
 }
 
-export function findOutermostFolder(path: string, isMatch: (folder: string) => boolean): string | undefined {
-    const folders = listEnclosingFolders(path).filter((folder) => folder !== '');
-    const matches = folders.filter((folder) => isMatch(folder));
-    return matches.at(-1);
-}
-
 export function buildModuleSpecifier(fromFile: string, toFile: string): string {
     const folder = posix.dirname(fromFile);
     const relativePath = posix.relative(folder, toFile);
@@ -120,4 +109,19 @@ export function escapeGlob(path: string): string {
 
 export function isInScope(path: string, scopePath: string): boolean {
     return scopePath === '' || path === scopePath || path.startsWith(`${scopePath}/`);
+}
+
+export function splitSystemPath(path: string): string[] {
+    const segments = path.split('/');
+    const systemSegments = process.platform === 'win32' ? path.split(PATH_SEPARATORS) : segments;
+    if (systemSegments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
+        throw new GspotError(
+            'filesystem',
+            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
+        );
+    return segments;
+}
+
+export function buildDashSafePath(path: string): string {
+    return path.startsWith('-') ? `./${path}` : path;
 }

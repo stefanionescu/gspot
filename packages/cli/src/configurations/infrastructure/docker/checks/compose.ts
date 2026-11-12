@@ -11,6 +11,7 @@ import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
+import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { composeSchema } from '#cli/schemas/configurations.ts';
@@ -65,12 +66,13 @@ function listBuildContexts(declarations: ComposeDeclaration[], folder: string): 
 }
 
 async function checkCompose(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
+    assertCommandCheck(planned);
     const groups = listComposeFiles(listCheckFiles(planned, COMPOSE_CHECK));
     return runCommandBatches(
         session,
         planned,
         groups.map(({ last, before }) => {
-            const command = (planned.check.command as string[]).flatMap((argument) =>
+            const command = planned.check.command.flatMap((argument) =>
                 argument === FILE_PLACEHOLDER
                     ? [
                           ...before.flatMap(({ path }) => [

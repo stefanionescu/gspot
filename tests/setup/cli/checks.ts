@@ -50,7 +50,7 @@ export async function prepareSwiftCheck(
     files: DirectoryJSON = {},
 ): Promise<AsyncDisposable & { session: Session; planned: PlannedCheck }> {
     await using resources = new AsyncDisposableStack();
-    resources.use(spyOn(environment, 'getOperatingSystem').mockReturnValue('macos'));
+    resources.use(spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch }));
     resources.use(
         fakeToolExecutables(
             readConfigurations()

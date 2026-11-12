@@ -1,3 +1,5 @@
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
+
 export const PIN_COMMANDS: ReadonlySet<string> = new Set([
     'add',
     'check',
@@ -24,7 +26,7 @@ export const HELP_MIN_WRAP_WIDTH = 20;
 export const GLOBAL_OPTIONS = {
     '--verbose': 'Print more detail, such as the stack of an internal error',
     '--json': 'Print the report as JSON',
-    '--version': 'Print the version',
+    [VERSION_FLAG]: 'Print the version',
     '-h, --help': 'Print help',
 } as const;
 
@@ -42,8 +44,6 @@ export const USAGE_LINE = 'Usage: gspot <command> [options]';
 
 export const HELP_FLAG = '-h, --help';
 
-export const VERSION_FLAG = '--version';
-
 export const INVALID_VALUE =
     /^error: (?:option '(?<option>--[a-z-]+)(?: [^']*)?' argument|command-argument value) '(?<value>.*)' is invalid(?: for argument '[^']+')?\. (?<detail>.*)$/su;
 
@@ -60,3 +60,11 @@ export const VERBOSE_FLAG = '--verbose';
 export const HELP_ERROR_CODE = 'commander.help';
 
 export const FATAL_ERROR_EVENTS = ['uncaughtException', 'unhandledRejection'] as const;
+
+export const DASH_VALUE_COMMANDS: ReadonlySet<string> = new Set(['set', 'unset']);
+
+export const DASH_VALUE_HELP = 'To pass a value that starts with -, put -- before it.';
+
+export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;
+
+export const NAME_LIST_SEPARATOR = ',';

@@ -194,7 +194,7 @@ function buildFixResult(
     note: string | undefined,
     signal: AbortSignal | undefined,
 ): FixResult {
-    if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? 'Canceled.' };
+    if (signal?.aborted === true) return { check, changed, status: 'canceled', note: note ?? FIX_CANCELED_MESSAGE };
     if (note !== undefined) return { check, changed, status: 'failed', note };
     return { check, changed, status: changed.length === 0 ? 'unchanged' : 'changed' };
 }

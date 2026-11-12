@@ -2,6 +2,7 @@ import { join } from 'node:path';
 
 import { ANSIBLE_CONFIG_EXTENSION, ANSIBLE_CONFIG_FILE } from '#cli/config/configurations/infrastructure.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
@@ -28,10 +29,11 @@ async function lintProject(
             !path.endsWith(ANSIBLE_CONFIG_EXTENSION),
     );
     if (files.length === 0) return [];
+    assertCommandCheck(planned);
     const cwd = join(session.root, folder);
     const selected = { ...planned, files };
-    const substitutions = buildCommandSubstitutions(session.root, selected, cwd, session.selection?.messageFile);
-    const commandArguments = expandCommand(session, selected, planned.check.command as string[], substitutions).filter(
+    const substitutions = buildCommandSubstitutions(session, session.root, selected, cwd);
+    const commandArguments = expandCommand(session, selected, planned.check.command, substitutions).filter(
         (argument) => typeof argument === 'string',
     );
     const result = await runCheckTool(session, planned, commandArguments, { cwd });

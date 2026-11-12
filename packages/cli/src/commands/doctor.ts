@@ -13,11 +13,15 @@ import {
 } from '#cli/config/commands/reports.ts';
 import { EXIT_FINDINGS } from '#cli/config/engine.ts';
 import { CI_FILES } from '#cli/config/generation/files.ts';
-import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import {
+    AVAILABLE_TOOL_STATES,
+    MISE_INSTALL_URL,
+    PROJECT_ENVIRONMENT_MESSAGE,
+    VERSION_FLAG,
+} from '#cli/config/tools/programs.ts';
 import { findCommandTool } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
@@ -35,7 +39,7 @@ import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
-import type { CommandDefinition } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
 import type { CiState, DoctorReport, DoctorTool } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
@@ -234,7 +238,7 @@ function formatDoctorReport(report: DoctorReport, states: DoctorStates): string 
     return `${lines.join('\n')}\n`;
 }
 
-async function runDoctorCommand(root: string): Promise<CommandResult> {
+async function runDoctorCommand({ root }: CommandLocation): Promise<CommandResult> {
     const session = await openSession(root);
     const { text: hooksText, ...hooks } = await readHookRunnerStatus(session);
     const { text: ciText, ...ci } = await readCiState(session);
@@ -271,5 +275,5 @@ async function runDoctorCommand(root: string): Promise<CommandResult> {
 
 export const DOCTOR_COMMAND: CommandDefinition = {
     name: 'doctor',
-    run: async ({ root }) => await runDoctorCommand(root),
+    run: runDoctorCommand,
 };

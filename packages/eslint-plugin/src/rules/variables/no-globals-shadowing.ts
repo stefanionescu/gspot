@@ -105,18 +105,11 @@ export const noGlobalsShadowing = createRule<[], 'declaration' | 'assignment'>({
         },
     },
     create(context) {
-        const inspect = (node: NamedNode) => {
-            const issues = listShadowingNames(node);
-            for (const issue of issues) context.report(issue);
-        };
         return {
-            FunctionDeclaration: inspect,
-            FunctionExpression: inspect,
-            ArrowFunctionExpression: inspect,
-            VariableDeclarator: inspect,
-            CatchClause: inspect,
-            AssignmentExpression: inspect,
-            UpdateExpression: inspect,
+            ':function, VariableDeclarator, CatchClause, AssignmentExpression, UpdateExpression'(node: NamedNode) {
+                const issues = listShadowingNames(node);
+                for (const issue of issues) context.report(issue);
+            },
         };
     },
 });

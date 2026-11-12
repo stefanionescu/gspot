@@ -13,7 +13,6 @@ import {
     NPM_TOOL_PROJECT,
 } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
@@ -39,9 +38,8 @@ async function captureLockfileRefusal(root: string, packageJson: string, lockfil
         [`${GSPOT_FOLDER}/bun.lock`]: lockfile,
         'gspot.toml': buildSandboxSettings([]),
     });
-    const owner = openFiles(root);
     const session = await openSession(root);
-    const install = await buildNpmToolInstall(session, owner);
+    const install = await buildNpmToolInstall(session);
     return captureRejection(
         planNpmLockfile(install, { path: GSPOT_PATHS.npmProject, content: CREDENTIAL_PACKAGE_JSON }),
     );
@@ -67,7 +65,6 @@ test('a failed installation hides credentials', async () => {
         'gspot.toml': buildSandboxSettings([]),
     });
     const session = await openSession(sandbox.path);
-    const owner = openFiles(sandbox.path);
     const failure = {
         stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
         stderr: `${refusal} from ${registry}private-check-tool`,
@@ -77,7 +74,7 @@ test('a failed installation hides credentials', async () => {
             buildProcessResult(command.at(-1) === '--version' ? { stdout: '1.4.2\n' } : { code: 1, ...failure }),
         ),
     );
-    const install = await buildNpmToolInstall(session, owner);
+    const install = await buildNpmToolInstall(session);
     const installationError = await captureRejection(installNpmTools(install));
     expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
     for (const secret of [password, encodeURIComponent(password), token])
@@ -126,7 +123,7 @@ test('npm resolves and installs a stale tool project in one run that starts from
         await writeFile(join(options.cwd, 'package-lock.json'), '{"lockfileVersion":3}\n');
         return buildProcessResult();
     });
-    const install = await buildNpmToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildNpmToolInstall(await openSession(sandbox.path));
     await installUnlockedNpmTools(install);
     expect(runs.map(({ hasLockfile, hasModules }) => ({ hasLockfile, hasModules }))).toStrictEqual([
         { hasLockfile: false, hasModules: false },
@@ -152,7 +149,7 @@ test('a lockfile that npm writes with registry credentials in its one run is del
             await writeFile(join(options.cwd, 'package-lock.json'), CREDENTIAL_LOCKFILE);
         return buildProcessResult({ stdout: command.at(-1) === '--version' ? '11.19.0\n' : '' });
     });
-    const install = await buildNpmToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildNpmToolInstall(await openSession(sandbox.path));
     const error = await captureRejection(installUnlockedNpmTools(install));
     expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(existsSync(join(sandbox.path, GSPOT_FOLDER, 'package-lock.json'))).toBe(false);

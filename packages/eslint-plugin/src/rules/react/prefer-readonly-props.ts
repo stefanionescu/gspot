@@ -8,8 +8,8 @@ import {
     READONLY_UTILITY,
 } from '../../config/react.ts';
 import { getTypes } from '../../language/checker.ts';
+import { listReturnedValues } from '../../language/functions.ts';
 import { getAssignedValue } from '../../language/modules.ts';
-import { listBodyNodes } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { CheckedType, TypeReader } from '../../types/plugin.ts';
 
@@ -18,14 +18,6 @@ function traceReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): T
         node.type === AST_NODE_TYPES.Identifier ? ASTUtils.findVariable(source.getScope(node), node) : null;
     const value = variable === null ? undefined : getAssignedValue(variable);
     return value ?? node;
-}
-
-function hasMarkupReturn(node: TSESTree.FunctionDeclaration, source: TSESLint.SourceCode): boolean {
-    const statements = listBodyNodes(node.body, source);
-    const returned = statements.flatMap((statement) =>
-        statement.type === AST_NODE_TYPES.ReturnStatement && statement.argument !== null ? [statement.argument] : [],
-    );
-    return returned.some((value) => traceReturnedValue(value, source).type.startsWith(JSX_NODE_PREFIX));
 }
 
 function isMarkedReadonly(type: CheckedType): boolean {
@@ -74,10 +66,13 @@ export const preferReadonlyProps = createRule<[], 'mutable' | 'mark'>({
                 const [props] = node.params;
                 const annotation =
                     props !== undefined && 'typeAnnotation' in props ? props.typeAnnotation?.typeAnnotation : undefined;
+                const hasMarkupReturn = listReturnedValues(node, source).some((value) =>
+                    traceReturnedValue(value, source).type.startsWith(JSX_NODE_PREFIX),
+                );
                 if (
                     props === undefined ||
                     annotation === undefined ||
-                    !hasMarkupReturn(node, source) ||
+                    !hasMarkupReturn ||
                     isReadonlyType(types.get(props), types)
                 )
                     return;

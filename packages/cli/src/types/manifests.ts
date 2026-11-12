@@ -21,10 +21,12 @@ export type Config = ParsedManifest['configs'][number];
 
 export type Group = (typeof GROUPS)[number];
 
+export type CheckOutput = z.output<typeof outputSchema>;
+
 export type Check = Omit<z.infer<typeof checkSchema>, 'example' | 'name' | 'output'> & {
     id: string;
     example?: string;
-    output: z.output<typeof outputSchema>;
+    output: CheckOutput;
 };
 
 export type Configuration = Omit<ParsedManifest, 'tools' | 'configuration' | 'checks'> &

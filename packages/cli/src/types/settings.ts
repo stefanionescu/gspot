@@ -92,13 +92,16 @@ export type InheritedSetting = {
     setting: Setting;
     value: unknown;
     reason?: string | undefined;
-    source: string;
     origin: SettingOrigin;
+    /**
+    The written key that set the value, when it differs from `key`.
+    */
+    writtenAs?: string;
 };
 
 export type SettingOrigin = z.infer<typeof settingOriginSchema>;
 
-export type InheritedValue = Pick<InheritedSetting, 'value' | 'source' | 'origin'> & {
+export type InheritedValue = Pick<InheritedSetting, 'value' | 'origin' | 'writtenAs'> & {
     reason: string | undefined;
 };
 

@@ -26,7 +26,7 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildDashSafePath, convertToPosixPath } from '#cli/system/paths.ts';
 import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/python-environment.ts';
@@ -143,7 +143,7 @@ async function findMissingSecondaryTool(
 function buildCommandSetup(session: CheckSession, planned: PlannedCheck, root: string): CommandSetup {
     const { scope } = planned;
     const cwd = selectCommandFolder(root, planned);
-    const substitutions = buildCommandSubstitutions(root, planned, cwd, session.selection?.messageFile);
+    const substitutions = buildCommandSubstitutions(session, root, planned, cwd);
     const files = substitutions.files;
     const env =
         planned.check.env === undefined
@@ -176,18 +176,19 @@ export function selectCommandFolder(root: string, planned: PlannedCheck): string
 }
 
 export function buildCommandSubstitutions(
+    session: Pick<CheckSession, 'selection'>,
     root: string,
     planned: PlannedCheck,
     cwd: string,
-    messageFile: string | undefined,
 ): Substitutions {
     const substitutions: Substitutions = {
         files: planned.files
             .map((file) => convertToPosixPath(relative(cwd, join(root, file.path))))
-            .map((path) => (path.startsWith('-') ? `./${path}` : path)),
+            .map((path) => buildDashSafePath(path)),
         scopePath: planned.scope.path,
         root,
     };
+    const messageFile = session.selection?.messageFile;
     if (messageFile !== undefined) substitutions.messageFile = messageFile;
     return substitutions;
 }

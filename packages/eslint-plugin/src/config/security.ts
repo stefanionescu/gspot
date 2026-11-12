@@ -1,6 +1,13 @@
 export const INSECURE_RANDOM_GENERATOR = 'Math.random';
 
-export const PATH_COMMAND_METHODS = new Set(['exec', 'execSync', 'execFile', 'execFileSync', 'spawn', 'spawnSync']);
+export const PATH_COMMAND_METHODS = new Set([
+    'child_process.exec',
+    'child_process.execSync',
+    'child_process.execFile',
+    'child_process.execFileSync',
+    'child_process.spawn',
+    'child_process.spawnSync',
+]);
 
 export const EXPLICIT_COMMAND = /^(?:\.[/\\]|\.\.|[/\\]|[A-Za-z]:\\)/u;
 
@@ -151,8 +158,6 @@ export const FILE_MODE_CONSTANTS: Readonly<Record<string, number>> = {
     S_IWOTH: 0o2,
     S_IXOTH: 0o1,
 };
-
-export const OCTAL_RADIX = 8;
 
 export const OTHERS_MASK = 0o7;
 

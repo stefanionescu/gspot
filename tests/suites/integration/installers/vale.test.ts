@@ -8,7 +8,6 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
@@ -114,8 +113,7 @@ test.each([...VALE_INSTALL_FAILURES])(
             version,
             ...fakeArguments,
         );
-        const writer = openFiles(sandbox.path);
-        const request = await buildSandboxToolInstall(session, writer);
+        const request = await buildSandboxToolInstall(session);
         const failure = await captureRejection(installValePackages(request, [miseBin]));
         expect(failure.message).toContain(named);
         expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(

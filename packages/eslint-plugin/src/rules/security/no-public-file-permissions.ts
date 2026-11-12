@@ -1,10 +1,10 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
+import { OCTAL_RADIX } from '../../config/plugin.ts';
 import {
     CHMOD_METHODS,
     FILE_MODE_CONSTANTS,
     FILE_MODE_MODULE,
-    OCTAL_RADIX,
     OTHERS_MASK,
     UMASK_FUNCTION,
 } from '../../config/security.ts';

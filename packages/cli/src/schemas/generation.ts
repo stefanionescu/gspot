@@ -1,8 +1,8 @@
 import { z } from 'zod';
 
 import { CONFIGURATION_ORIGINS, LEVELS } from '#cli/config/manifests.ts';
-import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
+import { lintCommandSchema } from '#cli/schemas/repository.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 
 /**
@@ -98,17 +98,6 @@ export const carryoverRowSchema = z.strictObject({
 });
 
 export const leftOutSettingSchema = z.strictObject({ key: z.string(), note: z.string() });
-
-const lintCommandSourceSchema = z.enum(Object.keys(LINT_COMMAND_FIXES) as Array<keyof typeof LINT_COMMAND_FIXES>);
-
-const lintCommandSchema = z.strictObject({
-    file: z.string(),
-    line: z.int(),
-    source: lintCommandSourceSchema,
-    command: z.string(),
-    tool: z.string(),
-    fix: z.string(),
-});
 
 export const initPlanSchema = z.strictObject({
     from: z.strictObject({ file: z.string(), leftOutSettings: leftOutSettingSchema.array() }).optional(),

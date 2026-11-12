@@ -16,7 +16,7 @@ import {
     commentSectionTitle,
     convertToGlobs,
     keepFirstPatterns,
-    listCheckIgnoreSections,
+    listPlannedIgnoreSections,
 } from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
@@ -47,22 +47,20 @@ function listMessageSections({ scope }: PlannedConfig): IgnoreSection[] {
 }
 
 function buildTyposSections(planned: PlannedConfig): IgnoreSection[] {
-    const sections = [
-        ...listMessageSections(planned),
-        ...planned.ignoreSections,
-        ...listCheckIgnoreSections(planned.scope.settings, TYPOS_CHECK),
-    ].map((section) => {
-        if (section.key === 'lockfiles')
-            return {
-                ...section,
-                patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
-                    (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
-                ),
-            };
-        return section.key === 'generators'
-            ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
-            : section;
-    });
+    const sections = [...listMessageSections(planned), ...listPlannedIgnoreSections(planned, TYPOS_CHECK)].map(
+        (section) => {
+            if (section.key === 'lockfiles')
+                return {
+                    ...section,
+                    patterns: [...section.patterns, ...TYPOS_LOCKFILE_GLOBS].filter(
+                        (path) => path === LOCKFILE_GLOB || !path.endsWith(LOCKFILE_EXTENSION),
+                    ),
+                };
+            return section.key === 'generators'
+                ? { ...section, patterns: [...section.patterns, ...TYPOS_FORMAT_GLOBS] }
+                : section;
+        },
+    );
     return keepFirstPatterns(
         sections.map((section) => ({
             ...section,
@@ -84,15 +82,16 @@ function serializeIgnoredGlobs(sections: IgnoreSection[]): string {
 }
 
 function buildTyposFile(planned: PlannedConfig): string {
+    const spelling = getTable(planned.scope.settings, 'spelling');
     const allowed = Object.fromEntries<string>(
-        Object.keys(getTable(planned.scope.settings, 'spelling').allowed_words)
+        Object.keys(spelling.allowed_words)
             .toSorted(compareText)
             .map((word) => [word, word]),
     );
     const text = stringify(
         {
             default: {
-                locale: getTable(planned.scope.settings, 'spelling').locale,
+                locale: spelling.locale,
                 'extend-ignore-re': TYPOS_IGNORE_PATTERNS,
                 'extend-words': allowed,
             },

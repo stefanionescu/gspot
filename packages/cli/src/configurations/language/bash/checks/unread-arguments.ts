@@ -1,14 +1,13 @@
 import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
 import { listFunctionCalls, readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { formatCount, formatNameList } from '#cli/system/text.ts';
+import { formatCount, formatNameState } from '#cli/system/text.ts';
 import type { ScriptFile } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function formatUnreadPositions(width: number, highest: number): string {
     const unread = Array.from({ length: width - highest }, (_, offset) => String(highest + offset + 1));
-    const isSingle = unread.length === 1;
-    return `${isSingle ? 'position' : 'positions'} ${formatNameList(unread)} ${isSingle ? 'is' : 'are'}`;
+    return `${unread.length === 1 ? 'position' : 'positions'} ${formatNameState(unread, 'never read')}`;
 }
 
 function isChanged(
@@ -41,7 +40,7 @@ async function checkUnreadArguments(session: CheckSession, planned: PlannedCheck
                     file: file.path,
                     line: scriptFunction.start,
                     rule: UNREAD_ARGUMENTS_RULE,
-                    message: `${scriptFunction.name} is called with up to ${formatCount(width, 'argument')} but ${read}: ${positions} never read.`,
+                    message: `${scriptFunction.name} is called with up to ${formatCount(width, 'argument')} but ${read}: ${positions}.`,
                 },
             ];
         }),

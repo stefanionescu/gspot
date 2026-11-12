@@ -1,6 +1,5 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { FUNCTION_NODES } from '../config/plugin.ts';
 import {
     CALL_STEP,
     MARKED_TEST_MODIFIERS,
@@ -16,8 +15,7 @@ import {
     TEST_FRAMEWORK_MODULES,
     TEST_KINDS,
 } from '../config/testing.ts';
-import { findFunction } from '../language/functions.ts';
-import { listChildren } from '../language/syntax.ts';
+import { findEnclosingFunction, findFunction } from '../language/functions.ts';
 import type { FileContext } from '../types/plugin.ts';
 import type { TableCall, TestCall, TestCallee, TestOrigin } from '../types/testing.ts';
 import { getRequiredModule, isModuleUsed } from './packages.ts';
@@ -121,21 +119,17 @@ export function getMarkedTestCall(node: TSESTree.Node, source: TSESLint.SourceCo
     return call?.modifiers.every((modifier) => MARKED_TEST_MODIFIERS.has(modifier)) === true ? call : undefined;
 }
 
+export function isRunningTestCall(call: TestCall): boolean {
+    return call.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier));
+}
+
 export function listEnclosingTestCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TestCall[] {
     return source.getAncestors(node).flatMap((ancestor) => getMarkedTestCall(ancestor, source) ?? []);
 }
 
-export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
-    const nodes: TSESTree.Node[] = [];
-    const pending = [root];
-    let node = pending.pop();
-    while (node !== undefined) {
-        nodes.push(node);
-        const children = listChildren(node, source.visitorKeys).filter((child) => !FUNCTION_NODES.has(child.type));
-        pending.push(...children.toReversed());
-        node = pending.pop();
-    }
-    return nodes;
+export function getEnclosingTestCall(node: TSESTree.Node, source: TSESLint.SourceCode): TestCall | undefined {
+    const parent = findEnclosingFunction(node, source)?.parent;
+    return parent?.type === AST_NODE_TYPES.CallExpression ? getTestCall(parent, source) : undefined;
 }
 
 export function readTestTable(node: TableCall, context: FileContext): TSESTree.Node | undefined {
@@ -157,10 +151,4 @@ export function isCypressChain(node: TSESTree.Node): boolean {
     while (value.type === AST_NODE_TYPES.MemberExpression || value.type === AST_NODE_TYPES.CallExpression)
         value = value.type === AST_NODE_TYPES.MemberExpression ? value.object : value.callee;
     return value.type === AST_NODE_TYPES.Identifier && value.name === 'cy';
-}
-
-export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
-    if (node.type !== AST_NODE_TYPES.CallExpression) return false;
-    const { callee } = node;
-    return ASTUtils.isIdentifier(callee) && callee.name === name;
 }

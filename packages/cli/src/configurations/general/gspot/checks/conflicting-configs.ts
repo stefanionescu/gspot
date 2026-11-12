@@ -18,7 +18,7 @@ function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck):
         .filter(({ tool, path, pointer }) => tools.has(tool) && !generated.has(path) && pointer !== true)
         .map(({ tool, path, shared, table, key }) => ({
             file: path,
-            line: table === undefined ? 1 : findLine(findText(session.root, path) ?? '', `[${table}`),
+            line: table === undefined ? 1 : findLine(findText(session.cache, path) ?? '', `[${table}`),
             rule: GSPOT_RULES.conflictingConfig,
             message: shared
                 ? `gspot writes the settings for ${tool}, so ${table ?? key ?? tool} in ${path} no longer applies. Delete the section, and move any rule you need into gspot.toml.`

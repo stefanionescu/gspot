@@ -82,7 +82,6 @@ function mergeTable(
     const written = possibleKeys
         .map((writtenKey) => ({ writtenKey, found: findWrittenSetting(table.table, writtenKey) }))
         .filter((row): row is typeof row & { found: NonNullable<typeof row.found> } => row.found !== undefined);
-    const owner = table.scopePath === '' ? SETTINGS_FILE : `scope ${table.scopePath}`;
     const origin: SettingOrigin =
         table.scopePath === '' ? { kind: 'root', name: SETTINGS_FILE } : { kind: 'scope', name: table.scopePath };
     for (const { writtenKey, found } of written) {
@@ -93,9 +92,9 @@ function mergeTable(
                 ['default', 'configuration'].includes(result.origin.kind) ? undefined : result.value,
                 joinSettingPaths(writtenKey, value, table.scopePath),
             ),
-            source: writtenKey === key ? owner : `${owner} (${writtenKey})`,
             origin,
             reason: found.reason,
+            ...(writtenKey !== key && { writtenAs: writtenKey }),
         };
     }
     return result;
@@ -225,17 +224,12 @@ export function getSettingValue(
     const keys = listPossibleKeys(availableSettings, match, key);
     let inherited: InheritedValue = {
         value: undefined,
-        source: 'unset',
         origin: { kind: 'unset', name: '' },
         reason: undefined,
     };
     if (shipped !== undefined)
         inherited = {
             value: shipped.value,
-            source:
-                shipped.configuration === SHIPPED_DEFAULT_ORIGIN
-                    ? SHIPPED_DEFAULT_ORIGIN
-                    : `configuration ${shipped.configuration}`,
             origin:
                 shipped.configuration === SHIPPED_DEFAULT_ORIGIN
                     ? { kind: 'default', name: SHIPPED_DEFAULT_OWNER }
@@ -243,15 +237,14 @@ export function getSettingValue(
             reason: undefined,
         };
     for (const table of tables) inherited = mergeTable(setting, key, inherited, table, keys);
-    const { value, source, reason, origin } = inherited;
-    return {
-        key,
-        setting,
-        value,
-        source,
-        origin,
-        reason,
-    };
+    return { key, setting, ...inherited };
+}
+
+export function formatSettingSource({ kind, name }: SettingOrigin, writtenAs?: string): string {
+    const written = writtenAs === undefined ? '' : ` (${writtenAs})`;
+    if (kind === 'default') return `${SHIPPED_DEFAULT_ORIGIN}${written}`;
+    if (kind === 'scope' || kind === 'configuration') return `${kind} ${name}${written}`;
+    return `${kind === 'root' ? name : kind}${written}`;
 }
 
 export function listWrittenKeys(settings: SettingsTable, availableSettings: AvailableSettings): string[] {

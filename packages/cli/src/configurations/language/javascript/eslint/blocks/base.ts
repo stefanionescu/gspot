@@ -40,10 +40,10 @@ import {
     buildScopeFiles,
     listCodeTestFiles,
     listJavascriptScopes,
+    listNestedScopeGlobs,
     listScriptFiles,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
 import type {
@@ -174,10 +174,10 @@ function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslint
     return scopes.map((scope) => ({
         files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
         ignores: [
-            ...listNestedScopes(
+            ...listNestedScopeGlobs(
                 scopes.map(({ path }) => path),
                 scope.path,
-            ).map((path) => joinScope(escapeGlob(path), '**')),
+            ),
             ...listCodeTestFiles(scope.settings.test_files),
             ...listScriptFiles(scope),
         ],
@@ -234,7 +234,7 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
             .map((group): ConfigurationBlocks[number] => ({
                 fields: {
                     files: buildScopeFiles(eslintFiles.code, group.scopePath, ['**/*']),
-                    ignores: group.ignoredScopes.map((scopePath) => `${escapeGlob(scopePath)}/**`),
+                    ignores: group.ignoredScopes,
                     rules: { [RESTRICTED_SYNTAX_RULE]: ['error', ...group.selectors] },
                 },
             })),

@@ -2,7 +2,7 @@ import { STAGES } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON, PYPROJECT_TOML, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { CheckStatus } from '#cli/types/engine/run.ts';
-import type { CheckOutput } from '#cli/types/engine/tool-runs.ts';
+import type { CheckOutput } from '#cli/types/manifests.ts';
 
 export const SHORT_HASH_LENGTH = 7;
 
@@ -30,8 +30,6 @@ export const CHECK_COMMAND = 'gspot check';
 
 export const HOOK_FLAG = '--hook';
 
-export const GIT_CHECK_IGNORE_ARGUMENTS = ['check-ignore', '--no-index', '-z', '--stdin'] as const;
-
 export const FILES_BETWEEN_PAUSES = 64;
 
 export const COPY_FOLDER_NAME = /^(?<pid>[1-9]\d{0,8})-[a-zA-Z0-9]+$/u;
@@ -53,8 +51,6 @@ export const GIT_UPDATE_INDEX_ARGUMENTS = ['update-index', '-z', '--index-info']
 export const GIT_HASH_FORMAT_ARGUMENTS = ['rev-parse', '--show-object-format'] as const;
 
 export const GIT_INIT_ARGUMENTS = ['init', '--quiet'] as const;
-
-export const GIT_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path'] as const;
 
 export const DEPENDENCY_REVISION_NOTE =
     'The dependency files in the working tree differ from the checked revision; the checks used the installed dependencies.';
@@ -220,6 +216,8 @@ export const EXIT_FINDINGS = 1;
 export const DOCKER_TOOL = 'docker';
 
 export const LOCAL_RULES_SETTING = 'security.semgrep_rules';
+
+export const LOCAL_RULE_EXTENSION = '.yml';
 
 export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
 

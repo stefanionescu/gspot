@@ -17,15 +17,23 @@ export type CommandOption = {
     choices?: readonly string[];
     required?: boolean;
     hidden?: boolean;
-    parse?: (value: string, previous: string[] | undefined) => unknown;
+    list?: string;
+    repeats?: true;
 };
 
-export type CommandDefinition<Arguments extends readonly unknown[] = readonly unknown[], Flags = object> = {
+export type CommandDefinition<
+    Arguments extends readonly unknown[] = readonly unknown[],
+    Flags = object,
+    Input = { arguments: Arguments; flags: Flags; cwd: string },
+> = {
     name: keyof typeof COMMAND_HELP;
     arguments?: readonly CommandArgument[];
     options?: readonly CommandOption[];
-    run(input: { arguments: Arguments; flags: Flags } & CommandLocation): Promise<CommandResult<object>>;
+    parse?(raw: { arguments: Arguments; flags: Flags; cwd: string }): Input;
+    run(input: Input & CommandLocation): Promise<CommandResult<object>>;
 };
+
+export type AnyCommandDefinition = CommandDefinition<readonly unknown[], object, object>;
 
 export type CommandHelp = {
     summary: string;
@@ -45,9 +53,7 @@ export type IgnoreFlags = { reason: string; rule?: string | undefined; paths?: s
 
 export type InitFlags = { from?: string; configurations?: string[]; level?: Level };
 
-export type IgnoreOptions = {
-    root: string;
-    cwd: string;
+export type IgnoreOptions = CommandLocation & {
     check?: string | undefined;
     paths?: string[] | undefined;
     rule?: string | undefined;
@@ -56,9 +62,7 @@ export type IgnoreOptions = {
 
 export type InstallCommandJson = z.infer<typeof installReportSchema>;
 
-export type SetOptions = {
-    root: string;
-    cwd: string;
+export type SetOptions = CommandLocation & {
     key: string;
     values: string[];
     reason?: string | undefined;
@@ -86,16 +90,16 @@ export type IgnoreRemoval = {
 
 export type IgnoreTarget = { unmatched: string; removed: string };
 
-export type UnsetOptions = { root: string; cwd: string; key: string; keys: string[]; scopePath?: string | undefined };
+export type UnsetOptions = CommandLocation & { key: string; keys: string[]; scopePath?: string | undefined };
 
 export type InitJson = z.infer<typeof initReportSchema>;
 
-export type ConfigurationsOptions = {
-    root: string;
-    cwd: string;
+export type ConfigurationsOptions = CommandLocation & {
     configurations: string[];
     scopePath?: string | undefined;
 };
+
+export type RemoveOptions = ConfigurationsOptions & { reason: string };
 
 export type ConfigurationChange = {
     action: string;
@@ -120,7 +124,5 @@ export type SettingsEditOptions = {
     unchangedSummary?: string;
     notes?: string[];
 };
-
-export type CommandCompletion = (result: CommandResult<object>) => void;
 
 export type SettingsEditReport = z.infer<typeof settingsEditReportSchema>;

@@ -20,7 +20,7 @@ import type {
 
 const PROGRESS_CLEAR = '\r\u{1B}[2K';
 
-const options: OutputState = { isJson: false, notes: [] };
+const options: OutputState = { isJson: false, isVerbose: false, notes: [] };
 
 /**
 Write text as a line, without terminal escape sequences, control characters except tabs and line feeds, and format
@@ -63,10 +63,10 @@ export function formatUnexpectedError(subject: string): string {
     return `${subject} stopped because of an internal error${location}. Report it at ${page}, with the stack that --verbose prints.`;
 }
 
-export function printUnexpectedError(error: unknown, isVerbose: boolean): void {
+export function printUnexpectedError(error: unknown): void {
     const stackText = error instanceof Error ? (error.stack ?? error.message) : String(error);
     const message = formatUnexpectedError('gspot');
-    printError({ error: 'unexpected', message, ...(isVerbose && { stack: stackText }) });
+    printError({ error: 'unexpected', message, ...(options.isVerbose && { stack: stackText }) });
 }
 
 export function printResult(result: CommandResult<object>): void {

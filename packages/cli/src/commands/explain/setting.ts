@@ -1,9 +1,10 @@
+import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/reports.ts';
 import { isSettingUnread, listSettingReaders } from '#cli/engine/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { findSetting, findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
+import { findSetting, findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/inherit.ts';
 import { findNamingParent, findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
@@ -15,7 +16,9 @@ import type { Session } from '#cli/types/tools.ts';
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scopePath, shipped, inherited } = scopeSetting;
     const shown =
-        inherited?.value === undefined ? NOT_SET : `${JSON.stringify(inherited.value)} (from ${inherited.source})`;
+        inherited?.value === undefined
+            ? NOT_SET
+            : `${JSON.stringify(inherited.value)} (from ${formatSettingSource(inherited.origin, inherited.writtenAs)})`;
     return [
         '',
         `Scope: ${formatScope(scopePath)}`,
@@ -69,7 +72,7 @@ function readShippedSetting(key: string): ExplainedSetting | undefined {
         text: [
             key,
             '',
-            match.setting.description.replaceAll('`', ''),
+            match.setting.description.replaceAll(CODE_MARK, ''),
             ...ownership,
             'No gspot.toml here: these are the shipped values',
             ...formatSettingScope(key, match.setting, scopeSetting),
@@ -101,7 +104,7 @@ function findSessionSetting(session: Session, key: string): ExplainedSetting | u
     const lines = [
         key,
         '',
-        first.setting.description.replaceAll('`', ''),
+        first.setting.description.replaceAll(CODE_MARK, ''),
         ...(session.scopes.some((scope) => scope.path === first.scopePath && isSettingUnread(settings, scope, key))
             ? [`No selected check reads ${key} at level ${settings.level}.`]
             : []),

@@ -110,13 +110,7 @@ function listDeletedTriggers(planned: PlannedScope, scopeCheck: ScopeCheck, scop
 
 function isReadableFile(session: Pick<SessionBase, 'scopes' | 'cache'>, check: Check, file: TrackedFile): boolean {
     if (check.binary_files === true) return true;
-    if (
-        check.large_files !== true &&
-        file.size >
-            getTable(selectScope(file.path, session.scopes).settings, 'repository').max_file_kilobytes *
-                BYTES_PER_KILOBYTE
-    )
-        return false;
+    if (check.large_files !== true && file.size > getMaxFileBytes(session.scopes, file.path)) return false;
     if (!file.tags.includes('text') || file.tags.includes('symlink')) return true;
     file.isUtf8 ??= isUtf8(readBytes(session.cache, file.path));
     return file.isUtf8;
@@ -148,6 +142,10 @@ function addNarrowedLinks(
     return { ...selection, triggerPaths: [...selection.triggerPaths, ...narrowedLinks], narrowedLinks };
 }
 
+export function getMaxFileBytes(scopes: Scope[], path: string): number {
+    return getTable(selectScope(path, scopes).settings, 'repository').max_file_kilobytes * BYTES_PER_KILOBYTE;
+}
+
 /**
 Drop the files that an ignore with paths and no rule covers for this check.
 */
@@ -170,8 +168,8 @@ export function stripIgnoredFiles<File extends Pick<TrackedFile, 'path'>>(
 
 /**
 Index the tracked files once per plan: their paths, the tracked files among the narrowed paths, and the files under
-each scope folder. A change to gspot.toml or to a gspot file leaves the narrowed files out, so every check plans its
-whole scope, because such a change can change what every check reads.
+each scope folder. A change to gspot.toml or to a gspot file can change what every check reads. Such a change leaves
+the narrowed files out, so every check plans its whole scope, outside a staged run, which reads only the staged files.
 */
 export function buildPlanInventory(
     files: TrackedFile[],

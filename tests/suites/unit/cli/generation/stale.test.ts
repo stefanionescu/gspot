@@ -51,3 +51,14 @@ test('a blank line after the block start marker is stale', async () => {
         { path: 'AGENTS.md', kind: 'changed' },
     ]);
 });
+
+test('an authored file at a generated path without the header is stale', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['format']),
+        '.editorconfig': 'root = true\n',
+    });
+    const session = await openSession(sandbox.path);
+    expect(
+        listStaleFiles(session, buildGeneratedFiles(session)).filter((file) => file.path === '.editorconfig'),
+    ).toStrictEqual([{ path: '.editorconfig', kind: 'changed' }]);
+});

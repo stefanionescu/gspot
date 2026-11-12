@@ -1,19 +1,18 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { FUNCTION_NODES } from '../../config/plugin.ts';
-import { RUNNING_TEST_MODIFIERS, TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
+import { TEST_FRAMEWORK_MODULES } from '../../config/testing.ts';
 import { getLocalFunction } from '../../language/functions.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { getTestCall, isRunningTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 import type { TestCall, TitleScan } from '../../types/testing.ts';
 
 function getRunningCall(call: TestCall | undefined, kind: TestCall['kind']): TestCall | undefined {
     if (call?.kind !== kind) return undefined;
-    const isRunning = call.modifiers.every((modifier) => RUNNING_TEST_MODIFIERS.has(modifier));
-    return isRunning && (kind === 'suite' || call.callback !== undefined) ? call : undefined;
+    return isRunningTestCall(call) && (kind === 'suite' || call.callback !== undefined) ? call : undefined;
 }
 
 function checkTitle(node: TSESTree.CallExpression, titles: Map<string, TSESTree.Node>, scan: TitleScan): void {

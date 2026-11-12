@@ -9,6 +9,10 @@ buildRuleTester().run('weak-ssl', weakSsl, {
     ],
     invalid: [
         {
+            code: "import tls from 'tls';\nconst version = 'TLSv1';\nconst options = { minVersion: version };\nfunction connect(version) {\n    tls.connect(options);\n}",
+            errors: [{ messageId: 'oldVersion', line: 3 }],
+        },
+        {
             code: "const https = require('https');\nconst tls = require('tls');\nconst constants = require('constants');\nhttps.request({ minVersion: 'TLSv1.1', maxVersion: 'TLSv1' });\ntls.connect({ secureProtocol: 'TLSv1_method' });\ntls.connect({ secureProtocol: 'TLS_method' });\ntls.createSecureContext({ secureOptions: constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 });\ntls.createSecureContext({ secureOptions: constants.SSL_OP_NO_SSLv2 | constants.SSL_OP_NO_SSLv3 | constants.SSL_OP_NO_TLSv1 | constants.SSL_OP_NO_TLSv1_1 });\ntls.createSecureContext({ secureOptions: compute() });",
             errors: [
                 { messageId: 'oldVersion', line: 4 },

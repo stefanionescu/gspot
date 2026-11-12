@@ -1,6 +1,5 @@
 import { lstatSync } from 'node:fs';
 import { basename, join } from 'node:path';
-import { isDeepStrictEqual } from 'node:util';
 
 import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
 import { GENERATED_ATTRIBUTE, GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
@@ -28,7 +27,6 @@ import { deleteEmptyFolders, openFiles, walkFiles } from '#cli/system/files/open
 import { decodeUtf8File } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { isInScope, isInside } from '#cli/system/paths.ts';
-import { normalizeTables } from '#cli/system/tables.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
 import type { ManagedKeys, ReplacementRequest, Repository, WritePlan } from '#cli/types/repository.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
@@ -56,7 +54,7 @@ function openManagedKeysFile(path: string, onDisk: FileContents | undefined, key
 
 function removeBlock(path: string, onDisk: FileContents): FileContents | undefined {
     const text = decodeUtf8File(path, onDisk.bytes);
-    const span = findBlockSpan(text, { path });
+    const span = findBlockSpan(text, path);
     if (span === undefined) return onDisk;
     const before = text.slice(0, span.start).replace(TRAILING_BLANK_LINE, '$1');
     const after = text.slice(span.end);
@@ -67,7 +65,7 @@ function removeBlock(path: string, onDisk: FileContents): FileContents | undefin
 function readGeneratedPatterns(files: Files): string[] {
     const attributesFile = files.read(GITATTRIBUTES_FILE);
     if (attributesFile === undefined) return [];
-    const block = findBlockBody(attributesFile.bytes.toString('utf8'), { path: GITATTRIBUTES_FILE }) ?? '';
+    const block = findBlockBody(attributesFile.bytes.toString('utf8'), GITATTRIBUTES_FILE) ?? '';
     return parseAttributePatterns(block, '.')
         .filter(({ attributes }) => attributes.includes(GENERATED_ATTRIBUTE))
         .map(({ pattern }) => pattern);
@@ -113,11 +111,6 @@ export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['
     };
 }
 
-export function hasManagedKeys(output: ManagedKeys, onDisk: FileContents): boolean {
-    const document = openManagedKeysFile(output.path, onDisk, output.keys);
-    return output.keys.every((field) => isDeepStrictEqual(document.getValue(field.key), normalizeTables(field.value)));
-}
-
 export function listStrayPaths(
     session: { root: string; repository: Repository },
     expected: ReadonlySet<string>,
@@ -145,7 +138,7 @@ export function listStrayPaths(
         if (isOwned(path, disk, generatedPatterns, ownablePaths)) return true;
         if (!blockPaths.has(path)) return false;
         const text = disk.read(path)?.bytes.toString('utf8');
-        return text !== undefined && findBlockSpan(text, { path }) !== undefined;
+        return text !== undefined && findBlockSpan(text, path) !== undefined;
     });
 }
 
@@ -157,7 +150,7 @@ export function planReplacements(writer: Files, requests: ReplacementRequest[]):
         const hasLaterEdit = previous !== undefined && !isSameContents(onDisk, previous);
         const hasUnreviewedContents = onDisk !== undefined && previous === undefined && !isSameContents(onDisk, next);
         if (!isOwned(path, writer, generatedPatterns, ownablePaths) && (hasLaterEdit || hasUnreviewedContents))
-            return { path, status: 'refused' };
+            return { path, after: next, status: 'refused' };
         return {
             path,
             after: next,
@@ -169,7 +162,7 @@ export function planReplacements(writer: Files, requests: ReplacementRequest[]):
 export function planBlock(writer: Files, path: string, body: string): WritePlan {
     const onDisk = writer.read(path);
     const text = onDisk === undefined ? '' : decodeUtf8File(path, onDisk.bytes);
-    const nextText = replaceBlock(text, body, { path });
+    const nextText = replaceBlock(text, body, path);
     const next = {
         bytes: Buffer.from(nextText),
         mode: onDisk?.mode ?? OWNER_WRITABLE_FILE,

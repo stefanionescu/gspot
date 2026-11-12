@@ -106,8 +106,6 @@ export const MISSING_KEY_RULE = 'missing-key';
 
 export const SEMGREP_TOOL = 'semgrep';
 
-export const SEMGREP_RULE_EXTENSION = '.yml';
-
 export const COMMITLINT_ERROR_SEVERITY = 2;
 
 export const COMMITLINT_PARSER_PRESET = {

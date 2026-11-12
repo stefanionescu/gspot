@@ -1,3 +1,5 @@
+import { JASMINE_PACKAGES } from '../testing.ts';
+
 export const SCRIPT_ASSERTIONS = [
     /^chai\.(?:assert(?:\.|$)|expect$)/u,
     /^sinon\.assert\.[^.]+$/u,
@@ -71,11 +73,8 @@ export const TEST_FRAMEWORK_DEPENDENCIES = [
     '@playwright/test',
     'chai',
     'cypress',
-    'jasmine',
-    'jasmine-core',
-    'jasmine-node',
+    ...JASMINE_PACKAGES,
     'jest',
-    'karma-jasmine',
     'mocha',
     'sinon',
     'supertest',

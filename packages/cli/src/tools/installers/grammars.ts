@@ -49,7 +49,7 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
             `The ${grammar} grammar failed SHA-256 verification, so gspot kept no copy. Run gspot install again, and check that no proxy rewrites the download.`,
         );
     mkdirSync(dirname(path), { recursive: true });
-    replaceBoundedFile({ root: dirname(path) }, basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
+    replaceBoundedFile(dirname(path), basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
     return true;
 }
 

@@ -48,7 +48,7 @@ test('set names -- when a value reads as an option, and takes the values after -
     expect(refused.code).toBe(2);
     expect(JSON.parse(refused.stdout)).toMatchObject({
         error: 'arguments',
-        message: expect.stringContaining('gspot set ci.setup_command -- bun install --frozen-lockfile') as string,
+        message: expect.stringContaining('To pass a value that starts with -, put -- before it.') as string,
     });
     const set = await runGspot(sandbox.path, ['set', 'ci.setup_command', '--', 'bun', 'install', '--frozen-lockfile']);
     expect(set.code, set.stdout + set.stderr).toBe(0);

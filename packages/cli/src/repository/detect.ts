@@ -5,10 +5,10 @@ import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/f
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { findProjectFolder, joinScope } from '#cli/repository/scopes.ts';
+import { findProjectFolder, joinScopeGlob } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
+import { extractExtension, isInScope } from '#cli/system/paths.ts';
 import { formatCount } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
@@ -68,7 +68,7 @@ function findContentEvidence(
     contents: ScopeContents,
 ): DetectionEvidence | undefined {
     for (const [path, pattern] of Object.entries(detect.content)) {
-        const isTarget = buildPathMatcher([joinScope(escapeGlob(contents.scopePath), path)]);
+        const isTarget = buildPathMatcher([joinScopeGlob(contents.scopePath, path)]);
         const file = contents.files.find((each) => {
             if (!isTarget(each.path)) return false;
             const text = findText(root, each.path);

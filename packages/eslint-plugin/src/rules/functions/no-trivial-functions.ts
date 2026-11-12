@@ -11,7 +11,6 @@ import {
     TRIVIAL_FUNCTION_STATEMENTS,
     TYPE_DECLARATIONS,
 } from '../../config/functions.ts';
-import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import { type TrivialFunctionsOptions } from '../../types/functions.ts';
@@ -24,8 +23,7 @@ const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.m
 function countStatements(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): number {
     if (TYPE_DECLARATIONS.has(node.type)) return 0;
     if ('declare' in node && node.declare) return 0;
-    const isExpressionBody =
-        FUNCTION_NODES.has(node.type) && (node as FunctionNode).body.type !== AST_NODE_TYPES.BlockStatement;
+    const isExpressionBody = ASTUtils.isFunction(node) && node.body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));
     return listChildren(node, visitorKeys).reduce((total, child) => total + countStatements(child, visitorKeys), own);

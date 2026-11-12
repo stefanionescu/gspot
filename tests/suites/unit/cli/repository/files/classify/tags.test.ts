@@ -46,8 +46,7 @@ test.each([...SHEBANGS])('a $name shebang gives only its language and runtime ta
     const prefix = Buffer.from(source);
     const result = classifyFile(
         '.',
-        { path: 'script', size: prefix.length, executable: false, isSymlink: false },
-        prefix,
+        { path: 'script', size: prefix.length, executable: false, isSymlink: false, prefix },
         { attributes: new Map(), generatedPaths: [] },
     );
     expect(result.kind).toBe('source');
@@ -57,10 +56,14 @@ test.each([...SHEBANGS])('a $name shebang gives only its language and runtime ta
 test('binary content gets no shebang language or runtime tags', () => {
     const prefix = Buffer.from('#!/usr/bin/env bun\n\0');
     expect(
-        classifyFile('.', { path: 'script', size: prefix.length, executable: true, isSymlink: false }, prefix, {
-            attributes: new Map(),
-            generatedPaths: [],
-        }),
+        classifyFile(
+            '.',
+            { path: 'script', size: prefix.length, executable: true, isSymlink: false, prefix },
+            {
+                attributes: new Map(),
+                generatedPaths: [],
+            },
+        ),
     ).toStrictEqual({
         path: 'script',
         kind: 'binary',

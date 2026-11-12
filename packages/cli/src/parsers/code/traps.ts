@@ -11,8 +11,8 @@ import {
     INTERPRETER_COMMANDS,
     SAVED_IFS,
     SEQUENCE_COMMAND,
+    STRING_EXPANSION_NODES,
     TRAP_COMMAND,
-    TRAP_EXPANSION_NODES,
     TRAP_SOURCE_ROWS,
     TRAP_STRING_ESCAPES,
 } from '#cli/config/parsers/code.ts';
@@ -39,12 +39,16 @@ function decodeTrapBody(body: Node): { text: string; sourceRows: TrapScript['sou
     return { text: text + quoted.slice(end), sourceRows };
 }
 
-function readLiteralArgument(argument: Node): string | undefined {
+function isLiteralString(node: Node): boolean {
+    return (
+        node.type === 'raw_string' ||
+        (node.type === 'string' && node.descendantsOfType(STRING_EXPANSION_NODES).length === 0)
+    );
+}
+
+function getLiteralArgument(argument: Node): string | undefined {
     if (argument.type === 'word' || argument.type === 'number') return argument.text;
-    const isLiteralString =
-        argument.type === 'raw_string' ||
-        (argument.type === 'string' && argument.descendantsOfType(TRAP_EXPANSION_NODES).length === 0);
-    return isLiteralString ? argument.text.slice(1, -1) : undefined;
+    return isLiteralString(argument) ? argument.text.slice(1, -1) : undefined;
 }
 
 function findSwallowingCommand(list: Node): Node | undefined {
@@ -122,10 +126,7 @@ export async function parseTrapScripts(
                 .childrenForFieldName('argument')
                 .filter((argument) => argument.text !== END_OF_OPTIONS);
             if (body === undefined || signals.length === 0) return [];
-            const isLiteral =
-                body.type === 'raw_string' ||
-                (body.type === 'string' && body.descendantsOfType(TRAP_EXPANSION_NODES).length === 0);
-            return isLiteral ? [{ trap, body }] : [];
+            return isLiteralString(body) ? [{ trap, body }] : [];
         });
     const scripts: TrapScript[] = [];
     for (const { trap, body } of bodies) {
@@ -176,7 +177,7 @@ export function listScriptCommands(commands: Node[], traps: TrapScript[]): Scrip
             {
                 name,
                 line: findSourceLine(node, sourceRows),
-                arguments: node.childrenForFieldName('argument').map((argument) => readLiteralArgument(argument)),
+                arguments: node.childrenForFieldName('argument').map((argument) => getLiteralArgument(argument)),
             },
         ];
     });

@@ -11,6 +11,7 @@ import {
     TIMER_FUNCTION,
     TIMER_WORDS,
 } from '../../config/react.ts';
+import { findEnclosingFunction } from '../../language/functions.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { isNamedFunction } from '../../libraries/react.ts';
 import { createRule } from '../../rule.ts';
@@ -86,7 +87,7 @@ function findComponentTimer(
     const method = TIMER_FUNCTION.exec(getModuleName(node.callee, source) ?? '')?.[1];
     const words = TIMER_WORDS.get(method);
     if (words === undefined) return undefined;
-    const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+    const callback = findEnclosingFunction(node, source);
     if (callback === undefined) return undefined;
     const kind = getComponentKind(callback, outputMethods);
     if (kind === undefined || isExempt(node, callback, source)) return undefined;

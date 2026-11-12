@@ -10,7 +10,7 @@ import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { setKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
-import { findSettingDefault, getSettingValue } from '#cli/settings/inherit.ts';
+import { findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/inherit.ts';
 import { findNamingParent, findSettingSchema } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
@@ -86,15 +86,6 @@ function parseSettingValue(values: string[], setting: Setting): ParsedSettingVal
     );
 }
 
-function requireReason({ key, reason }: SetOptions): string {
-    if (reason === undefined)
-        throw new GspotError(
-            'arguments',
-            `${key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
-        );
-    return reason;
-}
-
 function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, key: string): void {
     if (change.type === 'list') setKey(scopeTable, key, change.value);
     else if (setting.type === 'table' && isTable(change.value)) {
@@ -137,7 +128,7 @@ function formatPreviousValue(previous: InheritedSetting | undefined): string {
     if (previous?.value === undefined) return '';
     const text = JSON.stringify(previous.value);
     const shown = text.length > PREVIOUS_VALUE_LENGTH ? `${text.slice(0, PREVIOUS_VALUE_LENGTH)}...` : text;
-    return `  (was ${shown} from ${previous.source})`;
+    return `  (was ${shown} from ${formatSettingSource(previous.origin, previous.writtenAs)})`;
 }
 
 function formatSettingChange(
@@ -172,12 +163,14 @@ function buildSettingChange(
             'arguments',
             `${options.key} takes its value from ${parent}. Run gspot set ${parent} <value>.`,
         );
+    if (setting.reason_values === true && options.reason === undefined)
+        throw new GspotError(
+            'arguments',
+            `${options.key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.`,
+        );
     const change: ParsedSettingValue =
         setting.reason_values === true
-            ? {
-                  type: 'scalar',
-                  value: Object.fromEntries(options.values.map((name) => [name, requireReason(options)])),
-              }
+            ? { type: 'scalar', value: Object.fromEntries(options.values.map((name) => [name, options.reason])) }
             : parseSettingValue(options.values, setting);
     const previous = getSettingValue(availableSettings, settings, options.key, edit.scopePath);
     const shippedDefault = findSettingDefault(availableSettings, settings, match, edit.scopePath)?.value;
@@ -212,7 +205,7 @@ async function assertLintRules(edit: SettingsEditContext, key: string, change: P
 }
 
 async function runSetCommand(options: SetOptions): Promise<CommandResult> {
-    const edit = await readSettingsEditContext(options, options.scopePath);
+    const edit = await readSettingsEditContext(options);
     const { scopeTable } = edit;
     const { setting, change, summary, notes } = buildSettingChange(edit, options);
     await assertLintRules(edit, options.key, change);
@@ -220,12 +213,13 @@ async function runSetCommand(options: SetOptions): Promise<CommandResult> {
     return await writeSettingsEdit(edit, { summary, notes });
 }
 
-export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags> = {
+export const SET_COMMAND: CommandDefinition<[string, string[]], ReasonFlags, Omit<SetOptions, 'root'>> = {
     name: 'set',
     arguments: [{ term: '<setting>' }, { term: '<values...>' }],
     options: [{ flags: REASON_OPTION }, { flags: SCOPE_OPTION }],
-    run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
+    parse: ({ arguments: commandArguments, flags: { reason, scope: scopePath }, cwd }) => {
         const [key, values] = commandArguments;
-        return await runSetCommand({ root, cwd, key, values, reason, scopePath });
+        return { cwd, key, values, reason, scopePath };
     },
+    run: runSetCommand,
 };

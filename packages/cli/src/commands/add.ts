@@ -9,7 +9,7 @@ import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameState } from '#cli/system/text.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -26,8 +26,7 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     const context = await readConfigurationEditContext(options, options.configurations);
     const { scopePath, scopeTable, scopeSettings, selected } = context;
     if (options.configurations.every((name) => selected.includes(name))) {
-        const verb = options.configurations.length === 1 ? 'is' : 'are';
-        return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} already selected.`);
+        return buildUnchangedResult(`No change: ${formatNameState(options.configurations, 'already selected')}.`);
     }
     const scopeConfigurations = scopeSettings.configurations;
     const list = [...scopeConfigurations];
@@ -54,12 +53,13 @@ async function runAddCommand(options: ConfigurationsOptions): Promise<CommandRes
     return await writeSettingsEdit(context, { summary });
 }
 
-export const ADD_COMMAND: CommandDefinition<[string[]], ScopeFlags> = {
+export const ADD_COMMAND: CommandDefinition<[string[]], ScopeFlags, Omit<ConfigurationsOptions, 'root'>> = {
     name: 'add',
     arguments: [{ term: '<configuration...>' }],
     options: [{ flags: SCOPE_OPTION }],
-    run: async ({ arguments: commandArguments, flags: { scope: scopePath }, root, cwd }) => {
+    parse: ({ arguments: commandArguments, flags: { scope: scopePath }, cwd }) => {
         const [configurations] = commandArguments;
-        return await runAddCommand({ root, cwd, configurations: [...new Set(configurations)], scopePath });
+        return { cwd, configurations: [...new Set(configurations)], scopePath };
     },
+    run: runAddCommand,
 };

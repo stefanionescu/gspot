@@ -9,7 +9,6 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE, NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
 import { listMisePins } from '#cli/tools/pins.ts';
 import type { MiseToolPin } from '#cli/types/tools.ts';
@@ -73,8 +72,7 @@ test('mise installs tools of manual checks under a trust for that call, and not 
         ...planned,
         check: { ...planned.check, stage: 'manual' },
     }));
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -121,8 +119,7 @@ test('mise installs tools of manual checks under a trust for that call, and not 
 test('mise fills missing release checksums from the audited pins without fetching archives', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -152,8 +149,7 @@ test('mise fills missing release checksums from the audited pins without fetchin
 test('mise lock that leaves a platform without a download URL is refused and writes no lockfile', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') {
@@ -183,8 +179,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
         [GSPOT_PATHS.miseLockfile]: '[tools]\n',
     });
     const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];
     const lockfile =
@@ -221,7 +216,7 @@ test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps th
 test('a GitHub limit named before the output is cut names the token, and not the network', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -244,7 +239,7 @@ test('mise lock starts fresh from a broken lockfile', async () => {
         [GSPOT_PATHS.miseLockfile]: 'tools = [',
     });
     const session = await openSession(sandbox.path);
-    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(session);
     install.misePath = 'mise';
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
@@ -266,7 +261,7 @@ test('mise lock starts fresh from a broken lockfile', async () => {
 test('a failed mise tool installs again at its pin with the force flag', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
     const session = await openSession(sandbox.path);
-    const install = await buildSandboxToolInstall(session, openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(session);
     const project = install.generated.files.find(({ path }) => path === GSPOT_PATHS.miseProject)!;
     await createFileTree(sandbox.path, { [project.path]: project.content });
     const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];

@@ -2,8 +2,9 @@ import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint
 
 import { ASYNC_SUITE_MODIFIERS, ASYNC_SUITE_MODULES, ASYNC_SUITE_ORIGINS } from '../../config/testing.ts';
 import { findFunction } from '../../language/functions.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall, listBodyNodes } from '../../libraries/testing.ts';
+import { getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 

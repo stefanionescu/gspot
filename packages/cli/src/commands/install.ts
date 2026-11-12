@@ -18,9 +18,8 @@ import type { CommandResult } from '#cli/types/system.ts';
 async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const session = await openSession(root, { cancelSignal });
     const writer = openFiles(root);
-    const { report } = await writeEveryGeneratedFile(session, writer);
+    const report = await writeEveryGeneratedFile(session, writer);
     const { installed, missing, notes, steps } = await installTools(session, {
-        writer,
         checkTools: listHostCheckTools(session),
     });
     const changes = listGeneratedChangeLines(report);

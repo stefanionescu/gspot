@@ -11,10 +11,10 @@ import {
 } from '../../config/testing.ts';
 import { getModuleName } from '../../language/modules.ts';
 import { unwrapExpression } from '../../language/syntax.ts';
-import { isCallOf } from '../../libraries/testing.ts';
+import { getExpectCall } from '../../libraries/assertions.ts';
 import { createRule } from '../../rule.ts';
 import type { MemberCall } from '../../types/plugin.ts';
-import type { ExpectSubject, QueryUse } from '../../types/testing.ts';
+import type { QueryUse } from '../../types/testing.ts';
 
 function isLibraryName(node: TSESTree.Node, name: string, source: TSESLint.SourceCode): boolean {
     const qualified = getModuleName(node, source) ?? '';
@@ -42,16 +42,6 @@ function getQueryTarget(node: TSESTree.Node): TSESTree.Node {
     return isElement && ALL_QUERY_METHOD.test(method ?? '') ? value.object : value;
 }
 
-function getExpectSubject(target: TSESTree.Node): ExpectSubject | undefined {
-    const negation =
-        target.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(target) === 'not'
-            ? target
-            : undefined;
-    const expect = negation?.object ?? target;
-    const [value] = isCallOf(expect, 'expect') ? expect.arguments : [];
-    return value === undefined ? undefined : { value, isNegated: negation !== undefined };
-}
-
 function isInsideWaitFor(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const functions = source.getAncestors(node).filter((ancestor) => FUNCTION_NODES.has(ancestor.type));
     const calls = functions.map(({ parent }) => parent);
@@ -61,9 +51,11 @@ function isInsideWaitFor(node: TSESTree.Node, source: TSESLint.SourceCode): bool
 }
 
 function getQueryMismatch(node: MemberCall, source: TSESLint.SourceCode): QueryUse | undefined {
-    const subject = getExpectSubject(node.callee.object);
-    const method = subject && getScreenQuery(getQueryTarget(subject.value), source);
-    const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee)) !== subject?.isNegated;
+    const expect = getExpectCall(node.callee.object);
+    if (expect === undefined) return undefined;
+    const [value] = expect.call.arguments;
+    const method = value && getScreenQuery(getQueryTarget(value), source);
+    const isPresence = PRESENCE_MATCHERS.has(ASTUtils.getPropertyName(node.callee)) !== expect.negated;
     const isMismatch =
         method !== undefined && !method.name.startsWith('find') && isPresence !== method.name.startsWith('get');
     return isMismatch && !isInsideWaitFor(node, source) ? { method, isPresence } : undefined;

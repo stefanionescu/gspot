@@ -1,5 +1,4 @@
-import { realpathSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
+import { join, posix } from 'node:path';
 
 import semver from 'semver';
 
@@ -17,6 +16,7 @@ import {
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
+import { buildRootRelativePath } from '#cli/engine/outputs/formats.ts';
 import { assertShippedCheck } from '#cli/engine/plan.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
@@ -36,6 +36,7 @@ import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');
     const lockfiles = listCheckedFiles(session.scopes, planned).filter(({ path }) => !isGspotPath(path));
+    const cwd = join(session.root, planned.scope.path);
     const result = await runCheckTool(
         session,
         planned,
@@ -44,12 +45,12 @@ async function readLockedPackages(session: CheckSession, planned: PlannedCheck):
             `${OSV_LICENSES_FLAG}=${allowed.join(',')}`,
             ...lockfiles.map(({ path }) => OSV_LOCKFILE_FLAG + posix.relative(planned.scope.path, path)),
         ],
-        { cwd: join(session.root, planned.scope.path), exitCodes: [OSV_FINDINGS_CODE] },
+        { cwd, exitCodes: [OSV_FINDINGS_CODE] },
     );
     const { results } = parseToolOutput(OSV_SCANNER_NAME, result.stdout, osvLicenseReportSchema);
-    const root = realpathSync(session.root);
+    const posixRoot = convertToPosixPath(session.root);
     return results.flatMap(({ source, packages }) => {
-        const file = convertToPosixPath(relative(root, source.path));
+        const file = buildRootRelativePath(source.path, cwd, posixRoot);
         const text = findText(session.cache, file) ?? '';
         return packages.map(({ package: locked, license_violations: licenses }) => ({
             file,

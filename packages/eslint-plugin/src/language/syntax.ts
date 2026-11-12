@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import {
+    FUNCTION_NODES,
     IMPORT_EQUALS_SELECTOR,
     IMPORT_SELECTOR,
     MODULE_DECLARATION_NODES,
@@ -30,15 +31,21 @@ function isMemberWrite(member: TSESTree.Node): boolean {
     );
 }
 
-export function getNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Statement | undefined {
-    const { parent } = node;
-    if (parent.type === AST_NODE_TYPES.SwitchCase) return parent.consequent[parent.consequent.indexOf(node) + 1];
-    if (parent.type !== AST_NODE_TYPES.BlockStatement && parent.type !== AST_NODE_TYPES.Program) return undefined;
-    const statements =
-        parent.type === AST_NODE_TYPES.Program
-            ? parent.body.filter((statement) => !isModuleDeclaration(statement))
-            : parent.body;
+export function listSiblingStatements(statement: TSESTree.Node): readonly TSESTree.Node[] {
+    const { parent } = statement;
+    if (parent?.type === AST_NODE_TYPES.Program || parent?.type === AST_NODE_TYPES.BlockStatement) return parent.body;
+    return parent?.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : [];
+}
+
+export function getNextStatement(node: TSESTree.VariableDeclaration): TSESTree.Node | undefined {
+    const statements = listSiblingStatements(node).filter((statement) => !isModuleDeclaration(statement));
     return statements[statements.indexOf(node) + 1];
+}
+
+export function getMemberRoot(node: TSESTree.Node): TSESTree.Node {
+    let value = node;
+    while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
+    return value;
 }
 
 export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
@@ -99,6 +106,25 @@ export function haveSameTokens(
 export function listChildren(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): TSESTree.Node[] {
     const values = (visitorKeys[node.type] ?? []).flatMap((key): unknown[] => [node[key as keyof TSESTree.Node]]);
     return values.flat().filter((child): child is TSESTree.Node => typeof child === 'object' && child !== null);
+}
+
+export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+    const nodes: TSESTree.Node[] = [];
+    const pending = [root];
+    let node = pending.pop();
+    while (node !== undefined) {
+        nodes.push(node);
+        const children = listChildren(node, source.visitorKeys).filter((child) => !FUNCTION_NODES.has(child.type));
+        pending.push(...children.toReversed());
+        node = pending.pop();
+    }
+    return nodes;
+}
+
+export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
+    if (node.type !== AST_NODE_TYPES.CallExpression) return false;
+    const { callee } = node;
+    return ASTUtils.isIdentifier(callee) && callee.name === name;
 }
 
 export function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {

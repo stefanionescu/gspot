@@ -131,17 +131,18 @@ function addConfiguredFunctions(
 ): void {
     const base = getTable(planned.scope.settings, 'supabase').functions_folder;
     const configured = Object.entries(functions).filter(([name]) => !name.startsWith(SHARED_PREFIX));
+    const projectFolder = posix.dirname(SUPABASE_PROJECT_FILE);
     for (const [name, settings] of configured) {
         const folder = posix.join(base, name);
         const path =
             settings.entrypoint === undefined
                 ? entrypoints.get(folder)?.path
-                : joinScope(planned.scope.path, posix.join(posix.dirname(SUPABASE_PROJECT_FILE), settings.entrypoint));
+                : joinScope(planned.scope.path, posix.join(projectFolder, settings.entrypoint));
         if (path === undefined) continue;
         const importMap =
             settings.import_map === undefined
                 ? undefined
-                : joinScope(planned.scope.path, posix.join(posix.dirname(SUPABASE_PROJECT_FILE), settings.import_map));
+                : joinScope(planned.scope.path, posix.join(projectFolder, settings.import_map));
         entrypoints.set(folder, { path, importMap });
     }
 }

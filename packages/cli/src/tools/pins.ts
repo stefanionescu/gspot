@@ -57,15 +57,7 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
 
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
     if (tool.system === true || findPackagePin(tool) !== undefined) return undefined;
-    const pin = tool.installers['mise'];
-    return pin === undefined
-        ? undefined
-        : {
-              name: pin.name,
-              version: pin.version,
-              options: pin.options,
-              checksums: pin.checksums,
-          };
+    return tool.installers['mise'];
 }
 
 export function listPackagePins(configurations: Configuration[]): PackagePins {

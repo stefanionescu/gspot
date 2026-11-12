@@ -1,8 +1,4 @@
-import {
-    HTML_VALIDATE_EXTENDS,
-    HTML_VALIDATE_OVERRIDES,
-    HTML_VALIDATE_RULES,
-} from '#cli/config/configurations/html.ts';
+import { HTML_VALIDATE_EXTENDS, HTML_VALIDATE_RULES } from '#cli/config/configurations/html.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -31,10 +27,7 @@ export function buildHtmlValidateFile(planned: PlannedConfig): string {
     const dependencies = listProjectDependencyNames(planned.session.repository.dependencyFiles, planned.scope.path);
     const isGeneratedMarkup =
         configuration === 'site' && dependencies.some((name) => GENERATED_MARKUP_PACKAGES.has(name));
-    const rules: Record<string, unknown> = {
-        ...(configuration === 'html' && HTML_VALIDATE_RULES),
-        ...HTML_VALIDATE_OVERRIDES[configuration],
-    };
+    const rules: Record<string, unknown> = { ...HTML_VALIDATE_RULES[configuration] };
     for (const rule of [...listDisabledRules(planned), ...(isGeneratedMarkup ? GENERATED_MARKUP_RULES : [])])
         rules[rule] = 'off';
     return JSON.stringify({ extends: HTML_VALIDATE_EXTENDS, rules }, null, JSON_INDENT);

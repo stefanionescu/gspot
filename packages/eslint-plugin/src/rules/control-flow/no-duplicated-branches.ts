@@ -96,10 +96,7 @@ export const noDuplicatedBranches = createRule<[], 'branch' | 'all' | 'ternary'>
     create(context) {
         const source = context.sourceCode;
         return {
-            IfStatement: (node) => {
-                for (const issue of listBranchIssues(node, source)) context.report(issue);
-            },
-            SwitchStatement: (node) => {
+            'IfStatement, SwitchStatement'(node: TSESTree.IfStatement | TSESTree.SwitchStatement) {
                 for (const issue of listBranchIssues(node, source)) context.report(issue);
             },
             ConditionalExpression(node) {

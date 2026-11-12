@@ -12,8 +12,7 @@ import {
 import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getModuleName } from '../../language/modules.ts';
-import { unwrapExpression } from '../../language/syntax.ts';
-import { isCallOf } from '../../libraries/testing.ts';
+import { isCallOf, unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/libraries.ts';
 import type { TypeReader } from '../../types/plugin.ts';

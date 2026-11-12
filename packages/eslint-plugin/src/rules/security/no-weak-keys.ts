@@ -1,17 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS, WEAK_CURVES } from '../../config/security.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { getExpressionValue, getOptionValue } from '../../language/expressions.ts';
 import { createRule } from '../../rule.ts';
-
-function getStaticValue(
-    source: Readonly<TSESLint.SourceCode>,
-    property: TSESTree.Property | null | undefined,
-): unknown {
-    if (property === null || property === undefined) return undefined;
-    const value = ASTUtils.getStaticValue(property.value, source.getScope(property.value));
-    return value?.value;
-}
 
 export const noWeakKeys = createRule<[], 'shortKey' | 'weakCurve'>({
     name: 'no-weak-keys',
@@ -37,21 +28,21 @@ export const noWeakKeys = createRule<[], 'shortKey' | 'weakCurve'>({
         const source = context.sourceCode;
         const checkLengths = (algorithm: string, options: TSESTree.ObjectExpression): void => {
             for (const [option, minimum] of Object.entries(MINIMUM_KEY_LENGTHS)) {
-                const property = getOptionProperties(options, source).get(option);
-                const length = getStaticValue(source, property);
-                if (property && typeof length === 'number' && length > 0 && length < minimum)
+                const found = getOptionValue(options, option, source);
+                const length = found?.value;
+                if (found && typeof length === 'number' && length > 0 && length < minimum)
                     context.report({
-                        node: property,
+                        node: found.property,
                         messageId: 'shortKey',
                         data: { option, minimum: String(minimum), algorithm },
                     });
             }
         };
         const checkCurve = (options: TSESTree.ObjectExpression): void => {
-            const curve = getOptionProperties(options, source).get('namedCurve');
-            const name = getStaticValue(source, curve);
+            const curve = getOptionValue(options, 'namedCurve', source);
+            const name = curve?.value;
             if (curve && typeof name === 'string' && WEAK_CURVES.has(name))
-                context.report({ node: curve, messageId: 'weakCurve', data: { curve: name } });
+                context.report({ node: curve.property, messageId: 'weakCurve', data: { curve: name } });
         };
         return {
             [KEY_PAIR_SELECTOR](node: TSESTree.CallExpression) {

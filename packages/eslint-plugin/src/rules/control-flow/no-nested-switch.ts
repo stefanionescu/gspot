@@ -21,12 +21,8 @@ export const noNestedSwitch = createRule<[], 'nested'>({
     create(context) {
         return {
             SwitchStatement(node) {
-                for (const ancestor of context.sourceCode.getAncestors(node).toReversed()) {
-                    if (ancestor.type === AST_NODE_TYPES.SwitchStatement) {
-                        context.report({ node, messageId: 'nested' });
-                        return;
-                    }
-                }
+                if (context.sourceCode.getAncestors(node).some(({ type }) => type === AST_NODE_TYPES.SwitchStatement))
+                    context.report({ node, messageId: 'nested' });
             },
         };
     },

@@ -44,7 +44,7 @@ function checkPaths(session: Session, planned: PlannedCheck): CheckFinding[] {
             identifiers.set(key, identifier);
         }
     }
-    return validateIdentifiers(planned, settings, identifiers.values().toArray());
+    return validateIdentifiers(settings, identifiers.values().toArray());
 }
 
 export function buildFileIdentifier(path: string, language: string, containers: PathContainer[]): Identifier {

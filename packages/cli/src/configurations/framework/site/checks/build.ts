@@ -19,6 +19,8 @@ import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types
 
 const SITE_BUILDS = Symbol('site builds');
 
+const BUILT_FILES = Symbol('built files');
+
 const BUILD_SCRIPT = ['run', 'build'] as const;
 
 // The build script runs with the package manager of the repository when the settings name no command.
@@ -92,12 +94,17 @@ export function listBuiltFiles(folder: string): string[] {
 }
 
 /**
-Read the site build of this run, which the first caller runs, and skip the check when the build failed.
+Read the site build of this run, which the first caller runs, with the files it wrote, and skip the check when the
+build failed.
 */
-export async function readSuccessfulBuild(session: CheckSession, planned: PlannedCheck): Promise<SiteBuild> {
+export async function readSuccessfulBuild(
+    session: CheckSession,
+    planned: PlannedCheck,
+): Promise<SiteBuild & { files: string[] }> {
     const build = await readSiteBuild(session, planned);
     if (!build.built) throw new CheckStop('skipped', UNBUILT_SITE_NOTE);
-    return build;
+    const files = remember(session.cache, BUILT_FILES, build.folder, () => listBuiltFiles(build.folder));
+    return { ...build, files };
 }
 
 export const SITE_BUILD_CHECKS: Readonly<Record<string, CheckCode>> = {

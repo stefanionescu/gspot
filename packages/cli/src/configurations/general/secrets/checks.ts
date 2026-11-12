@@ -12,13 +12,16 @@ import {
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
+import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
+import { readSelectedCommits } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { readPushedCommits, readPushedRange } from '#cli/repository/revisions/push.ts';
+import { readPushedRange } from '#cli/repository/revisions/push.ts';
 import { getTable } from '#cli/settings/scopes.ts';
+import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -41,6 +44,8 @@ const GITLEAKS_STAGED_FLAG = '--staged';
 
 const ROOT_PLACEHOLDER = '{root}';
 
+const ENVIRONMENT_READS_KEY = Symbol('environment reads');
+
 async function readEnvironmentReferences(
     session: Session,
     path: string,
@@ -58,6 +63,22 @@ function listEnvironmentSources(planned: PlannedCheck): PlannedCheck['files'] {
     return planned.files.filter(
         (file) => file.kind === 'source' && extensions.some((extension) => file.path.endsWith(extension)),
     );
+}
+
+/**
+Parses the environment sources of the scope once in a run, for the two checks that read them.
+*/
+function listFileEnvironmentReads(
+    session: Session,
+    planned: PlannedCheck,
+): Promise<Array<{ path: string; reads: EnvironmentRead[] }>> {
+    return remember(session.cache, ENVIRONMENT_READS_KEY, planned.scope.path, async () => {
+        const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
+        const files: Array<{ path: string; reads: EnvironmentRead[] }> = [];
+        for (const { path } of listEnvironmentSources(planned))
+            files.push({ path, reads: await readEnvironmentReferences(session, path, environmentFunctions) });
+        return files;
+    });
 }
 
 function listMissingEnvironmentKeys(
@@ -97,7 +118,8 @@ async function checkGitleaksStaged(
         selection === undefined ||
         (selection.content === 'working-tree' && selection.paths === undefined && selection.reference === undefined);
     if (!isRepositoryWide || options.command !== undefined) return runCommandCheck(session, planned, options);
-    const command = (planned.check.command as string[])
+    assertCommandCheck(planned);
+    const command = planned.check.command
         .filter((argument) => argument !== GITLEAKS_STAGED_FLAG)
         .map((argument) => {
             if (argument === GITLEAKS_GIT_MODE) return GITLEAKS_FILES_MODE;
@@ -110,23 +132,17 @@ async function checkGitleaksStaged(
 Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
 */
 async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const commits = session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
+    const commits = await readSelectedCommits(session);
     if (commits.length === 0) return buildBaseResult(planned, session);
     const range = session.selection?.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
+    assertCommandCheck(planned);
     return runCommandCheck(session, planned, {
-        command: [
-            ...(planned.check.command as string[]),
-            GITLEAKS_LOG_FLAG,
-            `${GITLEAKS_LOG_OPTIONS} ${range.join(' ')} --`,
-        ],
+        command: [...planned.check.command, GITLEAKS_LOG_FLAG, `${GITLEAKS_LOG_OPTIONS} ${range.join(' ')} --`],
     });
 }
 
 async function checkEnvironmentExamples(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const { environment_examples: names, environment_functions: environmentFunctions } = getTable(
-        planned.scope.settings,
-        'secrets',
-    );
+    const { environment_examples: names } = getTable(planned.scope.settings, 'secrets');
     const examples = planned.files.filter((file) => names.includes(posix.basename(file.path)));
     if (examples.length === 0)
         throw new CheckStop(
@@ -142,32 +158,23 @@ async function checkEnvironmentExamples(session: Session, planned: PlannedCheck)
             });
         }),
     );
-    const findings: CheckFinding[] = [];
-    for (const file of listEnvironmentSources(planned)) {
-        const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
-        findings.push(...listMissingEnvironmentKeys(file.path, reads, exampleKeys));
-    }
-    return findings;
+    const files = await listFileEnvironmentReads(session, planned);
+    return files.flatMap(({ path, reads }) => listMissingEnvironmentKeys(path, reads, exampleKeys));
 }
 
 async function checkEnvironmentDefaults(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const { environment_functions: environmentFunctions } = getTable(planned.scope.settings, 'secrets');
-    const findings: CheckFinding[] = [];
-    for (const file of listEnvironmentSources(planned)) {
-        const reads = await readEnvironmentReferences(session, file.path, environmentFunctions);
-        findings.push(
-            ...reads
-                .filter(({ key = '', hasDefault }) => hasDefault === true && SECRET_KEY_NAME.test(key))
-                .map(({ key, line, column }) => ({
-                    file: file.path,
-                    line,
-                    column,
-                    rule: ENVIRONMENT_DEFAULT_RULE,
-                    message: `${String(key)} has a literal fallback. A secret has no default: fail when it is missing.`,
-                })),
-        );
-    }
-    return findings;
+    const files = await listFileEnvironmentReads(session, planned);
+    return files.flatMap(({ path, reads }) =>
+        reads
+            .filter(({ key = '', hasDefault }) => hasDefault === true && SECRET_KEY_NAME.test(key))
+            .map(({ key, line, column }) => ({
+                file: path,
+                line,
+                column,
+                rule: ENVIRONMENT_DEFAULT_RULE,
+                message: `${String(key)} has a literal fallback. A secret has no default: fail when it is missing.`,
+            })),
+    );
 }
 
 export const SECRETS_CHECKS: Readonly<Record<string, CheckCode>> = {

@@ -93,9 +93,10 @@ function buildSetting(name: string, schema: z.ZodType): Setting {
     };
 }
 
-const ROOT_SETTINGS: Setting[] = Object.entries<z.ZodType>({ ...rootSettingSchemas, ...tableSettingSchemas }).map(
-    ([name, schema]) => buildSetting(name, schema),
-);
+export const ROOT_SETTINGS: Setting[] = Object.entries<z.ZodType>({
+    ...rootSettingSchemas,
+    ...tableSettingSchemas,
+}).map(([name, schema]) => buildSetting(name, schema));
 
 function addSchemaSettings(settingsByConfiguration: Map<string, Setting[]>, schema: z.ZodType, name: string): void {
     const owners = schema.meta()?.['configurations'] as readonly string[] | undefined;

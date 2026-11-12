@@ -19,8 +19,6 @@ export type UploadForm = { node: TSESTree.Node; hasFolder: boolean; keepsExtensi
 
 export type SizedForm = { node: TSESTree.Node; size: number };
 
-export type UploadCall = TSESTree.CallExpression | TSESTree.NewExpression;
-
 export type ClientEnvironmentOptions = [
     { client: boolean; publicPrefixes: readonly string[]; allowedNames: readonly string[] },
 ];

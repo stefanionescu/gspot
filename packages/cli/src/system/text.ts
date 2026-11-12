@@ -4,6 +4,7 @@ import {
     DIGIT_BOUNDARY,
     LIST_LIMIT,
     MILLISECONDS_PER_SECOND,
+    NOT_LINE_BREAK,
     NUMERIC_WORDS,
     REGEXP_SYNTAX_CHARACTERS,
     ROOT_SCOPE_MARK,
@@ -85,6 +86,10 @@ export function formatNameList(names: readonly string[], type: Intl.ListFormatTy
     return new Intl.ListFormat('en', { type }).format(names);
 }
 
+export function formatNameState(names: readonly string[], state: string): string {
+    return `${formatNameList(names)} ${names.length === 1 ? 'is' : 'are'} ${state}`;
+}
+
 export function formatCount(count: number, noun: string): string {
     return `${String(count)} ${noun}${count === 1 ? '' : 's'}`;
 }
@@ -110,6 +115,13 @@ Compare text by code units so paths and generated names keep the same order in e
 export function compareText(left: string, right: string): number {
     if (left < right) return -1;
     return left > right ? 1 : 0;
+}
+
+/**
+Replace every character with a space and keep the line breaks, so offsets and lines stay where the text has them.
+*/
+export function blankText(text: string): string {
+    return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
 }
 
 export function replaceRanges(base: string, overlay: string, ranges: readonly TextRange[]): string {

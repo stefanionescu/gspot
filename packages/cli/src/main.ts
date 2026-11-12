@@ -1,4 +1,11 @@
-import { Argument, Command, CommanderError, type Help, Option } from '@commander-js/extra-typings';
+import {
+    Argument,
+    Command,
+    CommanderError,
+    type Help,
+    InvalidArgumentError,
+    Option,
+} from '@commander-js/extra-typings';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ADD_COMMAND } from '#cli/commands/add.ts';
@@ -15,12 +22,14 @@ import { SCAN_COMMAND } from '#cli/commands/scan/scan.ts';
 import { SET_COMMAND } from '#cli/commands/set.ts';
 import { UNIGNORE_COMMAND } from '#cli/commands/unignore.ts';
 import { UNSET_COMMAND } from '#cli/commands/unset.ts';
-import { COMMAND_SUGGESTION, DASH_VALUE_HELP } from '#cli/config/commands/edits.ts';
 import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
 import {
     ALLOWED_CHOICES,
+    COMMAND_SUGGESTION,
     COMMANDER_ERROR_PREFIX,
     COMMANDS_HELP_MESSAGE,
+    DASH_VALUE_COMMANDS,
+    DASH_VALUE_HELP,
     GLOBAL_OPTIONS,
     HELP_ERROR_CODE,
     HELP_FLAG,
@@ -28,6 +37,7 @@ import {
     HELP_WIDTH,
     INVALID_VALUE,
     JSON_FLAG,
+    NAME_LIST_SEPARATOR,
     PIN_COMMANDS,
     PROGRAM_EXIT_CODES,
     PROGRAM_HELP_FOOTER,
@@ -36,22 +46,15 @@ import {
     UNKNOWN_OPTION_ERROR_CODE,
     USAGE_LINE,
     VERBOSE_FLAG,
-    VERSION_FLAG,
 } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
-import { readGitFlag } from '#cli/repository/git/run.ts';
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text.ts';
-import type {
-    CommandArgument,
-    CommandCompletion,
-    CommandDefinition,
-    CommandHelp,
-    CommandOption,
-} from '#cli/types/commands/edits.ts';
+import type { AnyCommandDefinition, CommandArgument, CommandHelp, CommandOption } from '#cli/types/commands/edits.ts';
 import type { InvalidValue } from '#cli/types/main.ts';
 
 function formatInvalidValue(message: string, command: string | undefined): string | undefined {
@@ -69,7 +72,8 @@ function formatCommanderSentence(error: CommanderError, command: string | undefi
     if (invalid !== undefined) return invalid;
     const text = error.message.slice(COMMANDER_ERROR_PREFIX.length).replace(COMMAND_SUGGESTION, '').trim();
     const sentence = `${text.charAt(0).toUpperCase()}${text.slice(1)}${text.endsWith('.') ? '' : '.'}`;
-    return command === 'set' && error.code === UNKNOWN_OPTION_ERROR_CODE ? `${sentence} ${DASH_VALUE_HELP}` : sentence;
+    if (command === undefined || !DASH_VALUE_COMMANDS.has(command)) return sentence;
+    return error.code === UNKNOWN_OPTION_ERROR_CODE ? `${sentence} ${DASH_VALUE_HELP}` : sentence;
 }
 
 function readCorrection(message: string): string {
@@ -101,7 +105,7 @@ function printFailure(error: unknown, program: Command, options: string[]): numb
         printError({ error: error.code, message: error.message });
         return EXIT_ERROR;
     }
-    printUnexpectedError(error, options.includes(VERBOSE_FLAG));
+    printUnexpectedError(error);
     return EXIT_ERROR;
 }
 
@@ -151,18 +155,28 @@ function buildArgument({ term, choices, defaultValue }: CommandArgument, descrip
 }
 
 function buildOption(
-    { flags, choices, required, hidden, parse }: CommandOption,
+    { flags, choices, required, hidden, list, repeats }: CommandOption,
     description: string | undefined,
 ): Option {
     const option = new Option(flags, description);
     if (choices !== undefined) option.choices(choices);
     if (required === true) option.makeOptionMandatory();
     if (hidden === true) option.hideHelp();
-    if (parse !== undefined) option.argParser(parse as (value: string, previous: unknown) => unknown);
+    if (list !== undefined)
+        option.argParser((value: string, previous: string[] | undefined) => {
+            const names = value
+                .split(NAME_LIST_SEPARATOR)
+                .map((name) => name.trim())
+                .filter((name) => name !== '');
+            if (names.length === 0) throw new InvalidArgumentError(list);
+            return [...(previous ?? []), ...names];
+        });
+    if (repeats === true)
+        option.argParser((value: string, previous: string[] | undefined) => [...(previous ?? []), value]);
     return option;
 }
 
-function addCommandDefinition(program: Command, definition: CommandDefinition, helpWidth: number): Command {
+function addCommandDefinition(program: Command, definition: AnyCommandDefinition, helpWidth: number): Command {
     const help: CommandHelp = COMMAND_HELP[definition.name];
     const command = program
         .command(definition.name)
@@ -191,8 +205,7 @@ function isVersionRun(program: Command, name: string): boolean {
     return name === '' || program.commands.some((command) => command.name() === name);
 }
 
-export function buildProgram(onResult: CommandCompletion, cwd: string): Command {
-    const location = { cwd, root: cwd };
+export function buildProgram(onAction: (definition: AnyCommandDefinition, command: Command) => Promise<void>): Command {
     const program: Command = new Command('gspot')
         .description(cliPackage.description)
         .enablePositionalOptions()
@@ -203,14 +216,7 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
         .helpCommand(false)
         .exitOverride();
     program.configureOutput({ writeErr: () => {} });
-    program.hook('preAction', async (_program, action) => {
-        setOutputOptions({ isJson: action.optsWithGlobals()['json'] === true });
-        location.root = await readRepositoryRoot(location.cwd);
-        if (await readGitFlag(location.root, 'core.sparseCheckout'))
-            throw new GspotError('git', 'gspot does not support sparse checkouts. Run git sparse-checkout disable.');
-        if (PIN_COMMANDS.has(action.name())) assertGspotPin(location.root);
-    });
-    const definitions: readonly CommandDefinition[] = [
+    const definitions: readonly AnyCommandDefinition[] = [
         SCAN_COMMAND,
         INIT_COMMAND,
         INSTALL_COMMAND,
@@ -230,13 +236,7 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
     for (const definition of definitions) {
         const command = addCommandDefinition(program, definition, helpWidth);
         command.action(async () => {
-            onResult(
-                await definition.run({
-                    arguments: command.processedArgs,
-                    flags: command.optsWithGlobals(),
-                    ...location,
-                }),
-            );
+            await onAction(definition, command);
         });
     }
     program.configureHelp({
@@ -250,16 +250,21 @@ export function buildProgram(onResult: CommandCompletion, cwd: string): Command 
 export async function runProgram(commandArguments: string[], cwd: string): Promise<number> {
     const separator = commandArguments.indexOf('--');
     const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
-    setOutputOptions({ isJson: options.includes(JSON_FLAG) });
+    setOutputOptions({ isJson: options.includes(JSON_FLAG), isVerbose: options.includes(VERBOSE_FLAG) });
     let exitCode = 0;
     let annotations: readonly string[] = [];
-    const program = buildProgram((result) => {
+    let endReport: (() => void) | undefined;
+    const program = buildProgram(async (definition, command) => {
+        const flags: Record<string, unknown> = command.optsWithGlobals();
+        setOutputOptions({ isJson: flags['json'] === true, isVerbose: flags['verbose'] === true });
+        const raw = { arguments: command.processedArgs, flags, cwd };
+        const input = definition.parse?.(raw) ?? raw;
+        const root = await readRepositoryRoot(cwd);
+        if (PIN_COMMANDS.has(definition.name)) assertGspotPin(root);
+        if (definition.name === 'check') endReport = beginCheckReport();
+        const result = await definition.run({ ...input, root, cwd });
         printResult(result);
         ({ exitCode, annotations = [] } = result);
-    }, cwd);
-    let endReport: (() => void) | undefined;
-    program.hook('preAction', (_program, command) => {
-        if (command.name() === 'check') endReport = beginCheckReport();
     });
     try {
         const [name = ''] = program.parseOptions(commandArguments).operands;

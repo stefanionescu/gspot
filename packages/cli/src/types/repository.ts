@@ -3,15 +3,15 @@ import type { z } from 'zod';
 
 import type { CONFIGURATION_ORIGINS, FILE_KINDS } from '#cli/config/manifests.ts';
 import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
-import type { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import type { START_RUNNERS } from '#cli/config/repository/version-pin.ts';
 import type {
     gitFileSchema,
     gitIndexFileSchema,
     lintCommandPackageSchema,
+    lintCommandSchema,
     packageManagerPinSchema,
     packageManagerSchema,
+    pushSkipSchema,
 } from '#cli/schemas/repository.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile, KeyPath } from '#cli/types/parsers.ts';
@@ -128,13 +128,9 @@ export type ScopeContents = {
     scopePath: string;
 };
 
-export type ConfigurationEvidence = {
-    configuration: Configuration;
-    evidence: string;
-    count?: number;
-};
-
 export type DetectionEvidence = { evidence: string; count?: number };
+
+export type ConfigurationEvidence = DetectionEvidence & { configuration: Configuration };
 
 export type RepositoryListing = Pick<Repository, 'root' | 'index' | 'attributes' | 'unreadablePaths'> & {
     files: Array<ListedFile & { prefix: Buffer }>;
@@ -162,16 +158,7 @@ export type ConflictingConfig = {
     pointer?: boolean;
 };
 
-type LintCommandSource = keyof typeof LINT_COMMAND_FIXES;
-
-export type LintCommand = {
-    file: string;
-    line: number;
-    source: LintCommandSource;
-    command: string;
-    tool: string;
-    fix: string;
-};
+export type LintCommand = z.infer<typeof lintCommandSchema>;
 
 export type LintCommandSearch = {
     root: string;
@@ -185,7 +172,7 @@ export type CommandSearch = Pick<LintCommandSearch, 'tools'> & {
     miseTasks: ReadonlyMap<string, string>;
 };
 
-export type LintCommandPlace = { file: string; text: string; source: LintCommandSource };
+export type LintCommandPlace = { file: string; text: string; source: LintCommand['source'] };
 
 export type LintCommandPackage = { place: LintCommandPlace; manifest: z.infer<typeof lintCommandPackageSchema> };
 
@@ -231,11 +218,7 @@ export type PushRevision = {
 
 export type PushedRevisions = {
     revisions: PushRevision[];
-    skipped: Array<{
-        ref: string;
-        hash: string;
-        reason: (typeof PUSH_SKIP_REASONS)[number];
-    }>;
+    skipped: Array<z.infer<typeof pushSkipSchema>>;
 };
 
 export type PushLine = { localRef: string; localHash: string; remoteRef: string; remoteHash: string };

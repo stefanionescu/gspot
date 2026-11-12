@@ -3,7 +3,6 @@ import http from 'node:http';
 import { expect, spyOn, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { downloadArchive, explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
@@ -41,7 +40,7 @@ test.each([
     },
 ])('$name gives its explanation', async ({ status, published, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _registry = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.resolve(Response.json({ time: published }, { status })), {
             preconnect: fetch.preconnect,
@@ -57,7 +56,7 @@ test.each([
     { name: 'a registry that does not answer in time', failure: new DOMException('Timed out.', 'TimeoutError') },
 ])('$name adds no explanation', async ({ failure }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _registry = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.reject(failure), { preconnect: fetch.preconnect }),
     );
@@ -70,7 +69,7 @@ test.each([
     { name: 'a registry body without a time field', respond: () => Response.json({}) },
 ])('a release lookup that gets $name adds no explanation', async ({ respond }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _registry = spyOn(globalThis, 'fetch').mockImplementation(
         Object.assign(() => Promise.resolve(respond()), { preconnect: fetch.preconnect }),
     );
@@ -80,7 +79,7 @@ test.each([
 
 test('the release lookup turns on the proxy that the environment names', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _environment = overrideEnvironment({ HTTPS_PROXY: 'https://proxy.example.com:8080' });
     // The real call sets a proxy for every test that shares this process.
     using setProxy = spyOn(http, 'setGlobalProxyFromEnv').mockReturnValue(() => {});
@@ -94,7 +93,7 @@ test('the release lookup turns on the proxy that the environment names', async (
 
 test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     const command = buildProgramCommand('fakes/tool', '--signal', 'SIGKILL');
     const error = await captureRejection(
         runRequiredInstallStep(install, command, { cwd: sandbox.path, step: 'installing', name: 'npm installation' }),
@@ -106,8 +105,7 @@ test.skipIf(isWindows)('an install step that a signal stops names the signal in 
 test('an oversized archive cancels its response stream before reporting the size error', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const install = await buildSandboxToolInstall(session, writer);
+    const install = await buildSandboxToolInstall(session);
     let isCanceled = false;
     const stream = new ReadableStream<Uint8Array>({
         start: (controller) => {
@@ -134,7 +132,7 @@ test('an oversized archive cancels its response stream before reporting the size
 
 test('a failed download behind a proxy says how to turn the proxy on', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const install = await buildSandboxToolInstall(await openSession(sandbox.path), openFiles(sandbox.path));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _environment = overrideEnvironment({ HTTPS_PROXY: 'https://proxy.example.com:8080' });
     const refuse = Object.assign(() => Promise.reject(new Error('The proxy refused the connection.')), {
         preconnect: fetch.preconnect,

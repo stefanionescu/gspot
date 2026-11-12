@@ -104,8 +104,8 @@ async function testNginxFile(
     planned: PlannedCheck,
     path: string,
     workFolder: string,
-    image: string,
 ): Promise<BuiltInCheckResult> {
+    const image = getTable(planned.scope.settings, 'nginx').image;
     const copies = copyNginxFiles(session, planned, path, workFolder);
     const mounts = {
         configs: copies.values().toArray(),
@@ -182,7 +182,6 @@ function buildNginxTestArguments(text: string, mounts: NginxMounts, image: strin
 }
 
 async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promise<BuiltInCheckResult> {
-    const image = getTable(planned.scope.settings, 'nginx').image;
     const paths = listSourcePaths(planned.files, [NGINX_CONFIG_FILE]);
     if (paths.length === 0) return { findings: [], files: [] };
     using workFolder = createTemporaryFolder();
@@ -202,7 +201,7 @@ async function checkSyntax(session: CheckSession, planned: PlannedCheck): Promis
     const findings: CheckFinding[] = [];
     const checked = new Set<string>();
     for (const path of paths) {
-        const result = await testNginxFile(session, planned, path, workFolder.path, image);
+        const result = await testNginxFile(session, planned, path, workFolder.path);
         findings.push(...result.findings);
         for (const file of result.files) checked.add(file);
     }

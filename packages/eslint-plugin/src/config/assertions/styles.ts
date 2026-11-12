@@ -1,3 +1,5 @@
+import { JASMINE_PACKAGES } from '../testing.ts';
+
 export const ASSERTION_METHODS: ReadonlySet<string | null> = new Set([
     'a',
     'an',
@@ -215,11 +217,7 @@ export const UNCERTAIN_CHAI_PAIRS = [
 
 export const EXPECT_STYLES = [
     { style: 'jest-like', modules: ['vitest', 'bun:test', '@jest/globals'], dependencies: ['jest'] },
-    {
-        style: 'jasmine',
-        modules: ['jasmine'],
-        dependencies: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'],
-    },
+    { style: 'jasmine', modules: ['jasmine'], dependencies: [...JASMINE_PACKAGES] },
     { style: 'playwright', modules: ['@playwright/test'], dependencies: ['@playwright/test'] },
 ] as const;
 

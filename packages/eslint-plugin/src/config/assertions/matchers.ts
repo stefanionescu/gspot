@@ -44,7 +44,7 @@ export const TEXT_RECEIVER = /^(?:[\w$]*(?:text|string|message|content|html)|'[^
 
 export const BARE_RECEIVERS = new Set(['Identifier', 'MemberExpression', 'CallExpression', 'ThisExpression']);
 
-export const JASMINE_PACKAGES = ['jasmine-core', 'jasmine'];
+export const JASMINE_VERSION_PACKAGES = ['jasmine-core', 'jasmine'];
 
 export const JASMINE_SIZE_VERSION = [3, 6, 0];
 
@@ -145,18 +145,6 @@ export const MATCHER_TEMPLATES = new Map<string, readonly string[]>([
     ['chai-assert.atMost', ['{assert}.isAtMost({received}, {expected}{message})']],
     ['cypress.null', ["{received}.{method}('be.null')", "{received}.{method}('not.be.null')"]],
     ['cypress.undefined', ["{received}.{method}('be.undefined')", "{received}.{method}('not.be.undefined')"]],
-]);
-
-export const LOCATOR_FACTORIES: ReadonlySet<string | null> = new Set([
-    'getByRole',
-    'getByText',
-    'getByLabel',
-    'getByPlaceholder',
-    'getByAltText',
-    'getByTitle',
-    'getByTestId',
-    'locator',
-    'frameLocator',
 ]);
 
 export const LOCATOR_STATES: ReadonlyMap<string | null, readonly string[]> = new Map([

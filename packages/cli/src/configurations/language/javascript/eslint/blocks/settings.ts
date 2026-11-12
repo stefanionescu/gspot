@@ -19,11 +19,12 @@ import {
     buildScopeFiles,
     buildScopeOverrideBlocks,
     listJavascriptScopes,
+    listNestedScopeGlobs,
     splitGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { compareScopeDepth, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
@@ -73,10 +74,10 @@ function buildManifestRuleBlocks(scopes: Scope[], dependencyFiles: DependencyFil
     return scopes.flatMap((scope) =>
         listManifestRuleBlocks(
             scope,
-            listNestedScopes(
+            listNestedScopeGlobs(
                 scopes.map((each) => each.path),
                 scope.path,
-            ).map((path) => `!${joinScope(escapeGlob(path), '**')}`),
+            ).map((glob) => `!${glob}`),
             listProjectDependencyNames(dependencyFiles, scope.path),
         ),
     );

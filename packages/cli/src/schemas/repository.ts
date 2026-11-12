@@ -2,7 +2,9 @@ import semver from 'semver';
 import { z } from 'zod';
 
 import { GIT_MODES } from '#cli/config/repository/files.ts';
+import { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
+import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import { configTableSchema, stringValuesSchema } from '#cli/schemas/parsers.ts';
 
 export const gitFileSchema = z.object({
@@ -52,3 +54,16 @@ export const lintCommandPackageSchema = z.looseObject({
     'lint-staged': stringListSchema.catch([]),
     'simple-git-hooks': stringValuesSchema.catch({}),
 });
+
+const lintCommandSourceSchema = z.enum(Object.keys(LINT_COMMAND_FIXES) as Array<keyof typeof LINT_COMMAND_FIXES>);
+
+export const lintCommandSchema = z.strictObject({
+    file: z.string(),
+    line: z.int(),
+    source: lintCommandSourceSchema,
+    command: z.string(),
+    tool: z.string(),
+    fix: z.string(),
+});
+
+export const pushSkipSchema = z.strictObject({ ref: z.string(), hash: z.string(), reason: z.enum(PUSH_SKIP_REASONS) });

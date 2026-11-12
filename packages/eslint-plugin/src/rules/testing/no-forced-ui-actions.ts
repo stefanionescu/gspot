@@ -1,14 +1,10 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import {
-    CYPRESS_ACTIONS,
-    PLAYWRIGHT_ACTIONS,
-    PLAYWRIGHT_LOCATORS,
-    PLAYWRIGHT_QUERY_PREFIX,
-} from '../../config/testing.ts';
+import { CYPRESS_ACTIONS, PLAYWRIGHT_ACTIONS, PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
 import { getExpressionValue, getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
 import { isModuleUsed, readPackageFacts } from '../../libraries/packages.ts';
-import { isCypressChain, listBodyNodes } from '../../libraries/testing.ts';
+import { isCypressChain } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { MemberCall } from '../../types/plugin.ts';
 import type { UiFrameworks } from '../../types/testing.ts';
@@ -21,7 +17,7 @@ function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
             ? [ASTUtils.getPropertyName(each.callee) ?? '']
             : [],
     );
-    return names.some((name) => PLAYWRIGHT_LOCATORS.has(name) || name.startsWith(PLAYWRIGHT_QUERY_PREFIX));
+    return names.some((name) => PLAYWRIGHT_LOCATOR.test(name));
 }
 
 function getActionPosition(

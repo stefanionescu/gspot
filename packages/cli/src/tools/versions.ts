@@ -6,7 +6,6 @@ import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import {
     DISTRIBUTION_SUFFIX,
@@ -16,6 +15,7 @@ import {
     PYTHON_PACKAGES_FOLDER,
     STACK_FRAME_LINE,
     TOOL_ENVIRONMENT,
+    VERSION_FLAG,
 } from '#cli/config/tools/programs.ts';
 import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';

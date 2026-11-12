@@ -46,9 +46,7 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
                 hasTest ||= TEST_DECLARATIONS.has(name) || (isCall && isTitledDeclaration(name, node));
             },
             'Program:exit'() {
-                const isEmpty = !hasTest;
-                hasTest = false;
-                if (isEmpty) context.report({ loc: { line: 1, column: 0 }, messageId: 'empty' });
+                if (!hasTest) context.report({ loc: { line: 1, column: 0 }, messageId: 'empty' });
             },
         };
     },

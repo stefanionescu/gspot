@@ -16,7 +16,7 @@ import {
     REMOTE_HEAD_FIELD_COUNT,
     REMOTES_PREFIX,
 } from '#cli/config/repository/git.ts';
-import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import { decodeGitPath } from '#cli/repository/git/output.ts';
 import {
     buildGitError,
     readGitLines,
@@ -154,16 +154,10 @@ export async function readTreeStatus(root: string, cancelSignal?: AbortSignal): 
             .map((record) => decodeUtf8(Buffer.from(record.slice(STATUS_PATH_START), 'latin1')))
             .filter((path) => path !== undefined);
     const unreadablePaths: string[] = [];
-    const untracked = decodeGitPaths(
-        Buffer.from(
-            records
-                .filter((record) => record.startsWith(UNTRACKED_STATUS))
-                .map((record) => record.slice(STATUS_PATH_START))
-                .join('\0'),
-            'latin1',
-        ),
-        unreadablePaths,
-    );
+    const untracked = records
+        .filter((record) => record.startsWith(UNTRACKED_STATUS))
+        .map((record) => decodeGitPath(record.slice(STATUS_PATH_START), unreadablePaths))
+        .filter((path) => path !== undefined);
     return {
         staged: listPaths(0).toSorted((a, b) => compareText(a, b)),
         unstaged: listPaths(1),

@@ -7,17 +7,15 @@ import {
     GIT_CREATION_COMMANDS,
     GIT_FLAG_ARGUMENTS,
     GIT_FOLDER_VARIABLE,
-    GIT_HOOKS_ARGUMENTS,
     GIT_LOCAL_VARIABLES_ARGUMENTS,
     GIT_NONLOCAL_ENVIRONMENT_NAME,
+    GIT_PATH_ARGUMENTS,
     GIT_PATH_VARIABLES,
     GIT_PROGRAM,
     GIT_SETTING_ARGUMENTS,
     GIT_TOP_LEVEL_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     GIT_WORK_TREE_VARIABLE,
-    NOT_REPOSITORY_CODE,
-    NOT_REPOSITORY_MESSAGE,
     TRAILING_NEWLINE,
 } from '#cli/config/repository/git.ts';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
@@ -146,12 +144,6 @@ export async function readGitFlag(cwd: string, key: string): Promise<boolean> {
     throw buildGitError(GIT_FLAG_ARGUMENTS, result);
 }
 
-export async function readHooksFolder(cwd: string): Promise<string> {
-    const result = await runGit(cwd, GIT_HOOKS_ARGUMENTS, {});
-    if (result.code !== 0) throw buildGitError(GIT_HOOKS_ARGUMENTS, result);
-    return resolve(cwd, result.stdout.replace(TRAILING_NEWLINE, ''));
-}
-
 export async function readGitText(
     cwd: string,
     commandArguments: readonly string[],
@@ -160,6 +152,14 @@ export async function readGitText(
     const result = await runGit(cwd, commandArguments, options);
     if (result.code !== 0) throw buildGitError(commandArguments, result);
     return result.stdout;
+}
+
+/**
+Read the absolute path of a file or folder of the Git folder, such as hooks or index.
+*/
+export async function readGitPath(cwd: string, name: string, cancelSignal?: AbortSignal): Promise<string> {
+    const path = await readGitText(cwd, [...GIT_PATH_ARGUMENTS, name], { cancelSignal });
+    return path.replace(TRAILING_NEWLINE, '');
 }
 
 export async function readGitLines(
@@ -196,8 +196,4 @@ export function buildGitError(
         'git',
         `Git ${commandArguments[0] ?? ''} failed (exit ${String(result.code)}): ${result.stderr.trim()}`,
     );
-}
-
-export function isOutsideRepository(result: Pick<SpawnResult, 'code' | 'stderr'>): boolean {
-    return result.code === NOT_REPOSITORY_CODE && result.stderr.startsWith(NOT_REPOSITORY_MESSAGE);
 }

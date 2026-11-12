@@ -12,13 +12,13 @@ function hasWrittenUndefined(node: TSESTree.TypeNode): boolean {
 }
 
 function isLocalDeclaration(node: TSESTree.TypeNode, types: TypeReader): boolean {
-    const symbol = types.checker.getTypeAtLocation(types.map.get(node)).aliasSymbol;
+    const symbol = types.get(node).aliasSymbol;
     const files = (symbol?.declarations ?? []).map((declaration) => declaration.getSourceFile());
     return files.some((file) => !types.program.isSourceFileDefaultLibrary(file) && !LIBRARY_PATH.test(file.fileName));
 }
 
 function hasAliasedUndefined(node: TSESTree.TypeNode, types: TypeReader): boolean {
-    const type = types.checker.getTypeAtLocation(types.map.get(node));
+    const type = types.get(node);
     const members = type.isUnion() ? type.types : [];
     const undefinedCount = members.filter((member) => types.checker.typeToString(member) === UNDEFINED_NAME).length;
     return undefinedCount > 0 && undefinedCount < members.length && isLocalDeclaration(node, types);

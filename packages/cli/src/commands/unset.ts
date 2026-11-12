@@ -4,7 +4,7 @@ import { removeFromList, removeKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList, formatNameState } from '#cli/system/text.ts';
 import type { CommandDefinition, ScopeFlags, SettingsEditOptions, UnsetOptions } from '#cli/types/commands/edits.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -24,19 +24,18 @@ function formatUnsetSummary(
 ): Pick<SettingsEditOptions, 'summary' | 'unchangedSummary'> {
     const where = scopePath === '' ? '' : ` in scope ${scopePath}`;
     const names = formatNameList(keys);
+    const absent = formatNameState(keys, `not in ${key}${where}`);
     return {
         summary: keys.length === 0 ? `Removed your value for ${key}${where}.` : `Removed ${names} from ${key}${where}.`,
         unchangedSummary:
-            keys.length === 0
-                ? `No change: gspot.toml has no value for ${key}${where}.`
-                : `No change: ${names} ${keys.length === 1 ? 'is' : 'are'} not in ${key}${where}.`,
+            keys.length === 0 ? `No change: gspot.toml has no value for ${key}${where}.` : `No change: ${absent}.`,
     };
 }
 
 async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     const { key, keys } = options;
 
-    const edit = await readSettingsEditContext(options, options.scopePath);
+    const edit = await readSettingsEditContext(options);
     const { scopeTable, scopePath } = edit;
     const { match } = selectSettingToEdit(edit, key);
 
@@ -51,12 +50,13 @@ async function runUnsetCommand(options: UnsetOptions): Promise<CommandResult> {
     return await writeSettingsEdit(edit, formatUnsetSummary(key, keys, scopePath));
 }
 
-export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags> = {
+export const UNSET_COMMAND: CommandDefinition<[string, string[]], ScopeFlags, Omit<UnsetOptions, 'root'>> = {
     name: 'unset',
     arguments: [{ term: '<setting>' }, { term: '[items...]' }],
     options: [{ flags: SCOPE_OPTION }],
-    run: async ({ arguments: commandArguments, flags: { scope: scopePath }, root, cwd }) => {
+    parse: ({ arguments: commandArguments, flags: { scope: scopePath }, cwd }) => {
         const [key, keys] = commandArguments;
-        return await runUnsetCommand({ root, cwd, key, keys, scopePath });
+        return { cwd, key, keys, scopePath };
     },
+    run: runUnsetCommand,
 };

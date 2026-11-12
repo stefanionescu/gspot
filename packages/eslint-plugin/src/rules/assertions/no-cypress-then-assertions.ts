@@ -9,7 +9,8 @@ import {
     STRING_CALLS,
     THEN_CALLBACK,
 } from '../../config/assertions/evidence.ts';
-import { isTestRelatedPath, listBodyNodes } from '../../libraries/testing.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
+import { isTestRelatedPath } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { CallbackScope, ThenCall } from '../../types/assertions.ts';
 import type { FunctionNode, MemberCall } from '../../types/plugin.ts';

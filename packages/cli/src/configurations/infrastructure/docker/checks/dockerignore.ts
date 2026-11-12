@@ -10,7 +10,7 @@ import {
     IGNORE_PATTERN_FORMS,
 } from '#cli/config/configurations/docker.ts';
 import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import { WHITESPACE_RUN } from '#cli/config/system.ts';
+import { FOLDER_CONTENTS, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 import { listDockerInstructions } from '#cli/configurations/infrastructure/docker/checks/instructions.ts';
 import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
@@ -52,9 +52,14 @@ function listMissingPatterns(required: string[], text: string): string[] {
         const value = line.trim().replaceAll(EDGE_SLASHES, '');
         const isNegated = value.startsWith('!');
         const spelling = isNegated ? value.slice(1) : value;
-        return { negated: isNegated, glob: spelling.endsWith('/**') ? spelling.slice(0, -'/**'.length) : spelling };
+        return {
+            negated: isNegated,
+            glob: spelling.endsWith(FOLDER_CONTENTS) ? spelling.slice(0, -FOLDER_CONTENTS.length) : spelling,
+        };
     });
-    const patterns = required.map((pattern) => (pattern.endsWith('/**') ? pattern.slice(0, -'/**'.length) : pattern));
+    const patterns = required.map((pattern) =>
+        pattern.endsWith(FOLDER_CONTENTS) ? pattern.slice(0, -FOLDER_CONTENTS.length) : pattern,
+    );
     const absent = new Set(patterns.filter((pattern) => !isPatternExcluded(pattern, lines)));
     return required.filter((_, index) => absent.has(patterns[index] ?? ''));
 }

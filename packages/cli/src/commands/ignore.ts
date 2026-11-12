@@ -1,25 +1,21 @@
-import {
-    buildIgnorePaths,
-    formatIgnoreSubject,
-    pathsOption,
-    readIgnoreEditContext,
-    writeSettingsEdit,
-} from '#cli/commands/edits.ts';
+import { formatIgnoreSubject, readIgnoreEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
-import { REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
+import { PATHS_OPTION, REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/engine.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { readCheckRuleExplanation } from '#cli/configurations/rules.ts';
 import { buildUnknownRuleError, canIgnoreRule, hasRuleExplanations } from '#cli/engine/results.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { assertCheckExists, findCheck, findToolName } from '#cli/manifests/read.ts';
+import { assertCheckExists, findCheck, findToolName, listCheckIds } from '#cli/manifests/read.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
+import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { mergeIgnore } from '#cli/settings/text.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import type { CommandDefinition, IgnoreFlags, IgnoreOptions } from '#cli/types/commands/edits.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { formatNameList, quoteArgument } from '#cli/system/text.ts';
+import type { CommandDefinition, IgnoreEditContext, IgnoreFlags, IgnoreOptions } from '#cli/types/commands/edits.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -52,19 +48,40 @@ async function assertDocumentedRule(
     if (docs === undefined) throw buildUnknownRuleError(rule, checkId);
 }
 
+function assertNoCheckPaths(context: IgnoreEditContext, paths: string[]): void {
+    const checks = new Set(listCheckIds(Object.values(context.settings.commandChecks)));
+    for (const path of paths)
+        if (checks.has(path))
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(path)} names a check. Give the check as a positional argument.`,
+            );
+}
+
+function assertSelectorsMatch(context: IgnoreEditContext, selectors: string[]): void {
+    for (const selector of selectors) {
+        const path = selector.startsWith('!') ? selector.slice(1) : selector;
+        const isMatched = buildPathMatcher([path]);
+        if (
+            context.listing.files.every(
+                (file) => file.path !== path && !file.path.startsWith(`${path}/`) && !isMatched(file.path),
+            )
+        )
+            throw new GspotError(
+                'arguments',
+                `--paths ${quoteArgument(selector)} matches no repository file. Name an existing file, folder, or matching glob.`,
+            );
+    }
+}
+
+function buildIgnorePaths(context: IgnoreEditContext, cwd: string, paths: string[] | undefined): string[] | undefined {
+    assertNoCheckPaths(context, paths ?? []);
+    const selectors = buildArgumentPaths(context.root, cwd, paths);
+    assertSelectorsMatch(context, selectors ?? []);
+    return selectors;
+}
+
 async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> {
-    const record = {
-        check: options.check,
-        rule: options.rule,
-        paths: options.paths,
-        reason: options.reason,
-    };
-    const valid = ignoreSchema.safeParse(record);
-    if (!valid.success)
-        throw new GspotError(
-            'arguments',
-            valid.error.issues.map((issue) => `--${issue.path.join('.')}: ${issue.message}`).join('\n'),
-        );
     const context = await readIgnoreEditContext(options.root);
     const { root, edit: input, settings, cache, listing } = context;
     if (options.check !== undefined) assertCheckExists(options.check, Object.values(settings.commandChecks));
@@ -84,14 +101,21 @@ async function runIgnoreCommand(options: IgnoreOptions): Promise<CommandResult> 
     return await writeSettingsEdit(context, { summary: formatIgnoreSummary(options, paths) });
 }
 
-export const IGNORE_COMMAND: CommandDefinition<[string | undefined], IgnoreFlags> = {
+export const IGNORE_COMMAND: CommandDefinition<[string | undefined], IgnoreFlags, Omit<IgnoreOptions, 'root'>> = {
     name: 'ignore',
     arguments: [{ term: '[check]' }],
-    options: [{ flags: REASON_OPTION, required: true }, { flags: RULE_OPTION }, pathsOption],
-    run: async ({ arguments: commandArguments, flags: { reason, rule, paths }, root, cwd }) => {
+    options: [{ flags: REASON_OPTION, required: true }, { flags: RULE_OPTION }, { flags: PATHS_OPTION, repeats: true }],
+    parse: ({ arguments: commandArguments, flags: { reason, rule, paths }, cwd }) => {
         const [check] = commandArguments;
         const message = validateReason(`gspot ignore ${check ?? ''}`.trimEnd(), reason, IGNORE_CHECK_MESSAGE);
         if (message !== undefined) throw new GspotError('arguments', message);
-        return await runIgnoreCommand({ root, cwd, check, paths, rule, reason });
+        const valid = ignoreSchema.safeParse({ check, rule, paths, reason });
+        if (!valid.success)
+            throw new GspotError(
+                'arguments',
+                valid.error.issues.map((issue) => `--${issue.path.join('.')}: ${issue.message}`).join('\n'),
+            );
+        return { cwd, check, paths, rule, reason };
     },
+    run: runIgnoreCommand,
 };

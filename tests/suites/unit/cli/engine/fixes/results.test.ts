@@ -19,6 +19,7 @@ import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('the fixer tool owns crash detection when exit is 0', async () => {
@@ -69,6 +70,31 @@ test.each([...FIXER_RESULTS])(
         expect(result!.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
     },
 );
+
+test('a fixer canceled while it runs keeps its changed paths and cancels the later fixers', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    const marker = join(sandbox.path, 'fixer-ready');
+    const controller = new AbortController();
+    const session = await openSession(sandbox.path);
+    session.cancelSignal = controller.signal;
+    const first = planFixer(
+        session,
+        buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--mark', marker, '--wait'),
+    );
+    // Fixers of one check run together, so the later fixer takes another check ID.
+    const second = { ...first, check: { ...first.check, id: 'sandbox/later' } };
+    const running = runFixers(buildCheckSession(session, CHECK_GENERATION), [first, second]);
+    expect(await waitForFile(marker)).toBe(true);
+    controller.abort(143);
+    const { results } = await running;
+    expect(results[0]).toMatchObject({
+        status: 'canceled',
+        changed: ['source.txt'],
+        note: 'sandbox/fixer was canceled.',
+    });
+    expect(results[1]?.status).toBe('canceled');
+    await waitForExit(Number(await readFile(marker, 'utf8')));
+});
 
 test('a fixer that swaps one invalid UTF-8 byte for another reports the file as changed', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });

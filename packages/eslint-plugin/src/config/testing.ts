@@ -1,3 +1,5 @@
+export const JASMINE_PACKAGES = ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'] as const;
+
 export const TEST_FRAMEWORK_MODULES = new Set([
     'bun:test',
     'jest',
@@ -22,6 +24,11 @@ export const TEST_KINDS = new Map<string, 'test' | 'suite' | 'hook'>([
     ['afterAll', 'hook'],
     ['beforeEach', 'hook'],
     ['afterEach', 'hook'],
+]);
+
+export const TEST_STRUCTURE_CALLS = new Set([
+    ...TEST_KINDS.keys(),
+    ...['describe', 'context', 'it', 'test'].flatMap((name) => [`x${name}`, `f${name}`]),
 ]);
 
 export const CALL_STEP = '()';
@@ -54,7 +61,7 @@ export const EXCLUSIVE_TEST_NAMES = new Set(['context', 'describe', 'it', 'speci
 export const EXPLANATION_LETTER = /\p{L}/u;
 
 export const SKIP_FRAMEWORKS = [
-    { framework: 'jasmine', dependencies: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'] },
+    { framework: 'jasmine', dependencies: [...JASMINE_PACKAGES] },
     { framework: 'jest', dependencies: ['jest'] },
     { framework: 'vitest', dependencies: ['vitest'] },
     { framework: 'mocha', dependencies: ['mocha', 'cypress'] },
@@ -82,11 +89,7 @@ export const EARLY_RETURN_IMPORTS = [
 
 export const EARLY_RETURN_DEPENDENCIES = [
     { framework: undefined, modules: ['jest', '@jest/globals'], dependencies: ['jest'] },
-    {
-        framework: undefined,
-        modules: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'],
-        dependencies: ['jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine'],
-    },
+    { framework: undefined, modules: [...JASMINE_PACKAGES], dependencies: [...JASMINE_PACKAGES] },
     { framework: undefined, modules: ['ava'], dependencies: ['ava'] },
     { framework: undefined, modules: ['qunit'], dependencies: ['qunit'] },
     { framework: 'playwright', modules: ['@playwright/test'], dependencies: ['@playwright/test'] },
@@ -163,7 +166,7 @@ export const SIMILAR_TEST_MODULES = [
 
 export const SIMILAR_TEST_ORIGINS = new Set(['bun:test', 'jest', '@jest/globals', 'vitest', '@playwright/test']);
 
-export const GLOBAL_TEST_BLOCKERS = ['cypress', 'jasmine', 'jasmine-core', 'jasmine-node', 'karma-jasmine', 'mocha'];
+export const GLOBAL_TEST_BLOCKERS = ['cypress', ...JASMINE_PACKAGES, 'mocha'];
 
 export const SIMILAR_TEST_NAMES = new Set(['it', 'test']);
 
@@ -286,9 +289,7 @@ export const PLAYWRIGHT_ACTIONS: ReadonlyMap<string | null, number> = new Map([
     ['uncheck', 0],
 ]);
 
-export const PLAYWRIGHT_LOCATORS = new Set(['locator', 'frameLocator']);
-
-export const PLAYWRIGHT_QUERY_PREFIX = 'getBy';
+export const PLAYWRIGHT_LOCATOR = /^(?:(?:locator|frameLocator)$|getBy)/u;
 
 export const QUERY_METHOD = /^(?:get|query|find)(?:All)?By[A-Z]/u;
 

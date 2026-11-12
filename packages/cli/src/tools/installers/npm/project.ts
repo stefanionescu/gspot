@@ -5,7 +5,6 @@ import semver from 'semver';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { VERSION_FLAG } from '#cli/config/repository/package-managers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/repository/setup.ts';
 import { CI_NODE, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
@@ -26,9 +25,12 @@ import {
     PACKAGE_MANAGER_SETTINGS_NAME,
     RELEASE_AGE_VERSIONS,
 } from '#cli/config/tools/installers.ts';
-import { buildPackageManagerCommand } from '#cli/repository/package-manager.ts';
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
+import { buildPackageManagerCommand, selectToolPackageManager } from '#cli/repository/package-manager.ts';
+import { packageManagerSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { runProcess } from '#cli/system/processes.ts';
 import { findProgram } from '#cli/system/programs.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { assertCredentialFreeLockfile, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
@@ -37,13 +39,15 @@ import { extractRegistryCredentials, writeNpmrc } from '#cli/tools/installers/np
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
 import { explainReleaseAgeHold, runInstallStep } from '#cli/tools/installers/steps.ts';
 import { listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
-import type { ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
+import type { PackageManagerCommand, ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
 import type {
     GeneratedFile,
     NpmToolInstall,
     PackageManagerRequest,
     PackageManagerRun,
+    Session,
     ToolInstall,
+    ToolPackageManager,
     ToolRelease,
 } from '#cli/types/tools.ts';
 
@@ -134,6 +138,35 @@ function assertSettingsFree(install: ToolInstall): void {
 }
 
 /**
+Read the package manager of the tool project and its version. A session without npm tools has none. A pin gives the
+version, and without a pin the package manager prints it.
+*/
+export async function readToolPackageManager(session: Session): Promise<ToolPackageManager | undefined> {
+    const pin = session.packageManager;
+    if (pin === undefined) return undefined;
+    const name = selectToolPackageManager(pin.name);
+    const command: PackageManagerCommand = name === pin.name ? pin : { name };
+    if (command.version !== undefined) return { name, version: command.version, command };
+    const result = await runProcess([name, VERSION_FLAG], {
+        cwd: session.toolsRoot,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
+    });
+    if (result.code !== 0)
+        throw new GspotError(
+            'install',
+            `Cannot determine the ${name} version for the tool project. Check that ${name} --version runs in the repository, then run the command again.`,
+        );
+    const parsed = packageManagerSchema.safeParse({ name, version: result.stdout.trim() });
+    if (!parsed.success)
+        throw new GspotError(
+            'install',
+            `Cannot read the ${name} version for the tool project. Check that ${name} --version prints a version.`,
+            { cause: parsed.error },
+        );
+    return { ...parsed.data, name, command };
+}
+
+/**
 Verify the package manager executable before install changes any tool project file.
 */
 export async function assertPackageManagerVersion(install: ToolInstall): Promise<void> {
@@ -174,10 +207,8 @@ export async function planNpmLockfile(
     const lockfile = selectLockfileName(install.packageManager.name);
     const path = `${GSPOT_FOLDER}/${lockfile}`;
     const previous = install.writer.read(path);
-    if (previous !== undefined && isNpmLockfileFresh(install)) {
-        const bytes = Buffer.from(previous.bytes.toString('utf8'));
-        return { path, next: { bytes, mode: OWNER_WRITABLE_FILE }, previous: previous };
-    }
+    if (previous !== undefined && isNpmLockfileFresh(install))
+        return { path, next: { bytes: previous.bytes, mode: OWNER_WRITABLE_FILE }, previous };
     const content = await createNpmLockfile(install, { toolProjectFile, lockfileName: lockfile });
     return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous: previous };
 }

@@ -12,7 +12,6 @@ import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { buildPythonProjectTable, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
 import type { Configuration, Tool } from '#cli/types/manifests.ts';
-import type { Files } from '#cli/types/system.ts';
 import type { NpmToolInstall, Session, ToolInstall, ToolPackageManager, ToolSearch } from '#cli/types/tools.ts';
 import type { ToolProjectFiles } from '#tests/types/setup.ts';
 
@@ -32,12 +31,12 @@ export async function readToolProjectFiles(
     };
 }
 
-export async function buildSandboxToolInstall(session: Session, writer: Files): Promise<ToolInstall> {
-    return await buildToolInstall(session, { writer, checkTools: listHostCheckTools(session), misePath: undefined });
+export async function buildSandboxToolInstall(session: Session): Promise<ToolInstall> {
+    return await buildToolInstall(session, { checkTools: listHostCheckTools(session), misePath: undefined });
 }
 
-export async function buildNpmToolInstall(session: Session, writer: Files): Promise<NpmToolInstall> {
-    const install = await buildSandboxToolInstall(session, writer);
+export async function buildNpmToolInstall(session: Session): Promise<NpmToolInstall> {
+    const install = await buildSandboxToolInstall(session);
     const { packageManager } = install;
     if (packageManager === undefined) throw new Error('The sandbox package.json names no package packageManager.');
     return { ...install, packageManager, registryEnvironment: await readRegistryEnvironment(session.root) };

@@ -19,8 +19,9 @@ import {
     buildExtensionGlob,
     buildNodePatterns,
     buildScopeOverrideBlocks,
+    listNestedScopeGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { joinScope, joinScopeGlob } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
@@ -36,7 +37,7 @@ export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], den
                 : [
                       {
                           files: [buildExtensionGlob(...CODE_LANGUAGES), ...buildNodePatterns(nodeFiles, path)].map(
-                              (pattern) => [joinScope(escapeGlob(path), '**/*'), pattern],
+                              (pattern) => [joinScopeGlob(path, '**/*'), pattern],
                           ),
                           ignores,
                           settings: {
@@ -90,7 +91,7 @@ export function buildScopeImportBlocks(planned: Pick<PlannedEslintFile, 'session
             const aliases = readScopeAliases(root, path, cache);
             return {
                 files: [
-                    joinScope(escapeGlob(path), buildExtensionGlob(...CODE_LANGUAGES)),
+                    joinScopeGlob(path, buildExtensionGlob(...CODE_LANGUAGES)),
                     ...buildNodePatterns(nodeFiles, path),
                 ],
                 rules: {
@@ -114,10 +115,10 @@ export function buildNodeScriptBlocks(planned: Pick<PlannedEslintFile, 'session'
         const path = scope.path;
         return {
             files: [
-                ...NODE_SCRIPT_PATTERNS.map((pattern) => joinScope(escapeGlob(path), pattern)),
+                ...NODE_SCRIPT_PATTERNS.map((pattern) => joinScopeGlob(path, pattern)),
                 ...buildNodePatterns(nodeFiles, path),
             ],
-            ignores: listNestedScopes(paths, path).map((path) => joinScope(escapeGlob(path), '**')),
+            ignores: listNestedScopeGlobs(paths, path),
             settings: { n: { tryExtensions: IMPORT_EXTENSIONS, typescriptExtensionMap: [] } },
             rules: {
                 [FILE_EXTENSION_RULE]: ['error', 'always'],

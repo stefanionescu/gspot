@@ -92,12 +92,22 @@ export function listToolOnlyPackages(
     );
 }
 
-export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scopePath: string): string[] {
+/**
+Find the package.json of the scope folder, or of the nearest folder above it that holds one.
+*/
+export function findNearestPackageJson(
+    dependencyFiles: DependencyFile[],
+    scopePath: string,
+): DependencyFile | undefined {
     const projects = new Map(
         dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
     );
-    const owner = listEnclosingFolders(scopePath)
+    return listEnclosingFolders(scopePath)
         .map((folder) => projects.get(posix.join(folder, PACKAGE_JSON)))
         .find((file) => file !== undefined);
+}
+
+export function listProjectDependencyNames(dependencyFiles: DependencyFile[], scopePath: string): string[] {
+    const owner = findNearestPackageJson(dependencyFiles, scopePath);
     return owner === undefined ? [] : Object.keys(owner.dependencies);
 }

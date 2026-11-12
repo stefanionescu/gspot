@@ -5,10 +5,10 @@ import {
     buildScopeOverrideBlocks,
     listJavascriptScopes,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildModuleSpecifier, escapeGlob } from '#cli/system/paths.ts';
+import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
@@ -57,10 +57,7 @@ export function listLocalPlugins(
 
 export function buildLocalPluginBlocks(scopes: Scope[], codeFiles: string[]): EslintBlockFields[] {
     return listPluginRecords(scopes).map(({ name, rules, scopePath }) => ({
-        files:
-            scopePath === ''
-                ? codeFiles
-                : codeFiles.map((pattern) => [pattern, joinScope(escapeGlob(scopePath), '**/*')]),
+        files: scopePath === '' ? codeFiles : codeFiles.map((pattern) => [pattern, joinScopeGlob(scopePath, '**/*')]),
         rules: Object.fromEntries(
             Object.entries(rules).map(([rule, options]) => [`${name}/${rule}`, ['error', ...options]]),
         ),

@@ -5,12 +5,13 @@ import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import type { uvLockfileSchema } from '#cli/schemas/parsers.ts';
 import type {
     bunPackageSchema,
+    installResultSchema,
     miseLockfileSchema,
     ruleExplanationSchema,
     toolInspectionSchema,
     uvProjectSettingsSchema,
 } from '#cli/schemas/tools.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Check, Configuration, Tool, ToolInstallers } from '#cli/types/manifests.ts';
 import type {
     ManagedKeys,
     PackageManager,
@@ -57,12 +58,7 @@ export type PackagePin = {
     requires?: readonly string[];
 };
 
-export type MiseToolPin = {
-    name: string;
-    version: string;
-    options?: Record<string, string | number | boolean> | undefined;
-    checksums: Record<string, string>;
-};
+export type MiseToolPin = NonNullable<ToolInstallers['mise']>;
 
 type ToolFolderKind = 'npm' | 'python';
 
@@ -98,7 +94,6 @@ export type InspectedTool = {
     cwd: string;
     tool: Tool;
     missing: ToolInspection;
-    help: string;
     want: string | undefined;
     miseBinPaths: string[] | undefined;
     runsVersionCommand: boolean | undefined;
@@ -144,12 +139,7 @@ export type HookStatus = { ready: boolean; text: string; tool?: string | undefin
 
 export type HookPlan = { command?: readonly string[]; note: string };
 
-export type InstallResult = {
-    installed: string[];
-    missing: string[];
-    notes: string[];
-    steps: ReadonlyArray<readonly string[]>;
-};
+export type InstallResult = z.infer<typeof installResultSchema>;
 
 export type ToolPackageManager = PackageManager & {
     name: ToolPackageManagerName;
@@ -170,7 +160,7 @@ export type ToolInstall = {
     steps: Array<readonly string[]>;
 };
 
-export type ToolRelease = { label: string; kind: 'npm' | 'python'; version: string; url: string };
+export type ToolRelease = { label: string; kind: ToolFolderKind; version: string; url: string };
 
 export type MiseInstall = { installed: string; note: string; binPaths: string[]; tools: Tool[] };
 
@@ -184,7 +174,6 @@ export type UvCommand = {
     runFolder: string;
     commandArguments: readonly string[];
     executable: string;
-    credentials: string[];
     config?: string;
 };
 
@@ -223,10 +212,7 @@ export type RuleExplanation = z.infer<typeof ruleExplanationSchema>;
 
 export type RuleExplanations = Readonly<Record<string, RuleExplanation>>;
 
-export type ToolRunOptions = Pick<CancelableSpawnOptions, 'cwd' | 'env' | 'stdin'> & {
-    timeoutSeconds: number;
-    cancelSignal?: AbortSignal | undefined;
-};
+export type ToolRunOptions = CancelableSpawnOptions & { timeoutSeconds: number };
 
 export type ToolAvailability = ProcessFailure | { path: string };
 

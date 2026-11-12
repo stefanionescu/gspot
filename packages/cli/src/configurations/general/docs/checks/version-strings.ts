@@ -4,7 +4,7 @@ import { CHANGELOG_FILE, DOCS_RULES, VERSION_STRING_MESSAGE } from '#cli/config/
 import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { tryParseFile } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -15,8 +15,8 @@ import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listScopeVersions(session: Session, scopePath: string): string[] {
-    return session.repository.files
-        .filter(({ kind, path }) => kind === 'source' && selectScopePath(path, session.scopes) === scopePath)
+    return listOwnFiles(session.repository.files, session.scopes, scopePath)
+        .filter(({ kind }) => kind === 'source')
         .flatMap(({ path }) => {
             const name = posix.basename(path);
             if (name === PACKAGE_JSON) return [tryParseFile(() => readPackageJson(session.cache, path))?.version];

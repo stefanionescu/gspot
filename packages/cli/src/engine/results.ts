@@ -13,7 +13,7 @@ import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildDashSafePath, convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
 import { type PlannedCheck, type RunSelection } from '#cli/types/engine/plan.ts';
@@ -184,7 +184,7 @@ export function formatReproduceCommand(
     const targets = isScopeTarget ? [scopeArgument] : paths;
     const words = [
         CHECK_COMMAND,
-        ...targets.map((path) => quoteArgument(path.startsWith('-') ? `./${path}` : path)),
+        ...targets.map((path) => quoteArgument(buildDashSafePath(path))),
         '--only',
         quoteArgument(checkId),
         ...listSelectionArguments(selection),

@@ -2,8 +2,9 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../../config/assertions/matchers.ts';
 import { getTypes, isThenable } from '../../language/checker.ts';
+import { findEnclosingFunction } from '../../language/functions.ts';
 import { getModuleName } from '../../language/modules.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { getEnclosingTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { ThrowAssertion } from '../../types/assertions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
@@ -51,10 +52,8 @@ function isNonCallable(types: TypeReader, node: TSESTree.Node): boolean {
 }
 
 function isAsyncTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
-    const test =
-        callback?.parent.type === AST_NODE_TYPES.CallExpression ? getTestCall(callback.parent, source) : undefined;
-    const tested = test?.callback;
+    const callback = findEnclosingFunction(node, source);
+    const tested = getEnclosingTestCall(node, source)?.callback;
     return tested !== undefined && tested === callback && tested.async && tested.params.length === 0;
 }
 

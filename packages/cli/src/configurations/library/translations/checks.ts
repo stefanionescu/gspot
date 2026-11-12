@@ -206,9 +206,6 @@ function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] 
     const options = getTable(planned.scope.settings, 'translations');
     const folder = options.messages_folder as string;
     const base = options.base_locale;
-    const files = planned.files
-        .map((file) => file.path)
-        .filter((path) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX));
     const messageFiles = {
         folder,
         base,
@@ -218,6 +215,7 @@ function checkMessages(session: Session, planned: PlannedCheck): CheckFinding[] 
                 .filter((path) => path.startsWith(`${folder}/`) && path.endsWith(MESSAGE_FILE_SUFFIX)),
         ),
     };
+    const files = planned.files.map(({ path }) => path).filter((path) => messageFiles.paths.has(path));
     const { messagesByPath, findings } = readMessageFiles(session, files, messageFiles);
     const expected =
         files.length === 0

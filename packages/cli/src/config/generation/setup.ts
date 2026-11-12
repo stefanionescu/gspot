@@ -6,11 +6,6 @@ import { GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
 
 export const GENERATED_FILE_NOUN = 'generated file';
 
-export const NAME_ONLY_FLAG = '--name-only';
-
-export const READ_COMMITTED_MESSAGE =
-    'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
-
 export const PRETTIER_SCRIPT_NOTE =
     'gspot could not load this Prettier config, so set format.indent_width and format.print_width by hand';
 

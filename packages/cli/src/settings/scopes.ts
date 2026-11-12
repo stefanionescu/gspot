@@ -22,27 +22,14 @@ import type {
     TableValues,
 } from '#cli/types/settings.ts';
 
-function listNamingVariants(
-    availableSettings: AvailableSettings,
-    settings: Settings,
-    scopePath: string,
-): InheritedSetting[] {
-    return NAMING_LANGUAGES.flatMap((language) =>
-        Object.keys(namingCategorySchema.shape).flatMap((field) => [
-            `naming.${language}.${field}`,
-            ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
-        ]),
-    )
-        .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
-        .filter((row) => row !== undefined);
-}
+const NAMING_VARIANT_KEYS: readonly string[] = NAMING_LANGUAGES.flatMap((language) =>
+    Object.keys(namingCategorySchema.shape).flatMap((field) => [
+        `naming.${language}.${field}`,
+        ...NAMING_LANGUAGE_CATEGORIES[language].map((category) => `naming.${language}.${category}.${field}`),
+    ]),
+);
 
-function listLimitVariants(
-    availableSettings: AvailableSettings,
-    settings: Settings,
-    scopePath: string,
-): InheritedSetting[] {
+function listLimitVariantKeys(availableSettings: AvailableSettings): string[] {
     return availableSettings.settings
         .values()
         .filter((setting) => setting.name.startsWith('limits.') && setting.type === 'number')
@@ -51,9 +38,6 @@ function listLimitVariants(
                 (language) => `limits.${language}.${setting.name.slice(setting.name.lastIndexOf('.') + 1)}`,
             ),
         )
-        .filter((key) => !availableSettings.settings.has(key))
-        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
-        .filter((row) => row !== undefined)
         .toArray();
 }
 
@@ -125,9 +109,11 @@ export function buildScopeSettings(
     const listed = listInheritedSettings(availableSettings, settings, scopePath);
     const valuesByKey = Object.fromEntries(listed.map((row) => [row.key, row.value]));
     const namespaces: Record<string, unknown> = {};
-    fillTableValues(namespaces, listed);
-    fillTableValues(namespaces, listNamingVariants(availableSettings, settings, scopePath));
-    fillTableValues(namespaces, listLimitVariants(availableSettings, settings, scopePath));
+    const variants = [...NAMING_VARIANT_KEYS, ...listLimitVariantKeys(availableSettings)]
+        .filter((key) => !availableSettings.settings.has(key) && !Object.hasOwn(valuesByKey, key))
+        .map((key) => getSettingValue(availableSettings, settings, key, scopePath))
+        .filter((row) => row !== undefined);
+    fillTableValues(namespaces, [...listed, ...variants]);
     return {
         configurations: configurations.map((configuration) => configuration.name),
         valuesByKey: valuesByKey,

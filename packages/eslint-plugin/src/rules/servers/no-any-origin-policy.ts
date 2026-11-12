@@ -10,7 +10,13 @@ import {
     RESPONSE_CALL_ARGUMENTS,
     SERVER_FUNCTION,
 } from '../../config/servers.ts';
-import { getExpressionValue, getOptionProperties, listArgumentValues } from '../../language/expressions.ts';
+import {
+    getExpressionValue,
+    getOptionProperties,
+    getOptionValue,
+    getStaticString,
+    listArgumentValues,
+} from '../../language/expressions.ts';
 import { findFunction } from '../../language/functions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
@@ -35,12 +41,6 @@ function listResponseCalls(
             ASTUtils.getPropertyName(call.callee) === method;
         return isMethod ? [call] : [];
     });
-}
-
-function getText(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): string | undefined {
-    const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
-    if (typeof evaluated?.value !== 'string') return undefined;
-    return evaluated.value;
 }
 
 function isCompared(identifier: TSESTree.Node): boolean {
@@ -75,11 +75,11 @@ function isCopiedOrigin(
 ): boolean {
     const [name, header] = call.arguments;
     const value = getExpressionValue(header, source);
-    if (value === undefined || getText(source, name)?.toLowerCase() !== ALLOW_ORIGIN_HEADER) return false;
+    if (value === undefined || getStaticString(name, source)?.toLowerCase() !== ALLOW_ORIGIN_HEADER) return false;
     if (value.type === AST_NODE_TYPES.CallExpression)
         return (
             source.getText(value.callee) === `${request}.header` &&
-            getText(source, value.arguments[0])?.toLowerCase() === 'origin'
+            getStaticString(value.arguments[0], source)?.toLowerCase() === 'origin'
         );
     return value.type === AST_NODE_TYPES.MemberExpression && source.getText(value) === `${request}.headers.origin`;
 }
@@ -92,16 +92,15 @@ function listPermissiveServers(source: Readonly<TSESLint.SourceCode>, node: TSES
             const origin = [...getOptionProperties(call.arguments[1], source)].find(
                 ([key]) => key.toLowerCase() === ALLOW_ORIGIN_HEADER,
             )?.[1];
-            return getText(source, origin?.value) === '*';
+            return getStaticString(origin?.value, source) === '*';
         })
         .map(({ callee }) => callee);
 }
 
 function hasOpenOrigin(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node): boolean {
-    const origin = getOptionProperties(options, source).get('origin');
+    const origin = getOptionValue(options, 'origin', source);
     if (origin === undefined) return true;
-    const value = ASTUtils.getStaticValue(origin.value, source.getScope(origin.value))?.value;
-    return value === '*' || value === true;
+    return origin.value === '*' || origin.value === true;
 }
 
 function listPermissiveMiddlewares(

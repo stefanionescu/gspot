@@ -114,20 +114,10 @@ import { PYTEST_CHECKS } from '#cli/configurations/testing/pytest/checks.ts';
 import { PYTEST_CONFIG_BUILDERS } from '#cli/configurations/testing/pytest/generate.ts';
 import { VITEST_CHECKS } from '#cli/configurations/testing/vitest/checks.ts';
 import { TSC_CHECKS } from '#cli/configurations/tsc/check.ts';
+import { joinTables } from '#cli/system/tables.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
-
-/**
-Join the tables that the configurations export. Object spread lets the later of two equal keys replace the earlier one
-in silence, so a repeated key stops the program here.
-*/
-function joinTables<Entry>(tables: ReadonlyArray<Readonly<Record<string, Entry>>>): Readonly<Record<string, Entry>> {
-    const entries = tables.flatMap((table) => Object.entries(table));
-    const repeated = entries.map(([key]) => key).filter((key, index, keys) => keys.indexOf(key) !== index);
-    if (repeated.length > 0) throw new Error(`Two registry tables hold ${repeated.join(', ')}.`);
-    return Object.fromEntries(entries);
-}
+import type { Check } from '#cli/types/manifests.ts';
 
 export const CHECK_CODE = joinTables<CheckCode>([
     AGENTS_CHECKS,
@@ -217,7 +207,7 @@ export const CHECK_CODE = joinTables<CheckCode>([
     YAML_CHECKS,
 ]);
 
-const CONFIG_BUILDERS = joinTables<ConfigBuilder>([
+export const CONFIG_BUILDERS = joinTables<ConfigBuilder>([
     ANSIBLE_CONFIG_BUILDERS,
     BASH_CONFIG_BUILDERS,
     BIOME_CONFIG_BUILDERS,
@@ -253,11 +243,4 @@ export function selectCheckCode(check: Check): CheckCode | undefined {
     if (check.generator_outputs !== undefined)
         return { check: checkGeneratorOutputs, explanations: GENERATOR_OUTPUT_EXPLANATIONS };
     return CHECK_CODE[check.id];
-}
-
-export function selectConfigBuilder(
-    configuration: Pick<Configuration, 'name'>,
-    file: string,
-): ConfigBuilder | undefined {
-    return CONFIG_BUILDERS[`${configuration.name}/${file}`];
 }

@@ -1,7 +1,6 @@
 import { basename, dirname, join, relative } from 'node:path/posix';
 
 import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/eslint/blocks.ts';
-import { IMPORT_CYCLES_CONFIG } from '#cli/config/configurations/eslint/rules.ts';
 import {
     BOUNDARIES_PLUGIN_PACKAGE,
     CONFIGURATION_BLOCKS_SUFFIX,
@@ -13,7 +12,7 @@ import {
 } from '#cli/config/configurations/javascript.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
@@ -21,8 +20,7 @@ import { listConfigurationBlocks } from '#cli/configurations/language/javascript
 import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
 import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { BlockWriter, EslintFileWriter, PlannedEslintBlock } from '#cli/types/configurations/javascript.ts';
 import type { ConfigOutput, PlannedConfig } from '#cli/types/configurations/language.ts';
@@ -99,7 +97,7 @@ function serializeExport(blockTexts: string[], blockWriter: EslintFileWriter): s
     if (blockWriter.ruleOptions.length === 0) return `export default ${blocks};\n`;
     blockWriter.functions.add('setRuleOptions');
     const ruleOptions = blockWriter.ruleOptions.map((options) => ({
-        paths: options.includes.map((path) => [joinScope(escapeGlob(options.scopePath), '**/*'), path]),
+        paths: options.includes.map((path) => [joinScopeGlob(options.scopePath, '**/*'), path]),
         ignores: options.excludes,
         rules: options.rules,
     }));
@@ -111,10 +109,7 @@ function buildEslintFile(planned: PlannedConfig): ConfigOutput {
     const eslintFile = buildPlannedEslintFile(planned);
     const blockWriter = buildFileWriter(eslintFile.blockWriter);
     const boundaryBlocks = buildBoundaryBlocks(eslintFile);
-    const ignoredGlobs = convertToGlobs([
-        ...planned.ignoreSections,
-        ...listCheckIgnoreSections(planned.scope.settings, ESLINT_CHECK),
-    ]);
+    const ignoredGlobs = convertToGlobs(listPlannedIgnoreSections(planned, ESLINT_CHECK));
     const configurationFiles = buildConfigurationFiles(planned, listConfigurationBlocks(eslintFile), blockWriter);
     const plugins = [
         ...ESLINT_PLUGIN_PACKAGES,
@@ -146,5 +141,4 @@ function buildEslintFile(planned: PlannedConfig): ConfigOutput {
 
 export const ESLINT_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {
     'javascript/eslint/eslint.mjs': buildEslintFile,
-    'javascript/eslint/import-cycles.mjs': () => IMPORT_CYCLES_CONFIG,
 };

@@ -10,8 +10,7 @@ import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
-import { isInScope } from '#cli/system/paths.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
 
@@ -39,12 +38,8 @@ Runs vulture over every Python file of the scope, so that a use in any file coun
 files of this run.
 */
 async function checkVulture(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
-    const scopePath = planned.scope.path;
-    const scopePaths = session.scopes.map(({ path }) => path);
-    const children = listNestedScopes(scopePaths, scopePath);
-    const sources = session.repository.files
+    const sources = listOwnFiles(session.repository.files, session.scopes, planned.scope.path)
         .filter((file) => file.kind === 'source' && file.path.endsWith(PYTHON_EXTENSION))
-        .filter((file) => isInScope(file.path, scopePath) && isOutsideChildScopes(file.path, children))
         .map((file) => file.path);
     if (sources.length === 0) return [];
     const result = await runCheckTool(session, planned, [...VULTURE_COMMAND, ...sources], { cwd: session.root });

@@ -6,6 +6,7 @@ import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/co
 import { BYTES_PER_KILOBYTE } from '#cli/config/engine.ts';
 import { FILTER_ATTRIBUTE, LFS_FILTER, SYMLINK_MODE } from '#cli/config/repository/files.ts';
 import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
+import { getMaxFileBytes } from '#cli/engine/files.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -131,9 +132,7 @@ function checkEncoding(session: Session, planned: PlannedCheck): CheckFinding[] 
                 (file) =>
                     file.tags.includes('text') &&
                     !file.tags.includes('symlink') &&
-                    file.size <=
-                        getTable(selectScope(file.path, session.scopes).settings, 'repository').max_file_kilobytes *
-                            BYTES_PER_KILOBYTE &&
+                    file.size <= getMaxFileBytes(session.scopes, file.path) &&
                     !isUtf8(readBytes(session.cache, file.path)),
             )
             .map((file) => ({

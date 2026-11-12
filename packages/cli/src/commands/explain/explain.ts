@@ -11,7 +11,7 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { formatSimilarNames } from '#cli/system/text.ts';
-import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { Explanation } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -30,13 +30,14 @@ function formatUnknownSubject(session: Session | undefined, subject: string): st
     return `There is no check, lint rule, configuration, setting, or file called ${subject}. Give a check (python/ruff), a lint rule (python/ruff E501), a configuration (python), a setting (limits.max_file_lines), or a file (./src/app.ts).${similar}`;
 }
 
-async function runExplainCommand(
-    location: CommandLocation,
-    subject: string,
-    rule: string | undefined,
-    isVerbose: boolean,
-): Promise<CommandResult> {
-    const { root, cwd } = location;
+async function runExplainCommand(input: {
+    subject: string;
+    rule: string | undefined;
+    verbose: boolean;
+    cwd: string;
+    root: string;
+}): Promise<CommandResult> {
+    const { subject, rule, verbose, cwd, root } = input;
 
     const session = findText(root, SETTINGS_FILE) === undefined ? undefined : await openSession(root);
 
@@ -44,7 +45,7 @@ async function runExplainCommand(
         rule === undefined
             ? explainSubject(session, { subject, cwd })
             : await explainLintRule(root, subject, rule, {
-                  verbose: isVerbose,
+                  verbose,
                   ...(session !== undefined && { session }),
               });
     return {
@@ -66,11 +67,16 @@ function explainSubject(session: Session | undefined, { subject, cwd }: { subjec
     throw new GspotError('arguments', formatUnknownSubject(session, subject));
 }
 
-export const EXPLAIN_COMMAND: CommandDefinition<[string, string | undefined], { verbose?: true }> = {
+export const EXPLAIN_COMMAND: CommandDefinition<
+    [string, string | undefined],
+    { verbose?: true },
+    { subject: string; rule: string | undefined; verbose: boolean; cwd: string }
+> = {
     name: 'explain',
     arguments: [{ term: '<subject>' }, { term: '[rule]' }],
-    run: async ({ arguments: commandArguments, flags: { verbose }, ...location }) => {
+    parse: ({ arguments: commandArguments, flags: { verbose }, cwd }) => {
         const [subject, rule] = commandArguments;
-        return await runExplainCommand(location, subject, rule, verbose === true);
+        return { subject, rule, verbose: verbose === true, cwd };
     },
+    run: runExplainCommand,
 };

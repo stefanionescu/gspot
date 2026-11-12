@@ -253,6 +253,7 @@ target = "eslint/fixes.mjs"
 tool = "eslint"
 
 [[config_file]]
+source = "eslint-import-cycles.ts"
 target = "eslint/import-cycles.mjs"
 tool = "eslint"
 

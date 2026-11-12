@@ -11,12 +11,12 @@ enableCompileCache();
 const commandArguments = process.argv.slice(PROCESS_ARGUMENTS_START);
 const separator = commandArguments.indexOf('--');
 const options = separator === -1 ? commandArguments : commandArguments.slice(0, separator);
-setOutputOptions({ isJson: options.includes(JSON_FLAG) });
+setOutputOptions({ isJson: options.includes(JSON_FLAG), isVerbose: options.includes(VERBOSE_FLAG) });
 
 for (const event of FATAL_ERROR_EVENTS)
     process.once(event, (error: unknown) => {
         // A reader that closes the pipe early, such as `head`, wants no more output and no error report.
-        if (!hasErrorCode(error, 'EPIPE')) printUnexpectedError(error, options.includes(VERBOSE_FLAG));
+        if (!hasErrorCode(error, 'EPIPE')) printUnexpectedError(error);
         // eslint-disable-next-line n/no-process-exit -- reason: Fatal handlers must stop active work after an uncaught failure.
         process.exit(EXIT_ERROR);
     });

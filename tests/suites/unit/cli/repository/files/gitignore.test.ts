@@ -1,10 +1,10 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { buildGitignoreMatcher, listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
+import { buildGitignoreMatcher, listGitignorePatterns, readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 
 test('a path outside the repository is not ignored, and a path that .gitignore names is', async () => {
     await using sandbox = await testdir({ '.gitignore': 'dist/\n' });
@@ -53,4 +53,11 @@ test('a tracked .gitignore that is missing from the working tree is refused, not
             message: expect.stringContaining('app/.gitignore') as string,
         }),
     );
+});
+
+test('a Git failure while reading the ignored paths names the Git command and its exit code', async () => {
+    await using sandbox = await testdir();
+    const error = await captureRejection(readIgnoredPaths(sandbox.path, ['dist/index.js']));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(error.message).toStartWith('Git check-ignore failed (exit 128): ');
 });

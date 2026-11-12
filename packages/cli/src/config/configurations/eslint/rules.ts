@@ -189,19 +189,6 @@ const REGEXP_RULES = {
     'regexp/no-unused-capturing-group': 'error',
 } as const;
 
-export const IMPORT_CYCLES_CONFIG = `import config from './eslint.mjs';
-import { keepCycleFields } from './functions.mjs';
-
-export default [
-    ...config.map((block) => keepCycleFields(block)),
-    {
-        linterOptions: { reportUnusedDisableDirectives: 'off' },
-        settings: { 'import-x/cache': { lifetime: Infinity } },
-        rules: { 'import-x/no-cycle': ['error', { ignoreExternal: true }] },
-    },
-];
-`;
-
 const IMPORT_X_RULES = {
     'import-x/export': 'error',
     'import-x/no-self-import': 'error',

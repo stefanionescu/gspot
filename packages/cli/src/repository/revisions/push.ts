@@ -1,5 +1,4 @@
 import { readFileSync } from 'node:fs';
-import { resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
 
 import {
@@ -15,7 +14,6 @@ import {
     GIT_REMOTE_ARGUMENTS,
     GIT_REV_LIST_ARGUMENTS,
     GIT_ROOT_COMMITS_ARGUMENTS,
-    GIT_SHALLOW_FILE_ARGUMENTS,
     GIT_TREE_ARGUMENTS,
     HASH_PATTERN,
     INVALID_PUSH_INPUT_MESSAGE,
@@ -29,7 +27,14 @@ import {
     UNFETCHED_PUSH_MESSAGE,
 } from '#cli/config/repository/git.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
-import { buildGitError, readGitLines, readGitPaths, readGitText, runGit } from '#cli/repository/git/run.ts';
+import {
+    buildGitError,
+    readGitLines,
+    readGitPath,
+    readGitPaths,
+    readGitText,
+    runGit,
+} from '#cli/repository/git/run.ts';
 import {
     findRemoteDefaultBranch,
     listRemoteRefs,
@@ -90,8 +95,8 @@ async function readPeeledCommits(
 }
 
 async function readShallowBoundaries(root: string, cancelSignal?: AbortSignal): Promise<Set<string>> {
-    const path = await readGitText(root, GIT_SHALLOW_FILE_ARGUMENTS, { cancelSignal });
-    const text = readFileSync(resolve(root, path.trim()), 'utf8');
+    const path = await readGitPath(root, 'shallow', cancelSignal);
+    const text = readFileSync(path, 'utf8');
     return new Set(text.trim().split('\n'));
 }
 

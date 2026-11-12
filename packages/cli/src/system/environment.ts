@@ -34,12 +34,12 @@ export function readCacheFolder(): string {
     return join(cache, CACHE_FOLDER_NAME);
 }
 
-export function getOperatingSystem(): string {
-    return OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform;
-}
-
 export function readHost(): { platform: string; arch: string } {
-    return { platform: getOperatingSystem(), arch: process.arch };
+    return {
+        platform:
+            OPERATING_SYSTEMS.find((platform) => platform.nodeName === process.platform)?.name ?? process.platform,
+        arch: process.arch,
+    };
 }
 
 export function foldVariableName(name: string): string {

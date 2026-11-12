@@ -12,8 +12,7 @@ import {
     HTML_COMMENT_END,
     MDX_COMMENT,
     MDX_ESM,
-    NOT_LINE_BREAK,
-    SCRIPT_TAG,
+    TAG_GRAMMARS,
     TSX_LANGUAGES,
     YAML_SCALAR_TOKENS,
 } from '#cli/config/parsers/code.ts';
@@ -22,7 +21,7 @@ import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
 import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { getPosition, replaceRanges } from '#cli/system/text.ts';
+import { blankText, getPosition, replaceRanges } from '#cli/system/text.ts';
 import type {
     CommentParser,
     ComponentScript,
@@ -131,7 +130,7 @@ async function maskGrammarComments(grammar: GrammarName | 'sql', text: string, c
         const comments = tree.rootNode.descendantsOfType([...COMMENT_NODES]);
         for (const node of comments) ranges.push({ start: node.startIndex, end: node.endIndex });
     }
-    return maskCommentRanges(text, ranges);
+    return replaceRanges(text, blankText(text), ranges);
 }
 
 async function parseMdxComments(text: string): Promise<SourceComment[]> {
@@ -155,18 +154,6 @@ async function parseMdxComments(text: string): Promise<SourceComment[]> {
     return [...expressions, ...markup].toSorted((left, right) => left.line - right.line);
 }
 
-function maskCommentRanges(text: string, ranges: TextRange[]): string {
-    let position = 0;
-    const pieces: string[] = [];
-    const sorted = ranges.toSorted((left, right) => left.start - right.start);
-    for (const { start, end } of sorted) {
-        if (start < position) continue;
-        pieces.push(text.slice(position, start), blankText(text.slice(start, end)));
-        position = end;
-    }
-    return pieces.join('') + text.slice(position);
-}
-
 function listComponentScripts(element: Node, text: string, masked: string): ComponentScript[] {
     const language = element.namedChildren
         .find((node) => node.type === 'start_tag')
@@ -178,13 +165,6 @@ function listComponentScripts(element: Node, text: string, masked: string): Comp
             grammar,
             source: replaceRanges(masked, text, [{ start: node.startIndex, end: node.endIndex }]),
         }));
-}
-
-/**
-Replace every character with a space and keep the line breaks, so offsets and lines stay where the text has them.
-*/
-export function blankText(text: string): string {
-    return text.replaceAll(NOT_LINE_BREAK, (character) => ' '.repeat(character.length));
 }
 
 /**
@@ -242,10 +222,8 @@ export async function parseComments(
     const lowerPath = path.toLowerCase();
     if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
         return parseGrammarComments('typescript', text, { cache });
-    let scriptGrammar: GrammarName | undefined;
-    if (tags.includes(SCRIPT_TAG)) scriptGrammar = 'bash';
-    else if (tags.includes('python')) scriptGrammar = 'python';
-    const grammar = findGrammarByExtension(lowerPath) ?? scriptGrammar;
+    const grammar =
+        findGrammarByExtension(lowerPath) ?? Object.entries(TAG_GRAMMARS).find(([tag]) => tags.includes(tag))?.[1];
     if (grammar !== undefined) return parseGrammarComments(grammar, text, { cache });
     const parser = COMMENT_PARSERS.get(extractExtension(path));
     return parser === undefined ? [] : parser(text, path);

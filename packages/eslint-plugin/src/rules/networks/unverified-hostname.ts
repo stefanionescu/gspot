@@ -1,23 +1,13 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
 import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
-import { findFunction } from '../../language/functions.ts';
+import { findFunction, listReturnedValues } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 
 // The falsy values, which Node reads as a hostname that matches.
 const ACCEPTED_RESULTS: ReadonlySet<unknown> = new Set([undefined, null, false, 0, '']);
-
-/**
-Tell whether a result of checkServerIdentity accepts the server. Node treats a falsy result as a match and any other
-result as the error that ends the connection.
-*/
-function isAcceptingResult(result: TSESTree.Expression | null, source: TSESLint.SourceCode): boolean {
-    if (result === null) return true;
-    const found = ASTUtils.getStaticValue(result, source.getScope(result));
-    return found !== null && ACCEPTED_RESULTS.has(found.value);
-}
 
 export const unverifiedHostname = createRule<[], 'unverified'>({
     name: 'unverified-hostname',
@@ -38,16 +28,8 @@ export const unverifiedHostname = createRule<[], 'unverified'>({
     },
     create(context) {
         const source = context.sourceCode;
-        const results = new Map<TSESTree.Node, Array<TSESTree.Expression | null>>();
         const checks: Array<{ call: TSESTree.CallExpression; checker: FunctionNode }> = [];
         return {
-            ReturnStatement(node) {
-                const owner = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
-                if (owner !== undefined) results.set(owner, [...(results.get(owner) ?? []), node.argument]);
-            },
-            'ArrowFunctionExpression[expression=true]'(node: TSESTree.ArrowFunctionExpression) {
-                if (node.body.type !== AST_NODE_TYPES.BlockStatement) results.set(node, [node.body]);
-            },
             CallExpression(node) {
                 for (const options of listOptionLiterals(node, source, TLS_OPTION_ARGUMENTS)) {
                     const identity = getOptionProperties(options, source).get('checkServerIdentity');
@@ -56,9 +38,14 @@ export const unverifiedHostname = createRule<[], 'unverified'>({
                 }
             },
             'Program:exit'() {
-                for (const { call, checker } of checks)
-                    if ((results.get(checker) ?? []).every((result) => isAcceptingResult(result, source)))
-                        context.report({ node: call.callee, messageId: 'unverified' });
+                for (const { call, checker } of checks) {
+                    // Node treats a falsy result as a match and any other result as the error that ends the connection.
+                    const isAccepting = listReturnedValues(checker, source).every((result) => {
+                        const found = ASTUtils.getStaticValue(result, source.getScope(result));
+                        return found !== null && ACCEPTED_RESULTS.has(found.value);
+                    });
+                    if (isAccepting) context.report({ node: call.callee, messageId: 'unverified' });
+                }
             },
         };
     },

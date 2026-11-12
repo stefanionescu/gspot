@@ -1,16 +1,10 @@
 import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
 
+import { listSiblingStatements } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 
 function getPrecedingIf(node: TSESTree.IfStatement): TSESTree.IfStatement | undefined {
-    const { parent } = node;
-    if (
-        parent.type !== AST_NODE_TYPES.Program &&
-        parent.type !== AST_NODE_TYPES.BlockStatement &&
-        parent.type !== AST_NODE_TYPES.SwitchCase
-    )
-        return undefined;
-    const statements = parent.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : parent.body;
+    const statements = listSiblingStatements(node);
     const previous = statements[statements.indexOf(node) - 1];
     return previous?.type === AST_NODE_TYPES.IfStatement ? previous : undefined;
 }

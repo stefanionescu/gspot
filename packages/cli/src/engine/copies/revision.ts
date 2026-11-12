@@ -1,7 +1,9 @@
 import {
+    chmodSync,
     copyFileSync,
     lstatSync,
     mkdirSync,
+    readdirSync,
     realpathSync,
     rmSync,
     statSync,
@@ -21,7 +23,6 @@ import {
     GIT_HASH_ARGUMENTS,
     GIT_HASH_FORMAT_ARGUMENTS,
     GIT_INIT_ARGUMENTS,
-    GIT_PATH_ARGUMENTS,
     GIT_RAW_ATTRIBUTES_PATH,
     GIT_SET_HEAD_ARGUMENTS,
     GIT_SHALLOW_PATH,
@@ -31,16 +32,19 @@ import {
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES, PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { copyDependencies, readDeclarationDependencies, readIgnoredPaths } from '#cli/engine/copies/dependencies.ts';
+import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';
+import { copyDependencies, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { readGitText, runGit } from '#cli/repository/git/run.ts';
+import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
+import { readGitPath, readGitSetting, readGitText, runGit } from '#cli/repository/git/run.ts';
 import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
 import { listPackageFiles } from '#cli/repository/workspaces.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { preparePath } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { extractExtension } from '#cli/system/paths.ts';
+import { extractExtension, isInside } from '#cli/system/paths.ts';
 import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
@@ -141,17 +145,16 @@ async function initializeRevisionCopy(
     source: Revision,
     cancelSignal: AbortSignal | undefined,
 ): Promise<void> {
-    const [formatLine, gitStoreLine, shallowLine, head] = await Promise.all([
+    const [formatLine, gitStore, shallow, head] = await Promise.all([
         readGitText(toplevel, GIT_HASH_FORMAT_ARGUMENTS, { cancelSignal }),
-        readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'objects'], { cancelSignal }),
-        readGitText(toplevel, [...GIT_PATH_ARGUMENTS, 'shallow'], { cancelSignal }),
+        readGitPath(toplevel, 'objects', cancelSignal),
+        readGitPath(toplevel, 'shallow', cancelSignal),
         readHead(toplevel, cancelSignal),
     ]);
     await readGitText(copyRoot, [...GIT_INIT_ARGUMENTS, `--object-format=${formatLine.trim()}`, copyRoot], {
         cancelSignal,
     });
-    writeFileSync(join(copyRoot, GIT_ALTERNATES_PATH), `${gitStoreLine.trim()}\n`);
-    const shallow = shallowLine.trim();
+    writeFileSync(join(copyRoot, GIT_ALTERNATES_PATH), `${gitStore}\n`);
     if (statSync(shallow, { throwIfNoEntry: false }) !== undefined)
         copyFileSync(shallow, join(copyRoot, GIT_SHALLOW_PATH));
     if (source.kind === 'index' && head !== undefined)
@@ -172,8 +175,20 @@ async function checkOutRawFiles(copyRoot: string, cancelSignal: AbortSignal | un
 function copyValePackages(root: string, copyRoot: string): void {
     const source = join(root, GSPOT_PATHS.valePackages);
     if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
-    const target = preparePath({ root: realpathSync(resolve(copyRoot)) }, GSPOT_PATHS.valePackages);
-    symlinkSync(source, target, process.platform === 'win32' ? 'junction' : 'dir');
+    const target = preparePath(realpathSync(resolve(copyRoot)), GSPOT_PATHS.valePackages);
+    symlinkSync(source, target, 'junction');
+}
+
+async function copyGitFolderHooks(root: string, copyRoot: string): Promise<void> {
+    const [source, target] = await Promise.all([readGitPath(root, 'hooks'), readGitPath(copyRoot, 'hooks')]);
+    if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
+    mkdirSync(target, { recursive: true });
+    for (const name of readdirSync(source)) {
+        const stat = statSync(join(source, name), { throwIfNoEntry: false });
+        if (stat?.isFile() !== true || name.endsWith(SAMPLE_HOOK_SUFFIX)) continue;
+        copyFileSync(join(source, name), join(target, name));
+        chmodSync(join(target, name), stat.mode);
+    }
 }
 
 /**
@@ -225,4 +240,19 @@ export async function copyRevision(root: string, source: Revision, cancelSignal?
         copy[Symbol.dispose]();
         throw error;
     }
+}
+
+/**
+Give the copy the hooks that Git runs in the repository. The copy has a Git folder of its own, so without them the plan
+of init names no hook of the repository. A hooks folder that core.hooksPath names holds its tracked files in the copy.
+*/
+export async function copyHooks(root: string, copyRoot: string, cancelSignal: AbortSignal): Promise<void> {
+    const hooksPath = await readGitSetting(root, HOOKS_PATH_SETTING);
+    if (hooksPath === undefined) {
+        await copyGitFolderHooks(root, copyRoot);
+        return;
+    }
+    const local = relative(root, resolve(root, hooksPath));
+    const copied = isInside(local) ? local : resolve(root, hooksPath);
+    await readGitText(copyRoot, [...SET_HOOKS_PATH.slice(1), copied], { cancelSignal });
 }

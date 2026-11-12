@@ -16,6 +16,8 @@ export const MISE_LAUNCHER_FOLDER = 'shims';
 
 export const MISE_WHICH = 'which';
 
+export const VERSION_FLAG = '--version';
+
 export const BIN_FOLDER_NAME = '.bin';
 
 export const NPM_BIN_FOLDER = `node_modules/${BIN_FOLDER_NAME}`;

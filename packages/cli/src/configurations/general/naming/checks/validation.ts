@@ -22,7 +22,6 @@ import {
     WORD_FORM_SUFFIXES,
 } from '#cli/config/configurations/naming.ts';
 import { NUMERIC_WORDS } from '#cli/config/system.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { formatNameList, splitWords } from '#cli/system/text.ts';
 import type {
     BannedWord,
@@ -32,7 +31,6 @@ import type {
     FileNaming,
     Identifier,
     NamingCase,
-    NamingCheck,
     NamingSettings,
 } from '#cli/types/configurations/general.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
@@ -264,16 +262,8 @@ function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFi
     return findings.filter((finding) => finding !== undefined);
 }
 
-export function validateIdentifiers(
-    planned: NamingCheck,
-    settings: NamingSettings,
-    identifiers: Identifier[],
-): CheckFinding[] {
-    const isTestFile = buildPathMatcher(planned.scope.settings.test_files);
+export function validateIdentifiers(settings: NamingSettings, identifiers: Identifier[]): CheckFinding[] {
     return identifiers.flatMap((identifier) =>
-        validateIdentifier(identifier, {
-            settings,
-            isTestFile: isTestFile(identifier.file),
-        }),
+        validateIdentifier(identifier, { settings, isTestFile: settings.isTestFile(identifier.file) }),
     );
 }

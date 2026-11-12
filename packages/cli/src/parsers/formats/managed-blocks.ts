@@ -16,8 +16,8 @@ function selectMarkers(path: string): (typeof MARKERS)[keyof typeof MARKERS] {
     return MARKERS[Object.hasOwn(BLOCK_STYLES, name) ? BLOCK_STYLES[name as keyof typeof BLOCK_STYLES] : 'hash'];
 }
 
-export function findBlockSpan(text: string, file: { path: string }): TextRange | undefined {
-    const markersForStyle = selectMarkers(file.path);
+export function findBlockSpan(text: string, path: string): TextRange | undefined {
+    const markersForStyle = selectMarkers(path);
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);
     if (start === -1 && closing === -1) return undefined;
@@ -31,7 +31,7 @@ export function findBlockSpan(text: string, file: { path: string }): TextRange |
     ) {
         throw new GspotError(
             'filesystem',
-            `${file.path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot install.`,
+            `${path} has incomplete or repeated gspot block markers. Fix the markers, then run gspot install.`,
         );
     }
     const end = closing + markersForStyle.end.length;
@@ -43,25 +43,25 @@ export function findBlockSpan(text: string, file: { path: string }): TextRange |
 Replace a complete block or add it, and keep the text around it. A new block goes first in `.gitattributes`, because a
 later line wins there, so the rules that the repository already has keep winning over the catch-all in the block.
 */
-export function replaceBlock(text: string, block: string, file: { path: string }): string {
-    const { start, end, gap } = selectMarkers(file.path);
-    const span = findBlockSpan(text, file);
+export function replaceBlock(text: string, block: string, path: string): string {
+    const { start, end, gap } = selectMarkers(path);
+    const span = findBlockSpan(text, path);
     const authored = span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
     const newline = authored.includes('\r\n') && !authored.replaceAll('\r\n', '').includes('\n') ? '\r\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', () => newline);
     if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
-    return addBlock(text, body, { isFirst: posix.basename(file.path) === FIRST_BLOCK_FILE, newline });
+    return addBlock(text, body, { isFirst: posix.basename(path) === FIRST_BLOCK_FILE, newline });
 }
 
-export function findBlockBody(text: string, file: { path: string }): string | undefined {
-    const span = findBlockSpan(text, file);
+export function findBlockBody(text: string, path: string): string | undefined {
+    const span = findBlockSpan(text, path);
     if (span === undefined) return undefined;
-    const { start, end } = selectMarkers(file.path);
+    const { start, end } = selectMarkers(path);
     const block = text.slice(span.start, span.end).trimEnd();
     return block.slice(start.length, -end.length).trim();
 }
 
-export function stripBlock(text: string, file: { path: string }): string {
-    const span = findBlockSpan(text, file);
+export function stripBlock(text: string, path: string): string {
+    const span = findBlockSpan(text, path);
     return span === undefined ? text : text.slice(0, span.start) + text.slice(span.end);
 }

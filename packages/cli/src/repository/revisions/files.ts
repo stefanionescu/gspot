@@ -4,24 +4,26 @@ import { join } from 'node:path';
 import { GIT_INDEX_FILES_ARGUMENTS, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
 import {
     GIT_BLOBS_ARGUMENTS,
+    GIT_CHANGED_PATHS_ARGUMENTS,
+    GIT_COMMITTED_PATHS_ARGUMENTS,
     GIT_HEAD_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
     GIT_WRITE_TREE_ARGUMENTS,
     INDEX_LINE,
+    READ_COMMITTED_MESSAGE,
     TRAILING_NEWLINE,
+    TREE_LINE,
     UNREADABLE_HISTORY_MESSAGE,
 } from '#cli/config/repository/git.ts';
-import { parseGitBlobs, parseListingLine, parseTreeFiles, stripIndexStages } from '#cli/repository/git/output.ts';
-import { readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
-import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
+import { decodeGitPaths, parseGitBlobs, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
+import { readGitPath, readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
+import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
-
-const GIT_INDEX_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path', 'index'] as const;
 
 const PRIVATE_INDEX_FILE = 'index';
 
@@ -45,7 +47,9 @@ export async function listRevisionFiles(
             'git',
             `Git could not read the entries of this revision: ${read.stderr.trim()}. Resolve Git errors before checking again.`,
         );
-    return parseTreeFiles(read.stdout, unreadablePaths);
+    return decodeGitPaths(read.stdout, unreadablePaths).map((line) =>
+        parseListingLine(TREE_LINE.exec(line), gitFileSchema),
+    );
 }
 
 /**
@@ -93,10 +97,10 @@ Write the tree of the index through a private copy of the index file. `git write
 so a copy keeps `.git/index.lock` free for the user's `git add` or `git commit` beside the check.
 */
 export async function readIndexTree(root: string, cancelSignal?: AbortSignal): Promise<string> {
-    const indexPath = await readGitText(root, GIT_INDEX_PATH_ARGUMENTS, { cancelSignal });
+    const indexPath = await readGitPath(root, 'index', cancelSignal);
     using folder = createTemporaryFolder();
     const privateIndex = join(folder.path, PRIVATE_INDEX_FILE);
-    copyFileSync(indexPath.replace(TRAILING_NEWLINE, ''), privateIndex);
+    copyFileSync(indexPath, privateIndex);
     const tree = await readGitText(root, GIT_WRITE_TREE_ARGUMENTS, {
         cancelSignal,
         env: { GIT_INDEX_FILE: privateIndex },
@@ -113,6 +117,20 @@ export async function readHead(root: string, cancelSignal?: AbortSignal): Promis
     const symbolic = await runGit(root, GIT_SYMBOLIC_HEAD_ARGUMENTS, options);
     if (symbolic.code !== 0) throw failure;
     return undefined;
+}
+
+/**
+List the tracked paths among `paths` whose working-tree and index contents match HEAD. An unborn history has none.
+*/
+export async function listCommittedPaths(root: string, paths: string[]): Promise<Set<string>> {
+    if ((await readHead(root)) === undefined) return new Set();
+    const [tracked, changed] = await Promise.all([
+        runGitBytes(root, [...GIT_COMMITTED_PATHS_ARGUMENTS, ...paths], {}),
+        runGitBytes(root, [...GIT_CHANGED_PATHS_ARGUMENTS, ...paths], {}),
+    ]);
+    if (tracked.code !== 0 || changed.code !== 0) throw new GspotError('git', READ_COMMITTED_MESSAGE);
+    const modified = new Set(decodeGitPaths(changed.stdout));
+    return new Set(decodeGitPaths(tracked.stdout).filter((path) => !modified.has(path)));
 }
 
 export async function isShallowClone(root: string, cancelSignal?: AbortSignal): Promise<boolean> {

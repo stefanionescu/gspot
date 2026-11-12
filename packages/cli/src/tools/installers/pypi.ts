@@ -64,7 +64,7 @@ import type {
 
 async function runUv(
     install: ToolInstall,
-    { runFolder, commandArguments, executable, credentials, config = join(runFolder, UV_SETTINGS_FILE) }: UvCommand,
+    { runFolder, commandArguments, executable, config = join(runFolder, UV_SETTINGS_FILE) }: UvCommand,
 ): Promise<SpawnResult> {
     const command = [
         executable,
@@ -86,7 +86,7 @@ async function runUv(
         throw new GspotError('install', formatUnavailableNote(uv, { name: UV_TOOL, state: 'missing' }));
     }
     if (result.code !== 0) {
-        const output = redactInstallOutput(result, credentials);
+        const output = redactInstallOutput(result, install.pythonSettings.credentials);
         const pins = listPackagePins(install.session.toolConfigurations).python;
         const explanation = await explainReleaseAgeHold(install, output, listPythonReleases(pins));
         const exit = result.signal === undefined ? `exit ${String(result.code)}` : `stopped by ${result.signal}`;
@@ -166,12 +166,7 @@ export async function planPythonLockfile(
     const runFolder = scratch.path;
     writeFileSync(join(runFolder, PYPROJECT_TOML), toolProjectFile.content);
     writeUvSettings(runFolder, indexes, install.releaseAgeDays);
-    await runUv(install, {
-        runFolder,
-        commandArguments: UV_LOCKFILE_ARGUMENTS,
-        executable,
-        credentials,
-    });
+    await runUv(install, { runFolder, commandArguments: UV_LOCKFILE_ARGUMENTS, executable });
     const lockfile = readFileSync(join(runFolder, UV_LOCKFILE), 'utf8');
     assertCredentialFreeLockfile(lockfile, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
     return {
@@ -190,13 +185,11 @@ export async function installPythonTools(
     const runFolder = join(root, GSPOT_FOLDER);
 
     using settings = createTemporaryFolder();
-    const { settings: indexes, credentials } = install.pythonSettings;
-    writeUvSettings(settings.path, indexes, install.releaseAgeDays);
+    writeUvSettings(settings.path, install.pythonSettings.settings, install.releaseAgeDays);
     await runUv(install, {
         runFolder,
         commandArguments: [...UV_INSTALL_ARGUMENTS, ...flags],
         executable,
-        credentials,
         config: join(settings.path, UV_SETTINGS_FILE),
     });
     const count = listPackagePins(toolConfigurations).python.length;

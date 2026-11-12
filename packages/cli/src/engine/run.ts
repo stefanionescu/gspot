@@ -26,7 +26,7 @@ import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { buildArgumentPath, convertToPosixPath, isInScope } from '#cli/system/paths.ts';
+import { buildArgumentPath, buildDashSafePath, convertToPosixPath, isInScope } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { quoteArgument } from '#cli/system/text.ts';
@@ -174,7 +174,7 @@ function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCo
         return { fixCommand: command.join(' ') };
     const paths = [...files].map((file) => {
         const path = convertToPosixPath(relative(options.cwd, join(session.toolsRoot, file)));
-        return quoteArgument(path.startsWith('-') ? `./${path}` : path);
+        return quoteArgument(buildDashSafePath(path));
     });
     return { fixCommand: [...command, ...paths].join(' ') };
 }

@@ -16,7 +16,6 @@ import {
     TEMPORARY_FILE_COMMAND,
     TEMPORARY_VALUE_NODES,
 } from '#cli/config/parsers/code.ts';
-import { blankText } from '#cli/parsers/code/comments.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import {
     buildCommandCalls,
@@ -26,7 +25,7 @@ import {
     listSwallowedLines,
     parseTrapScripts,
 } from '#cli/parsers/code/traps.ts';
-import { replaceRanges } from '#cli/system/text.ts';
+import { blankText, replaceRanges } from '#cli/system/text.ts';
 import type {
     NumberedLine,
     ParseCache,

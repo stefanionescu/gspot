@@ -1,5 +1,6 @@
 import { listIgnores } from '#cli/settings/scopes.ts';
 import type { IgnoreSection } from '#cli/types/configurations/general.ts';
+import type { PlannedConfig } from '#cli/types/configurations/language.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
 
@@ -26,6 +27,10 @@ export function listCheckIgnoreSections(scopeSettings: ScopeSettings, checkId: s
     return listIgnores(scopeSettings, checkId)
         .filter((ignore) => ignore.rule === undefined)
         .map(({ reason, paths }): IgnoreSection => ({ key: 'settings', title: reason, patterns: paths ?? [] }));
+}
+
+export function listPlannedIgnoreSections(planned: PlannedConfig, checkId: string): IgnoreSection[] {
+    return [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, checkId)];
 }
 
 export function keepFirstPatterns(sections: IgnoreSection[]): IgnoreSection[] {

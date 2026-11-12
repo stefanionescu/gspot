@@ -11,12 +11,6 @@ import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 import type { UploadForm } from '../../types/security.ts';
 
-function getOption(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined, key: string) {
-    const literal = getExpressionValue(options, source);
-    if (literal?.type !== AST_NODE_TYPES.ObjectExpression) return undefined;
-    return getOptionProperties(literal, source).get(key);
-}
-
 function setFormOption(form: UploadForm, property: string, value: TSESTree.Expression): void {
     if (property === 'uploadDir') form.hasFolder = true;
     else if (property === 'keepExtensions')
@@ -56,8 +50,8 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
             const variable = node.arguments.length === 0 ? findAssignedVariable(node, source) : null;
             if (variable) forms.set(variable, { node: node.callee, hasFolder: false, keepsExtensions: false });
             if (node.arguments.length === 0) return;
-            const extensions = getOption(source, node.arguments[0], 'keepExtensions');
-            const hasFolder = Boolean(getOption(source, node.arguments[0], 'uploadDir'));
+            const extensions = getOptionProperties(node.arguments[0], source).get('keepExtensions');
+            const hasFolder = Boolean(getOptionProperties(node.arguments[0], source).get('uploadDir'));
             report(
                 node.callee,
                 hasFolder,
@@ -65,13 +59,17 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
             );
         };
         const checkMulter = (node: TSESTree.CallExpression | TSESTree.NewExpression): void => {
-            const storage = getExpressionValue(getOption(source, node.arguments[0], 'storage')?.value, source);
+            const storage = getExpressionValue(
+                getOptionProperties(node.arguments[0], source).get('storage')?.value,
+                source,
+            );
             const isDisk =
                 storage?.type === AST_NODE_TYPES.CallExpression &&
                 storage.arguments.length > 0 &&
                 storage.callee.type === AST_NODE_TYPES.MemberExpression &&
                 ASTUtils.getPropertyName(storage.callee) === 'diskStorage';
-            if (isDisk && !getOption(source, storage.arguments[0], 'destination')) report(node.callee, false, false);
+            if (isDisk && !getOptionProperties(storage.arguments[0], source).get('destination'))
+                report(node.callee, false, false);
         };
         return {
             'CallExpression, NewExpression'(node: TSESTree.CallExpression | TSESTree.NewExpression) {

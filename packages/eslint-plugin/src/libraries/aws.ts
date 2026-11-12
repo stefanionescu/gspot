@@ -12,6 +12,7 @@ import {
 import { UNDEFINED_NAME } from '../config/plugin.ts';
 import { getExpressionValue, getOptionProperties, listArgumentValues } from '../language/expressions.ts';
 import { getQualifiedName } from '../language/modules.ts';
+import { getMemberRoot } from '../language/syntax.ts';
 import type {
     CdkFinding,
     CdkIssue,
@@ -28,8 +29,7 @@ Tell whether nothing in the file gives an expression a value. The expression, or
 an undeclared variable, or a variable without an import or a write, such as a parameter.
 */
 function isUnresolved(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
-    let root = node;
-    while (root?.type === AST_NODE_TYPES.MemberExpression) root = root.object;
+    const root = node && getMemberRoot(node);
     if (root?.type !== AST_NODE_TYPES.Identifier || root.name === UNDEFINED_NAME) return false;
     const variable = ASTUtils.findVariable(source.getScope(root), root);
     if (variable === null) return true;
@@ -66,18 +66,18 @@ function getPathStep(
     if (!property) return { targets: [], issues: [] };
     const isInline = child.literal === child.report && child.literal.properties.includes(property);
     const target = { value: property.value, report: isInline ? property.value : child.report };
-    return rest.length > 0 ? listPathTargets(source, target, rest, check.required) : { targets: [target], issues: [] };
+    return rest.length > 0 ? listPathTargets(source, target, rest, check) : { targets: [target], issues: [] };
 }
 
 function listPathTargets(
     source: Readonly<TSESLint.SourceCode>,
     target: CdkTarget,
     path: readonly string[],
-    isRequired: boolean,
+    check: Pick<CdkPropertyCheck, 'required'>,
 ): CdkPathResult {
     const literals = isUnresolved(source, target.value) ? [] : listLiteralTargets(source, target);
     const results = literals.map((child) =>
-        getPathStep(source, child, path, { required: isRequired, report: target.report }),
+        getPathStep(source, child, path, { required: check.required, report: target.report }),
     );
     return {
         targets: results.flatMap(({ targets }) => targets),
@@ -142,12 +142,7 @@ export function listCdkIssues(
     const argument = node.arguments[check.position ?? CDK_PROPS_POSITION];
     if (argument === undefined || (ASTUtils.isIdentifier(argument) && argument.name === UNDEFINED_NAME))
         return check.required ? [{ node: node.callee, kind: 'omitted' }] : [];
-    const { targets, issues } = listPathTargets(
-        source,
-        { value: argument, report: argument },
-        check.path,
-        check.required,
-    );
+    const { targets, issues } = listPathTargets(source, { value: argument, report: argument }, check.path, check);
     return [...issues, ...targets.flatMap((target) => checkCdkValue(source, target, check))];
 }
 

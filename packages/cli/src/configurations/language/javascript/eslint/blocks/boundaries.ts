@@ -18,8 +18,7 @@ import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/structure.ts';
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
 import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { listCodeTestFiles, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
     EslintBlock,
     EslintBoundaryPolicy,
@@ -127,7 +126,7 @@ export function buildBoundaryBlocks(planned: Pick<PlannedEslintFile, 'session' |
     const serverFiles = [
         ...new Set(trpcScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.tables.trpc?.server_files ?? [])),
     ];
-    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => joinScope(escapeGlob(path), '**/*'));
+    const trpcPaths = serverFiles.length === 0 ? [] : trpcScopes.map(({ path }) => joinScopeGlob(path, '**/*'));
     if (!isEnforceTests && importRules.length === 0 && trpcPaths.length === 0) return [];
     const tests = listCodeTestFiles([
         ...new Set(javascriptScopes.flatMap(({ settings: scopeSettings }) => scopeSettings.test_files)),

@@ -58,16 +58,20 @@ function getLocalBody(node: TSESTree.Node | undefined): TSESTree.Node | undefine
     return isFunction ? value.body : undefined;
 }
 
+function getCallDeclaration(callee: TSESTree.Node, types: TypeReader) {
+    return types.get(callee).getCallSignatures().at(0)?.getDeclaration();
+}
+
 function isHttpExpectation(node: TSESTree.CallExpression, types: TypeReader | undefined): boolean {
     const { callee } = node;
     const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
-    const declaration = types?.get(callee).getCallSignatures().at(0)?.getDeclaration();
+    const declaration = types && getCallDeclaration(callee, types);
     const file = declaration?.getSourceFile().fileName ?? '';
     return HTTP_EXPECTATIONS.has(method) && file.includes(HTTP_TESTING_MODULE);
 }
 
 function getImportedText(callee: TSESTree.Node, types: TypeReader): string {
-    const declaration = types.get(callee).getCallSignatures().at(0)?.getDeclaration();
+    const declaration = getCallDeclaration(callee, types);
     const isOwn = declaration !== undefined && !types.program.isSourceFileDefaultLibrary(declaration.getSourceFile());
     return isOwn ? declaration.getText() : '';
 }

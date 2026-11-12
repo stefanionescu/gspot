@@ -18,17 +18,13 @@ function normalizeLiteral(value: unknown): unknown {
     return BOOLEAN_TEXTS.has(text) ? text === 'true' : value;
 }
 
-function getExpressionValue(expression: TSESTree.Node): unknown {
+function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
+    if (value === null) return true;
+    const expression = value.type === AST_NODE_TYPES.JSXExpressionContainer ? value.expression : value;
     if (expression.type === AST_NODE_TYPES.Literal) return normalizeLiteral(expression.value);
     return expression.type === AST_NODE_TYPES.TemplateLiteral && expression.expressions.length === 0
         ? expression.quasis[0]?.value.cooked
         : null;
-}
-
-function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
-    if (value === null) return true;
-    const expression = value.type === AST_NODE_TYPES.JSXExpressionContainer ? value.expression : value;
-    return getExpressionValue(expression);
 }
 
 function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {

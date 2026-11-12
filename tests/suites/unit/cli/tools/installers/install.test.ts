@@ -8,14 +8,13 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { getTool } from '#cli/manifests/read.ts';
-import { openFiles } from '#cli/system/files/open.ts';
+import { getTool, listDistinctTools } from '#cli/manifests/read.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeExecutableLookup, fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeExecutableLookup, fakeNpmTool, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function runBunInstall(root: string, installPackages: () => Promise<void>, damagedTool?: string) {
@@ -30,10 +29,7 @@ async function runBunInstall(root: string, installPackages: () => Promise<void>,
         if (installs > 1) await installPackages();
         return buildProcessResult();
     });
-    const result = await installTools(session, {
-        writer: openFiles(root),
-        checkTools: listHostCheckTools(session),
-    });
+    const result = await installTools(session, { checkTools: listHostCheckTools(session) });
     return { result, installs };
 }
 
@@ -86,14 +82,29 @@ test('a failed mise install stops the install after the npm tool project, which 
         if (command.includes('install')) installs.push([...command]);
         return Promise.resolve(buildProcessResult({ stdout: '1.4.2\n' }));
     });
-    const error = await captureRejection(
-        installTools(session, {
-            writer: openFiles(sandbox.path),
-            checkTools: listHostCheckTools(session),
-        }),
-    );
+    const error = await captureRejection(installTools(session, { checkTools: listHostCheckTools(session) }));
     expect(error.message).toContain('mise failed');
     expect(
         installs.map((command) => command.slice(command.indexOf('--') + 1, command.indexOf('--') + 3)),
     ).toStrictEqual([['bun', 'install']]);
+});
+
+test('a second install with every tool in place runs no package manager', async () => {
+    await using sandbox = await createGitSandbox(BUN_SANDBOX);
+    const session = await openSession(sandbox.path);
+    await createFileTree(sandbox.path, buildToolLockfiles(session.toolConfigurations));
+    const tools = listDistinctTools(session.toolConfigurations);
+    for (const tool of tools) if (tool.installers['npm'] !== undefined) await fakeNpmTool(sandbox.path, tool.name);
+    const installs: string[][] = [];
+    using _commands = fakeCommands('mise', (command) => {
+        if (command.includes('install')) installs.push([...command]);
+        return Promise.resolve(buildProcessResult({ stdout: '1.4.2\n' }));
+    });
+    using _executables = fakeToolExecutables(tools.filter((tool) => tool.installers['mise'] !== undefined));
+    const input = { checkTools: listHostCheckTools(session) };
+    await installTools(session, input);
+    expect(installs).toHaveLength(1);
+    const second = await installTools(session, input);
+    expect(installs).toHaveLength(1);
+    expect(second.missing).toStrictEqual([]);
 });

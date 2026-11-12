@@ -7,7 +7,7 @@ import { hasErrorCode } from '#cli/system/errors.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { GitIndexFile, ListedFile } from '#cli/types/repository.ts';
+import type { GitIndexFile, ListedFile, Repository } from '#cli/types/repository.ts';
 
 function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };
@@ -69,4 +69,11 @@ export function listTrackedFiles(root: string, index: GitIndexFile[], untracked:
         .toSorted((a, b) => compareText(a, b))
         .map((path) => readListedFile(root, path, { executables, tracked }))
         .filter((file) => file !== undefined);
+}
+
+/**
+List the paths of the index, or of the listed files when the index is empty.
+*/
+export function listTrackedPaths(repository: Pick<Repository, 'index' | 'files'>): string[] {
+    return (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
 }

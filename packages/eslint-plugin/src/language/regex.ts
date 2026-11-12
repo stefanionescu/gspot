@@ -2,12 +2,7 @@ import { type AST, parseRegExpLiteral } from '@eslint-community/regexpp';
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { REGEXP_CONSTRUCTOR } from '../config/regex.ts';
-
-function getStaticString(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): string | undefined {
-    const evaluated = node && ASTUtils.getStaticValue(node, source.getScope(node));
-    if (typeof evaluated?.value !== 'string') return undefined;
-    return evaluated.value;
-}
+import { getStaticString } from './expressions.ts';
 
 function getConstructorSource(
     node: TSESTree.CallExpression | TSESTree.NewExpression,

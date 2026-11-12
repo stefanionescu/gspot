@@ -1,8 +1,8 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
-import type { CheckedType, TypeCategory, TypeReader } from '../types/plugin.ts';
+import type { CheckedType, RuleContext, TypeCategory, TypeReader } from '../types/plugin.ts';
 
-export function getTypes(context: Readonly<TSESLint.RuleContext<string, readonly unknown[]>>): TypeReader | undefined {
+export function getTypes(context: Pick<RuleContext, 'sourceCode'>): TypeReader | undefined {
     const services = context.sourceCode.parserServices;
     const program = services?.program;
     const map = services?.esTreeNodeToTSNodeMap;

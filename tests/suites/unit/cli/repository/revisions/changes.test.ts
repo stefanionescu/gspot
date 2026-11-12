@@ -11,6 +11,7 @@ import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { isMacos, isWindows } from '#tests/setup/system/platform.ts';
 
 test('the status of an unborn index lists its staged, unstaged, and untracked paths', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n', 'notes.txt': 'draft\n' });
@@ -25,6 +26,14 @@ test('the status of an unborn index lists its staged, unstaged, and untracked pa
     await writeFile(join(sandbox.path, 'source.ts'), 'export const answer = 42;\n');
     const { unstaged } = await readTreeStatus(sandbox.path);
     expect(unstaged).toStrictEqual(['source.ts']);
+});
+
+// Windows and macOS refuse a file name that is not UTF-8.
+test.skipIf(isWindows || isMacos)('an untracked name that is not UTF-8 is listed as unreadable', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
+    await writeFile(Buffer.concat([Buffer.from(`${sandbox.path}/`), Buffer.from([0xff]), Buffer.from('.ts')]), '');
+    const { untracked } = await readTreeStatus(sandbox.path);
+    expect(untracked).toStrictEqual({ paths: ['source.ts'], unreadablePaths: [String.raw`"\377.ts"`] });
 });
 
 test('a status read leaves the index of a stat-dirty tree unwritten', async () => {

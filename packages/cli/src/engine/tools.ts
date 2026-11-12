@@ -8,6 +8,7 @@ import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
 import { findTool, getTool, listToolNames, readConfigurations } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
@@ -26,9 +27,7 @@ clone reads the same version.
 */
 function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
     const { cache, repository } = session;
-    const tracked = new Set(
-        (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path),
-    );
+    const tracked = new Set(listTrackedPaths(repository));
     const lockfile = JAVASCRIPT_LOCKFILES.find((name) => findText(cache, name) !== undefined);
     if (lockfile === undefined || !tracked.has(lockfile)) return undefined;
     return semver.valid(readLockedVersions(cache, '')?.get(TYPESCRIPT_PACKAGE)) ?? undefined;

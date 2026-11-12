@@ -113,5 +113,6 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
         allowedPhrases: shipped.allowed_phrases.map((phrase) => splitWords(phrase)),
         exceptions,
         limitLookup: buildLimitLookup(scopeSettings),
+        isTestFile: buildPathMatcher(scopeSettings.test_files),
     };
 }

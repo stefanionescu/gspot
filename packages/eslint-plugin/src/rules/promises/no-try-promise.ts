@@ -1,18 +1,11 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
 import { CALL_NODES, CATCH_METHOD, CHAINED_USES, HANDLING_PARENTS } from '../../config/functions.ts';
 import { getTypes, isThenable } from '../../language/checker.ts';
-import { listChildren } from '../../language/syntax.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { PromiseUse } from '../../types/functions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
-
-function listCalls(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
-    if (ASTUtils.isFunction(node)) return [];
-    const isCall = CALL_NODES.has(node.type);
-    const calls = listChildren(node, source.visitorKeys).flatMap((child) => listCalls(child, source));
-    return isCall ? [node, ...calls] : calls;
-}
 
 function getChainedUse(node: TSESTree.Node): PromiseUse {
     const { parent } = node;
@@ -61,7 +54,9 @@ export const noTryPromise = createRule<[], 'open' | 'caught'>({
         return {
             TryStatement(node) {
                 const uses = new Set(
-                    listCalls(node.block, context.sourceCode).map((call) => classifyCall(call, types)),
+                    listBodyNodes(node.block, context.sourceCode)
+                        .filter((each) => CALL_NODES.has(each.type))
+                        .map((call) => classifyCall(call, types)),
                 );
                 if (node.handler === null || uses.has('blocking')) return;
                 const loc = { start: node.loc.start, end: node.block.loc.start };

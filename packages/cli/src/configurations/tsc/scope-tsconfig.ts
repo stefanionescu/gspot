@@ -12,7 +12,7 @@ import {
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { listIgnoredRules } from '#cli/settings/scopes.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
@@ -73,10 +73,7 @@ export function writeScopeTsconfig(session: Session, scope: Scope, folder: strin
 function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();
     const { root, toolsRoot, cache } = session;
-    const ownFiles =
-        Map.groupBy(session.repository.files, (file) =>
-            selectScopePath(file.path, session.repository.scopeFolders),
-        ).get(scope.path) ?? [];
+    const ownFiles = listOwnFiles(session.repository.files, session.repository.scopeFolders, scope.path);
     const scopeFiles = ownFiles.filter(
         (ownFile) =>
             ownFile.tags.includes(TYPESCRIPT_TAG) || DECLARATION_EXTENSIONS.includes(extractExtension(ownFile.path)),

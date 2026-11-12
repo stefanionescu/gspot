@@ -10,16 +10,16 @@ import { REMOVAL_REASON_SUGGESTION } from '#cli/config/settings/validation.ts';
 import { findRequirementChain, formatRequiredRemoval } from '#cli/manifests/select.ts';
 import { listDetectedAdditions } from '#cli/repository/proposals.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { addScopeTable, removeKey } from '#cli/settings/edit.ts';
-import { findSetting, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
+import { addScopeTable, removeUnknownKeys } from '#cli/settings/edit.ts';
+import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text.ts';
-import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
+import { formatNameState } from '#cli/system/text.ts';
+import type { CommandDefinition, RemoveOptions, ScopeFlags } from '#cli/types/commands/edits.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
@@ -39,16 +39,13 @@ function removeUnusedSettings(table: TomlTable, scopePath: string): string {
     for (const written of affected) {
         const selected = selectConfigurationsForScope(edited, written.scopePath);
         const available = buildAvailableSettings(selected, edited.level);
-        const keys = listWrittenKeys(written.table, available).filter(
-            (key) => findSetting(available, key) === undefined,
-        );
-        for (const key of keys) removeKey(addScopeTable(table, written.scopePath), key);
+        const keys = removeUnknownKeys(addScopeTable(table, written.scopePath), written.table, available);
         removed.push(...keys.map((key) => (written.scopePath === '' ? key : `${key} (scope ${written.scopePath})`)));
     }
     return removed.length === 0 ? '' : ` Removed settings ${removed.join(', ')}.`;
 }
 
-async function runRemoveCommand(options: ConfigurationsOptions & { reason: string }): Promise<CommandResult> {
+async function runRemoveCommand(options: RemoveOptions): Promise<CommandResult> {
     const context = await readConfigurationEditContext(options);
     const { edit: input, scopePath, scopeTable, scopeSettings, selected: selectedNames } = context;
     const detected = listDetectedAdditions(context.session)
@@ -58,8 +55,7 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     const kept = selected.filter((name) => !options.configurations.includes(name));
     assertRemovable(options.configurations, kept);
     if (options.configurations.every((name) => !selected.includes(name))) {
-        const verb = options.configurations.length === 1 ? 'is' : 'are';
-        return buildUnchangedResult(`No change: ${formatNameList(options.configurations)} ${verb} not selected.`);
+        return buildUnchangedResult(`No change: ${formatNameState(options.configurations, 'not selected')}.`);
     }
     const previous = scopeTable['removed_configurations'];
     const removed = options.configurations.filter((name) => selected.includes(name));
@@ -78,14 +74,19 @@ async function runRemoveCommand(options: ConfigurationsOptions & { reason: strin
     return writeSettingsEdit(context, { summary });
 }
 
-export const REMOVE_COMMAND: CommandDefinition<[string[]], ScopeFlags & { reason: string }> = {
+export const REMOVE_COMMAND: CommandDefinition<
+    [string[]],
+    ScopeFlags & { reason: string },
+    Omit<RemoveOptions, 'root'>
+> = {
     name: 'remove',
     arguments: [{ term: '<configuration...>' }],
     options: [{ flags: REASON_OPTION, required: true }, { flags: SCOPE_OPTION }],
-    run: async ({ arguments: commandArguments, flags: { reason, scope: scopePath }, root, cwd }) => {
+    parse: ({ arguments: commandArguments, flags: { reason, scope: scopePath }, cwd }) => {
         const [configurations] = commandArguments;
         const invalid = validateReason(GSPOT_REMOVE, reason, REMOVAL_REASON_SUGGESTION);
         if (invalid !== undefined) throw new GspotError('arguments', invalid);
-        return await runRemoveCommand({ root, cwd, configurations: [...new Set(configurations)], reason, scopePath });
+        return { cwd, configurations: [...new Set(configurations)], reason, scopePath };
     },
+    run: runRemoveCommand,
 };

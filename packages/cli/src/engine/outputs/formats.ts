@@ -14,7 +14,8 @@ import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { CheckOutput, OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
+import type { OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
+import type { CheckOutput } from '#cli/types/manifests.ts';
 
 const COPY_ROOT = new RegExp(`^(?<repository>.*)/${escapeRegExp(COPIES_FOLDER)}/[^/]+(?<folder>/.*)?$`, 'u');
 
@@ -37,7 +38,7 @@ function stripRoot(root: string, file: string): string {
     return form === undefined ? posix.relative(root, canonicalFile) : canonicalFile.slice(form.length + 1);
 }
 
-function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
+export function buildRootRelativePath(path: string, cwd: string, posixRoot: string): string {
     const file = convertToPosixPath(path);
     const absolute = isAbsolute(file) || DRIVE_LETTER.test(file) ? file : posix.join(convertToPosixPath(cwd), file);
     return stripRoot(posixRoot, absolute);

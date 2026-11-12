@@ -1,5 +1,3 @@
-import { posix } from 'node:path';
-
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/configurations/framework.ts';
 import {
     COMMONJS_FILES,
@@ -9,10 +7,10 @@ import {
     TYPELESS_JAVASCRIPT_FILES,
 } from '#cli/config/configurations/javascript.ts';
 import { NEXTJS_CONFIGURATION } from '#cli/config/configurations/nextjs.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { listScriptFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { findNearestPackageJson } from '#cli/repository/dependencies.ts';
 import { compareScopeDepth, joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
+import { escapeGlob, isInScope } from '#cli/system/paths.ts';
 import type { EslintRuntime } from '#cli/types/configurations/javascript.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Scope } from '#cli/types/settings.ts';
@@ -52,16 +50,6 @@ function buildFrameworkRuntime(scope: Scope, escaped: string): EslintRuntime | u
     };
 }
 
-function readNearestPackageType(dependencyFiles: DependencyFile[], scopePath: string): string | undefined {
-    const packages = new Map(
-        dependencyFiles.filter((file) => file.kind === PACKAGE_JSON).map((file) => [file.path, file]),
-    );
-    const owner = listEnclosingFolders(scopePath)
-        .map((folder) => packages.get(posix.join(folder, PACKAGE_JSON)))
-        .find((file) => file !== undefined);
-    return owner === undefined ? undefined : (owner.moduleType ?? COMMONJS_PACKAGE_TYPE);
-}
-
 function buildPackageRuntime(scope: Scope, escaped: string, packageType: string | undefined): EslintRuntime[] {
     if (packageType === undefined || scope.settings.configurations.includes(NEXTJS_CONFIGURATION)) return [];
     const isCommonjs = packageType === COMMONJS_PACKAGE_TYPE;
@@ -91,7 +79,9 @@ export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]
                 { scopePath, runtime: 'node', ...splitGlobs([joinScope(escaped, '**/*')]) },
                 { scopePath, runtime: 'commonjs', ...splitGlobs([joinScope(escaped, COMMONJS_FILES)]) },
             );
-        blocks.push(...buildPackageRuntime(scope, escaped, readNearestPackageType(dependencyFiles, scopePath)));
+        const found = findNearestPackageJson(dependencyFiles, scopePath);
+        const packageType = found === undefined ? undefined : (found.moduleType ?? COMMONJS_PACKAGE_TYPE);
+        blocks.push(...buildPackageRuntime(scope, escaped, packageType));
         const framework = buildFrameworkRuntime(scope, escaped);
         if (framework !== undefined) blocks.push(framework);
         blocks.push(

@@ -1,7 +1,10 @@
 import { LONE_FILE_RULE } from '#cli/config/configurations/structure.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import {
+    buildFolderTree,
+    listCodeFiles,
+    listSourceExtensions,
+} from '#cli/configurations/general/structure/checks/folder-tree.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -11,9 +14,7 @@ import type { Session } from '#cli/types/tools.ts';
 function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);
     const tree = buildFolderTree(planned.files);
-    const extensions = listSourceConfigurations(planned.scope.configurations).flatMap(
-        (configuration) => configuration.files.extensions,
-    );
+    const extensions = listSourceExtensions(planned.scope);
     const isRouteFile = buildPathMatcher(
         planned.scope.configurations.flatMap((configuration) => configuration.route_files),
     );

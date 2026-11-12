@@ -1,9 +1,10 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { EVIDENCE_DEPENDENCIES, EVIDENCE_IMPORTS, STATEMENT_LINKS } from '../../config/assertions/evidence.ts';
+import { findEnclosingFunction } from '../../language/functions.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
 import { isModuleUsed } from '../../libraries/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { getEnclosingTestCall, getTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { PlacementState } from '../../types/assertions.ts';
 import type { FileContext } from '../../types/plugin.ts';
@@ -25,11 +26,8 @@ function getStatement(node: TSESTree.CallExpression): TSESTree.ExpressionStateme
 }
 
 function getPlacement(node: TSESTree.Node, source: TSESLint.SourceCode): 'top' | 'suite' | 'function' {
-    const callback = source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
-    const owner =
-        callback?.parent.type === AST_NODE_TYPES.CallExpression ? getTestCall(callback.parent, source) : undefined;
-    if (callback === undefined) return 'top';
-    return owner?.kind === 'suite' ? 'suite' : 'function';
+    if (findEnclosingFunction(node, source) === undefined) return 'top';
+    return getEnclosingTestCall(node, source)?.kind === 'suite' ? 'suite' : 'function';
 }
 
 function trackAssertion(node: TSESTree.CallExpression, context: FileContext, state: PlacementState): void {

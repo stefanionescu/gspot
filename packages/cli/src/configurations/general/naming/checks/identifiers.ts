@@ -34,7 +34,7 @@ async function checkIdentifiers(session: Session, planned: PlannedCheck): Promis
                 });
             continue;
         }
-        findings.push(...validateIdentifiers(planned, settings, identifiers));
+        findings.push(...validateIdentifiers(settings, identifiers));
     }
     return findings;
 }

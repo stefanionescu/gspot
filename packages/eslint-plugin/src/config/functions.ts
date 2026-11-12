@@ -1,6 +1,6 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
-import { TYPE_ASSERTION_NODES } from './plugin.ts';
+import { FUNCTION_NODES, TYPE_ASSERTION_NODES } from './plugin.ts';
 
 export const NAMED_ARGUMENT_MINIMUM = 2;
 
@@ -54,24 +54,6 @@ export const TRUE_TYPE = 'true';
 export const BOXED_STRING_NAME = 'String';
 
 export const SANITATION_MEMBERS = 2;
-
-const FOCUSED_TEST_PREFIX = 'f';
-
-const SKIPPED_TEST_PREFIX = 'x';
-
-const TEST_SUITE_CALLS = ['describe', 'context', 'it', 'test'];
-
-export const TEST_STRUCTURE_CALLS: ReadonlySet<string> = new Set([
-    ...TEST_SUITE_CALLS.flatMap((name) => [name, `${SKIPPED_TEST_PREFIX}${name}`, `${FOCUSED_TEST_PREFIX}${name}`]),
-    'suite',
-    'specify',
-    'before',
-    'after',
-    'beforeEach',
-    'afterEach',
-    'beforeAll',
-    'afterAll',
-]);
 
 export const PURE_RECEIVER_SYMBOLS: ReadonlySet<string> = new Set(['Array', 'Date', 'Math', 'RegExp']);
 
@@ -255,7 +237,7 @@ export const INLINE_VALUE_PARENTS = new Set<string>([
     'AssignmentPattern',
 ]);
 
-export const FUNCTION_SELECTOR = ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)';
+export const FUNCTION_SELECTOR = `:matches(${[...FUNCTION_NODES].join(', ')})`;
 
 export const TYPE_DECLARATIONS = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
 

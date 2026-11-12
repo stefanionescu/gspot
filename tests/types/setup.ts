@@ -108,12 +108,6 @@ export type FindingRow = { file: string; line: number | undefined; rule: string 
 
 type SampleFinding = Partial<Pick<Finding, 'file' | 'rule' | 'line' | 'column' | 'message'>>;
 
-export type SampleFix = {
-    files: Record<string, string>;
-    settings?: string;
-    removed?: readonly string[] | undefined;
-};
-
 export type CheckSample = SandboxChanges & {
     check: string;
     apply?: boolean | undefined;
@@ -128,6 +122,8 @@ export type SandboxChanges = {
     removed?: readonly string[] | undefined;
     executable?: readonly string[] | undefined;
 };
+
+export type SampleFix = Omit<SandboxChanges, 'executable'>;
 
 export type SandboxPlan = {
     configurations: readonly string[];

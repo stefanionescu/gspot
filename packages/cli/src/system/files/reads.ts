@@ -2,14 +2,9 @@ import { isUtf8 } from 'node:buffer';
 import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-import {
-    MISSING_TRACKED_FILE_MESSAGE,
-    PATH_SEPARATORS,
-    RESERVED_SEGMENTS,
-    UNSAFE_PATH_MESSAGE,
-} from '#cli/config/system.ts';
+import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { isInside } from '#cli/system/paths.ts';
+import { isInside, splitSystemPath } from '#cli/system/paths.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
 function readFilePrefix(path: string, limit: number): Buffer {
@@ -104,17 +99,6 @@ export function decodeUtf8File(path: string, bytes: Buffer): string {
     if (text === undefined)
         throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);
     return text;
-}
-
-export function splitSystemPath(path: string): string[] {
-    const segments = path.split('/');
-    const systemSegments = process.platform === 'win32' ? path.split(PATH_SEPARATORS) : segments;
-    if (systemSegments.some((segment) => RESERVED_SEGMENTS.has(segment) || segment.includes('\0')))
-        throw new GspotError(
-            'filesystem',
-            UNSAFE_PATH_MESSAGE.replace('{path}', () => JSON.stringify(path)),
-        );
-    return segments;
 }
 
 export function measureFolder(path: string): number {

@@ -7,7 +7,8 @@ import { LINE_BREAK } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { CheckOutput, ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import type { CheckOutput } from '#cli/types/manifests.ts';
 
 const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;
 

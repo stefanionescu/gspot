@@ -32,9 +32,6 @@ export const TOML_QUOTES = /^(["'])(.*)\1$/su;
 
 export const BOOLEAN_WORDS: ReadonlySet<string> = new Set(['true', 'false']);
 
-export const DASH_VALUE_HELP =
-    'To pass a value that starts with -, put -- before the values: gspot set ci.setup_command -- bun install --frozen-lockfile.';
-
 export const NO_CHECK_IGNORE_TEXTS = {
     unmatched: 'no ignore without a check matches',
     removed: 'without a check',
@@ -91,10 +88,6 @@ export const FROM_CONFLICT_MESSAGE =
 
 export const FROM_OPTION = '--from <file>';
 
-export const NAME_LIST_SEPARATOR = ',';
-
 export const ADD_REMOVE_MESSAGE = 'Use gspot add or gspot remove to change configurations.';
 
 export const FIX_INSTALL_MESSAGE = 'Fix that, then run gspot install.';
-
-export const COMMAND_SUGGESTION = /\(Did you mean ([^?)]+)\??\)/u;

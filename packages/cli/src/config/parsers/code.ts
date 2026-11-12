@@ -69,8 +69,6 @@ export const SEQUENCE_COMMAND = 'seq';
 
 export const EXPANSION_NODES: readonly string[] = ['simple_expansion', 'expansion'];
 
-export const NOT_LINE_BREAK = /[^\r\n]/gu;
-
 export const YAML_SCALAR_TOKENS: ReadonlySet<string> = new Set(['doc-mode', 'flow-error-end', 'scalar']);
 
 export const HTML_ALTERNATE_COMMENT_END = '--!>';
@@ -272,7 +270,7 @@ export const FORWARDED_ARGUMENTS: ReadonlySet<string> = new Set(['"$@"', '"$*"']
 
 export const TRAP_COMMAND = 'trap';
 
-export const TRAP_EXPANSION_NODES = [...EXPANSION_NODES, 'command_substitution', 'arithmetic_expansion'];
+export const STRING_EXPANSION_NODES = [...EXPANSION_NODES, 'command_substitution', 'arithmetic_expansion'];
 
 export const TRAP_STRING_ESCAPES = /\\(["\\$\u{60}\n])|\n/gu;
 

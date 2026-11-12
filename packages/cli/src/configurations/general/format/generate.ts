@@ -8,7 +8,7 @@ import {
 } from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { commentSectionTitle, keepFirstPatterns, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { commentSectionTitle, keepFirstPatterns, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listPrettierPlugins } from '#cli/engine/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
@@ -170,15 +170,13 @@ function buildPrettierFile(planned: PlannedConfig): string {
 }
 
 function buildPrettierignoreFile(planned: PlannedConfig): string {
-    const ordered = [...planned.ignoreSections, ...listCheckIgnoreSections(planned.scope.settings, PRETTIER_CHECK)].map(
-        (section) => ({
-            ...section,
-            patterns: [
-                ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
-                ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
-            ],
-        }),
-    );
+    const ordered = listPlannedIgnoreSections(planned, PRETTIER_CHECK).map((section) => ({
+        ...section,
+        patterns: [
+            ...section.patterns.filter((pattern) => !pattern.startsWith('!')).toSorted(compareText),
+            ...section.patterns.filter((pattern) => pattern.startsWith('!')).toSorted(compareText),
+        ],
+    }));
     const lines = keepFirstPatterns(ordered).flatMap(({ title, patterns }) =>
         patterns.length === 0 ? [] : ['', ...commentSectionTitle(title, ''), ...patterns],
     );

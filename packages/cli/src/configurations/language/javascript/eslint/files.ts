@@ -6,7 +6,7 @@ import { MISE_TASKS_GLOB } from '#cli/config/configurations/structure.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { compareScopeDepth, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { compareScopeDepth, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
 import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
@@ -27,6 +27,10 @@ Build the glob of the files of these languages.
 export function buildExtensionGlob(...languages: string[]): string {
     const extensions = listTaggedExtensions(...languages).map((extension) => extension.slice(1));
     return extensions.length === 1 ? `**/*.${String(extensions[0])}` : `**/*.{${extensions.join(',')}}`;
+}
+
+export function listNestedScopeGlobs(paths: readonly string[], scopePath: string): string[] {
+    return listNestedScopes(paths, scopePath).map((path) => joinScopeGlob(path, '**'));
 }
 
 /**
@@ -50,10 +54,10 @@ export function buildScopeOverrideBlocks<Value, Block>(
             scope,
             parent,
             value,
-            ignores: listNestedScopes(
+            ignores: listNestedScopeGlobs(
                 changes.map((change) => change.scope.path),
                 scope.path,
-            ).map((path) => joinScope(escapeGlob(path), '**')),
+            ),
         }),
     );
 }
@@ -63,10 +67,7 @@ export function listJavascriptScopes(scopes: Scope[]): Scope[] {
 }
 
 export function listScriptFiles(scope: Pick<Scope, 'path' | 'settings'>): string[] {
-    return [
-        ...(scope.settings.tables.javascript?.script_files ?? []),
-        joinScope(escapeGlob(scope.path), MISE_TASKS_GLOB),
-    ];
+    return [...(scope.settings.tables.javascript?.script_files ?? []), joinScopeGlob(scope.path, MISE_TASKS_GLOB)];
 }
 
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
@@ -100,14 +101,12 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
         tests: scopes.flatMap(({ scopePath, tests }) =>
             buildTestFiles(listCodeTestFiles(tests), code).map(([test, pattern]) => [
                 test,
-                joinScope(escapeGlob(scopePath), '**/*'),
+                joinScopeGlob(scopePath, '**/*'),
                 pattern,
             ]),
         ),
         scripts: scopes.flatMap(({ scopePath, scripts }) =>
-            scripts.flatMap((script) =>
-                code.map((pattern) => [script, joinScope(escapeGlob(scopePath), '**/*'), pattern]),
-            ),
+            scripts.flatMap((script) => code.map((pattern) => [script, joinScopeGlob(scopePath, '**/*'), pattern])),
         ),
     };
 }
@@ -140,7 +139,7 @@ export function buildScopeFiles(
     return files.flatMap((file) =>
         paths.map((path) => [
             ...(Array.isArray(file) ? file : [file]),
-            joinScope(escapeGlob(scopePath), '**/*'),
+            joinScopeGlob(scopePath, '**/*'),
             ...(Array.isArray(path) ? path : [path]),
         ]),
     );

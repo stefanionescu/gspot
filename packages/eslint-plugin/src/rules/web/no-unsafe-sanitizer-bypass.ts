@@ -1,23 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { SANITIZER_BYPASS_METHODS } from '../../config/web.ts';
-import { getOptionProperties } from '../../language/expressions.ts';
-import { getAssignedValue } from '../../language/modules.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 import { createRule } from '../../rule.ts';
-
-function getSanitizerSource(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
-    const seen = new Set<TSESTree.Node>();
-    let value = node;
-    while (value.type === AST_NODE_TYPES.Identifier && !seen.has(value)) {
-        seen.add(value);
-        const variable = ASTUtils.findVariable(source.getScope(value), value);
-        if (variable === null) break;
-        const assigned = getAssignedValue(variable);
-        if (assigned === undefined) break;
-        value = assigned;
-    }
-    return value;
-}
 
 function getSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (
@@ -26,7 +11,7 @@ function getSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode):
         node.property.type !== AST_NODE_TYPES.Identifier
     )
         return undefined;
-    const receiver = getSanitizerSource(node.object, source);
+    const receiver = getExpressionValue(node.object, source) ?? node.object;
     return receiver.type === AST_NODE_TYPES.ObjectExpression
         ? getOptionProperties(receiver, source).get(node.property.name)?.value
         : undefined;
@@ -37,7 +22,7 @@ function isLiteralSanitizerValue(
     source: TSESLint.SourceCode,
     seen = new Set<TSESTree.Node>(),
 ): boolean {
-    const value = getSanitizerSource(node, source);
+    const value = getExpressionValue(node, source) ?? node;
     if (seen.has(value)) return false;
     seen.add(value);
     if (value.type === AST_NODE_TYPES.Literal) return true;

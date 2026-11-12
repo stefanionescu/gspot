@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { escapeRegExp, splitWords } from '#cli/system/text.ts';
+import { escapeRegExp, formatNameState, splitWords } from '#cli/system/text.ts';
 
 test('an escaped text matches itself in a Unicode pattern, and each syntax character stays literal', () => {
     const text = String.raw`a.b*c+d?e^f$g{h}i(j)k|l[m]n\o/p-q`;
@@ -20,3 +20,8 @@ test.each([
         expect(splitWords(name)).toStrictEqual([...words]);
     },
 );
+
+test('formatNameState writes is for one name and are for several', () => {
+    expect(formatNameState(['astro'], 'not selected')).toBe('astro is not selected');
+    expect(formatNameState(['astro', 'vue'], 'not selected')).toBe('astro and vue are not selected');
+});

@@ -1,12 +1,20 @@
 import { SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
 import { isReasonedValue } from '#cli/settings/file.ts';
+import { findSetting, listWrittenKeys } from '#cli/settings/inherit.ts';
 import { parseSettings } from '#cli/settings/read.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/settings/validation/messages.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
-import type { EditedSettings, SettingKey, SettingsEdit, TomlTable } from '#cli/types/settings.ts';
+import type {
+    AvailableSettings,
+    EditedSettings,
+    SettingKey,
+    SettingsEdit,
+    SettingsTable,
+    TomlTable,
+} from '#cli/types/settings.ts';
 
 function splitKey(key: string): SettingKey {
     const boundary = key.lastIndexOf('.');
@@ -55,6 +63,18 @@ export function removeKey(table: TomlTable, key: string): void {
             break;
         Reflect.deleteProperty(parent, segment);
     }
+}
+
+export function removeUnknownKeys(
+    table: TomlTable,
+    written: SettingsTable,
+    availableSettings: AvailableSettings,
+): string[] {
+    const keys = listWrittenKeys(written, availableSettings).filter(
+        (key) => findSetting(availableSettings, key) === undefined,
+    );
+    for (const key of keys) removeKey(table, key);
+    return keys;
 }
 
 export function removeRecordPaths(

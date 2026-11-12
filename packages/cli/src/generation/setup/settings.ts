@@ -4,8 +4,7 @@ import { readScopeFormat } from '#cli/generation/setup/format.ts';
 import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
-import { overlayTable, removeKey } from '#cli/settings/edit.ts';
-import { findSetting, listWrittenKeys } from '#cli/settings/inherit.ts';
+import { overlayTable, removeUnknownKeys } from '#cli/settings/edit.ts';
 import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
@@ -54,8 +53,7 @@ function leaveOutUnreadSettings(template: Template, configurations: ProposedConf
     );
     const table = structuredClone(template.table);
     const written = buildSettingsFromTable(table);
-    const unread = listWrittenKeys(written, offered).filter((key) => findSetting(offered, key) === undefined);
-    for (const key of unread) removeKey(table, key);
+    const unread = removeUnknownKeys(table, written, offered);
     return {
         ...template,
         table,

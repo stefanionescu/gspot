@@ -213,6 +213,15 @@ export function assertShippedCheck(planned: PlannedCheck): asserts planned is Sh
         throw new Error(`${planned.check.id} has check code but no configuration.`);
 }
 
+/**
+Narrow a check that runs a command. The check code of a manifest check without a command is a broken manifest.
+*/
+export function assertCommandCheck(
+    planned: PlannedCheck,
+): asserts planned is PlannedCheck & { check: { command: string[] } } {
+    if (planned.check.command === undefined) throw new Error(`${planned.check.id} has check code but no command.`);
+}
+
 export function planChecks(session: Session, options: PlanOptions): PlannedCheck[] {
     const checks = planScopes(session, options)
         .flatMap((planned) => skipReplacedChecks(planned, options.selection))

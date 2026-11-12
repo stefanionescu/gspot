@@ -26,6 +26,7 @@ import type {
     RepositorySetup,
     ScopeFolder,
     TrackedFile,
+    WritePlan,
 } from '#cli/types/repository.ts';
 import type { AvailableSettings, Level, Scope, Settings, TomlTable } from '#cli/types/settings.ts';
 import type { FileContents, TextRange } from '#cli/types/system.ts';
@@ -58,6 +59,16 @@ export type ConfigBuildState = {
 export type UsedNames = { tools: Set<string>; checks: Set<string> };
 
 export type ApplyReport = z.infer<typeof generatedFilesSchema>;
+
+/**
+The writes that bring the generated files of a repository up to date, one list per kind of plan.
+*/
+export type GeneratedWritePlans = {
+    replacements: WritePlan[];
+    managedKeys: WritePlan[];
+    blocks: WritePlan[];
+    removals: WritePlan[];
+};
 
 export type ActionPin = { name: string; sha: string; version: string };
 

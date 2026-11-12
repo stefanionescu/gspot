@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path/posix';
 
 import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation/files.ts';
-import { selectConfigBuilder } from '#cli/configurations/registry.ts';
+import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { buildIgnoreSections, isPointerInherited } from '#cli/generation/ignores.ts';
@@ -175,7 +175,7 @@ function buildConfigFile(
         ignoreSections: generated.ignoreSections,
         level: owner.session.settings.level,
     };
-    const builder = selectConfigBuilder(planned.configuration, config.file);
+    const builder = CONFIG_BUILDERS[`${planned.configuration.name}/${config.file}`];
     let built: ReturnType<ConfigBuilder>;
     if (builder === undefined) {
         const source = config.source;

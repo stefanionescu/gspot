@@ -25,11 +25,7 @@ import {
 } from '#cli/config/configurations/site.ts';
 import { LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
-import {
-    convertToBuildPath,
-    listBuiltFiles,
-    readSuccessfulBuild,
-} from '#cli/configurations/framework/site/checks/build.ts';
+import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
 import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
@@ -39,7 +35,7 @@ import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
@@ -57,10 +53,9 @@ function listPossiblePages(pathname: string): [string, ...string[]] {
 }
 
 async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
-    const files = session.repository.files.filter(
+    const files = listOwnFiles(session.repository.files, session.scopes, planned.scope.path).filter(
         (file) =>
             file.kind === 'source' &&
-            selectScopePath(file.path, session.scopes) === planned.scope.path &&
             (STYLE_EXTENSIONS.has(extname(file.path)) || STYLE_COMPONENTS.has(extname(file.path))),
     );
     const styles: string[] = [];
@@ -84,7 +79,7 @@ async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Pr
 
 async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
-    const pages = new Set(listBuiltFiles(build.folder));
+    const pages = new Set(build.files);
     const { urls, base } = readSitemapUrls(build.folder, pages, planned);
     const location = urls[0];
     const buildUrl = `${pathToFileURL(build.folder).href}/`;
@@ -121,9 +116,7 @@ async function checkLychee(session: CheckSession, planned: PlannedCheck): Promis
 
 async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
-    const pages = listBuiltFiles(build.folder)
-        .filter((path) => path.endsWith(HTML_EXTENSION))
-        .map((path) => join(build.folder, path));
+    const pages = build.files.filter((path) => path.endsWith(HTML_EXTENSION)).map((path) => join(build.folder, path));
     if (pages.length === 0) return [];
     const config = join(session.root, getConfigPath(session, planned, HTML_VALIDATE_TOOL));
     using reports = createTemporaryFolder();
@@ -153,7 +146,7 @@ async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): 
 
 async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
-    const sheets = listBuiltFiles(build.folder).filter((path) => path.endsWith(CSS_EXTENSION));
+    const sheets = build.files.filter((path) => path.endsWith(CSS_EXTENSION));
     if (sheets.length === 0) return [];
     const config = join(session.root, getConfigPath(session, planned, PURGECSS_TOOL));
     const program = join(import.meta.dirname, PURGECSS_PROCESS + extname(import.meta.filename));
@@ -185,7 +178,7 @@ async function checkPurgecss(session: CheckSession, planned: PlannedCheck): Prom
 
 async function checkSitemap(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);
-    const files = new Set(listBuiltFiles(build.folder));
+    const files = new Set(build.files);
     const sitemapFile = [...files].find((file) => SITEMAP_FILE.test(file));
     if (sitemapFile === undefined) return [];
     const { urls, findings, base } = readSitemapUrls(build.folder, files, planned);

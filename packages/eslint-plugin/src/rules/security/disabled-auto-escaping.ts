@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { ESCAPING_CALLS, ESCAPING_CONSTRUCTIONS, MUSTACHE_ESCAPE, MUSTACHE_GLOBAL } from '../../config/security.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { getOptionValue } from '../../language/expressions.ts';
 import { findFunction } from '../../language/functions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
@@ -16,15 +16,7 @@ function isEscapingOff(
     const name = getQualifiedName(node, source) ?? '';
     const setting = Object.hasOwn(settings, name) ? settings[name] : undefined;
     if (setting === undefined) return false;
-    const options = getExpressionValue(node.arguments[setting.argument], source);
-    const property =
-        options?.type === AST_NODE_TYPES.ObjectExpression
-            ? getOptionProperties(options, source).get(setting.property)
-            : undefined;
-    return (
-        property !== undefined &&
-        ASTUtils.getStaticValue(property.value, source.getScope(node))?.value === setting.value
-    );
+    return getOptionValue(node.arguments[setting.argument], setting.property, source)?.value === setting.value;
 }
 
 function getReturnedValue(escape: FunctionNode): TSESTree.Node | null {
@@ -69,8 +61,10 @@ export const disabledAutoEscaping = createRule<[], 'unescaped'>({
                 const isOff = isEscapingOff(source, node, ESCAPING_CONSTRUCTIONS);
                 if (isOff) context.report({ node: node.callee, messageId: 'unescaped' });
             },
-            'AssignmentExpression[left.type="MemberExpression"]'(node: TSESTree.AssignmentExpression) {
-                const target = node.left as TSESTree.MemberExpression;
+            'AssignmentExpression[left.type="MemberExpression"]'(
+                node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression },
+            ) {
+                const target = node.left;
                 const isMustache =
                     getQualifiedName(target, source) === MUSTACHE_ESCAPE ||
                     (ASTUtils.isIdentifier(target.object) &&

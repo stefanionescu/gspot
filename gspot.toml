@@ -74,6 +74,7 @@ entry_files = [
     "packages/cli/src/configurations/framework/site/checks/purgecss-process.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-functions.ts",
     "packages/cli/src/configurations/language/javascript/files/eslint-fixes.ts",
+    "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts",
     "packages/cli/src/bin.ts",
     "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
     "packages/cli/src/configurations/framework/site/files/purgecss.ts",
@@ -240,7 +241,7 @@ reason = "These samples hold home folders so that the tests see gspot report the
 [[ignore]]
 check = "javascript/eslint"
 rule = "import-x/no-default-export"
-paths = ["packages/eslint-plugin/src/plugin.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"]
+paths = ["packages/eslint-plugin/src/plugin.ts", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts", "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts"]
 reason = "ESLint and markdownlint-cli2 load the default export of these modules."
 
 [[ignore]]

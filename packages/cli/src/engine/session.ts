@@ -4,6 +4,7 @@ import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { detectPackageManager, selectToolPackageManager } from '#cli/repository/package-manager.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
+import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { selectStartRunner } from '#cli/repository/version-pin.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readSettingsText } from '#cli/settings/file.ts';
@@ -13,6 +14,7 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { downloadSwiftGrammar } from '#cli/tools/installers/grammars.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Repository, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
@@ -132,4 +134,8 @@ export async function openSession(
     };
     const toolConfigurations = pinProjectTypescript(selectToolConfigurations(base, configuredChecks), base);
     return { ...base, toolConfigurations, ...selectPackageManagers(base, toolConfigurations) };
+}
+
+export async function readSelectedCommits(session: CheckSession): Promise<string[]> {
+    return session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
 }

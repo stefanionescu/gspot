@@ -2,14 +2,16 @@ import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint
 
 import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { COMPONENT_NAME } from '../../config/react.ts';
+import { findEnclosingFunction } from '../../language/functions.ts';
 import { getStateHook, isNamedFunction } from '../../libraries/react.ts';
 import { createRule } from '../../rule.ts';
 import type { StateHook } from '../../types/libraries.ts';
 
-function isComponentBody(hook: StateHook, ancestors: TSESTree.Node[], source: TSESLint.SourceCode): boolean {
-    const owner = ancestors.findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));
+function isComponentBody(hook: StateHook, node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
+    const ancestors = source.getAncestors(node);
+    const owner = findEnclosingFunction(node, source);
     const index = owner === undefined ? -1 : ancestors.indexOf(owner);
-    const hookOwner = source.getAncestors(hook.call).findLast((ancestor) => FUNCTION_NODES.has(ancestor.type));
+    const hookOwner = findEnclosingFunction(hook.call, source);
     const isOutermost = ancestors
         .slice(0, index)
         .every((ancestor) => !FUNCTION_NODES.has(ancestor.type) || !isNamedFunction(ancestor, COMPONENT_NAME));
@@ -43,7 +45,7 @@ export const noSetterInComponent = createRule<[], 'setter'>({
             ) {
                 const hook = getStateHook(node.callee, source);
                 const isSetter = hook !== undefined && hook.name === hook.setter;
-                if (isSetter && isComponentBody(hook, source.getAncestors(node), source))
+                if (isSetter && isComponentBody(hook, node, source))
                     context.report({ node: node.callee, messageId: 'setter' });
             },
         };

@@ -10,7 +10,7 @@ import {
 import { listArgumentValues } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
+import type { FunctionNode, MemberCall } from '../../types/plugin.ts';
 
 function findInjectedApplication(node: FunctionNode): TSESTree.Identifier | undefined {
     const { parent } = node;
@@ -33,11 +33,11 @@ function findInjectedApplication(node: FunctionNode): TSESTree.Identifier | unde
 }
 
 function listMiddlewareNames(
-    node: TSESTree.CallExpression,
+    node: MemberCall,
     application: TSESTree.Identifier | undefined,
     source: TSESLint.SourceCode,
 ): Array<string | undefined> {
-    const { object } = node.callee as TSESTree.MemberExpression;
+    const { object } = node.callee;
     if (application === undefined || !ASTUtils.isIdentifier(object) || object.name !== application.name) return [];
     return listArgumentValues(node.arguments, source).map((middleware) =>
         middleware.type === AST_NODE_TYPES.CallExpression ? getQualifiedName(middleware, source) : undefined,
@@ -104,7 +104,7 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
                 application = node.id;
                 session = undefined;
             },
-            [MIDDLEWARE_SELECTOR]: (node: TSESTree.CallExpression) => {
+            [MIDDLEWARE_SELECTOR]: (node: MemberCall) => {
                 const names = listMiddlewareNames(node, application, source);
                 session = checkMiddlewareOrder(context, node, names, session);
             },

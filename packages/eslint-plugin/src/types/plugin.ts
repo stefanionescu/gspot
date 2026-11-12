@@ -48,3 +48,5 @@ export type FunctionNode = Exclude<LocalFunction, TSESTree.TSDeclareFunction>;
 export type FileContext = Pick<RuleContext, 'filename' | 'settings' | 'sourceCode'>;
 
 export type MemberCall = TSESTree.CallExpression & { callee: TSESTree.MemberExpression };
+
+export type CallNode = TSESTree.CallExpression | TSESTree.NewExpression;

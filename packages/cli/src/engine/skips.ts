@@ -1,4 +1,4 @@
-import { LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
+import { LOCAL_RULE_EXTENSION, LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
@@ -10,9 +10,9 @@ import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import type { PlannedCheck, PlannedScope, SettingReader, Skip } from '#cli/types/engine/plan.ts';
-import type { Check, Tool } from '#cli/types/manifests.ts';
+import type { Check, Config, Tool } from '#cli/types/manifests.ts';
 import type { Repository } from '#cli/types/repository.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { Level, Scope, Settings } from '#cli/types/settings.ts';
 import type { Host } from '#cli/types/tools.ts';
 
 function findDependencySkip(
@@ -73,17 +73,10 @@ function findIgnoreSkip(scope: Scope, check: Check): Skip | undefined {
         : { cause: 'ignore', note: `turned off by an ignore in gspot.toml: ${ignored.reason}` };
 }
 
-function findConfigSkip(settings: Settings, scope: Scope, check: Check): Skip | undefined {
+function findLocalRulesSkip(settings: Settings, scope: Scope, check: Check): Skip | undefined {
     const tool = check.when?.config_file;
     if (tool === undefined) return undefined;
-    const isSelected = scope.configurations.some((configuration) =>
-        configuration.configs.some(
-            (file) =>
-                file.tool.includes(tool) &&
-                file.target.endsWith('.yml') &&
-                (file.level !== 'all' || settings.level === 'all'),
-        ),
-    );
+    const isSelected = listLocalRuleConfigs(scope, settings.level, tool).length > 0;
     return isSelected || !isSettingEmpty(scope.settings.valuesByKey[LOCAL_RULES_SETTING])
         ? undefined
         : { cause: 'setting', note: `No selected configuration or ${LOCAL_RULES_SETTING} supplies local rules.` };
@@ -93,6 +86,20 @@ function findConfigurationSkip(scope: Scope, check: Check): Skip | undefined {
     const configuration = check.when?.configuration;
     if (configuration === undefined || scope.settings.configurations.includes(configuration)) return undefined;
     return { cause: 'condition', note: `Needs the ${configuration} configuration, which this scope does not select.` };
+}
+
+/**
+List the rule files that the selected configurations of a scope ship for a tool at a level.
+*/
+export function listLocalRuleConfigs(scope: Scope, level: Level, tool: string): Config[] {
+    return scope.configurations.flatMap((configuration) =>
+        configuration.configs.filter(
+            (file) =>
+                file.tool.includes(tool) &&
+                file.target.endsWith(LOCAL_RULE_EXTENSION) &&
+                (file.level !== 'all' || level === 'all'),
+        ),
+    );
 }
 
 export function isSettingEmpty(value: unknown): boolean {
@@ -118,7 +125,7 @@ export function findSettingsSkip(settings: Settings, scope: Scope, check: Check)
     if (unselected !== undefined) return unselected;
     const ignored = findIgnoreSkip(scope, check);
     if (ignored !== undefined) return ignored;
-    const ruleFiles = findConfigSkip(settings, scope, check);
+    const ruleFiles = findLocalRulesSkip(settings, scope, check);
     if (ruleFiles !== undefined) return ruleFiles;
     const setting = findEmptySetting(settings, scope, check);
     return setting === undefined ? undefined : { cause: 'setting', note: `needs the setting ${setting}` };

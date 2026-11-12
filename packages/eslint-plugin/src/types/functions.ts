@@ -10,8 +10,6 @@ export type ReturnScope = {
     kinds: Set<string>;
 };
 
-export type CallNode = TSESTree.CallExpression | TSESTree.NewExpression;
-
 export type ParameterNames = ReadonlyArray<string | undefined>;
 
 export type SwappedPair = readonly [string, string];

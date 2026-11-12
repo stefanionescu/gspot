@@ -5,7 +5,6 @@ import { addAbortSignal } from 'node:stream';
 import { runPushCheck } from '#cli/commands/check/push.ts';
 import { formatAnnotations } from '#cli/commands/check/report.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { parseListOption } from '#cli/commands/edits.ts';
 import {
     BASE_OPTION,
     CHECK_INPUT_HOOKS,
@@ -39,7 +38,7 @@ import { readSettings } from '#cli/settings/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList, formatNameState } from '#cli/system/text.ts';
 import type { CommandDefinition, CommandLocation } from '#cli/types/commands/edits.ts';
 import type { CheckCommandJson, CheckFlags, CheckOptions } from '#cli/types/commands/reports.ts';
 import type { CommandResult } from '#cli/types/system.ts';
@@ -137,38 +136,9 @@ function readOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
 }
 
 // The commit-msg hook passes an absolute path, and its `$PWD` may reach the repository through a symlink.
-function formatMessageArgument(typed: string, { cwd }: CommandLocation): string {
+function formatMessageArgument(typed: string, cwd: string): string {
     if (!isAbsolute(typed) || !existsSync(typed)) return typed;
     return convertToPosixPath(relative(realpathSync(cwd), realpathSync(typed)));
-}
-
-function parseCheckFlags(
-    paths: string[],
-    flags: CheckFlags,
-    location: CommandLocation,
-): { root: string; options: CheckOptions } {
-    const { cwd } = location;
-    const { hook } = flags;
-    const onlyStage = readOnlyStage(flags);
-    const messagePath = hook === 'commit-msg' ? paths[0] : undefined;
-    const options: CheckOptions = {
-        cwd,
-        staged: flags.staged === true,
-        fix: flags.fix === true,
-        verbose: flags.verbose === true,
-        paths: hook === 'commit-msg' ? [] : paths,
-        hook,
-        only: onlyStage === undefined ? flags.only : undefined,
-        skip: flags.skip,
-        base: flags.base,
-        messageFile: messagePath === undefined ? undefined : resolve(cwd, messagePath),
-        messageArgument: messagePath === undefined ? undefined : formatMessageArgument(messagePath, location),
-        stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
-    };
-    assertCheckSelection(options, flags);
-    assertMessageSelection(options, paths);
-    assertReadableMessageFile(options);
-    return { root: location.root, options };
 }
 
 async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promise<void> {
@@ -177,10 +147,7 @@ async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promi
         (path) => existsSync(join(root, path)) && indexed.every((file) => !file.startsWith(path)),
     );
     if (unstaged.length > 0)
-        throw new GspotError(
-            'git',
-            `${formatNameList(unstaged)} ${unstaged.length === 1 ? 'is' : 'are'} not staged. ${STAGE_SETUP_MESSAGE}`,
-        );
+        throw new GspotError('git', `${formatNameState(unstaged, 'not staged')}. ${STAGE_SETUP_MESSAGE}`);
 }
 
 async function runStagedCheck(
@@ -243,35 +210,55 @@ async function runCheckSelection(
         : runTreeCheck(root, options, cancelSignal));
 }
 
-async function runCheckCommand(
-    paths: string[],
-    flags: CheckFlags,
-    location: CommandLocation,
-): Promise<CommandResult<CheckCommandJson>> {
+async function runCheckCommand({
+    root,
+    ...options
+}: CheckOptions & CommandLocation): Promise<CommandResult<CheckCommandJson>> {
     try {
-        const result = await runCancelableCommand(async (cancelSignal) => {
-            const { root, options } = parseCheckFlags(paths, flags, location);
-            return await runCheckSelection(root, options, cancelSignal);
-        }, CHECK_STOPPED_MESSAGE);
+        const result = await runCancelableCommand(
+            (cancelSignal) => runCheckSelection(root, options, cancelSignal),
+            CHECK_STOPPED_MESSAGE,
+        );
         return { ...result, annotations: formatAnnotations(result.json) };
     } finally {
         rewriteProgress('');
     }
 }
 
-export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags> = {
+export const CHECK_COMMAND: CommandDefinition<[string[]], CheckFlags, CheckOptions> = {
     name: 'check',
     arguments: [{ term: '[paths...]' }],
     options: [
-        { flags: ONLY_OPTION, parse: parseListOption(EMPTY_CHECKS_MESSAGE) },
-        { flags: SKIP_OPTION, parse: parseListOption(EMPTY_CHECKS_MESSAGE) },
+        { flags: ONLY_OPTION, list: EMPTY_CHECKS_MESSAGE },
+        { flags: SKIP_OPTION, list: EMPTY_CHECKS_MESSAGE },
         { flags: STAGED_FLAG },
         { flags: BASE_OPTION },
         { flags: FIX_FLAG },
         { flags: HOOK_OPTION, choices: CHECK_INPUT_HOOKS, hidden: true },
     ],
-    run: async ({ arguments: commandArguments, flags, ...location }) => {
+    parse: ({ arguments: commandArguments, flags, cwd }) => {
         const [paths] = commandArguments;
-        return await runCheckCommand(paths, flags, location);
+        const { hook } = flags;
+        const onlyStage = readOnlyStage(flags);
+        const messagePath = hook === 'commit-msg' ? paths[0] : undefined;
+        const options: CheckOptions = {
+            cwd,
+            staged: flags.staged === true,
+            fix: flags.fix === true,
+            verbose: flags.verbose === true,
+            paths: hook === 'commit-msg' ? [] : paths,
+            hook,
+            only: onlyStage === undefined ? flags.only : undefined,
+            skip: flags.skip,
+            base: flags.base,
+            messageFile: messagePath === undefined ? undefined : resolve(cwd, messagePath),
+            messageArgument: messagePath === undefined ? undefined : formatMessageArgument(messagePath, cwd),
+            stage: hook === undefined ? onlyStage : HOOK_CHECKS[hook].stages[0],
+        };
+        assertCheckSelection(options, flags);
+        assertMessageSelection(options, paths);
+        assertReadableMessageFile(options);
+        return options;
     },
+    run: runCheckCommand,
 };

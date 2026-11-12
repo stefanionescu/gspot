@@ -26,7 +26,6 @@ import {
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/repository/git.ts';
 import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { gitFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { formatNameList } from '#cli/system/text.ts';
@@ -160,6 +159,16 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
 }
 
 /**
+Decode one record of a Git listing, which holds its bytes as Latin-1. A record with invalid UTF-8 gives no text, and
+`unreadablePaths` takes its name when the caller passes that list.
+*/
+export function decodeGitPath(record: string, unreadablePaths?: string[]): string | undefined {
+    const text = decodeUtf8(Buffer.from(record, 'latin1'));
+    if (text === undefined) unreadablePaths?.push(formatUnreadablePath(record));
+    return text;
+}
+
+/**
 Decode the records of a null-separated Git listing. A record with invalid UTF-8 is left out, and `unreadablePaths`
 takes its name when the caller passes that list.
 */
@@ -167,16 +176,9 @@ export function decodeGitPaths(output: Uint8Array, unreadablePaths?: string[]): 
     return Buffer.from(output)
         .toString('latin1')
         .split('\0')
-        .flatMap((record) => {
-            if (record === '') return [];
-            const text = decodeUtf8(Buffer.from(record, 'latin1'));
-            if (text === undefined) unreadablePaths?.push(formatUnreadablePath(record));
-            return text === undefined ? [] : [text];
-        });
-}
-
-export function parseTreeFiles(output: Uint8Array, unreadablePaths: string[]): GitFile[] {
-    return decodeGitPaths(output, unreadablePaths).map((line) => parseListingLine(TREE_LINE.exec(line), gitFileSchema));
+        .filter((record) => record !== '')
+        .map((record) => decodeGitPath(record, unreadablePaths))
+        .filter((text) => text !== undefined);
 }
 
 export function stripIndexStages(indexFiles: GitIndexFile[]): GitFile[] {

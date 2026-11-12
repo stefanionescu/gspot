@@ -32,6 +32,8 @@ export const UNDEFINED_NAME = 'undefined';
 
 export const NUMERIC_SIGNS = new Set(['+', '-']);
 
+export const OCTAL_RADIX = 8;
+
 export const NUMERIC_VALUE_TYPES: ReadonlySet<string> = new Set(['number', 'bigint']);
 
 export const DRIVE_LETTER = /^[a-z]:/u;

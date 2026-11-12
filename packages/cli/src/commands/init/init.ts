@@ -1,4 +1,3 @@
-import { parseListOption } from '#cli/commands/edits.ts';
 import { formatDetection } from '#cli/commands/init/report.ts';
 import { readTemplate } from '#cli/commands/init/template.ts';
 import {
@@ -21,11 +20,10 @@ import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
 import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { print, runCancelableCommand } from '#cli/system/terminal.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, InitFlags, InitJson } from '#cli/types/commands/edits.ts';
+import type { CommandDefinition, CommandLocation, InitFlags, InitJson } from '#cli/types/commands/edits.ts';
 import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
 import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
 
@@ -36,10 +34,7 @@ async function installInitTools(
 ): Promise<CommandResult<InitJson>> {
     const { plan, settingsText, pinPath } = initPlan;
     const session = await openSession(root, { cancelSignal, startRunner: initPlan.session.startRunner });
-    const installation = await installTools(session, {
-        writer: openFiles(root),
-        checkTools: listHostCheckTools(session),
-    });
+    const installation = await installTools(session, { checkTools: listHostCheckTools(session) });
     const { installed, missing, steps } = installation;
     const notes = [...applied.notes, ...installation.notes];
     const lines = [WROTE_PLAN_MESSAGE, ...applied.notes, ...installed, ...installation.notes, ...missing];
@@ -54,12 +49,14 @@ async function installInitTools(
     };
 }
 
-async function runInitCommand(
-    root: string,
-    options: InitOptions,
-): Promise<CommandResult<InitJson | CanceledCommandJson>> {
+async function runInitCommand({
+    root,
+    level,
+    template,
+    configurations,
+}: InitOptions & CommandLocation): Promise<CommandResult<InitJson | CanceledCommandJson>> {
     if (findText(root, SETTINGS_FILE) !== undefined) throw new GspotError('arguments', SETTINGS_EXIST_MESSAGE);
-    const initPlan = await planInit(root, options);
+    const initPlan = await planInit(root, { level, template, configurations });
     await assertFilesCommitted(root, initPlan.replaced);
     print(formatDetection(initPlan.detection));
     print(formatInitPlan(initPlan.plan, initPlan.settingsText));
@@ -70,21 +67,17 @@ async function runInitCommand(
     );
 }
 
-function assertTemplateFlags(from: string | undefined, configurations: InitFlags['configurations']): void {
-    if (from === undefined || configurations === undefined) return;
-    throw new GspotError('arguments', FROM_CONFLICT_MESSAGE);
-}
-
-export const INIT_COMMAND: CommandDefinition<[], InitFlags> = {
+export const INIT_COMMAND: CommandDefinition<[], InitFlags, InitOptions> = {
     name: 'init',
     options: [
         { flags: FROM_OPTION },
-        { flags: CONFIGURATIONS_OPTION, parse: parseListOption('Name at least one configuration.') },
+        { flags: CONFIGURATIONS_OPTION, list: 'Name at least one configuration.' },
         { flags: LEVEL_OPTION, choices: LEVELS },
     ],
-    run: async ({ flags: { from, configurations, level }, root, cwd }) => {
-        assertTemplateFlags(from, configurations);
-        const template = from === undefined ? undefined : readTemplate(from, cwd);
-        return await runInitCommand(root, { level, template, configurations });
+    parse: ({ flags: { from, configurations, level }, cwd }) => {
+        if (from !== undefined && configurations !== undefined)
+            throw new GspotError('arguments', FROM_CONFLICT_MESSAGE);
+        return { level, template: from === undefined ? undefined : readTemplate(from, cwd), configurations };
     },
+    run: runInitCommand,
 };

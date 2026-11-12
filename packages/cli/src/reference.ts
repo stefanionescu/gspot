@@ -91,7 +91,7 @@ function readCliReference(): CliReference {
         package: cliPackage,
         docs: DOCS_PATHS,
         groups: GROUP_LABELS,
-        commands: buildProgram(() => {}, process.cwd()).commands.map((command) => buildCommandReference(command)),
+        commands: buildProgram(async () => {}).commands.map((command) => buildCommandReference(command)),
         globalOptions: GLOBAL_OPTIONS,
         exitCodes: PROGRAM_EXIT_CODES,
         configurations,

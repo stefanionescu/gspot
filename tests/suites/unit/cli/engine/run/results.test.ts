@@ -221,6 +221,27 @@ test.each([
     },
 );
 
+test('the fix command of a file that starts with a dash names it as ./-f.txt', async () => {
+    const check = {
+        id: 'project/quality',
+        command: buildProgramCommand('fakes/tool', '--line=-f.txt:oops', '--exit', '1'),
+        fix: buildProgramCommand('fakes/tool'),
+        paths: ['*.txt'],
+        runs: 'once',
+        exit_codes: [1],
+        output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<message>.+)$', fixable: '.' },
+        stage: 'commit',
+    };
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [check] }) }),
+        '-f.txt': 'text\n',
+    });
+    const paths = ['-f.txt'];
+    const options = buildRunOptions({ only: ['project/quality'], cwd: sandbox.path, paths, pathArguments: paths });
+    const result = await runChecks(await openSession(sandbox.path), options);
+    expect(result.report.checks[0]?.fixCommand).toEndWith(' ./-f.txt');
+});
+
 test('a check with malformed JSON reports an error, and the other checks keep their results', async () => {
     const reporter = buildProgramCommand('fakes/tool', '--stdout', 'source.txt\n', '--exit', '1');
     const checks = ['broken', 'kept'].map((name) => ({

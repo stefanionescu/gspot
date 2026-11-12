@@ -17,7 +17,7 @@ import { buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/en
 import { buildMissingFileStop, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, extractExtension, isInside } from '#cli/system/paths.ts';
@@ -36,8 +36,8 @@ function buildScopeCompilerProject(
     const { root, repository } = session;
     const sources = repository.files.filter((file) => file.kind === 'source');
     const files = new Set(
-        (Map.groupBy(sources, (file) => selectScopePath(file.path, repository.scopeFolders)).get(scopePath) ?? []).map(
-            (file) => convertToPosixPath(join(root, file.path)),
+        listOwnFiles(sources, repository.scopeFolders, scopePath).map((file) =>
+            convertToPosixPath(join(root, file.path)),
         ),
     );
     return {

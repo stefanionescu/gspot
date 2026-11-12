@@ -6,13 +6,12 @@ import {
     REASON_HEADER,
     VALUE_WIDTH,
 } from '#cli/config/commands/reports.ts';
-import { SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/schema.ts';
 import { isRepositoryRun, isRootOnlyCheck } from '#cli/engine/files.ts';
 import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { listInheritedSettings } from '#cli/settings/inherit.ts';
+import { formatSettingSource, listInheritedSettings } from '#cli/settings/inherit.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
 import { isTable } from '#cli/system/tables.ts';
@@ -21,7 +20,7 @@ import type { CommandDefinition } from '#cli/types/commands/edits.ts';
 import type { ConfigurationsListJson, SettingsListJson } from '#cli/types/commands/reports.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope, SettingOrigin, Settings } from '#cli/types/settings.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -34,12 +33,6 @@ function formatScopeGroup(scopes: readonly string[]): string {
     const named = nested.length === 1 ? formatScope(nested[0] as string) : formatCount(nested.length, 'scope');
     if (nested.length === 0) return formatScope('');
     return nested.length === scopes.length ? named : `${formatScope('')} and ${named}`;
-}
-
-function formatSettingSource({ kind, name }: SettingOrigin): string {
-    if (kind === 'default') return SHIPPED_DEFAULT_ORIGIN;
-    if (kind === 'scope' || kind === 'configuration') return `${kind} ${name}`;
-    return kind === 'root' ? name : kind;
 }
 
 /**

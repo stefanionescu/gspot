@@ -28,6 +28,7 @@ import {
     NODE_ASSERTION,
 } from '../config/assertions/styles.ts';
 import { getModuleName } from '../language/modules.ts';
+import { getMemberRoot, isCallOf } from '../language/syntax.ts';
 import type {
     Assertion,
     AssertionChecks,
@@ -35,12 +36,12 @@ import type {
     AssertionKind,
     AssertionPredicate,
     AssertionStyles,
-    AssertionSubject,
     ChaiChain,
+    ExpectCall,
 } from '../types/assertions.ts';
 import type { FileContext } from '../types/plugin.ts';
 import { isModuleUsed, listImportedModules } from './packages.ts';
-import { isCallOf, isCypressChain } from './testing.ts';
+import { isCypressChain } from './testing.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
 const expectPredicates = new Map<string | null, AssertionPredicate>(EXPECT_PREDICATES);
@@ -72,25 +73,20 @@ function readAssertionStyles(context: FileContext): AssertionStyles {
     return styles;
 }
 
-function getExpectSubject(node: TSESTree.Node): AssertionSubject | undefined {
-    const isNegated = node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'not';
-    const expect = isNegated ? node.object : node;
-    const [received, ...others] = isCallOf(expect, 'expect') ? expect.arguments : [];
-    const isSingle = others.length === 0 && received !== undefined && received.type !== AST_NODE_TYPES.SpreadElement;
-    return isSingle ? { received, negated: isNegated } : undefined;
-}
-
 function getExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyles['expect']): Assertion | undefined {
     const callee = node.callee;
     if (style === undefined || callee.type !== AST_NODE_TYPES.MemberExpression) return undefined;
+    const expect = getExpectCall(callee.object);
+    if (expect?.call.arguments.length !== 1) return undefined;
+    const received = expect.call.arguments.find((argument) => argument.type !== AST_NODE_TYPES.SpreadElement);
+    if (received === undefined) return undefined;
     const matcher = ASTUtils.getPropertyName(callee);
-    const subject = getExpectSubject(callee.object);
     const predicate = node.arguments.length === 0 ? expectPredicates.get(matcher) : undefined;
-    if (subject === undefined) return undefined;
+    const { negated } = expect;
     if (predicate !== undefined)
-        return { ...subject, style, kind: 'predicate', predicate, node, report: subject.received };
-    const checks = { style, comparison: expectComparisons.get(matcher), negated: subject.negated };
-    return getCheckedCall(node, checks, callee.property, [subject.received, ...node.arguments]);
+        return { received, negated, style, kind: 'predicate', predicate, node, report: received };
+    const checks = { style, comparison: expectComparisons.get(matcher), negated };
+    return getCheckedCall(node, checks, callee.property, [received, ...node.arguments]);
 }
 
 function getChaiChain(node: TSESTree.Node): ChaiChain | undefined {
@@ -183,14 +179,9 @@ function getAssertChecks(name: string, styles: AssertionStyles): AssertionChecks
     return chai ?? nodeAssert;
 }
 
-function getExpectRoot(node: TSESTree.CallExpression): TSESTree.Node | undefined {
-    let value: TSESTree.Node = node.callee;
-    while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
-    return value !== node.callee && value.type === AST_NODE_TYPES.CallExpression ? value.callee : undefined;
-}
-
 function isGlobalExpect(node: TSESTree.CallExpression, source: TSESLint.SourceCode): boolean {
-    const callee = getExpectRoot(node);
+    const root = getMemberRoot(node.callee);
+    const callee = root !== node.callee && root.type === AST_NODE_TYPES.CallExpression ? root.callee : undefined;
     const isNamed = callee?.type === AST_NODE_TYPES.Identifier && GLOBAL_EXPECTS.has(callee.name);
     return isNamed || (callee !== undefined && PLAYWRIGHT_EXPECT.test(getModuleName(callee, source) ?? ''));
 }
@@ -231,6 +222,15 @@ function isRunnerAssertion(
         CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee)) &&
         isCypressChain(callee.object);
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
+}
+
+/**
+Get the `expect(...)` call at the start of a matcher chain, and whether `.not` follows it.
+*/
+export function getExpectCall(node: TSESTree.Node): ExpectCall | undefined {
+    const isNegated = node.type === AST_NODE_TYPES.MemberExpression && ASTUtils.getPropertyName(node) === 'not';
+    const call = isNegated ? node.object : node;
+    return isCallOf(call, 'expect') ? { call, negated: isNegated } : undefined;
 }
 
 export function readAssertion(

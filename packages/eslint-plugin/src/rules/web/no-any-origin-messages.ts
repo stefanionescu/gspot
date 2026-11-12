@@ -21,7 +21,7 @@ import { getTypes } from '../../language/checker.ts';
 import { findAssignedVariable, getExpressionValue } from '../../language/expressions.ts';
 import { findFunction } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
-import type { FunctionNode, TypeReader } from '../../types/plugin.ts';
+import type { FunctionNode, MemberCall, TypeReader } from '../../types/plugin.ts';
 
 function isInIfStatement(node: TSESTree.Node): boolean {
     let ancestor = node.parent;
@@ -197,8 +197,8 @@ export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigi
                 )
                     context.report({ node: callee, messageId: 'anyTarget' });
             },
-            [ADD_LISTENER_SELECTOR](node: TSESTree.CallExpression) {
-                const callee = node.callee as TSESTree.MemberExpression;
+            [ADD_LISTENER_SELECTOR](node: MemberCall) {
+                const { callee } = node;
                 const [type, listener] = node.arguments;
                 const event = getExpressionValue(type, source);
                 const isMessage =
@@ -207,8 +207,8 @@ export const noAnyOriginMessages = createRule<[], 'anyTarget' | 'unverifiedOrigi
                     event.value.toLowerCase() === MESSAGE_EVENT;
                 if (isMessage && isWindow(source, types, callee.object)) checkListener(listener, callee);
             },
-            [ON_MESSAGE_SELECTOR](node: TSESTree.AssignmentExpression) {
-                const target = node.left as TSESTree.MemberExpression;
+            [ON_MESSAGE_SELECTOR](node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression }) {
+                const target = node.left;
                 const isReceiver = isDomReceiver(source, types, target.object);
                 if (isReceiver) checkListener(node.right, target);
             },

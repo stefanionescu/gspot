@@ -178,7 +178,7 @@ test('two configurations with different defaults are an error until gspot.toml s
     );
     expect(getSettingValue(conflictingSettings, corrected, 'sql.dialect', '')).toMatchObject({
         value: 'sqlite',
-        source: 'gspot.toml',
+        origin: { kind: 'root', name: 'gspot.toml' },
     });
 });
 
@@ -209,6 +209,6 @@ test('a scope value settles the scopes below it, and a sibling scope still repor
     ).toStrictEqual([{ path: ['scope', 2, 'configurations'], message: CONFLICT_MESSAGE }]);
     expect(getSettingValue(conflictingSettings, settings, 'sql.dialect', 'app/db')).toMatchObject({
         value: 'sqlite',
-        source: 'scope app',
+        origin: { kind: 'scope', name: 'app' },
     });
 });

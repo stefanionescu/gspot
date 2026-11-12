@@ -10,7 +10,7 @@ import {
     NETMASK_SUFFIX,
     OCTAL_OCTET,
 } from '../../config/networks.ts';
-import { OCTAL_RADIX } from '../../config/security.ts';
+import { OCTAL_RADIX } from '../../config/plugin.ts';
 import { createRule } from '../../rule.ts';
 
 function isReportedAddress(address: string): boolean {

@@ -41,6 +41,10 @@ export function joinScope(scopePath: string, path: string): string {
     return scopePath === '' ? path : `${scopePath}/${path}`;
 }
 
+export function joinScopeGlob(scopePath: string, pattern: string): string {
+    return joinScope(escapeGlob(scopePath), pattern);
+}
+
 export function detectScopeFolders(
     files: TrackedFile[],
     dependencyFiles: DependencyFile[],
@@ -104,6 +108,17 @@ export function selectScopePath(path: string, scopes: ReadonlyArray<{ path: stri
         scopeFolderSets.set(scopes, folders);
     }
     return findEnclosingFolder(path, folders) ?? '';
+}
+
+/**
+List the files whose deepest enclosing scope is `scopePath`, which leaves out the files of its nested scopes.
+*/
+export function listOwnFiles<File extends { path: string }>(
+    files: readonly File[],
+    scopes: ReadonlyArray<{ path: string }>,
+    scopePath: string,
+): File[] {
+    return files.filter((file) => selectScopePath(file.path, scopes) === scopePath);
 }
 
 export function selectScope<Entry extends { path: string }>(path: string, scopes: readonly Entry[]): Entry {

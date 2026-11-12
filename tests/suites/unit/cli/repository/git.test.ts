@@ -6,12 +6,11 @@ import { Readable } from 'node:stream';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { mergeAttributes, parseAttributePatterns, parseGitBlobs, parseTreeFiles } from '#cli/repository/git/output.ts';
+import { mergeAttributes, parseAttributePatterns, parseGitBlobs } from '#cli/repository/git/output.ts';
 import { readGitLines, readGitText } from '#cli/repository/git/run.ts';
 import {
     ATTRIBUTE_LINES,
     BINARY_BLOB,
-    INDEX_PATH,
     INVALID_BLOBS,
     SHA1,
     SHA256,
@@ -27,21 +26,6 @@ test.each([...ATTRIBUTE_LINES])(
         expect(parseAttributePatterns(line, '.')).toStrictEqual(expected);
     },
 );
-
-test('tree entries keep full object IDs, modes and unquoted paths', () => {
-    const output =
-        `100644 blob ${SHA1}\t${INDEX_PATH}\0` +
-        `100755 blob ${SHA256}\texecutable\0` +
-        `120000 blob ${SHA1}\tlink\0` +
-        `160000 commit ${SHA256}\tsubmodule\0`;
-    expect(parseTreeFiles(Buffer.from(output), [])).toStrictEqual([
-        { mode: '100644', hash: SHA1, path: INDEX_PATH },
-        { mode: '100755', hash: SHA256, path: 'executable' },
-        { mode: '120000', hash: SHA1, path: 'link' },
-        { mode: '160000', hash: SHA256, path: 'submodule' },
-    ]);
-    expect(parseTreeFiles(Buffer.alloc(0), [])).toStrictEqual([]);
-});
 
 test.each([...INVALID_BLOBS])(`a batch is refused: $name`, async ({ output }) => {
     const stream = parseGitBlobs(Readable.from([Buffer.from(output)]), [SHA1]);

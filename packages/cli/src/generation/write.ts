@@ -14,7 +14,6 @@ import { INSTALLED_TOOL_FOLDERS, OWNER_WRITABLE_FILE, TEMPORARY_FILE_NAME } from
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listOwnablePaths } from '#cli/generation/pointers.ts';
-import { listExpectedPaths } from '#cli/generation/stale.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import {
@@ -28,8 +27,9 @@ import {
 import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { formatCount } from '#cli/system/text.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
+import type { ApplyReport, GeneratedWritePlans } from '#cli/types/generation.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
 
@@ -41,6 +41,19 @@ function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): voi
     ] as const) {
         if (!keep) writer.deleteTree(path);
     }
+}
+
+function listExpectedPaths(session: Pick<Session, 'toolPackageManager'>, generated: Generation): Set<string> {
+    const paths = new Set([...generated.files, ...generated.blocks, ...generated.managedKeys].map((file) => file.path));
+    const { toolPackageManager } = session;
+    const project = generated.files.find((file) => file.path === GSPOT_PATHS.npmProject);
+    if (toolPackageManager !== undefined && project !== undefined)
+        paths.add(`${GSPOT_FOLDER}/${selectLockfileName(toolPackageManager)}`);
+    for (const file of generated.files) {
+        if (file.path === GSPOT_PATHS.miseProject) paths.add(GSPOT_PATHS.miseLockfile);
+        else if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
+    }
+    return paths;
 }
 
 export function listGeneratedChangeLines(report: ApplyReport): string[] {
@@ -66,6 +79,36 @@ export function formatApplyReport(report: ApplyReport): string {
 }
 
 /**
+Plan every write that brings the generated files up to date, and write none. The stale check and the install read this
+one plan, so the check reports what the install changes. `reviewed` holds the contents that the user saw before agreeing
+to a replacement.
+*/
+export function planGeneratedWrites(
+    session: Session,
+    generated: Generation,
+    writer: Files,
+    reviewed?: ReadonlyMap<string, FileContents | undefined>,
+): GeneratedWritePlans {
+    const expected = listExpectedPaths(session, generated);
+    return {
+        replacements: planReplacements(
+            writer,
+            generated.files.map((file) => ({
+                path: file.path,
+                next: {
+                    bytes: Buffer.from(file.content),
+                    mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
+                },
+                previous: reviewed?.get(file.path),
+            })),
+        ),
+        managedKeys: generated.managedKeys.map((output) => planManagedKeys(writer, output.path, output.keys)),
+        blocks: generated.blocks.map((block) => planBlock(writer, block.path, block.body)),
+        removals: planRemovals(writer, listStrayPaths(session, expected, listOwnablePaths(session))),
+    };
+}
+
+/**
 Plan, write, and report generated file changes. When the settings turn the hooks off, unset core.hooksPath at once, so
 Git does not keep pointing at the removed hooks folder until the next install.
 */
@@ -75,7 +118,6 @@ export async function writeGeneratedFiles(
     writer: Files,
     options?: { reviewed?: ReadonlyMap<string, FileContents | undefined> | undefined },
 ): Promise<ApplyReport> {
-    const reviewed = options?.reviewed;
     const report: ApplyReport = {
         written: [],
         unchanged: [],
@@ -83,29 +125,20 @@ export async function writeGeneratedFiles(
         updated: [],
         notes: [],
     };
-    const paths = listExpectedPaths(session, generated);
-    const managedKeyPlans = generated.managedKeys.map((output) => planManagedKeys(writer, output.path, output.keys));
-    const replacements = planReplacements(
+    const { replacements, managedKeys, blocks, removals } = planGeneratedWrites(
+        session,
+        generated,
         writer,
-        generated.files.map((file) => ({
-            path: file.path,
-            next: {
-                bytes: Buffer.from(file.content),
-                mode: file.executable === true ? EXECUTABLE_FILE : OWNER_WRITABLE_FILE,
-            },
-            previous: reviewed?.get(file.path),
-        })),
+        options?.reviewed,
     );
-    const blocks = generated.blocks.map((block) => planBlock(writer, block.path, block.body));
-    const pruning = planRemovals(writer, listStrayPaths(session, paths, listOwnablePaths(session)));
-    writePlans(writer, [...replacements, ...managedKeyPlans, ...blocks, ...pruning]);
-    deleteUnusedToolFolders(writer, paths);
+    writePlans(writer, [...replacements, ...managedKeys, ...blocks, ...removals]);
+    deleteUnusedToolFolders(writer, listExpectedPaths(session, generated));
     report.written.push(...replacements.filter((plan) => plan.status === 'changed').map((plan) => plan.path));
     report.unchanged.push(...replacements.filter((plan) => plan.status === 'unchanged').map((plan) => plan.path));
     report.updated.push(
-        ...[...blocks, ...managedKeyPlans].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
+        ...[...blocks, ...managedKeys].filter((plan) => plan.status === 'changed').map((plan) => plan.path),
     );
-    const pruned = pruning.filter((plan) => plan.status === 'changed');
+    const pruned = removals.filter((plan) => plan.status === 'changed');
     report.deleted.push(...pruned.filter((plan) => plan.after === undefined).map(({ path }) => path));
     report.updated.push(...pruned.filter((plan) => plan.after !== undefined).map(({ path }) => path));
     const { hooksPath } = await readHooks(session.repository);
@@ -116,16 +149,13 @@ export async function writeGeneratedFiles(
     return report;
 }
 
-export async function writeEveryGeneratedFile(
-    session: Session,
-    writer: Files,
-): Promise<{ generated: Generation; report: ApplyReport }> {
+export async function writeEveryGeneratedFile(session: Session, writer: Files): Promise<ApplyReport> {
     const generated = buildGeneratedFiles(session);
     const folders = new Set(
         [...generated.files, ...generated.blocks, ...generated.managedKeys].map(({ path }) => dirname(path)),
     );
     for (const folder of folders) deleteStaleTemporaryPaths(writer, folder === '.' ? '' : folder, TEMPORARY_FILE_NAME);
-    return { generated, report: await writeGeneratedFiles(session, generated, writer) };
+    return writeGeneratedFiles(session, generated, writer);
 }
 
 export async function listInstallNotes(

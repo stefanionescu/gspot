@@ -9,7 +9,7 @@ import {
     WEAK_SSL_OPTION_ARGUMENTS,
     WEAK_TLS_VERSIONS,
 } from '../../config/networks.ts';
-import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
+import { getOptionProperties, getOptionValue, listOptionLiterals } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { listCdkTableIssues } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
@@ -23,24 +23,18 @@ function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): 
     return [isConstant ? ASTUtils.getPropertyName(node) : null];
 }
 
-function getOption(options: TSESTree.ObjectExpression, option: string, source: Readonly<TSESLint.SourceCode>) {
-    const property = getOptionProperties(options, source).get(option);
-    const value = property ? ASTUtils.getStaticValue(property.value, source.getScope(property)) : null;
-    return { property, value: value?.value, isKnown: value !== null };
-}
-
 function listVersionIssues(
     options: TSESTree.ObjectExpression,
     source: Readonly<TSESLint.SourceCode>,
 ): Array<TSESLint.ReportDescriptor<'oldVersion'>> {
     const issues = TLS_VERSION_OPTIONS.flatMap((option): Array<TSESLint.ReportDescriptor<'oldVersion'>> => {
-        const { property, value } = getOption(options, option, source);
-        return property && WEAK_TLS_VERSIONS.has(value)
-            ? [{ node: property, messageId: 'oldVersion', data: { option } }]
+        const found = getOptionValue(options, option, source);
+        return found !== undefined && WEAK_TLS_VERSIONS.has(found.value)
+            ? [{ node: found.property, messageId: 'oldVersion', data: { option } }]
             : [];
     });
-    const protocol = getOption(options, 'secureProtocol', source);
-    if (protocol.property && protocol.isKnown && !SECURE_PROTOCOLS.has(protocol.value))
+    const protocol = getOptionValue(options, 'secureProtocol', source);
+    if (protocol?.isKnown === true && !SECURE_PROTOCOLS.has(protocol.value))
         issues.push({ node: protocol.property, messageId: 'oldVersion', data: { option: 'secureProtocol' } });
     return issues;
 }

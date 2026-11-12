@@ -32,12 +32,12 @@ test('a printed result removes escape sequences and format characters but keeps 
     using output = captureTerminal();
     const { stdout } = output;
     try {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
         const name = 'title\u{1B}]0;renamed\u{7}\u{1B}[2Jcheck‮gnp.exe\u{200B}⁦x⁩';
         printResult({ text: `\u{1B}[31mfailed\u{1B}[39m ${name}\n`, json: {}, exitCode: 1 });
         expect(stdout).toStrictEqual(['\u{1B}[31mfailed\u{1B}[39m titlecheckgnp.exex\n']);
     } finally {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
     }
 });
 
@@ -46,10 +46,10 @@ test('a human error removes terminal controls while JSON preserves the message a
     using output = captureTerminal();
     const { stdout, stderr } = output;
     try {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
         printError({ error: 'filesystem', message });
         expect(stderr).toStrictEqual(['Beforeafter\n']);
-        setOutputOptions({ isJson: true });
+        setOutputOptions({ isJson: true, isVerbose: false });
         printError({ error: 'filesystem', message });
         expect(JSON.parse(stdout.join(''))).toStrictEqual({
             version: cliPackage.version,
@@ -59,7 +59,7 @@ test('a human error removes terminal controls while JSON preserves the message a
             message,
         });
     } finally {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
     }
 });
 
@@ -67,17 +67,17 @@ test('warnings use stderr in text mode and join existing JSON notes without writ
     using output = captureTerminal();
     const { stdout, stderr } = output;
     try {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
         printWarning('Check\u{1B}[2K again.');
         expect(stderr).toStrictEqual(['[warn] Check again.\n']);
         stderr.length = 0;
-        setOutputOptions({ isJson: true });
+        setOutputOptions({ isJson: true, isVerbose: false });
         printWarning('Check again.');
         printResult({ text: '', json: { notes: ['Existing note.'] }, exitCode: 0 });
         expect(stderr).toStrictEqual([]);
         expect(JSON.parse(stdout.join(''))).toMatchObject({ notes: ['Check again.', 'Existing note.'] });
     } finally {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
     }
 });
 
@@ -85,10 +85,11 @@ test('unexpected command errors use the shared envelope and include their stack 
     using output = captureTerminal();
     const { stdout } = output;
     try {
-        setOutputOptions({ isJson: true });
         const failure = new TypeError('Private implementation detail');
-        printUnexpectedError(failure, false);
-        printUnexpectedError(failure, true);
+        setOutputOptions({ isJson: true, isVerbose: false });
+        printUnexpectedError(failure);
+        setOutputOptions({ isJson: true, isVerbose: true });
+        printUnexpectedError(failure);
         const brief: unknown = JSON.parse(stdout[0]!);
         const detailed: unknown = JSON.parse(stdout[1]!);
         expect(brief).toMatchObject({
@@ -101,7 +102,7 @@ test('unexpected command errors use the shared envelope and include their stack 
         expect(brief).not.toHaveProperty('stack');
         expect(detailed).toMatchObject({ stack: failure.stack });
     } finally {
-        setOutputOptions({ isJson: false });
+        setOutputOptions({ isJson: false, isVerbose: false });
     }
 });
 
@@ -112,7 +113,7 @@ test.each([true, false])('warning colors follow stderr when its terminal state i
         [process.stderr, stderrIsTerminal],
     ]);
     using output = captureTerminal();
-    setOutputOptions({ isJson: false });
+    setOutputOptions({ isJson: false, isVerbose: false });
     printWarning('Read the note.');
     expect(output.stdout).toStrictEqual([]);
     expect(output.stderr).toStrictEqual([

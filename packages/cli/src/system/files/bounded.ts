@@ -26,8 +26,8 @@ import {
     WRITABLE_FILE,
 } from '#cli/config/system.ts';
 import { buildWriteError, GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { splitSystemPath } from '#cli/system/files/reads.ts';
-import type { FileBounds, FileContents } from '#cli/types/system.ts';
+import { splitSystemPath } from '#cli/system/paths.ts';
+import type { FileContents } from '#cli/types/system.ts';
 
 function prepareParentFolder(folder: string): Stats {
     try {
@@ -66,12 +66,12 @@ function writeStagedFile(path: string, contents: FileContents): void {
 Build the absolute path of a file after a check that every parent names a real folder, not a link.
 */
 export function buildContainedPath(
-    bounds: FileBounds,
+    root: string,
     path: string,
     statParent: (path: string) => Stats = lstatSync,
 ): string {
     const segments = splitSystemPath(path);
-    let folder = bounds.root;
+    let folder = root;
     const parents = segments.slice(0, -1);
     for (const segment of parents) {
         folder = join(folder, segment);
@@ -82,7 +82,7 @@ export function buildContainedPath(
                 `A parent of ${path} is a link or is not a folder. Choose a folder without links.`,
             );
     }
-    return join(bounds.root, ...segments);
+    return join(root, ...segments);
 }
 
 /**
@@ -104,17 +104,17 @@ export function isSameContents(found: FileContents | undefined, expected: FileCo
 /**
 Build the absolute path of a file, create missing parents, and refuse parents that link or name no folder.
 */
-export function preparePath(bounds: FileBounds, path: string): string {
+export function preparePath(root: string, path: string): string {
     try {
-        return buildContainedPath(bounds, path, prepareParentFolder);
+        return buildContainedPath(root, path, prepareParentFolder);
     } catch (error) {
         throw buildWriteError(path, error);
     }
 }
 
-export function readBoundedFile(bounds: FileBounds, path: string): FileContents | undefined {
+export function readBoundedFile(root: string, path: string): FileContents | undefined {
     try {
-        const target = buildContainedPath(bounds, path);
+        const target = buildContainedPath(root, path);
         return readRegularFile(target, lstatSync(target), path);
     } catch (error) {
         if (hasErrorCode(error, 'ENOENT')) return undefined;
@@ -122,9 +122,9 @@ export function readBoundedFile(bounds: FileBounds, path: string): FileContents 
     }
 }
 
-export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileContents | undefined {
+export function readBoundedKeepingLinks(root: string, path: string): FileContents | undefined {
     try {
-        const target = buildContainedPath(bounds, path);
+        const target = buildContainedPath(root, path);
         const stat = lstatSync(target);
         return stat.isSymbolicLink()
             ? { bytes: Buffer.from(readlinkSync(target)), mode: PERMISSION_BITS, isSymlink: true }
@@ -135,8 +135,8 @@ export function readBoundedKeepingLinks(bounds: FileBounds, path: string): FileC
     }
 }
 
-export function replaceBoundedFile(bounds: FileBounds, path: string, contents: FileContents): void {
-    const target = preparePath(bounds, path);
+export function replaceBoundedFile(root: string, path: string, contents: FileContents): void {
+    const target = preparePath(root, path);
     const temporary = join(
         dirname(target),
         `${TEMPORARY_FILE_PREFIX}${String(process.pid)}-${randomUUID()}${TEMPORARY_FILE_SUFFIX}`,

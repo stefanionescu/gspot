@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { LOOP_BODY_PARENTS } from '../../config/logic.ts';
+import { listFunctionAncestors } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { AssignedValues, AssignmentFrame, PathFrame, SegmentFlow, ValueState } from '../../types/variables.ts';
 
@@ -35,8 +36,8 @@ function haveSameValues(first: ValueState, second: ValueState): boolean {
     });
 }
 
-function buildOutgoing(flow: SegmentFlow, incoming: ValueState): ValueState {
-    const outgoing = new Map(incoming);
+function buildOutgoing(flow: SegmentFlow): ValueState {
+    const outgoing = new Map(flow.incoming);
     for (const reference of flow.references) {
         const { resolved, writeExpr, from } = reference;
         if (resolved !== null && reference.isWrite())
@@ -55,16 +56,11 @@ function solveFlows(flows: ReadonlyMap<string, SegmentFlow>): void {
         if (flow === undefined) continue;
         const states = flow.segment.prevSegments.map(({ id }) => flows.get(id)?.outgoing);
         flow.incoming = joinStates(states.filter((state) => state !== undefined));
-        const outgoing = buildOutgoing(flow, flow.incoming);
+        const outgoing = buildOutgoing(flow);
         if (haveSameValues(flow.outgoing, outgoing)) continue;
         flow.outgoing = outgoing;
         pending.push(...segment.nextSegments);
     }
-}
-
-function listLocalChain(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
-    const ancestors = source.getAncestors(node);
-    return [...ancestors.slice(ancestors.findLastIndex((ancestor) => ASTUtils.isFunction(ancestor)) + 1), node];
 }
 
 function isRewrite(value: TSESTree.Node, reference: TSESLint.Scope.Reference): boolean {
@@ -78,7 +74,7 @@ function isRewrite(value: TSESTree.Node, reference: TSESLint.Scope.Reference): b
 }
 
 function isLoopSetup(reference: TSESLint.Scope.Reference, value: TSESTree.Node, source: TSESLint.SourceCode): boolean {
-    const isInit = listLocalChain(value, source).some(
+    const isInit = listFunctionAncestors(value, source).some(
         (child) => child.parent?.type === AST_NODE_TYPES.ForStatement && Object.is(child.parent.init, child),
     );
     if (isInit) return true;
@@ -91,7 +87,7 @@ function isLoopSetup(reference: TSESLint.Scope.Reference, value: TSESTree.Node, 
     const declaration = definition?.node.parent;
     return (
         declaration?.type === AST_NODE_TYPES.VariableDeclaration &&
-        listLocalChain(declaration, source).some(({ type }) => LOOP_BODY_PARENTS.has(type))
+        listFunctionAncestors(declaration, source).some(({ type }) => LOOP_BODY_PARENTS.has(type))
     );
 }
 

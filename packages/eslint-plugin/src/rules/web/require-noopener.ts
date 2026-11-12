@@ -3,6 +3,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/util
 import { NO_OPENER_FEATURE, WEB_URL, WINDOW_FEATURES_ARGUMENT, WINDOW_OPEN_SELECTOR } from '../../config/web.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { createRule } from '../../rule.ts';
+import type { MemberCall } from '../../types/plugin.ts';
 
 export const requireNoopener = createRule<[], 'opener'>({
     name: 'require-noopener',
@@ -31,8 +32,8 @@ export const requireNoopener = createRule<[], 'opener'>({
             return typeof text === 'string' ? text : '';
         };
         return {
-            [WINDOW_OPEN_SELECTOR](node: TSESTree.CallExpression) {
-                const { object, property } = node.callee as TSESTree.MemberExpression;
+            [WINDOW_OPEN_SELECTOR](node: MemberCall) {
+                const { object, property } = node.callee;
                 const isWindow =
                     (ASTUtils.isIdentifier(object) && object.name === 'window') ||
                     (object.type === AST_NODE_TYPES.MemberExpression &&

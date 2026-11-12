@@ -2,8 +2,6 @@ export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 
 export const NPM_TOOL = 'npm';
 
-export const VERSION_FLAG = '--version';
-
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 
 export const FROZEN_INSTALLS = {

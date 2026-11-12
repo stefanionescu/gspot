@@ -28,6 +28,13 @@ test.each([...JSON_ARGUMENT_ERRORS])(
     },
 );
 
+test('an argument error wins over a repository error', async () => {
+    await using sandbox = await testdir();
+    const result = await runGspot(sandbox.path, ['check', '--staged', '--fix', '--json']);
+    expect(result.code).toBe(2);
+    expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments' });
+});
+
 test('an unknown command exits 2 and names the closest command', async () => {
     await using sandbox = await testdir();
     const result = await runGspot(sandbox.path, ['checks', '--json']);

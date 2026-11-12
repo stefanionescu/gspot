@@ -57,6 +57,7 @@ import type {
     FileTags,
     GeneratedPaths,
     ListedFile,
+    RepositoryListing,
     TrackedFile,
 } from '#cli/types/repository.ts';
 
@@ -97,7 +98,7 @@ function classifyManagedDocument(root: string, file: ListedFile, prefix: Buffer)
     if (file.isSymlink || !file.path.endsWith(MARKDOWN_EXTENSION) || !prefix.includes(MARKERS.markdown.start))
         return SOURCE_KIND;
     const text = readText(root, file.path);
-    const authored = stripBlock(text, { path: file.path });
+    const authored = stripBlock(text, file.path);
     return authored === text || authored.trim() !== ''
         ? SOURCE_KIND
         : { kind: 'generated', origin: KIND_ORIGINS.gspot };
@@ -205,9 +206,13 @@ export function hasGeneratedHeader(text: string): boolean {
     return lines.some((line) => GENERATED_HEADER_LINE.test(line));
 }
 
-export function classifyFile(root: string, file: ListedFile, prefix: Buffer, rules: FileKindRules): TrackedFile {
-    const tagged = tagFile(file, prefix);
-    const kind = classifyKind({ root: root, listed: file, prefix, isBinary: tagged.isBinary }, rules);
+export function classifyFile(
+    root: string,
+    file: RepositoryListing['files'][number],
+    rules: FileKindRules,
+): TrackedFile {
+    const tagged = tagFile(file, file.prefix);
+    const kind = classifyKind({ root: root, listed: file, prefix: file.prefix, isBinary: tagged.isBinary }, rules);
     return {
         path: file.path,
         kind: kind.kind,

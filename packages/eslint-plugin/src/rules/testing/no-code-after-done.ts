@@ -1,27 +1,20 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { FUNCTION_NODES } from '../../config/plugin.ts';
 import { DONE_STOP_STATEMENTS } from '../../config/testing.ts';
-import { getMarkedTestCall, listBodyNodes } from '../../libraries/testing.ts';
+import { listFunctionAncestors } from '../../language/functions.ts';
+import { listBodyNodes, listSiblingStatements } from '../../language/syntax.ts';
+import { getMarkedTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { TestCall } from '../../types/testing.ts';
 
-function listFollowingStatements(statement: TSESTree.Node): TSESTree.Node[] {
-    const { parent } = statement;
-    const isBlock = parent?.type === AST_NODE_TYPES.BlockStatement || parent?.type === AST_NODE_TYPES.Program;
-    const cases = parent?.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : [];
-    const siblings: TSESTree.Node[] = isBlock ? parent.body : cases;
-    return siblings.slice(siblings.indexOf(statement) + 1);
-}
-
 function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
-    const ancestors = source.getAncestors(call);
-    const boundary = ancestors.findLastIndex((node) => FUNCTION_NODES.has(node.type));
-    const statements = ancestors
-        .slice(boundary + 1)
+    const statements = listFunctionAncestors(call, source)
         .filter((node) => node.type.endsWith('Statement') && node.type !== AST_NODE_TYPES.BlockStatement)
         .toReversed();
-    const following = statements.flatMap((statement) => listFollowingStatements(statement));
+    const following = statements.flatMap((statement) => {
+        const siblings = listSiblingStatements(statement);
+        return siblings.slice(siblings.indexOf(statement) + 1);
+    });
     for (const next of following) {
         if (DONE_STOP_STATEMENTS.has(next.type)) return undefined;
         const found = listBodyNodes(next, source).find((node) => node.type === AST_NODE_TYPES.ExpressionStatement);

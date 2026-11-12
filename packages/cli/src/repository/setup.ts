@@ -32,7 +32,7 @@ import { LINE_BREAK } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
 import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { readGitSetting, readHooksFolder } from '#cli/repository/git/run.ts';
+import { readGitPath, readGitSetting } from '#cli/repository/git/run.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -65,21 +65,20 @@ function detectHookFolder(
     return { kind: folder === HUSKY_PATH ? 'husky' : 'githooks', path: folder, files };
 }
 
-async function readHooksPathSetup(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
+function readHooksPathSetup(hooksPath: string, folder: string): RepositorySetup['hooks'] {
     if (hooksPath === '') return [];
-    const location = await readHooksFolder(root);
     return [
         {
             kind: 'hooksPath',
             path: hooksPath,
-            files: listFolderFiles(dirname(location), basename(location)),
+            files: listFolderFiles(dirname(folder), basename(folder)),
         },
     ];
 }
 
-async function listHookFolders(root: string, hooksPath: string): Promise<RepositorySetup['hooks']> {
+function listHookFolders(root: string, hooksPath: string, folder: string): RepositorySetup['hooks'] {
     return [
-        ...(await readHooksPathSetup(root, hooksPath)),
+        ...readHooksPathSetup(hooksPath, folder),
         ...FOREIGN_HOOK_FOLDERS.map((folder) => detectHookFolder(root, folder, hooksPath)).filter(
             (hook) => hook !== undefined,
         ),
@@ -116,8 +115,7 @@ function isLfsHookScript(folder: string, name: string): boolean {
     return lines[0] === HOOK_SHEBANG && isCall && lines.slice(1, -1).every((line) => line.startsWith(LFS_GUARD_PREFIX));
 }
 
-async function listGitFolderHooks(root: string): Promise<RepositorySetup['hooks']> {
-    const folder = await readHooksFolder(root);
+function listGitFolderHooks(root: string, folder: string): RepositorySetup['hooks'] {
     if (statSync(folder, { throwIfNoEntry: false })?.isDirectory() !== true) return [];
     const files = readdirSync(folder).filter((name) => {
         if (name.endsWith(SAMPLE_HOOK_SUFFIX)) return false;
@@ -142,8 +140,9 @@ export async function readHooks(repository: Pick<Repository, 'root'>): Promise<R
     const hooksPath = convertToPosixPath(relative(root, resolve(root, written ?? '')));
     const isHusky = hooksPath === HUSKY_PATH || hooksPath.startsWith(`${HUSKY_PATH}/`);
     const isOwn = hooksPath === GSPOT_PATHS.hooks || isHusky;
-    const folders = await listHookFolders(root, isOwn ? '' : hooksPath);
-    const gitHooks = await listGitFolderHooks(root);
+    const folder = await readGitPath(root, 'hooks');
+    const folders = listHookFolders(root, isOwn ? '' : hooksPath, folder);
+    const gitHooks = listGitFolderHooks(root, folder);
     const hooks = [
         ...folders.filter(
             (hook) => hook.kind === 'hooksPath' || hooksPath === hook.path || hooksPath.startsWith(`${hook.path}/`),

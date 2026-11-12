@@ -36,6 +36,17 @@ function assertValeRan(result: SpawnResult): void {
     throw new CheckStop('error', `Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
+async function runVale(
+    session: CheckSession,
+    planned: PlannedCheck,
+    args: string[],
+    run: { cwd: string; stdin?: string },
+): Promise<CheckFinding[]> {
+    const result = await runCheckTool(session, planned, args, run);
+    assertValeRan(result);
+    return parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: run.cwd });
+}
+
 async function runValeOnPaths(
     session: CheckSession,
     planned: PlannedCheck,
@@ -49,11 +60,7 @@ async function runValeOnPaths(
         process.platform,
     );
     const findings = await Promise.all(
-        batches.map(async (batch) => {
-            const result = await runCheckTool(session, planned, [...command, ...batch], { cwd: folder });
-            assertValeRan(result);
-            return parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: folder });
-        }),
+        batches.map((batch) => runVale(session, planned, [...command, ...batch], { cwd: folder })),
     );
     return findings.flat();
 }
@@ -65,20 +72,13 @@ async function runValeOnStdin(
     command: string[],
     folder: string,
 ): Promise<CheckFinding[]> {
-    const text = readText(session.cache, route.path);
-    const result = await runCheckTool(
+    const findings = await runVale(
         session,
         planned,
         [...command, `--ext=${route.extension}`, `--path=${join(session.root, route.path)}${route.extension}`],
-        {
-            cwd: folder,
-            stdin: text,
-        },
+        { cwd: folder, stdin: readText(session.cache, route.path) },
     );
-    assertValeRan(result);
-    return parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: folder }).map(
-        (finding) => ({ ...finding, file: route.path }),
-    );
+    return findings.map((finding) => ({ ...finding, file: route.path }));
 }
 
 function selectRoute(file: TrackedFile): ProseRoute | undefined {
@@ -141,7 +141,7 @@ async function checkCommitMessage(session: CheckSession, planned: PlannedCheck):
     const { text, prefix } = await readCommitMessage(session, messageFile);
     const lines = text.split('\n').map((line) => (line.startsWith(prefix) ? '' : line));
     const folder = dirname(join(session.root, GSPOT_PATHS.valeMessageConfig));
-    const result = await runCheckTool(
+    const findings = await runVale(
         session,
         planned,
         [
@@ -154,14 +154,11 @@ async function checkCommitMessage(session: CheckSession, planned: PlannedCheck):
         ],
         { cwd: folder, stdin: lines.join('\n') },
     );
-    assertValeRan(result);
-    return parseOutput(planned.check, result.stdout, result.stderr, { root: session.root, cwd: folder }).map(
-        ({ line, column: _column, message, ...finding }) => ({
-            ...finding,
-            file: '',
-            message: `Line ${String(line)}: ${message}`,
-        }),
-    );
+    return findings.map(({ line, column: _column, message, ...finding }) => ({
+        ...finding,
+        file: '',
+        message: `Line ${String(line)}: ${message}`,
+    }));
 }
 
 async function checkDates(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {

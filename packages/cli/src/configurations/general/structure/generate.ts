@@ -1,6 +1,6 @@
 import { JSCPD_CHECK, JSCPD_IGNORED, JSCPD_IMPORT_PATTERNS } from '#cli/config/configurations/general.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/general.ts';
 import type { PlannedConfig } from '#cli/types/configurations/language.ts';
@@ -16,10 +16,9 @@ function buildJscpdFile(planned: PlannedConfig): string {
         ignorePattern: JSCPD_IMPORT_PATTERNS,
         ignore: [
             ...JSCPD_IGNORED,
-            ...convertToGlobs([
-                ...planned.ignoreSections,
-                ...listCheckIgnoreSections(planned.scope.settings, JSCPD_CHECK),
-            ]).filter((pattern) => !pattern.startsWith('!')),
+            ...convertToGlobs(listPlannedIgnoreSections(planned, JSCPD_CHECK)).filter(
+                (pattern) => !pattern.startsWith('!'),
+            ),
         ],
     };
     return JSON.stringify(settings, null, JSON_INDENT);

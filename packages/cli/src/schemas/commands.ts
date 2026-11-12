@@ -1,23 +1,21 @@
 import { z } from 'zod';
 
 import { FILE_KINDS, GROUPS, SETTING_TYPES, TOOL_KINDS } from '#cli/config/manifests.ts';
-import { PUSH_SKIP_REASONS } from '#cli/config/repository/git.ts';
 import { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
 import { checkStateSchema, findingSchema, reportedCheckSchema, runReportSchema } from '#cli/schemas/engine.ts';
 import { generatedFilesSchema, initPlanSchema } from '#cli/schemas/generation.ts';
 import { checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
+import { pushSkipSchema } from '#cli/schemas/repository.ts';
 import {
     reasonRequirementSchema,
     removedConfigurationSchema,
     settingOriginSchema,
 } from '#cli/schemas/settings/fields.ts';
-import { toolInspectionSchema } from '#cli/schemas/tools.ts';
+import { installResultSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
 
 export const installReportSchema = generatedFilesSchema.extend({
+    ...installResultSchema.shape,
     summary: z.string(),
-    installed: z.string().array(),
-    steps: z.string().array().readonly().array().readonly(),
-    missing: z.string().array(),
 });
 
 export const doctorToolSchema = toolInspectionSchema.extend({ kind: z.enum(TOOL_KINDS) });
@@ -98,7 +96,7 @@ export const pushReportSchema = z.strictObject({
             report: runReportSchema,
         })
         .array(),
-    skipped: z.strictObject({ ref: z.string(), hash: z.string(), reason: z.enum(PUSH_SKIP_REASONS) }).array(),
+    skipped: pushSkipSchema.array(),
     exitCode: z.int(),
 });
 
@@ -131,12 +129,10 @@ export const scanReportSchema = z.strictObject({
 });
 
 export const initReportSchema = generatedFilesSchema.extend({
+    ...installResultSchema.shape,
     root: z.string(),
     plan: initPlanSchema,
     settingsText: z.string(),
-    installed: z.string().array(),
-    missing: z.string().array(),
-    steps: z.string().array().readonly().array().readonly(),
 });
 
 export const checkIgnoreSchema = z.strictObject({

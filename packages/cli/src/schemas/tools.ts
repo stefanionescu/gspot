@@ -88,3 +88,10 @@ export const toolInspectionSchema = z.strictObject({
     note: z.string().optional(),
     minimumVersion: z.string().optional(),
 });
+
+export const installResultSchema = z.strictObject({
+    installed: z.string().array(),
+    missing: z.string().array(),
+    notes: z.string().array(),
+    steps: z.string().array().readonly().array().readonly(),
+});

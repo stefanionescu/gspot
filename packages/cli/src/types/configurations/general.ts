@@ -103,6 +103,7 @@ export type NamingSettings = {
     allowedPhrases: string[][];
     exceptions: CompiledException[];
     limitLookup: (language: string, category: string) => CategoryLimits;
+    isTestFile: (path: string) => boolean;
 };
 
 export type NamedFile = { file: TrackedFile; language: string };
@@ -130,8 +131,6 @@ export type SqlName = { category: NamedCategory; name: string; location?: number
 export type FileIdentifiers = { file: string; language: string; identifiers: Identifier[] };
 
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };
-
-export type NamingCheck = { scope: { settings: { test_files: string[] } } };
 
 export type ParsedLanguage = 'python' | 'swift' | 'bash';
 
@@ -172,7 +171,11 @@ export type FormatOverride = {
     options: Record<string, unknown>;
 };
 
-export type ScopeFormat = { scopePath: string; paths: string[]; format: Optional<FormatSettings> };
+export type ScopeFormat = {
+    scopePath: string;
+    paths: string[];
+    format: { [Key in keyof FormatSettings]?: FormatSettings[Key] | undefined };
+};
 
 export type SourcedConfig = Extract<Config, { source: string }>;
 
@@ -189,5 +192,3 @@ export type NamingCase = (typeof CASE_NAMES)[number];
 export type ParsedNamingLanguageFields = NonNullable<TableSettings<'naming'>[keyof typeof NAMING_LANGUAGE_CATEGORIES]>;
 
 export type WrittenFormat = z.input<typeof formatSchema>;
-
-type Optional<Value> = { [Key in keyof Value]?: Value[Key] | undefined };

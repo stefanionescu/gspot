@@ -1,3 +1,5 @@
+import { REQUIRE_SELECTOR } from './plugin.ts';
+
 export const TLS_CHECKS = {
     'aws_cdk_lib.aws_apigateway.CfnDomainName': [{ path: ['securityPolicy'], required: true, valid: ['TLS_1_2'] }],
     'aws_cdk_lib.aws_apigateway.DomainName': [
@@ -264,8 +266,7 @@ export const FTP_MODULE = 'ftp';
 
 export const TELNET_IMPORT = 'ImportDeclaration[source.value="telnet-client"]';
 
-export const TELNET_REQUIRE =
-    'CallExpression[callee.type="Identifier"][callee.name="require"][arguments.0.value="telnet-client"]';
+export const TELNET_REQUIRE = `${REQUIRE_SELECTOR}[arguments.0.value="telnet-client"]`;
 
 export const NETMASK_SUFFIX = /\/\d{1,3}$/u;
 

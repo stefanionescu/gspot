@@ -8,8 +8,9 @@ import {
     SHALLOW_CLONE_NAMES,
     STRUCTURED_CLONE_NAME,
 } from '../../config/libraries.ts';
+import { listFunctionAncestors } from '../../language/functions.ts';
 import { getAssignedValue, getQualifiedName } from '../../language/modules.ts';
-import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
+import { haveSameTokens, listSiblingStatements, unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { Isolation } from '../../types/libraries.ts';
 
@@ -62,10 +63,7 @@ function getPriorIsolation(
     prefix: TSESTree.Node,
     source: TSESLint.SourceCode,
 ): Isolation | undefined {
-    const { parent } = child;
-    const isBlock = parent?.type === AST_NODE_TYPES.BlockStatement || parent?.type === AST_NODE_TYPES.Program;
-    const cases = parent?.type === AST_NODE_TYPES.SwitchCase ? parent.consequent : [];
-    const statements: readonly TSESTree.Node[] = isBlock ? parent.body : cases;
+    const statements = listSiblingStatements(child);
     return statements
         .slice(
             0,
@@ -80,9 +78,7 @@ function getDominatingIsolation(
     mutation: TSESTree.Node,
     source: TSESLint.SourceCode,
 ): Isolation | undefined {
-    const ancestors = source.getAncestors(mutation);
-    const chain = [...ancestors.slice(ancestors.findLastIndex((node) => ASTUtils.isFunction(node)) + 1), mutation];
-    return chain
+    return listFunctionAncestors(mutation, source)
         .map((child) => getPriorIsolation(child, prefix, source))
         .findLast((isolation) => isolation !== undefined);
 }

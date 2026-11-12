@@ -2,6 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-e
 
 import type { FunctionNode, LocalFunction } from '../types/plugin.ts';
 import { getExpressionValue } from './expressions.ts';
+import { listBodyNodes } from './syntax.ts';
 
 function getFunctionNode(node: TSESTree.Node | null): LocalFunction | undefined {
     switch (node?.type) {
@@ -35,4 +36,27 @@ export function findFunction(node: TSESTree.Node | undefined, source: TSESLint.S
     const value = getExpressionValue(node, source) ?? node;
     const found = value && getLocalFunction(value, source);
     return found?.type === AST_NODE_TYPES.TSDeclareFunction ? undefined : found;
+}
+
+export function findEnclosingFunction(node: TSESTree.Node, source: TSESLint.SourceCode): FunctionNode | undefined {
+    return source.getAncestors(node).findLast((ancestor) => ASTUtils.isFunction(ancestor));
+}
+
+/**
+List the nodes between the enclosing function and a node, from the outermost one to the node itself.
+*/
+export function listFunctionAncestors(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node[] {
+    const ancestors = source.getAncestors(node);
+    return [...ancestors.slice(ancestors.findLastIndex((ancestor) => ASTUtils.isFunction(ancestor)) + 1), node];
+}
+
+/**
+List the values that a function returns: the body of an arrow function without a block, or the argument of each
+`return` statement outside a nested function.
+*/
+export function listReturnedValues(fn: FunctionNode, source: TSESLint.SourceCode): TSESTree.Expression[] {
+    if (fn.body.type !== AST_NODE_TYPES.BlockStatement) return [fn.body];
+    return listBodyNodes(fn.body, source).flatMap((node) =>
+        node.type === AST_NODE_TYPES.ReturnStatement && node.argument !== null ? [node.argument] : [],
+    );
 }

@@ -28,6 +28,7 @@ import {
     getOptionProperties,
     listArgumentValues,
 } from '../../language/expressions.ts';
+import { getMemberRoot } from '../../language/syntax.ts';
 import { getCdkArgument, getCdkName, getCdkProperty, getCdkResult } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 import type { AdminAccess } from '../../types/aws.ts';
@@ -48,12 +49,16 @@ function findArgument(
     return getExpressionValue(isCall ? call.arguments[position] : undefined, source);
 }
 
+function isAdminRange(start: number, end: number): boolean {
+    return ADMIN_PORTS.some((port) => port >= start && port <= end);
+}
+
 function isAdminPortOptions(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     const protocol = getOptionProperties(node, source).get('protocol');
     const isTcp = protocol !== undefined && TCP_PROTOCOL_NAMES.has(getCdkName(source, protocol.value));
     const start = Number.parseInt(String(getField(source, node, 'fromPort')));
     const end = Number.parseInt(String(getField(source, node, 'toPort')));
-    return isTcp && ADMIN_PORTS.some((port) => port >= start && port <= end);
+    return isTcp && isAdminRange(start, end);
 }
 
 function isAdminPortCall(
@@ -64,7 +69,7 @@ function isAdminPortCall(
     const [start, end] = [0, 1].map((position) => getLiteralValue(findArgument(source, node, position), source));
     if (typeof start !== 'number') return false;
     const high = name === PORT_RANGE && typeof end === 'number' ? end : start;
-    return ADMIN_PORTS.some((port) => port >= start && port <= high);
+    return isAdminRange(start, high);
 }
 
 function isAdminPort(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
@@ -93,8 +98,7 @@ function listDefaultPortAccess(
     node: TSESTree.CallExpression,
     name: string,
 ): AdminAccess[] {
-    let owner: TSESTree.Node = node.callee;
-    while (owner.type === AST_NODE_TYPES.MemberExpression) owner = owner.object;
+    const owner = getMemberRoot(node.callee);
     const isAny =
         name === DEFAULT_PORT_ANYWHERE || (name === DEFAULT_PORT_FROM && isOpenPeer(source, node.arguments[0]));
     const port = getCdkProperty(source, getCdkArgument(source, getCdkResult(source, owner), 0), 'defaultPort');
@@ -119,9 +123,7 @@ function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.N
     const protocol = getField(source, node, 'ipProtocol');
     const start = Number.parseInt(String(getField(source, node, 'fromPort')));
     const end = Number.parseInt(String(getField(source, node, 'toPort')));
-    const isAdmin =
-        protocol === ALL_PROTOCOLS ||
-        (TCP_PROTOCOLS.has(protocol) && ADMIN_PORTS.some((port) => port >= start && port <= end));
+    const isAdmin = protocol === ALL_PROTOCOLS || (TCP_PROTOCOLS.has(protocol) && isAdminRange(start, end));
     return Object.entries(OPEN_ADDRESSES).flatMap(([key, address]) => {
         const property = getOptionProperties(node, source).get(key);
         const value = property ? getExpressionValue(property.value, source) : undefined;

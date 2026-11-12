@@ -11,7 +11,7 @@ path = "sibling"
 removed_configurations = { site = "This scope does not use the inherited site checks." }
 `;
 
-export const POSTGRES_ORIGIN = 'configuration postgres';
+export const POSTGRES_ORIGIN = { kind: 'configuration', name: 'postgres' } as const;
 
 export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
 

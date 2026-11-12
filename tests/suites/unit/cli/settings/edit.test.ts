@@ -4,9 +4,12 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { addScopeTable, buildEditedSettings, removeKey, setKey } from '#cli/settings/edit.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { addScopeTable, buildEditedSettings, removeKey, removeUnknownKeys, setKey } from '#cli/settings/edit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';
+import { buildSettingsFromTable } from '#cli/settings/read.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/text.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
@@ -39,6 +42,13 @@ test('setting a nested key, then deleting it, removes the empty table', async ()
     removeKey(removedEdit.table, 'limits.bash.max_file_lines');
     const removed = buildEditedSettings(sandbox.path, removedEdit).text;
     expect(removed).toBe(INITIAL_SETTINGS);
+});
+
+test('removeUnknownKeys deletes the keys that no setting offers and returns them', () => {
+    const table: TomlTable = { level: 'all', postgres: { assume_in_transaction: false }, tool_timeout_seconds: 600 };
+    const removed = removeUnknownKeys(table, buildSettingsFromTable(table), buildAvailableSettings([], 'basic'));
+    expect(removed).toStrictEqual(['postgres.assume_in_transaction']);
+    expect(table).toStrictEqual({ level: 'all', tool_timeout_seconds: 600 });
 });
 
 test.each([...SCOPE_SETTING_WRITES])(

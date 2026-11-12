@@ -4,8 +4,7 @@ import {
     SWAGGER_PACKAGE,
     TS_PATTERN,
 } from '#cli/config/configurations/framework.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import { type ConfigurationBuilder } from '#cli/types/configurations/javascript.ts';
 
 export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder>> = {
@@ -25,7 +24,7 @@ export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, ConfigurationBuilder
                         '@darraghor/nestjs-typed/injectable-should-be-provided': [
                             'error',
                             {
-                                src: [joinScope(escapeGlob(scopePath), TS_PATTERN)],
+                                src: [joinScopeGlob(scopePath, TS_PATTERN)],
                                 filterFromPaths: NESTJS_INJECTABLE_FILTER_PATHS,
                             },
                         ],

@@ -107,8 +107,6 @@ export const GIT_PEEL_ARGUMENTS = ['cat-file', '--batch-check=%(objectname) %(ob
 
 export const PEEL_SUFFIX = '^{}';
 
-export const GIT_SHALLOW_FILE_ARGUMENTS = ['rev-parse', '--git-path', 'shallow'] as const;
-
 export const MISSING_PUSH_REVISION_MESSAGE = 'Cannot find the commit {hash} that the push sends.';
 
 export const REMOTES_FLAG = '--remotes';
@@ -137,11 +135,15 @@ export const DELETED_REF_REASON = 'deleted ref';
 
 export const NON_COMMIT_REASON = 'non-commit object';
 
+export const NO_SETTINGS_REASON = 'the commit has no gspot.toml';
+
+export const NO_CHANGES_REASON = 'no changed paths';
+
 export const PUSH_SKIP_REASONS = [
     DELETED_REF_REASON,
     NON_COMMIT_REASON,
-    'the commit has no gspot.toml',
-    'no changed paths',
+    NO_SETTINGS_REASON,
+    NO_CHANGES_REASON,
 ] as const;
 
 export const INVALID_PUSH_INPUT_MESSAGE = 'Invalid Git pre-push input. Supply every local and remote ref/object pair.';
@@ -204,6 +206,21 @@ export const GIT_SETTING_ARGUMENTS = ['config', '--null', '--get'] as const;
 
 export const GIT_FLAG_ARGUMENTS = ['config', '--bool', '--get'] as const;
 
-export const GIT_HOOKS_ARGUMENTS = ['rev-parse', '--git-path', 'hooks'] as const;
+export const SPARSE_CHECKOUT_SETTING = 'core.sparseCheckout';
+
+export const SPARSE_CHECKOUT_MESSAGE = 'gspot does not support sparse checkouts. Run git sparse-checkout disable.';
+
+export const GIT_PATH_ARGUMENTS = ['rev-parse', '--path-format=absolute', '--git-path'] as const;
 
 export const LINE_FEED = 10;
+
+const NAME_ONLY_FLAG = '--name-only';
+
+export const READ_COMMITTED_MESSAGE =
+    'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
+
+export const GIT_COMMITTED_PATHS_ARGUMENTS = ['ls-files', '-z', '--'] as const;
+
+export const GIT_CHANGED_PATHS_ARGUMENTS = ['diff', NAME_ONLY_FLAG, '-z', 'HEAD', '--'] as const;
+
+export const GIT_CHECK_IGNORE_ARGUMENTS = ['check-ignore', '--no-index', '-z', '--stdin'] as const;

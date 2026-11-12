@@ -13,7 +13,7 @@ import { COMMAND_SEPARATORS } from '#cli/config/repository/setup.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { MISE_TASK_FOLDERS } from '#cli/config/system.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { listCodeTestFiles, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listDistinctTools } from '#cli/manifests/read.ts';
@@ -111,10 +111,7 @@ function buildKnipFile(planned: PlannedConfig): string {
     const { settings, root, startRunner } = planned.session;
     const options = getTable(scope.settings, 'javascript');
     const scanner = getTable(scope.settings, 'dependencies').bun_scanner;
-    const ignoredGlobs = convertToGlobs([
-        ...planned.ignoreSections,
-        ...listCheckIgnoreSections(planned.scope.settings, KNIP_CHECK),
-    ]);
+    const ignoredGlobs = convertToGlobs(listPlannedIgnoreSections(planned, KNIP_CHECK));
     const { dependencyFiles } = planned.session.repository;
     const dependencyNames = new Set(dependencyFiles.flatMap((file) => Object.keys(file.dependencies)));
     const scriptWords = new Set(

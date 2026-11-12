@@ -2,8 +2,11 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
 
-import { readHead, readIndexTree } from '#cli/repository/revisions/files.ts';
+import { listCommittedPaths, listRevisionFiles, readHead, readIndexTree } from '#cli/repository/revisions/files.ts';
+import type { GitFile } from '#cli/types/repository.ts';
+import { HASH_FORMATS, INDEX_PATH } from '#tests/config/repository/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -27,4 +30,32 @@ test('the tree of the index is written while the user holds the index lock, and 
     expect(runGitStep(sandbox.path, ['ls-tree', '--name-only', tree])).toBe('source.ts\nstaged.ts');
     expect(await readFile(join(sandbox.path, '.git', 'index.lock'), 'utf8')).toBe('held by git add');
     expect(await readFile(join(sandbox.path, '.git', 'index'))).toStrictEqual(index);
+});
+
+test('a revision lists the entries of its tree, with SHA-1 and SHA-256 hashes', async () => {
+    for (const { format, hashLength } of HASH_FORMATS) {
+        await using sandbox = await testdir({ blob: 'contents\n' });
+        runGitStep(sandbox.path, ['init', '--quiet', `--object-format=${format}`]);
+        const hash = runGitStep(sandbox.path, ['hash-object', '-w', 'blob']);
+        const entries: GitFile[] = [
+            { mode: '100755', hash, path: 'executable' },
+            { mode: '100644', hash, path: INDEX_PATH },
+            { mode: '120000', hash, path: 'link' },
+            { mode: '160000', hash, path: 'submodule' },
+        ];
+        for (const entry of entries)
+            runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', entry.mode, entry.hash, entry.path]);
+        runGitStep(sandbox.path, ['commit', '--quiet', '--message', 'init']);
+        const head = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
+        expect(hash).toHaveLength(hashLength);
+        expect(await listRevisionFiles(sandbox.path, { kind: 'commit', hash: head })).toStrictEqual(entries);
+    }
+});
+
+test('committed paths leave out files that changed since HEAD, and an unborn history has none', async () => {
+    await using sandbox = await createGitSandbox({ a: 'kept\n', b: 'kept\n' });
+    expect(await listCommittedPaths(sandbox.path, ['a', 'b'])).toStrictEqual(new Set());
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'b'), 'changed\n');
+    expect(await listCommittedPaths(sandbox.path, ['a', 'b'])).toStrictEqual(new Set(['a']));
 });

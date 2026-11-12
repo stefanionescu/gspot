@@ -8,16 +8,16 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a managed block is appended and replaced without changing your own text', () => {
-    const first = replaceBlock('# Mine\n\ntext\n', 'block one', { path: 'AGENTS.md' });
-    expect(findBlockBody(first, { path: 'AGENTS.md' })).toBe('block one');
-    const second = replaceBlock(first, 'block two', { path: 'AGENTS.md' });
-    expect(findBlockBody(second, { path: 'AGENTS.md' })).toBe('block two');
+    const first = replaceBlock('# Mine\n\ntext\n', 'block one', 'AGENTS.md');
+    expect(findBlockBody(first, 'AGENTS.md')).toBe('block one');
+    const second = replaceBlock(first, 'block two', 'AGENTS.md');
+    expect(findBlockBody(second, 'AGENTS.md')).toBe('block two');
     expect(second).toStartWith('# Mine\n\ntext\n\n');
-    expect(replaceBlock(second, 'block two', { path: 'AGENTS.md' })).toBe(second);
+    expect(replaceBlock(second, 'block two', 'AGENTS.md')).toBe(second);
 });
 
 test('a new block goes first in .gitattributes, so the rules of the repository keep winning', async () => {
-    const text = replaceBlock('*.bat text eol=crlf\n', '* text=auto eol=lf', { path: '.gitattributes' });
+    const text = replaceBlock('*.bat text eol=crlf\n', '* text=auto eol=lf', '.gitattributes');
     await using sandbox = await createGitSandbox({ '.gitattributes': text });
     expect(runGitStep(sandbox.path, ['check-attr', 'eol', 'run.bat'])).toBe('run.bat: eol: crlf');
     expect(runGitStep(sandbox.path, ['check-attr', 'eol', 'run.sh'])).toBe('run.sh: eol: lf');
@@ -30,15 +30,15 @@ test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed marker
         code: 'filesystem',
         message: expect.stringContaining(path) as string,
     });
-    expect(() => findBlockSpan(source, context)).toThrow(refusal);
+    expect(() => findBlockSpan(source, context.path)).toThrow(refusal);
 });
 
 test.each([...BLOCK_FORMATS])('block readers keep your own text in $path', (context) => {
-    expect(findBlockSpan('authored text', context)).toBeUndefined();
+    expect(findBlockSpan('authored text', context.path)).toBeUndefined();
     const source = `before\n${context.start}\n  instructions  \n${context.end}\nafter`;
-    expect(findBlockBody(source, context)).toBe('instructions');
-    const replaced = replaceBlock(source, 'replacement', context);
+    expect(findBlockBody(source, context.path)).toBe('instructions');
+    const replaced = replaceBlock(source, 'replacement', context.path);
     expect(replaced).toStartWith('before\n');
     expect(replaced).toEndWith('after');
-    expect(findBlockBody(replaced, context)).toBe('replacement');
+    expect(findBlockBody(replaced, context.path)).toBe('replacement');
 });

@@ -1,5 +1,5 @@
-import { chmodSync, copyFileSync, existsSync, mkdirSync, readdirSync, statSync } from 'node:fs';
-import { join, relative, resolve } from 'node:path';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
 
 import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import { compareInstalledRules, readUserRules } from '#cli/commands/scan/rules.ts';
@@ -12,24 +12,20 @@ import {
 } from '#cli/config/commands/reports.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { copyHooks, copyRevision } from '#cli/engine/copies/revision.ts';
 import { printProgress } from '#cli/engine/report.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { CHECK_GENERATION } from '#cli/generation/checks.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
-import { readGitSetting, readGitText, readHooksFolder } from '#cli/repository/git/run.ts';
+import { readGitText } from '#cli/repository/git/run.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { findText, measureFolder } from '#cli/system/files/reads.ts';
-import { isInside } from '#cli/system/paths.ts';
 import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
@@ -45,33 +41,6 @@ function listCodeRunners(session: Session): string[] {
     const checks = session.scopes.flatMap((scope) => scope.configurations.flatMap(({ checks }) => checks));
     const running = checks.filter(({ needs }) => needs?.some((need) => SCAN_LEFT_OUT_NEEDS.has(need)) === true);
     return [...new Set(running.map(({ id }) => id))].toSorted(compareText);
-}
-
-async function copyGitFolderHooks(root: string, copyRoot: string): Promise<void> {
-    const [source, target] = await Promise.all([readHooksFolder(root), readHooksFolder(copyRoot)]);
-    if (statSync(source, { throwIfNoEntry: false })?.isDirectory() !== true) return;
-    mkdirSync(target, { recursive: true });
-    for (const name of readdirSync(source)) {
-        const stat = statSync(join(source, name), { throwIfNoEntry: false });
-        if (stat?.isFile() !== true || name.endsWith(SAMPLE_HOOK_SUFFIX)) continue;
-        copyFileSync(join(source, name), join(target, name));
-        chmodSync(join(target, name), stat.mode);
-    }
-}
-
-/**
-Give the copy the hooks that Git runs in the repository. The copy has a Git folder of its own, so without them the plan
-of init names no hook of the repository. A hooks folder that core.hooksPath names holds its tracked files in the copy.
-*/
-async function copyHooks(root: string, copyRoot: string, cancelSignal: AbortSignal): Promise<void> {
-    const hooksPath = await readGitSetting(root, HOOKS_PATH_SETTING);
-    if (hooksPath === undefined) {
-        await copyGitFolderHooks(root, copyRoot);
-        return;
-    }
-    const local = relative(root, resolve(root, hooksPath));
-    const copied = isInside(local) ? local : resolve(root, hooksPath);
-    await readGitText(copyRoot, [...SET_HOOKS_PATH.slice(1), copied], { cancelSignal });
 }
 
 /**
@@ -120,7 +89,6 @@ async function runScanCommand(root: string, cancelSignal: AbortSignal): Promise<
         session.scopes.map(({ path }) => path),
     );
     await installTools(session, {
-        writer: openFiles(copy.root),
         checkTools: listHostCheckTools(session),
         runsProjectInstall: false,
     });

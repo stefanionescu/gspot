@@ -5,8 +5,6 @@ import type { Result } from 'execa';
 
 export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
 
-export type FileBounds = { root: string };
-
 export type Files = {
     readCanonicalPath(path: string): string;
     list(path: string): string[];
@@ -91,7 +89,7 @@ export type ProcessTreeControl = {
 
 export type RunningProcess = PromiseLike<SpawnCompletion> & { stdout: Readable };
 
-export type OutputOptions = { isJson: boolean };
+export type OutputOptions = { isJson: boolean; isVerbose: boolean };
 
 export type OutputState = OutputOptions & { notes: string[] };
 

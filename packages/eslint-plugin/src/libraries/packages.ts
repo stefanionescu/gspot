@@ -18,6 +18,7 @@ import {
     VUE_THREE,
 } from '../config/libraries.ts';
 import { PLUGIN_PREFIX } from '../config/plugin.ts';
+import { getMemberRoot, isCallOf } from '../language/syntax.ts';
 import type { PackageFacts, VersionCeiling } from '../types/libraries.ts';
 import type { FileContext } from '../types/plugin.ts';
 
@@ -91,10 +92,8 @@ export function readPackageFacts(context: FileContext): PackageFacts {
 }
 
 export function getRequiredModule(node: TSESTree.Node): string | undefined {
-    let value = node;
-    while (value.type === AST_NODE_TYPES.MemberExpression) value = value.object;
-    const call = value.type === AST_NODE_TYPES.CallExpression ? value : undefined;
-    if (call?.callee.type !== AST_NODE_TYPES.Identifier || call.callee.name !== 'require') return undefined;
+    const call = getMemberRoot(node);
+    if (!isCallOf(call, 'require')) return undefined;
     const [module] = call.arguments.map((argument) => ASTUtils.getStringIfConstant(argument));
     return module ?? undefined;
 }

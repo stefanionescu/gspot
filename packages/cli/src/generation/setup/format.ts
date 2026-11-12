@@ -26,7 +26,7 @@ import { getTool } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { joinScope, selectScopePath } from '#cli/repository/scopes.ts';
+import { joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
 import {
     prettierOptionsSchema,
     prettierSettingsSchema,
@@ -315,9 +315,9 @@ export function readScopeFormat(
     const read = readFormatOptions(
         { root: repository.root, scopePath, scripts: draft.prettierScripts },
         Object.fromEntries(
-            repository.dependencyFiles
-                .filter((dependencyFile) => selectScopePath(dependencyFile.path, draft.scopes) === scopePath)
-                .flatMap((dependencyFile) => Object.entries(dependencyFile.dependencies)),
+            listOwnFiles(repository.dependencyFiles, draft.scopes, scopePath).flatMap((dependencyFile) =>
+                Object.entries(dependencyFile.dependencies),
+            ),
         ),
         getTool([format], 'prettier').replace as string[],
     );

@@ -41,7 +41,7 @@ function getSettingValueType(schema: z.ZodType, isPath: boolean): Setting['type'
     return isPath ? 'path' : 'string';
 }
 
-function unwrapSettingInput(schema: z.ZodType): z.ZodType {
+export function unwrapSettingInput(schema: z.ZodType): z.ZodType {
     let inner = unwrapSettingSchema(schema);
     while (inner instanceof z.ZodPipe || inner instanceof z.ZodUnion) {
         let next = inner instanceof z.ZodUnion ? inner.options[0] : inner.out;

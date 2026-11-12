@@ -18,7 +18,8 @@ import {
 } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
-import type { SizedForm, UploadCall } from '../../types/security.ts';
+import type { CallNode } from '../../types/plugin.ts';
+import type { SizedForm } from '../../types/security.ts';
 
 function parseSize(text: string): number | undefined {
     const match = SIZE_TEXT.exec(text.trim());
@@ -53,7 +54,7 @@ function getOptions(
     return options?.type === AST_NODE_TYPES.ObjectExpression ? options : undefined;
 }
 
-function listOversizedForms(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
+function listOversizedForms(source: Readonly<TSESLint.SourceCode>, node: CallNode): TSESTree.Node[] {
     const options = getOptions(source, node);
     const maximum = options && getOptionProperties(options, source).get('maxFileSize');
     return options && isTooLarge(source, maximum, SIZE_DEFAULTS.formidable, SIZE_LIMITS.upload)
@@ -63,7 +64,7 @@ function listOversizedForms(source: Readonly<TSESLint.SourceCode>, node: UploadC
 
 function listOversizedFiles(
     source: Readonly<TSESLint.SourceCode>,
-    node: UploadCall,
+    node: CallNode,
     limits: TSESTree.Property,
 ): TSESTree.Node[] {
     if (limits.value.type !== AST_NODE_TYPES.ObjectExpression) return [];
@@ -71,21 +72,21 @@ function listOversizedFiles(
     return isTooLarge(source, fileSize, undefined, SIZE_LIMITS.upload) ? [fileSize ?? node] : [];
 }
 
-function listOversizedUploads(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
+function listOversizedUploads(source: Readonly<TSESLint.SourceCode>, node: CallNode): TSESTree.Node[] {
     const options = getOptions(source, node);
     const limits = options && getOptionProperties(options, source).get('limits');
     if (node.arguments.length === 0 || (options && !limits)) return [node.callee];
     return limits ? listOversizedFiles(source, node, limits) : [];
 }
 
-function listOversizedBodies(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
+function listOversizedBodies(source: Readonly<TSESLint.SourceCode>, node: CallNode): TSESTree.Node[] {
     const options = getOptions(source, node);
     const limit =
         options && BODY_LIMIT_OPTIONS.map((key) => getOptionProperties(options, source).get(key)).find(Boolean);
     return limit && isTooLarge(source, limit, undefined, SIZE_LIMITS.standard) ? [limit] : [];
 }
 
-function getUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall): string | undefined {
+function getUploadModule(source: Readonly<TSESLint.SourceCode>, node: CallNode): string | undefined {
     const { callee } = node;
     const origin = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;
     const name = getQualifiedName(origin, source);
@@ -93,7 +94,7 @@ function getUploadModule(source: Readonly<TSESLint.SourceCode>, node: UploadCall
     return module !== MULTER_MODULE || (name === MULTER_MODULE && callee === origin) ? module : undefined;
 }
 
-function listOversizedNodes(source: Readonly<TSESLint.SourceCode>, node: UploadCall): TSESTree.Node[] {
+function listOversizedNodes(source: Readonly<TSESLint.SourceCode>, node: CallNode): TSESTree.Node[] {
     const module = getUploadModule(source, node);
     if (module === FORMIDABLE_MODULE) return listOversizedForms(source, node);
     if (module === BODY_PARSER_MODULE) return listOversizedBodies(source, node);
@@ -134,7 +135,7 @@ export const maxRequestSize = createRule<[], 'unlimited'>({
         const source = context.sourceCode;
         const forms = new Map<TSESLint.Scope.Variable, SizedForm>();
         return {
-            'CallExpression, NewExpression'(node: UploadCall) {
+            'CallExpression, NewExpression'(node: CallNode) {
                 for (const oversized of listOversizedNodes(source, node))
                     context.report({ node: oversized, messageId: 'unlimited' });
                 const isForm = node.arguments.length === 0 && getUploadModule(source, node) === FORMIDABLE_MODULE;

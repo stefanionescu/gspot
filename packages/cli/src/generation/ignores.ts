@@ -14,6 +14,7 @@ import { listOwnedConfigs } from '#cli/generation/owned.ts';
 import { listOutsideTargets, listPointerPaths } from '#cli/generation/pointers.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
+import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
 import { readLinguistPatterns } from '#cli/repository/read.ts';
 import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { compareText } from '#cli/system/text.ts';
@@ -57,7 +58,7 @@ export function buildIgnoreSections(session: Session, generated: Pick<ConfigTarg
     const generatorOutputs = scopes.flatMap(({ path: scopePath, configurations }) =>
         configurations.flatMap((configuration) => configuration.generated.map((file) => join(scopePath, file))),
     );
-    const trackedPaths = (repository.index.length === 0 ? repository.files : repository.index).map(({ path }) => path);
+    const trackedPaths = listTrackedPaths(repository);
     const folders = [
         ...new Set(
             scopes.flatMap(({ configurations }) =>

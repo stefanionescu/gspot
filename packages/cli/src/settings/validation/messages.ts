@@ -2,18 +2,13 @@ import { z } from 'zod';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { getSettingType, unwrapSettingInput } from '#cli/settings/lookup.ts';
 import { formatNameList } from '#cli/system/text.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';
 
 export const SETTINGS_PAGE_SENTENCE = `${cliPackage.homepage}/reference/gspot-toml/ lists every setting.`;
-
-function unwrapFirstOption(schema: z.ZodType): z.ZodType {
-    const inner = unwrapSettingSchema(schema);
-    return inner instanceof z.ZodUnion ? (inner.options[0] as z.ZodType) : inner;
-}
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,
@@ -22,7 +17,7 @@ function formatValueAdvice(
 ): string {
     const issue = error.issues.find((issue) => issue.code === 'invalid_value');
     if (issue !== undefined) return formatNameList(issue.values.map(String), 'disjunction');
-    const inner = schema === undefined ? undefined : unwrapFirstOption(schema);
+    const inner = schema === undefined ? undefined : unwrapSettingInput(schema);
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
     if (inner instanceof z.ZodBoolean) return 'true or false';
     const description = setting.description.replace(TRAILING_PERIOD, '');
@@ -46,7 +41,7 @@ export function formatFileValueError(schema: z.ZodType | undefined, issue: z.cor
     if (schema === undefined || issue.message.startsWith('needs ')) return issue.message;
     const validation = schema.safeParse(value);
     if (validation.success) return issue.message;
-    const inner = unwrapFirstOption(schema);
+    const inner = unwrapSettingInput(schema);
     const setting = {
         name: issue.path.map(String).join('.'),
         type: getSettingType(schema).type,
