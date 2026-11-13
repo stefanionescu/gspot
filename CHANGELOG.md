@@ -2,17 +2,20 @@
 
 ## 0.4.3
 
-gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories found. It changes no rule and loosens none. Three
-of the fixes unblock a push: a site whose pages import a large file, an Xcode project with package dependencies, and a
-model loaded from a local folder.
+gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories, an audit of the code, and an outside report
+found. Two configurations take new names, seven ESLint plugin rules are gone, and `removed_configurations` refuses two
+kinds of entry. Level `all` turns on more lint rules, and four checks report more. `gspot check --fix` now rewrites
+stale generated files.
 
-This section is not released, and its entries cite no commit yet.
+This section is not released.
 
 ### Breaking changes
 
+Configurations and settings:
+
 - `data-files` becomes the `json`, `yaml`, `toml`, and `xml` configurations, and `engineering` becomes `agents`. In
   `gspot.toml`, rename `[data_files]` to `[json]`, so `[[data_files.schemas]]` becomes `[[json.schemas]]`, and write
-  the new check IDs in `[[ignore]]` and `--only`:
+  the new check IDs in `[[ignore]]` and `--only`. (aba847c)
 
 | 0.4.2                             | 0.4.3                 |
 | --------------------------------- | --------------------- |
@@ -22,8 +25,74 @@ This section is not released, and its entries cite no commit yet.
 | `data-files/yaml`                 | `yaml/syntax`         |
 | `engineering/nested-agents-files` | `agents/nested-files` |
 
-- The ESLint plugin no longer reads the undocumented `testFileExtensions` setting. Its test rules find test files by
-  the extensions they ship with.
+- `removed_configurations` stops every command when it names a configuration that is always on. Delete the entry. To
+  run fewer of its checks, run `gspot set level` or `gspot ignore`. (d44150b)
+- `removed_configurations` stops every command when it names a configuration that a selected one requires. gspot kept
+  such a configuration selected and said nothing. Delete the entry, or remove the configuration that requires it.
+  (d44150b)
+- `gspot check --hook commit-msg` exits 2 with `--fix`, `--base`, or `--staged`, as `--hook pre-push` did. Leave them
+  out of a hook script that you wrote. (d44150b)
+
+ESLint plugin:
+
+- The plugin drops seven rules, because a rule of another plugin that gspot ships reports the same code. Delete each
+  name from your ESLint config and from `eslint-disable` comments, where ESLint now reports an unknown rule. (4c5a4ff)
+
+| Removed rule                          | Use instead                                                                  |
+| ------------------------------------- | ---------------------------------------------------------------------------- |
+| `gspot/no-misleading-array-reverse`   | `unicorn/no-array-reverse`, `unicorn/no-array-sort`                          |
+| `gspot/no-impossible-collection-size` | `unicorn/no-impossible-length-comparison`                                    |
+| `gspot/prefer-boolean-return`         | `unicorn/prefer-boolean-return`                                              |
+| `gspot/no-global-this`                | `unicorn/no-this-outside-of-class`                                           |
+| `gspot/prefer-object-literal`         | `unicorn/no-immediate-mutation`                                              |
+| `gspot/no-inline-interpolation`       | `jest/no-interpolation-in-snapshots`, `vitest/no-interpolation-in-snapshots` |
+| `gspot/no-duplicate-in-composite`     | `@typescript-eslint/no-duplicate-type-constituents`                          |
+
+- `@typescript-eslint/no-duplicate-type-constituents` needs type information, which gspot turns off in the `<script>`
+  blocks of `.astro` files. A repeated type in such a block is no longer reported. (4c5a4ff)
+- The plugin no longer reads the undocumented `testFileExtensions` setting. Its test rules find test files by the
+  extensions they ship with. (a00b7f7)
+
+Checks that newly fail:
+
+- `structure/function-order` reports every private top-level function below the first public function of its file,
+  also when a function above it calls it. Move the private function above the public one. (c43ff99)
+- `structure/function-order` reads the JavaScript and TypeScript files of `test_files`. A helper below the first
+  top-level `test`, `it`, or `describe` call is reported. Move it above the first test. (c43ff99)
+- `structure/trivial-functions` reports an exported JavaScript or TypeScript function that one place calls, when it
+  holds `limits.trivial_function_statements` statements or fewer. Inline it at that call. A function in
+  `javascript.entry_files` passes. (c43ff99)
+- `naming/identifiers` reports a function named exactly `run` and a function or method whose first word is `handle`.
+  `naming/paths` reports a folder named `mocks`. Rename each one. A method named `run` and a `__mocks__` folder pass.
+  (c43ff99)
+- A `handle` function still passes in `.tsx`, `.jsx`, `.vue`, `.svelte`, and `.astro` files, and a Swift function or
+  method marked `@objc` keeps its `handle` name. (c43ff99, 8b6c861)
+- `gspot/weakenings` reports the rule `import-rule` when an `[[import_rule]]` record goes away, gains a path, or may
+  import more rules, and when `javascript.import_boundaries` loses an entry. Restore the record, or ignore the rule
+  with a reason. (c43ff99)
+- `gspot/weakenings` reports the rule `rule-options` when new or changed options in `tools.eslint.rules` leave out or
+  change a key of the options that gspot ships. Repeat each shipped key with its shipped value. (c43ff99)
+- Level `all` turns on `no-implicit-coercion`, `no-lonely-if`, `object-shorthand`, `operator-assignment`,
+  `prefer-object-has-own`, `prefer-template`, and `radix`. Run `gspot check --fix`, which fixes most of their findings.
+  (c43ff99)
+- Level `all` turns on `unicorn/consistent-destructuring`, `unicorn/no-repeated-call-wrappers`,
+  `unicorn/no-unused-properties`, and `unicorn/no-useless-coercion`. (c43ff99)
+- In TypeScript, level `all` turns on `@typescript-eslint/dot-notation` and
+  `@typescript-eslint/no-import-type-side-effects`, and `@typescript-eslint/no-unnecessary-condition` runs with
+  `checkTypePredicates`. (c43ff99)
+- The new `gspot/no-boolean-parameters` runs at level `all` and reports a positional parameter typed `boolean`. Take an
+  options object, or split the function. (c43ff99)
+- The new `gspot/no-renamed-imports` runs at level `all` and reports an import that renames a value of a module of the
+  user's repository. Rename the export. (c43ff99)
+- `gspot/no-ignored-catch` reports a `catch` without a binding. Handle the error, or leave the block empty with a
+  comment that says why. (0c5da73, d44150b)
+
+Level `all` rules that the 0.3.8 section did not name:
+
+- Level `all` runs `unicorn/no-asterisk-prefix-in-documentation-comments`, `unicorn/prefer-iterator-to-array`, and
+  `unicorn/max-nested-calls` from 0.3.8, which moved to eslint-plugin-unicorn 78. The first has a fix, so
+  `gspot check --fix` rewrites each multiline doc comment that starts its lines with an asterisk. Review that diff after
+  an upgrade.
 
 ### Known issues
 
@@ -33,9 +102,17 @@ This section is not released, and its entries cite no commit yet.
   order of a block that exists. Move such a rule below the block.
 - A `[[scope]]` value that starts at the root of the repository still passes `gspot install`. `gspot/unmatched-paths`
   reports it and prints the form to write.
-- `naming/identifiers` reads SQL as Postgres. Under another `sql.dialect`, it checks no name in a file that the Postgres
-  parser cannot read.
+- `naming/identifiers` parses SQL only as Postgres. Unless `sql.dialect` is `postgres`, it checks no name in a file
+  that the Postgres parser cannot read.
 - `python/pydoclint` DOC503 asks for the name after `raise`, also when that name is a helper function or a variable.
+- With `next-intl` installed, the `translations` configuration reports each import of `next/link`, and of `redirect`,
+  `useRouter`, or `usePathname` from `next/navigation`, also in a project without locale routing. Ignore the rule
+  `gspot/restricted-syntax` for those files with a reason.
+- Three Next.js shapes still report. `export const dynamicParams` reports `unicorn/consistent-boolean-name`. The
+  default export of a Cloudflare Worker entry, and of the module that `images.loaderFile` names, reports
+  `import-x/no-default-export`. Ignore the rule for that file with a reason.
+- `unicorn/max-nested-calls` reports most Zod schemas at its default limit, because an object in an array in an object
+  already passes it. Set its `max` option in `tools.eslint.rules`, or ignore the rule with a reason.
 
 ### Highlights
 
@@ -43,93 +120,210 @@ This section is not released, and its entries cite no commit yet.
 
 - `site/build` and the other checks that build in a copy now copy every tracked file. A file over
   `repository.max_file_kilobytes`, such as a video that a page imports, was missing from the copy, and the build failed.
+  (aba847c)
 - `swift/build` builds an Xcode scheme that has Swift package dependencies. It no longer passes
-  `SWIFT_TREAT_WARNINGS_AS_ERRORS=YES` to every target, which Xcode 26 refuses for package targets. It reads the
-  warnings of the build and reports each one in your own sources, so a warning still fails the check.
+  `SWIFT_TREAT_WARNINGS_AS_ERRORS=YES` to every target, which Xcode 26 refuses for package targets. (aba847c)
+- `swift/build` reads the warnings of the build and reports each one in your own sources, so a warning still fails the
+  check. (aba847c)
 - `gspot.ml.unpinned-hub-download` accepts a load with `local_files_only=True`, which downloads nothing. A load
-  without it, or with `local_files_only=False`, is still reported.
+  without it, or with `local_files_only=False`, is still reported. (aba847c)
 - The CI workflow runs `gspot check` under `mise exec`, so a command check reads the `[env]` of your mise config again.
+  (aba847c)
 - gspot reads the whole output of a tool. A tool that exits with output still in a pipe lost what came after 64 KB, and
-  `html/html-validate` then failed with `The output is not JSON`.
-- A `[[command_check]]` with regex output that exits 0 reports only the lines that name a file or a line.
+  `html/html-validate` then failed with `The output is not JSON`. (aba847c)
+- A `[[command_check]]` with regex output that exits 0 reports only the lines that name a file or a line. (aba847c)
+- A push of a new branch compares with the merge base of the pushed commit, where it used the branch that was checked
+  out. A push of a new orphan branch no longer fails. (d44150b)
+- When the pushed commit and the compared branch share no commit, the check reads every file and notes
+  `Checked every file: <compared> and <head> share no commit.` `gspot check --base` does the same. (d44150b)
+- A Git failure during the check of a push to the default branch is reported as a Git error, where gspot called it a
+  force push. (d44150b)
+- A fixable finding that names no tracked file, such as one on a folder, no longer stops the run. (d44150b)
+- Ctrl-C during `docker info` cancels the check, where gspot reported Docker as missing. (d44150b)
 
 #### Findings that were wrong
 
 - `dependencies/osv-scanner` reports one finding for each vulnerability, not one for each advisory ID. The finding
-  lists the other IDs, names the fixed versions, and points at the line of the package in the lockfile.
+  lists the other IDs, names the fixed versions, and points at the line of the package in the lockfile. (aba847c)
 - `licenses/allowed` points at the line of the package in the lockfile, and reports an ignore whose `paths` can never
-  match as `unmatched-ignore`.
-- When `gspot.toml` at the base revision does not fit the schema, `gspot/weakenings` compares the current file with the
-  shipped defaults and reports each weakening that has no reason.
+  match as `unmatched-ignore`. (aba847c)
+- When `gspot.toml` at the base revision does not fit the schema, `gspot/weakenings` reads it without the keys that the
+  schema refuses. A level drop from `all` is reported, and a switch that was already off is not. (aba847c, d44150b)
+- When the base file still does not fit, `gspot/weakenings` compares the current file with the shipped defaults.
+  (aba847c)
 - `gspot/detected-configurations` honors an `[[ignore]]` that has only `paths`, and each line names the evidence of its
-  own scope.
-- `naming/identifiers` reports a Bash variable once when a `readonly` line follows its assignment, and no longer
-  reports Postgres syntax errors for a folder whose `sql.dialect` is another dialect.
-- `structure/jscpd` leaves the lines of an import block out of the length of a clone.
+  own scope. (aba847c)
+- `naming/identifiers` reports a Bash variable once when a `readonly` line follows its assignment. (aba847c)
+- `naming/identifiers` reports Postgres syntax errors only when `sql.dialect` is `postgres`. It reported them for
+  another dialect, and for SQLite files when no dialect was set. (aba847c, d44150b)
+- `naming/paths` accepts a SQL migration named with a sequence number, such as `0001_create_users.sql`. (d44150b)
+- In a scope with `react`, a state setter no longer counts its `set` prefix against `naming.<language>.max_words`.
+  (d44150b)
+- `structure/jscpd` leaves the lines of an import block out of the length of a clone. (aba847c)
 - When a staged file also has unstaged edits, the copy that a commit checks links each hidden folder of
-  `node_modules` that holds its own install. A tsconfig path into such a folder resolved in place but not in the copy,
-  so type-aware ESLint reported false type errors there.
+  `node_modules` that holds its own install. Type-aware ESLint reported false type errors for a tsconfig path into such
+  a folder. (062928c)
 - A module that `javascript.externals` lists passes the import rules when it resolves to a file. The test file and tRPC
-  policies still apply to it.
+  policies still apply to it. (aba847c)
+- The Next.js `sitemap`, `robots`, `manifest`, `icon`, `apple-icon`, `opengraph-image`, `twitter-image`, `middleware`,
+  and `proxy` files may export a default, and so may the next-intl `i18n/request` file. (d44150b)
+- `useMDXComponents` and a file named `twitter-image` pass the naming checks under `nextjs`. (d44150b)
+- Level `all` no longer runs `unicorn/prefer-iterator-to-array` on code of a runtime other than Node.js, because a
+  browser may lack `Iterator.prototype.toArray`. (bc399ba)
+- `gspot/generated-files` no longer reports an up-to-date block in a file with CRLF line ends. It reports a blank line
+  after the start marker, which `gspot install` rewrites. (d44150b)
+- `gspot/generated-files` and `gspot install` build one plan of writes, so the check reports what the install changes.
+  (52b71d5)
+- `postgres/definer-search-path` reports a `SECURITY DEFINER` function that sets `search_path` and then resets it.
+  (d44150b)
+- `supabase/service-role-key` reads a script without an extension. (d44150b)
+- `docs/missing-paths` reads `.MD` and `.MDX` files, and the `structure` checks on folders no longer count them as
+  code. (d44150b)
+- `cloudflare/redirects` accepts an `http://` destination. (d44150b)
+- `docker/instructions` reads an instruction that continues over lines with CRLF line ends. (d44150b)
 - `prose/commit-message` accepts the `--` after `mise exec`. A double hyphen between words is still reported.
-- `gspot.heading-case` accepts a word in capitals that starts with a digit, such as `3D`.
-- `spelling/typos` leaves out the message files of other languages in `translations.messages_folder`.
+  (aba847c)
+- `gspot.heading-case` accepts a word in capitals that starts with a digit, such as `3D`. (aba847c)
+- `spelling/typos` leaves out the message files of other languages in `translations.messages_folder`. (aba847c)
 - `python/pydoclint` picks the Google style for a file whose docstrings hold only `Returns:`, `Raises:`, or
-  `Attributes:` sections.
+  `Attributes:` sections. (aba847c)
 - gspot reports the findings of a Semgrep run in which a `nosemgrep` comment names a rule that did not match, where it
-  stopped with `Semgrep could not complete the scan`.
+  stopped with `Semgrep could not complete the scan`. (aba847c)
 
 #### Fixers
 
+- `gspot check --fix` rewrites stale generated files, as `gspot install` does. A plain `gspot check` writes nothing and
+  marks the finding as fixable. (bc399ba)
+- A stale tool lockfile under `.gspot/` still needs `gspot install`, which also installs the tools, and `--fix` with
+  `--staged` is still refused. (bc399ba)
+- The new `gspot/no-detached-doc-comments` runs at level `all`. Its fix removes the blank line that the fix of an unused
+  `eslint-disable` comment leaves between a doc comment and its function. (bc399ba)
 - `gspot check --fix` fixes the SQLFluff findings that have a fix, and no longer marks a rule without one as fixable.
+  (aba847c)
 - The fix for `unicorn/no-asterisk-prefix-in-documentation-comments` leaves no line of spaces in an indented comment.
+  (aba847c)
 - The fix for `unicorn/consistent-boolean-name` no longer writes a name such as `isWasReady`. The finding stays, and
-  you choose the name.
+  you choose the name. (aba847c)
+- A fixer that is canceled notes `The fix was canceled.` (52b71d5)
 
 #### Settings
 
-- The refusal of an unknown record table names the right line.
-- With a pin in `package.json` and another in `mise.toml`, the message names both versions.
+- The refusal of an unknown record table names the right line. (aba847c)
+- With a pin in `package.json` and another in `mise.toml`, the message names both versions. (aba847c)
 - `gspot set tools.<tool>.rules` stops with the reason when it cannot read the rule catalog of the tool, such as before
-  `gspot install`.
+  `gspot install`. (aba847c)
 - A `tools.stylelint.rules.property-no-vendor-prefix` setting whose `ignoreProperties` holds a name without its prefix
-  is refused, because Stylelint matches the property as written and the fixer then deletes the prefix.
+  is refused, because Stylelint matches the property as written and the fixer then deletes the prefix. (aba847c)
+- A typo in `removed_configurations` is refused. (aba847c)
+- `gspot add` of a configuration accepts the settings of the configurations that it requires. (d44150b)
+- `gspot unset` names `--` when an item starts with `-`. (52b71d5)
+- The example in the JSON schema of `gspot.toml` writes `[[naming.exception]]`, which the schema accepts. (a00b7f7)
 
 #### Install, init, and scan
 
 - `gspot install` no longer writes the generated files a second time after an upgrade, and prints the note about keys
-  it no longer manages only after `set`, `unset`, and `remove`.
+  it no longer manages only after `set`, `unset`, and `remove`. (aba847c)
 - `gspot install` no longer locks the npm tools again on every run when `gspot.toml` holds a
   `[[tools.eslint.plugins]]` or `[[tools.stylelint.plugins]]` record with a `package`. With npm, each run also deleted
-  `.gspot/node_modules`.
+  `.gspot/node_modules`. (b8c653f)
+- `gspot install` locks the tools again after `dependencies.min_release_age_days`, the npm registry settings, or the
+  uv indexes change. (d44150b)
+- `gspot install` reads a tool `pnpm-lock.yaml` that pnpm writes as two YAML documents. (d44150b)
+- gspot never runs a `uv` that sits inside the user's repository. (d44150b)
+- A registry answer that is not JSON no longer replaces the install error, and the release age lookup uses the proxy
+  that the environment names. (d44150b)
+- The summary of `gspot install` says `Some tools are still missing.` whenever a tool is missing, also after it
+  installed others. (d44150b)
+- `gspot install` rewrites `.gspot/configurations/javascript/eslint/import-cycles.mjs` with new text. The lint results
+  stay the same. (52b71d5)
 - `gspot init` stops with `Cannot read committed Git history` when Git cannot read HEAD, where it said that Git does
-  not hold the replaced config files unchanged at HEAD. Run `git status` and repair the repository.
-- `gspot scan` quotes the check and the rule in the `gspot ignore` command it prints, so a rule name with a space or a
-  shell character can be pasted.
-- `gspot init` and `gspot add` leave `site.build_command` unset, and the site build runs the `build` script with the
-  package manager of the repository.
-- Without a `.venv`, `gspot install` builds the project environment with the Python that the mise config pins.
-- A stale `uv.lock` gets the advice to run `uv lock`, where it got the advice to check the network.
+  not hold the replaced config files unchanged at HEAD. Run `git status` and repair the repository. (b8c653f)
+- A signal that stops `gspot init` during its writes lets the writes finish, then names `gspot install`. (d44150b)
 - Ctrl-C while `gspot init` installs tools prints the state of the repository and the command that finishes the setup.
-- A staged check that finds tool files unstaged names them and says to stage `gspot.toml` and `.gspot/`.
-- `gspot scan` compares every ESLint and Stylelint config, reads the hooks of Husky, `core.hooksPath`, and `.git/hooks`,
-  finds lint commands in mise tasks, lists the findings that have no rule, and names an untracked lockfile.
-- A `.githooks/` folder that Git does not use no longer counts as a hook manager.
-- `gspot init` lists `typos.toml` in the table of what it carries over.
-- A typo in `removed_configurations` is refused.
-- The example in the JSON schema of `gspot.toml` writes `[[naming.exception]]`, which the schema accepts.
+  (aba847c)
+- `gspot init` and `gspot add` leave `site.build_command` unset, and the site build runs the `build` script with the
+  package manager of the repository. (aba847c)
+- The carryover table of `gspot init` names the Prettier config that it read, and lists `typos.toml`. (aba847c,
+  d44150b)
+- Without a `.venv`, `gspot install` builds the project environment with the Python that the mise config pins.
+  (aba847c)
+- A stale `uv.lock` gets the advice to run `uv lock`, where it got the advice to check the network. (aba847c)
+- A staged check that finds tool files unstaged names them and says to stage `gspot.toml` and `.gspot/`. (aba847c)
+- `gspot scan` compares every ESLint and Stylelint config, reads the hooks of Husky, `core.hooksPath`, and
+  `.git/hooks`, and finds lint commands in mise tasks. It lists the findings that have no rule, and names an untracked
+  lockfile. (aba847c)
+- `gspot scan` quotes the check and the rule in the `gspot ignore` command it prints, so a rule name with a space or a
+  shell character can be pasted. (b8c653f)
+- A `.githooks/` folder that Git does not use no longer counts as a hook manager. (aba847c)
 
 #### Messages and crashes
 
-- A closed output pipe ends gspot quietly, and a dangling `lefthook.yml` link no longer stops `gspot doctor`.
-- `gspot list settings` prints a long value on its own line and each record of a list on its own line.
-- An argument error after a global flag names the help of its command.
-- `gspot explain naming/identifiers banned-word` lists the words that each level bans.
+- An option value that reads `--json`, as in `gspot ignore <check> --reason --json`, no longer turns on JSON output.
+  (d44150b)
+- An argument error comes before a repository error. `gspot check --staged --fix` outside a Git repository exits 2
+  with the error `arguments`, where it reported `git`. (52b71d5)
+- `gspot ignore --rule`, `gspot set tools.eslint.rules`, and `gspot explain` no longer stop on a rule of
+  `@eslint-react/eslint-plugin` or `eslint-plugin-astro`. (d44150b)
+- `gspot explain <check> <rule>` explains a rule of a `[[command_check]]`, which `gspot ignore --rule` already
+  accepted. (d44150b)
+- `gspot explain <check>` lists the rule files that the check names, where it listed every rule file of its
+  configuration. (c43ff99)
+- `gspot explain ./file` in a repository without `gspot.toml` says to run `gspot init`. (d44150b)
+- A missing generated file gives the status `error` in every check. `javascript/tsc` and `structure/jscpd` reported
+  `missing`. (d44150b)
+- A TypeScript scope that a parent tsconfig covers is skipped with the cause `replaced`, where it gave `condition`.
+  (d44150b)
+- A refused import prints a rule name that holds `{{` as you wrote it. (bc399ba)
+- The generated ESLint config loads when a selected configuration adds no block for a scope, such as `testing-library`
+  without a Testing Library dependency, or `react-dom` beside `react-native`. (bc399ba)
+- A closed output pipe ends gspot quietly, and a dangling `lefthook.yml` link no longer stops `gspot doctor`. (aba847c)
+- `gspot list settings` prints a long value on its own line and each record of a list on its own line. (aba847c)
+- An argument error after a global flag names the help of its command. (aba847c)
+- `gspot explain naming/identifiers banned-word` lists the words that each level bans. (aba847c)
 - `gspot explain javascript/eslint no-undef` names the `[[tools.eslint.override]]` setting for a browser script.
+  (aba847c)
 - The help of `commits/commitlint`, `python/pydoclint` DOC503, `postgres/edited-migrations`, and the refusal of a
-  `nosemgrep` comment now say what to write.
-- The scan refusal in a repository that has a `gspot.toml` says how to try an upgrade.
-- An Xcode project that gspot cannot parse is named once in the error, with its fix once.
+  `nosemgrep` comment now say what to write. (aba847c)
+- The scan refusal in a repository that has a `gspot.toml` says how to try an upgrade. (aba847c)
+- An Xcode project that gspot cannot parse is named once in the error, with its fix once. (a00b7f7)
+
+#### Rules for coding agents
+
+- `WORKING.md`, `TESTING.md`, `NAMING.md`, `ERRORS.md`, `SETTINGS.md`, `COMMENTS.md`, `WRITING.md`, `DOCS.md`,
+  `GIT.md`, `DEPENDENCIES.md`, `GENERATED.md`, and `SUPPRESSIONS.md` gain rules that the audit found missing, such as
+  to search before you write a function. Run `gspot install` to get them. (bc399ba)
+- `TYPESCRIPT.md`, `JAVASCRIPT.md`, `ASTRO.md`, `BASH.md`, `GITHUB-ACTIONS.md`, `CSS.md`, `CLOUDFLARE.md`, `SITE.md`,
+  and `ZOD.md` gain rules too. (bc399ba)
+- `gspot install` writes `PLAYWRIGHT.md` for the `@playwright/test` dependency or a `playwright.config.*` file. The
+  `playwright` dependency alone no longer selects it. (c43ff99)
+
+#### ESLint plugin
+
+- The four S3 bucket rules read an option that a spread, a quoted key, or a `props` argument sets. A report now points
+  at the value or at the `props` argument. (0c5da73, d44150b)
+- `gspot/no-any-origin-policy` matches the header name of `writeHead` in any letter case. (0c5da73)
+- `gspot/no-code-after-done` reads the statements inside a `case`. (0c5da73)
+- `gspot/no-async-constructor` reports each awaited declaration, where it reported the whole constructor body.
+  (0c5da73)
+- `gspot/no-misplaced-loop-counter` counts a call on a `this` member as a change of the tested value. (0c5da73)
+- `gspot/no-client-environment` no longer reports every `const { env } = process` when `process` is a declared
+  global. (0c5da73)
+- The rules that read a version range from `package.json` read a caret range of zeros, such as `^0.0`, as npm reads
+  it. (0c5da73)
+- The security rules that read one option key follow the value in the scope of the options. An options object written
+  outside the function that makes the call is now reported. (52b71d5)
+- `gspot/no-unsafe-sanitizer-bypass` no longer reports a field of a table written with `as const`. (52b71d5)
+
+#### Docs
+
+- The Import rules page says that a rule owns every file its `paths` match, stylesheets included. (bc399ba)
+- The 404 page keeps the width of the other pages, and the sidebar lists the Django and Flask pages. (0c5da73)
+
+### Development
+
+This repository runs gspot 0.4.2. Each fixed value sits in a `config/` file under a subject label, each unit test file
+sits at the path of its source file, and tests that only retyped a constant are gone. (d6e1f39, a00b7f7, ca86f0c,
+64e8dbd, 268b63e, 7488a69)
 
 ## 0.4.2
 
