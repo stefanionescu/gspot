@@ -23,6 +23,7 @@ publish_package() {
 
 main() {
     local commit
+    local tagged
     local plugin_spec
     local cli_spec
 
@@ -33,6 +34,12 @@ main() {
         exit 1
     fi
     commit=$(git rev-parse HEAD) || exit 1
+    tagged=$(git rev-parse "${usage_tag}^{commit}") || exit 1
+    # npm must serve the code of the tagged commit, so later commits on main with the same version do not ship.
+    if [[ ${tagged} != "${commit}" ]]; then
+        printf 'HEAD is not the commit of %s. Run git checkout %s, then publish again.\n' "${usage_tag}" "${usage_tag}" >&2
+        exit 1
+    fi
     mise run release:check-ci "${commit}"
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
