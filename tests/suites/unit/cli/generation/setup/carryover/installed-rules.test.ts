@@ -1,18 +1,15 @@
-import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { compareInstalledRules, convertRule, readUserRules } from '#cli/generation/setup/carryover/lint-rules.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 async function writePrinter(root: string, rules: unknown): Promise<void> {
-    await mkdir(join(root, '.gspot/node_modules/.bin'), { recursive: true });
-    const program = join(root, '.gspot/node_modules/.bin/eslint');
-    await writeFile(program, `#!/bin/sh\necho '${JSON.stringify({ rules })}'\n`);
-    await chmod(program, 0o755);
+    const printed = Buffer.from(JSON.stringify({ rules })).toString('hex');
+    await writeProgramCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/eslint`, 'fakes/tool', '--stdout-hex', printed);
 }
 
 test('scan sorts the ESLint rules of the repository by what gspot runs', async () => {

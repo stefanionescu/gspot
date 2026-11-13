@@ -1,8 +1,11 @@
+import { fileURLToPath } from 'node:url';
+
 import * as parser from '@typescript-eslint/parser';
 import { Glob } from 'bun';
 import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
 
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import plugin from '#eslint-plugin/plugin.ts';
 import { TOPICS } from '#eslint-plugin/registry/topics.ts';
 
@@ -10,8 +13,8 @@ test('each rule file of a topic folder is registered under that topic and takes 
     const registered = Object.entries(TOPICS).flatMap(([topic, rules]) =>
         rules.map(({ name }) => `${topic}/${name}.ts`),
     );
-    const folder = new URL('../../../../packages/eslint-plugin/src/rules/', import.meta.url).pathname;
-    const files = [...new Glob('*/*.ts').scanSync(folder)];
+    const folder = fileURLToPath(new URL('../../../../packages/eslint-plugin/src/rules/', import.meta.url));
+    const files = [...new Glob('*/*.ts').scanSync(folder)].map((path) => convertToPosixPath(path));
     expect(registered.toSorted()).toStrictEqual(files.toSorted());
     const names = files.map((path) => path.slice(path.indexOf('/') + 1, -'.ts'.length));
     expect(Object.keys(plugin.rules).toSorted()).toStrictEqual(names.toSorted());

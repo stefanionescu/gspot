@@ -4,6 +4,7 @@ import { expect, test } from 'bun:test';
 import type { ESLint } from 'eslint';
 import { testdir } from 'testdirs';
 
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TYPED_RULE_PROJECTS } from '#tests/config/configurations/javascript/blocks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
@@ -43,7 +44,7 @@ test('a config file outside every tsconfig gets the typed rules, and one that a 
         results.flatMap(({ filePath, messages }) =>
             messages
                 .filter(({ ruleId }) => ruleId === typed)
-                .map(({ line }) => ({ file: relative(sandbox.path, filePath), line })),
+                .map(({ line }) => ({ file: convertToPosixPath(relative(sandbox.path, filePath)), line })),
         ),
     ).toStrictEqual([
         { file: 'scripts/deploy.ts', line: 1 },

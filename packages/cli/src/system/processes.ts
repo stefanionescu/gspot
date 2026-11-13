@@ -220,7 +220,9 @@ export async function runProcess(command: readonly string[], options: Cancelable
     if (unstarted !== undefined) return unstarted;
     const folder = mkdtempSync(join(tmpdir(), TEMPORARY_FILE_PREFIX));
     const paths = [join(folder, 'stdout'), join(folder, 'stderr')] as const;
-    const descriptors = paths.map((path) => openSync(path, 'a'));
+    // Not append mode: a handle that may only append is not writable to an MSYS program, such as the `sh` and `bash`
+    // of Git for Windows, and its output is lost.
+    const descriptors = paths.map((path) => openSync(path, 'w'));
     try {
         let child;
         try {

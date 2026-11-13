@@ -197,6 +197,7 @@ export const HASH_FORMATS = [
     { format: 'sha256', hashLength: SHA256.length },
 ] as const;
 export const INDEX_PATH = 'folder/a\n"é.sql';
+export const NTFS_PROTECTION_OFF = ['-c', 'core.protectNTFS=false'] as const;
 
 // swift tags
 export const SWIFT_TAG_CASES = [

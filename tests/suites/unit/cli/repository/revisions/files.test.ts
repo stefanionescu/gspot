@@ -12,7 +12,7 @@ import {
     writeIndexTree,
 } from '#cli/repository/revisions/files.ts';
 import type { GitFile } from '#cli/types/repository.ts';
-import { HASH_FORMATS, INDEX_PATH } from '#tests/config/repository.ts';
+import { HASH_FORMATS, INDEX_PATH, NTFS_PROTECTION_OFF } from '#tests/config/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
@@ -49,8 +49,17 @@ test('a revision lists the entries of its tree, with SHA-1 and SHA-256 hashes', 
             { mode: '120000', hash, path: 'link' },
             { mode: '160000', hash, path: 'submodule' },
         ];
-        for (const entry of entries)
-            runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', entry.mode, entry.hash, entry.path]);
+        // Git for Windows refuses a quote or a line end in a path unless the NTFS protection is off.
+        for (const { mode, path } of entries)
+            runGitStep(sandbox.path, [
+                ...NTFS_PROTECTION_OFF,
+                'update-index',
+                '--add',
+                '--cacheinfo',
+                mode,
+                hash,
+                path,
+            ]);
         runGitStep(sandbox.path, ['commit', '--quiet', '--message', 'init']);
         const head = runGitStep(sandbox.path, ['rev-parse', 'HEAD']);
         expect(hash).toHaveLength(hashLength);
