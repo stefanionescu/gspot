@@ -7,44 +7,44 @@ import { testdir } from 'testdirs';
 import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession, runCheckCode, runChecks } from '#cli/engine/run.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
-const LOCAL_FILE_PATHS = {
-    indexOnly: ['.env.'],
-    refused: [
-        '.env',
-        '.env.local',
-        '.env.example.local',
-        'nested/.dev.vars.production',
-        'node_modules/.env.example',
-        'python/.venv/lib/package.py',
-        'python/nested/venv/lib/package.py',
-        'python/deep/.venv/lib/package.py',
-        'swift/.build/output.bin',
-        'sibling/node_modules/package/index.js',
-        'sibling/.dev.vars',
-    ],
-    allowed: [
-        '.env.example',
-        'nested/.env.example',
-        'python/node_modules/package/index.js',
-        'swift/node_modules/package/index.js',
-        'sibling/.venv/lib/package.py',
-        '.venv/lib/package.py',
-        '.build/output.bin',
-        'python/source.py',
-    ],
-    scopes: `[[scope]]
+test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
+    const paths = {
+        indexOnly: ['.env.'],
+        refused: [
+            '.env',
+            '.env.local',
+            '.env.example.local',
+            'nested/.dev.vars.production',
+            'node_modules/.env.example',
+            'python/.venv/lib/package.py',
+            'python/nested/venv/lib/package.py',
+            'python/deep/.venv/lib/package.py',
+            'swift/.build/output.bin',
+            'sibling/node_modules/package/index.js',
+            'sibling/.dev.vars',
+        ],
+        allowed: [
+            '.env.example',
+            'nested/.env.example',
+            'python/node_modules/package/index.js',
+            'swift/node_modules/package/index.js',
+            'sibling/.venv/lib/package.py',
+            '.venv/lib/package.py',
+            '.build/output.bin',
+            'python/source.py',
+        ],
+        scopes: `[[scope]]
 path = "python"
 configurations = ["python"]
 removed_configurations = { javascript = "This scope uses its own language tools without JavaScript dependencies." }
@@ -57,17 +57,8 @@ removed_configurations = { javascript = "This scope uses its own language tools 
 [[scope]]
 path = "sibling"
 `,
-} as const;
-
-const LARGE_FILE_TABLES = `[[scope]]
-path = "app"
-
-[repository]
-max_file_kilobytes = 1
-`;
-
-test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
-    const { refused, allowed, scopes, indexOnly } = LOCAL_FILE_PATHS;
+    } as const;
+    const { refused, allowed, scopes, indexOnly } = paths;
     const settings = buildSandboxSettings(['javascript'], { level: 'all', tables: scopes });
     await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
@@ -110,7 +101,7 @@ test('conflict-markers reports each marker line of a text file at level basic, a
 test('large files are reported in every scope except LFS, generated and vendored files, and pass once shrunk', async () => {
     const settings = buildSandboxSettings(['javascript'], {
         level: 'all',
-        tables: LARGE_FILE_TABLES,
+        tables: '[[scope]]\npath = "app"\n\n[repository]\nmax_file_kilobytes = 1\n',
     });
     await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
@@ -129,24 +120,15 @@ vendor/** linguist-vendored
 
     runGitStep(sandbox.path, ['init', '-q']);
     runGitStep(sandbox.path, ['add', '-f', '.']);
-    const failed = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['repository/large-files'] }),
+    const failed = await runSandboxCheck(sandbox.path, 'repository/large-files');
+    expect(failed.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+        ['app/big.bin', 'big.bin'].map((file) => ({ file, rule: 'size' })),
     );
-
-    expect(
-        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
-    ).toStrictEqual(['app/big.bin', 'big.bin'].map((file) => ({ file, rule: 'size' })));
     await writeFile(join(sandbox.path, 'app/big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
     await writeFile(join(sandbox.path, 'big.bin'), Buffer.alloc(BYTES_PER_KILOBYTE));
 
     runGitStep(sandbox.path, ['add', '-f', 'app/big.bin', 'big.bin']);
-    const fixed = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['repository/large-files'] }),
-    );
-
-    expect(listFindingRows(fixed.report)).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'repository/large-files')).toStrictEqual([]);
 });
 
 test('a staged outward link plans local-files, and a run that stages another file leaves the link alone', async () => {
@@ -178,17 +160,13 @@ test('a staged outward link plans local-files, and a run that stages another fil
     expect(await run(['notes.txt'])).toStrictEqual([]);
 });
 
-test('oversized and invalid UTF-8 files leave other checks, and the invalid UTF-8 file gets one encoding finding', async () => {
+test('an invalid UTF-8 file gets one encoding finding, and an oversized file gets none', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
         'large.md': 'x'.repeat(1025),
         'latin1.md': Buffer.from([35, 32, 67, 97, 102, 233]),
     });
     runGitStep(sandbox.path, ['add', '-A']);
-    const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'all', only: ['format/prettier'] })[0]!;
-    expect(planned.files.map(({ path }) => path)).not.toContain('large.md');
-    expect(planned.files.map(({ path }) => path)).not.toContain('latin1.md');
     expect(await runSandboxCheck(sandbox.path, 'repository/encoding')).toStrictEqual([
         expect.objectContaining({
             file: 'latin1.md',

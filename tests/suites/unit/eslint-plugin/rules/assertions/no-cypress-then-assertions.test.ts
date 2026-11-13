@@ -19,6 +19,7 @@ buildRuleTester().run('no-cypress-then-assertions', noCypressThenAssertions, {
             'cy.get("li").then(($items) => { const size = load(); expect($items).to.exist; });',
             'cy.get("li").then(($items) => { if (ready) expect($items).to.exist; });',
             'cy.get("li").then(({ length }) => { expect(length).to.equal(3); });',
+            'cy.get("input").then(($input) => { expect($input.val()).to.equal("a"); });',
         ].map((code) => ({ code, filename: '/repo/cypress/e2e/cart.cy.ts' })),
     ],
     invalid: [

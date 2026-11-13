@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/general.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -37,7 +37,7 @@ const CONTROLLED_PLAYBACK_PAGE = `<!doctype html>
 `;
 
 const HTML_SANDBOX = {
-    configurations: ['html', 'site'],
+    configurations: ['html'],
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;

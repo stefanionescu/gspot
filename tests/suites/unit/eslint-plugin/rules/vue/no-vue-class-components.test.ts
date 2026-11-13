@@ -1,5 +1,9 @@
 import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+import { Linter } from 'eslint';
+
+import plugin from '#eslint-plugin/plugin.ts';
 import { noVueClassComponents } from '#eslint-plugin/rules/vue/no-vue-class-components.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
@@ -40,4 +44,15 @@ buildRuleTester({ root }).run('no-vue-class-components', noVueClassComponents, {
             errors: [{ messageId: 'classComponent', line: 2 }],
         },
     ],
+});
+
+test('a JavaScript class from the default parser, which sets no decorators field, is linted without a finding', () => {
+    const linter = new Linter({ configType: 'flat', cwd: root });
+    const config: object = {
+        plugins: { gspot: plugin },
+        rules: { 'gspot/no-vue-class-components': 'error' },
+        settings: { gspot: { root } },
+    };
+    const source = 'export class Clock {\n    read() {\n        return 1;\n    }\n}\n';
+    expect(linter.verify(source, config, join(root, 'three/clock.js'))).toStrictEqual([]);
 });

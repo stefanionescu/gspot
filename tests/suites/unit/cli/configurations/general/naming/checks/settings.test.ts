@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { SWIFT_NAMING_LIMITS } from '#tests/config/configurations/naming/allowed-names.ts';
+import { SWIFT_NAMING_LIMITS } from '#tests/config/configurations/naming/languages.ts';
 import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 

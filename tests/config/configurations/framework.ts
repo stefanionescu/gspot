@@ -12,17 +12,9 @@ This project contains native project folders but also has native configuration p
 13/15 checks passed. 2 checks failed. Possible issues detected:
 Use the --verbose flag to see more details about passed checks.`;
 
-export const APP_FOLDERS = ['apps/first', 'apps/second'] as const;
-
-export const EXPO_PACKAGE_JSON = '{"private":true,"dependencies":{"expo":"54.0.0"}}\n';
-
-export const NEXT_CACHE_BYTES = [0, 255, 1, 2] as const;
-
 export const AUTHORED_NEXT_ENV = '// Authored type declaration\n';
 
 export const ROUTE_TYPES_COMMENT = '// Retained route types\n';
-
-export const UNRELATED_FILE = { path: 'unrelated/private.txt', text: 'Preserve unrelated scope\n' } as const;
 
 export const GENERATED_ROUTES = '// Generated routes\n';
 
@@ -69,17 +61,6 @@ export const SVELTE_CHECK_FINDINGS = [
     },
 ] as const;
 
-export const BUILD_OUTPUT_CHECKS = ['site/html-validate', 'site/purgecss', 'site/lychee', 'site/sitemap'] as const;
-
-export const WORKSPACE_SITE_FILES = {
-    'package.json': '{"private":true,"workspaces":["web","packages/*"]}',
-    'web/package.json': '{"name":"web","type":"module","dependencies":{"core":"workspace:*"}}',
-    'packages/core/package.json': '{"name":"core","type":"module","main":"value.js"}',
-    'packages/core/value.js': 'export const value = "<h1>Workspace site</h1>";',
-    'packages/unused/package.json': '{"name":"unused"}',
-    'packages/unused/private.txt': 'Unrelated site bytes',
-} as const;
-
 export const INVALID_SITEMAP_URLS = ['/', 'https://example.test/%E0%A4/'];
 
 export const PURGECSS_STYLE_CASES = [
@@ -122,13 +103,6 @@ export const PURGECSS_STYLE_CASES = [
         expected: [],
     },
 ] as const;
-
-export const SCOPE_ASSET_FILES = {
-    'README.md': '![Logo](docs/assets/logo.svg#light)\n![Other logo](other/assets/unused.svg)\n',
-    'docs/assets/logo.svg': '<svg/>',
-    'docs/assets/unused.svg': '<svg/>',
-    'other/assets/unused.svg': '<svg/>',
-} as const;
 
 export const GLOB_ASSET_CASES = [
     {

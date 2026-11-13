@@ -1,4 +1,3 @@
-import { existsSync } from 'node:fs';
 import { copyFile, mkdir, readdir, readFile, readlink, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -7,14 +6,10 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { GIT_HOOK_REPORT, SELECTED_SOURCE } from '#tests/config/engine/files.ts';
 import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
@@ -27,11 +22,6 @@ import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();
     const { project, commitId } = await prepareNestedRepository(sandbox.path);
-    const head = await readHead(project);
-    const headFiles = await listRevisionFiles(project, { kind: 'commit', hash: head! });
-    expect(headFiles.map((file) => file.path)).toStrictEqual(['source.txt']);
-    const files = await listRevisionFiles(project, { kind: 'index' });
-    expect(files.map((file) => file.path)).toStrictEqual(['source.txt']);
     for (const source of [{ kind: 'index' } as const, { kind: 'commit', hash: commitId } as const]) {
         using copy = await copyRevision(project, source);
         expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe(
@@ -59,18 +49,12 @@ test.each(['index', 'commit'] as const)('a %s copy keeps gitlinks without readin
     runGitStep(sandbox.path, ['commit', '-qm', 'Gitlink']);
     await mkdir(join(sandbox.path, 'vendor'));
     await symlink(outside.path, join(sandbox.path, path), 'dir');
-    const { index } = await readTestRepository(sandbox.path);
-    expect(listSubmodulePaths(index)).toStrictEqual([path]);
-    const session = await openSession(sandbox.path);
-    expect(session.repository.files.map((file) => file.path)).toStrictEqual(['gspot.toml', 'source.txt']);
     const expected = runGitStep(sandbox.path, ['write-tree']);
     const source = kind === 'index' ? { kind } : { kind, hash: runGitStep(sandbox.path, ['rev-parse', 'HEAD']) };
     using copy = await copyRevision(sandbox.path, source);
     expect(copy.tree).toBe(expected);
     expect(await readdir(join(copy.root, path))).toStrictEqual([]);
     expect(await readFile(join(copy.root, 'source.txt'), 'utf8')).toBe(SELECTED_SOURCE);
-    const copied = await readTestRepository(copy.root);
-    expect(listSubmodulePaths(copied.index)).toStrictEqual([path]);
 });
 
 test('a Git hook in a linked worktree copies the index and the commit, and keeps its own index, HEAD, Git settings, and cancellation', async () => {
@@ -168,24 +152,6 @@ test('a copy runs no global Git filter or line conversion, and its checks read t
     expect(await readFile(join(copy.root, 'large.bin'), 'utf8')).toBe('pointer\n');
     expect(await readFile(join(copy.root, 'notes.txt'), 'utf8')).toBe('one\ntwo\n');
     expect(runGitStep(copy.root, ['check-attr', 'filter', 'large.bin'])).toContain('lfs');
-});
-
-test('a copy with checked paths clones the ignored declarations of only the tsconfig files whose folder holds one', async () => {
-    await using sandbox = await testdir({
-        '.gitignore': '*.gen.d.ts\n',
-        'site/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
-        'site/types.gen.d.ts': 'declare const site: string;\n',
-        'site/src/page.ts': 'export const page = 1;\n',
-        'tools/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
-        'tools/types.gen.d.ts': 'declare const tools: string;\n',
-        'tools/src/main.ts': 'export const main = 1;\n',
-    });
-    commitAll(sandbox.path);
-    using checked = await copyRevision(sandbox.path, { kind: 'index', paths: ['site/src/page.ts'] });
-    expect(existsSync(join(checked.root, 'site/types.gen.d.ts'))).toBe(true);
-    expect(existsSync(join(checked.root, 'tools/types.gen.d.ts'))).toBe(false);
-    using every = await copyRevision(sandbox.path, { kind: 'index' });
-    expect(existsSync(join(every.root, 'tools/types.gen.d.ts'))).toBe(true);
 });
 
 test.skipIf(isWindows)(

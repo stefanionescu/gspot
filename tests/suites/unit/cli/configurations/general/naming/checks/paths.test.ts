@@ -40,40 +40,24 @@ test.each([...FILE_NAME_CASES])('$name', async ({ configurations, files, invalid
         ...files,
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
-
-    expect(failed.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+    expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toMatchObject([
         { file: invalid, line: 1, column: 1, rule: 'case' },
     ]);
     await rename(join(sandbox.path, invalid), join(sandbox.path, renamed));
-    const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
-
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toStrictEqual([]);
 });
 
-test.each([
-    { scope: '', configuration: 'sql' },
-    { scope: 'app', configuration: 'postgres' },
-])(
-    'migration timestamps pass with $configuration while other numeric folders are reported (scope "$scope")',
-    async ({ scope, configuration }) => {
-        const prefix = scope === '' ? '' : `${scope}/`;
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['naming', configuration], { level: 'all', scopes: [{ path: 'app' }] }),
-            ...Object.fromEntries(
-                Object.entries({
-                    'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-                    'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
-                } as const).map(([path, text]) => [`${prefix}${path}`, text]),
-            ),
-        });
-
-        const findings = await runSandboxCheck(sandbox.path, 'naming/paths', { scope });
-        expect(findings.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
-            `${prefix}other/20240101000000_create_teams/query.sql`,
-        ]);
-    },
-);
+test('migration timestamps pass while other numeric folders are reported', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['naming', 'sql'], { level: 'all' }),
+        'migrations/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+        'other/20240101000000_create_teams/query.sql': 'SELECT 1;\n',
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(findings.filter(({ rule }) => rule === 'digits').map(({ file }) => file)).toStrictEqual([
+        'other/20240101000000_create_teams/query.sql',
+    ]);
+});
 
 test('a numbered file name needs an ignored_prefix override', async () => {
     const settings = buildSandboxSettings(['bash', 'naming'], { level: 'all' });
@@ -82,15 +66,10 @@ test('a numbered file name needs an ignored_prefix override', async () => {
         '.mise/tasks/01-build.sh': 'echo example\n',
     });
 
-    const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
-
-    expect(
-        failed.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
-    ).toStrictEqual([...NUMBERED_FILE_FINDINGS]);
+    const failed = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(failed.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...NUMBERED_FILE_FINDINGS]);
     await writeFile(join(sandbox.path, 'gspot.toml'), settings + NUMBERED_PREFIX_OVERRIDE);
-    const corrected = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
-
-    expect(corrected.report.checks).toMatchObject([{ status: 'passed', findings: [] }]);
+    expect(await runSandboxCheck(sandbox.path, 'naming/paths')).toStrictEqual([]);
 });
 
 test('a banned folder word such as shared is reported in folder names', async () => {
@@ -115,10 +94,8 @@ test('a mise task file named _default passes, and the same name elsewhere does n
         '.mise/tasks/build/_default': '#!/usr/bin/env bash\necho build\n',
         'scripts/_default': '#!/usr/bin/env bash\necho other\n',
     });
-    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/paths'] }));
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual([
-        'scripts/_default',
-    ]);
+    const findings = await runSandboxCheck(sandbox.path, 'naming/paths');
+    expect(findings.map(({ file }) => file)).toStrictEqual(['scripts/_default']);
 });
 
 test.each(['', 'apps/api'])(

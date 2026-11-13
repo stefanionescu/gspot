@@ -1,8 +1,7 @@
 import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
+import { expect, test } from 'bun:test';
 
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -10,9 +9,7 @@ import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/eng
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
 import { buildMiseInstall, listPackagePins } from '#cli/tools/pins.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { COVERAGE_PROVIDERS, NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
+import { NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -34,31 +31,19 @@ test.each([...NODE_REQUIREMENTS])(
     },
 );
 
-describe.each(COVERAGE_PROVIDERS.flatMap((row) => [0, 80].map((lines) => ({ ...row, lines }))))(
-    '$configuration coverage at the $lines limit',
-    ({ configuration, provider, file, configurations, lines }) => {
-        const resources = new AsyncDisposableStack();
-        let session: Session;
-        let checks: PlannedCheck[];
-        beforeAll(async () => {
-            const sandbox = resources.use(await createGitSandbox({}));
-            await createFileTree(sandbox.path, { [file]: '', ['app/' + file]: '' });
-            await writeFile(
-                join(sandbox.path, 'gspot.toml'),
-                buildSandboxSettings(configurations, {
-                    scopes: [{ path: 'app', configurations }],
-                    tables: `[coverage]\nmin_line_percent = ${String(lines)}\n`,
-                }),
-            );
-            session = await openSession(sandbox.path);
-            checks = planChecks(session, { stage: 'push', only: [configuration + '/tests'] });
+test.each([0, 80])(
+    'pytest needs its coverage provider only above a zero limit and always lists it among the secondary tools: %d',
+    async (lines) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
+                tables: `[coverage]\nmin_line_percent = ${String(lines)}\n`,
+            }),
+            'test_math.py': '',
         });
-        afterAll(() => resources.disposeAsync());
-        test('the root scope needs the coverage provider only above a zero limit and always lists it among the secondary tools', () => {
-            const check = checks.find((planned) => planned.scope.path === '')!;
-            expect(listCheckTools(check)).toStrictEqual([configuration, ...(lines === 0 ? [] : [provider])]);
-            expect(listSecondaryTools(check.scope, check.check, check.check.command)).toStrictEqual([provider]);
-        });
+        const session = await openSession(sandbox.path);
+        const check = planChecks(session, { stage: 'push', only: ['pytest/tests'] })[0]!;
+        expect(listCheckTools(check)).toStrictEqual(['pytest', ...(lines === 0 ? [] : ['pytest-cov'])]);
+        expect(listSecondaryTools(check.scope, check.check, check.check.command)).toStrictEqual(['pytest-cov']);
     },
 );
 

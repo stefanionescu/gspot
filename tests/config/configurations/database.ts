@@ -17,30 +17,10 @@ export const SECURITY_ALTERATIONS = [
 ] as const;
 
 export const COMPOSITE_INDEX_CASES = [
-    { columns: 'tenant_id, user_id', count: 0 },
-    { columns: 'user_id, tenant_id, id', count: 0 },
-    { columns: 'id, tenant_id, user_id', count: 1 },
+    { columns: 'tenant_id, user_id', expected: [] },
+    { columns: 'user_id, tenant_id, id', expected: [] },
+    { columns: 'id, tenant_id, user_id', expected: ['foreign-key-index'] },
 ] as const;
-
-export const DEFAULT_MIGRATION_FOLDER_FILES = {
-    'supabase/migrations/1_first.sql': 'CREATE TABLE first_table(id int);',
-    'db/migrations/2_second.sql': 'CREATE TABLE second_table(id int);',
-    'migrations/3_third.sql': 'CREATE TABLE third_table(id int);',
-    'migrations/4_rollback.down.sql': 'invalid SQL;',
-    'custom/5_custom.sql': 'CREATE TABLE custom_table(id int);',
-    'custom_extra/6_ignored.sql': 'invalid SQL;',
-} as const;
-
-export const POSTGRES_CHECKS = [
-    'postgres/migration-order',
-    'postgres/edited-migrations',
-    'postgres/row-level-security',
-    'postgres/grants',
-    'postgres/definer-search-path',
-    'postgres/foreign-key-indexes',
-] as const;
-
-export const MALFORMED_MIGRATION_PATH = 'migrations/20240201_teams.sql';
 
 const EQUIVALENT_INDEXES_SQL = `
         CREATE TABLE posts (author_id int REFERENCES users(id));
@@ -195,10 +175,6 @@ ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
     },
 ] as const;
 
-export const ROW_SECURITY_SQL = 'ALTER TABLE teams ENABLE ROW LEVEL SECURITY;';
-
-export const NAME_COLUMN_SQL = 'ALTER TABLE teams ADD COLUMN name text;\n';
-
 export const CHILD_POSTGRES_SCOPE_TABLES = `[[scope]]
 path = "app"
 
@@ -222,25 +198,11 @@ export const SQUAWK_MIGRATION_FILES = {
     'migrations/V2_initial.sql': 'SELECT 1;\n',
 } as const;
 
-export const SQUAWK_VERSION_CASES = [
-    ['2', ['migrations/2_initial.sql', 'migrations/V2_initial.sql']],
-    [
-        '9007199254740992',
-        [
-            'migrations/10_next.sql',
-            'migrations/2_initial.sql',
-            'migrations/9007199254740992_large.sql',
-            'migrations/V2_initial.sql',
-        ],
-    ],
-    [
-        'all',
-        [
-            'migrations/10_next.sql',
-            'migrations/2_initial.sql',
-            'migrations/9007199254740992_large.sql',
-            'migrations/9007199254740993_later.sql',
-            'migrations/V2_initial.sql',
-        ],
-    ],
+export const FROZEN_MIGRATION_PATHS = ['db/V20240101__init.sql', 'db/V20240202__users.sql'] as const;
+
+export const FROZEN_MIGRATION_CASES = [
+    { through: '20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
+    { through: 'V20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
+    { through: 'none', frozen: [] },
+    { through: 'all', frozen: FROZEN_MIGRATION_PATHS },
 ] as const;

@@ -6,41 +6,7 @@ buildRuleTester().run('no-renamed-exports', noRenamedExports, {
         'export const API_URL = process.env.API_URL;',
         'export const a = globalThis.settings.name;',
         'export const a = 1;',
-        'const a = b;',
-        'import settings from "./settings"; export const { homepage } = settings;',
-        'import settings from "./settings"; export const { owner: { name } } = settings;',
-    ],
-    invalid: [
-        {
-            code: 'import { b } from "./owner"; export const a = b;',
-            errors: [{ messageId: 'renamed', data: { name: 'a', source: 'b' } }],
-        },
-        { code: 'import { b } from "./owner"; export const a = b.c.d;', errors: [{ messageId: 'renamed' }] },
-        { code: 'const b = 1; export const a = b as B;', errors: [{ messageId: 'renamed' }] },
-        {
-            code: 'import { b, d } from "./owner"; export const a = b!, c = d;',
-            errors: [{ messageId: 'renamed' }, { messageId: 'renamed' }],
-        },
-        {
-            code: 'import settings from "./settings"; export const { homepage: SITE_URL } = settings;',
-            errors: [{ messageId: 'renamed', data: { name: 'SITE_URL', source: 'homepage' } }],
-        },
-        {
-            code: 'import settings from "./settings"; export const { owner: { name: OWNER } = {}, "home-page": homePage } = settings;',
-            errors: [
-                { messageId: 'renamed', data: { name: 'OWNER', source: 'name' } },
-                { messageId: 'renamed', data: { name: 'homePage', source: 'home-page' } },
-            ],
-        },
-        {
-            code: 'export const { license: LICENSE = "MIT" } = build();',
-            errors: [{ messageId: 'renamed', data: { name: 'LICENSE', source: 'license' } }],
-        },
-    ],
-});
-
-buildRuleTester().run('no-renamed-exports regressions', noRenamedExports, {
-    valid: [
+        'import settings from "./settings"; export const { homepage, [field]: value, ...rest } = settings;',
         {
             code: 'const main = () => 1;\nmain();\nexport { main as default };',
             name: 'a default export by specifier is not a second name',
@@ -57,12 +23,38 @@ buildRuleTester().run('no-renamed-exports regressions', noRenamedExports, {
             code: "import { owner as alias } from './owner';\nexport { alias as owner };",
             name: 'an export that restores the imported name',
         },
+        'import { initial } from "./owner"; export let current = initial;',
+        'import { "x-y" as alias } from "./owner";\nexport { alias as "x-y" };',
     ],
     invalid: [
         {
+            code: 'import { b } from "./owner"; export const a = b;',
+            errors: [{ messageId: 'renamed', data: { name: 'a', source: 'b' } }],
+        },
+        {
+            code: 'import { b } from "./owner"; export const a = b.c.d;',
+            errors: [{ messageId: 'renamed', data: { name: 'a', source: 'b.c.d' } }],
+        },
+        { code: 'const b = 1; export const a = b as B;', errors: [{ messageId: 'renamed' }] },
+        {
+            code: 'import { b, d } from "./owner"; export const a = b, c = d;',
+            errors: [{ messageId: 'renamed' }, { messageId: 'renamed' }],
+        },
+        {
+            code: 'import settings from "./settings"; export const { owner: { name: OWNER } = {}, "home-page": homePage } = settings;',
+            errors: [
+                { messageId: 'renamed', data: { name: 'OWNER', source: 'name' } },
+                { messageId: 'renamed', data: { name: 'homePage', source: 'home-page' } },
+            ],
+        },
+        {
+            code: 'export const { license: LICENSE = "MIT" } = build();',
+            errors: [{ messageId: 'renamed', data: { name: 'LICENSE', source: 'license' } }],
+        },
+        {
             code: 'const owner = 1;\nexport { owner as alias };',
             name: 'an export specifier that renames a local value reports',
-            errors: [{ messageId: 'renamed' }],
+            errors: [{ messageId: 'renamed', data: { name: 'alias', source: 'owner' } }],
         },
         {
             code: "import { owner as alias } from './owner';\nexport { alias };",

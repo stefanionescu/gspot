@@ -47,7 +47,13 @@ test.each([...MESSAGE_LAYOUTS])(
             'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
         });
         const findings = await runSandboxCheck(sandbox.path, 'translations/messages');
-        expect(findings.map(({ file, message }) => ({ file, message }))).toStrictEqual(expected);
+        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual(
+            expected.map(({ file, key }) => ({
+                file,
+                rule: 'missing-key',
+                message: expect.stringContaining(key) as string,
+            })),
+        );
     },
 );
 
@@ -103,4 +109,33 @@ test('a plural branch can print its enclosing count as an argument or a pound si
     });
     const findings = await runSandboxCheck(sandbox.path, 'translations/messages');
     expect(findings).toStrictEqual([]);
+});
+
+test('translations/messages in a nested scope reads only the message files of that scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
+        'messages/en.json': '{"title":"Home"}',
+        'messages/de.json': '{"title":"Start"}',
+        'apps/backend/messages/en.json': '{"heading":"Backend"}',
+        'apps/backend/messages/de.json': '{}',
+        'gspot.toml': buildSandboxSettings(['translations'], {
+            level: 'all',
+            scopes: [{ path: 'apps/backend' }],
+            tables: `${TRANSLATION_TABLES}[scope.translations]\nmessages_folder = "messages"\n`,
+        }),
+    });
+    expect(await runSandboxCheck(sandbox.path, 'translations/messages', { scope: '' })).toStrictEqual([]);
+    const nested = await runSandboxCheck(sandbox.path, 'translations/messages', { scope: 'apps/backend' });
+    expect(nested.map(({ file }) => file)).toStrictEqual(['apps/backend/messages/de.json']);
+});
+
+test('an empty messages folder reports the base locale file', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ dependencies: TRANSLATION_SANDBOX.dependencies }),
+        'gspot.toml': buildSandboxSettings(['translations'], { level: 'all', tables: TRANSLATION_TABLES }),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'translations/messages');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'messages/en.json', rule: 'base-locale' },
+    ]);
 });

@@ -7,6 +7,7 @@ buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegr
         "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/latest/lib.js';",
         "const script = document.createElement('script');\nscript.src = '/assets/lib@1.2.3/lib.js';",
         "const panel = document.createElement('div');\npanel.id = 'lib@1.2.3';",
+        "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/lib@1.2.3/lib.js';\nscript.src = 'https://cdn.example.com/lib@1.2.4/lib.js';",
     ],
     invalid: [
         {
@@ -20,6 +21,10 @@ buildTypedRuleTester().run('disabled-resource-integrity', disabledResourceIntegr
         {
             code: "const script = document.createElement('script');\nscript.src = '//cdn.example.com/jquery@3.7.1/jquery.min.js';\nscript.crossOrigin = 'anonymous';",
             errors: [{ messageId: 'missingIntegrity', line: 1 }],
+        },
+        {
+            code: "const script = document.createElement('script');\nscript.src = 'https://cdn.example.com/lib@1.2.3/lib.js';\nscript.integrity = 'sha384-abc';\nscript.crossOrigin = 'use-credentials';",
+            errors: [{ messageId: 'missingCrossOrigin', line: 1 }],
         },
     ],
 });

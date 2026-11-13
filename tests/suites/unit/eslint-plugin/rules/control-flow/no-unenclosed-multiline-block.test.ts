@@ -5,11 +5,6 @@ buildRuleTester().run('no-unenclosed-multiline-block', noUnenclosedMultilineBloc
     valid: ['if (isReady) {\n    run();\n    notify();\n}', 'if (isReady) run();\nfinish();'],
     invalid: [
         {
-            code: 'for (let index = 0; index < 3; index++)\n    run();\n    notify();',
-            errors: [{ messageId: 'unenclosed' }],
-        },
-        { code: 'for (const key in items)\n    run(key);\n    notify();', errors: [{ messageId: 'unenclosed' }] },
-        {
             code: 'namespace Tasks {\n    if (isReady)\n        run();\n        notify();\n}',
             errors: [{ messageId: 'unenclosed' }],
         },

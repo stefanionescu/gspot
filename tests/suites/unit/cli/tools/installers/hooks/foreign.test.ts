@@ -3,52 +3,18 @@ import { dirname, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { parse } from 'yaml';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { HOOK_REPOSITORIES } from '#tests/config/tools/installers.ts';
+import { HOOK_REPOSITORIES } from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-
-const PRE_COMMIT_NOTE = `hooks already run from .pre-commit-config.yaml, .git/hooks; add this to the repos of .pre-commit-config.yaml:
-  - repo: local
-    hooks:
-      - id: gspot-pre-commit
-        name: gspot pre-commit
-        entry: .gspot/hooks/pre-commit
-        language: system
-        always_run: true
-        pass_filenames: false
-        stages: [pre-commit]
-      - id: gspot-commit-msg
-        name: gspot commit-msg
-        entry: .gspot/hooks/commit-msg
-        language: system
-        always_run: true
-        stages: [commit-msg]
-Then run pre-commit install --hook-type pre-commit --hook-type commit-msg.
-pre-commit keeps the push input from its hooks, so add this line to .git/hooks/pre-push instead:
-  .gspot/hooks/pre-push "$@"`;
-
-const LEFTHOOK_NOTE = `hooks already run from lefthook.yml, .git/hooks; add this to lefthook.yml:
-  pre-commit:
-    commands:
-      gspot:
-        run: .gspot/hooks/pre-commit
-  pre-push:
-    commands:
-      gspot:
-        run: .gspot/hooks/pre-push {0}
-        use_stdin: true
-  commit-msg:
-    commands:
-      gspot:
-        run: .gspot/hooks/commit-msg {1}`;
 
 async function writeGitHook(root: string, name: string, content: string): Promise<void> {
     await writeFile(join(root, '.git/hooks', name), content);
@@ -149,9 +115,30 @@ test('pre-commit gets a block for its file, and the push hook stays out because 
     await writeGitHook(sandbox.path, 'pre-commit', '#!/bin/sh\nexit 0\n');
     const session = await openSession(sandbox.path);
     const { note } = await installHooks(session, []);
-    expect(note).toBe(PRE_COMMIT_NOTE);
+    const start = 'repos of .pre-commit-config.yaml:\n';
+    const block = note.slice(note.indexOf(start) + start.length, note.indexOf('\nThen run'));
+    const repos = parse(block) as Array<{ hooks: Array<Record<string, unknown>> }>;
+    expect(repos).toMatchObject([
+        {
+            repo: 'local',
+            hooks: [
+                {
+                    id: 'gspot-pre-commit',
+                    entry: `${GSPOT_PATHS.hooks}/pre-commit`,
+                    pass_filenames: false,
+                    stages: ['pre-commit'],
+                },
+                { id: 'gspot-commit-msg', entry: `${GSPOT_PATHS.hooks}/commit-msg`, stages: ['commit-msg'] },
+            ],
+        },
+    ]);
+    expect(repos[0]?.hooks[1]).not.toHaveProperty('pass_filenames');
+    const install = note.split('\n').find((line) => line.startsWith('Then run'));
+    expect(install).toContain('--hook-type commit-msg');
+    expect(install).not.toContain('--hook-type pre-push');
+    expect(note).toContain('.git/hooks/pre-push');
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
-    expect(await readHookStatus(session, session.repository)).toMatchObject({ lines: [PRE_COMMIT_NOTE] });
+    expect(await readHookStatus(session, session.repository)).toMatchObject({ lines: [note] });
 
     await writeFile(
         join(sandbox.path, '.pre-commit-config.yaml'),
@@ -172,7 +159,12 @@ test('Lefthook gets a block that passes the arguments and the push input on', as
     await writeGitHook(sandbox.path, 'pre-commit', '#!/bin/sh\nexit 0\n');
     const session = await openSession(sandbox.path);
     const { note } = await installHooks(session, []);
-    expect(note).toBe(LEFTHOOK_NOTE);
+    const start = 'add this to lefthook.yml:\n';
+    const block = note.slice(note.indexOf(start) + start.length);
+    expect(parse(block)).toMatchObject({
+        'pre-push': { commands: { gspot: { run: `${GSPOT_PATHS.hooks}/pre-push {0}`, use_stdin: true } } },
+        'commit-msg': { commands: { gspot: { run: `${GSPOT_PATHS.hooks}/commit-msg {1}` } } },
+    });
     expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
 });
 

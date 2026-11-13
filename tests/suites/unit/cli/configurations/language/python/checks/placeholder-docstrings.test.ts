@@ -1,11 +1,42 @@
 import { expect, test } from 'bun:test';
 
-import { PLACEHOLDER_DOCSTRING_CASES, PYTHON_MODULE_SANDBOX } from '#tests/config/configurations/python.ts';
+import { PLACEHOLDER_DOCSTRING_CASES } from '#tests/config/configurations/python.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+const CLEAN_PYTHON_MODULE = `"""Prices."""
+
+
+def _rounded(amount: float) -> float:
+    """Round to cents, half up."""
+    shifted = amount * 100
+    whole = int(shifted + 0.5)
+    return whole / 100
+
+
+def total(prices: list[float]) -> float:
+    """Add prices and round the sum."""
+    summed = sum(prices)
+    checked = max(summed, 0.0)
+    return _rounded(checked) + _rounded(0.0)
+
+
+__all__ = ["total"]
+`;
+
+const PYTHON_MODULE_SANDBOX = {
+    configurations: ['python'],
+    cleanSource: CLEAN_PYTHON_MODULE,
+    files: {
+        'pyproject.toml': GOOGLE_PYPROJECT,
+        'example/__init__.py': '"""The test package."""\n',
+        'example/prices.py': CLEAN_PYTHON_MODULE,
+    },
+} as const;
 
 test.each([...PLACEHOLDER_DOCSTRING_CASES])(
     '$check reports $expected.rule in $expected.file and passes after the fix',
@@ -20,6 +51,8 @@ test.each<{ docstring: string; lines: number[] }>([
     { docstring: 'Class for orders.', lines: [1] },
     { docstring: 'A class of orders.', lines: [1] },
     { docstring: 'Classifies orders by region.', lines: [] },
+    { docstring: 'TODO', lines: [1] },
+    { docstring: '...', lines: [1] },
 ])(
     'python/placeholder-docstrings reports the class docstring $docstring on lines $lines',
     async ({ docstring, lines }) => {

@@ -8,19 +8,13 @@ const CALLED_WORKFLOW_REFERENCES = [
 ] as const;
 
 export const ACTIONLINT_EXITS = [
-    { code: 0, status: 'passed', findings: [], note: undefined },
+    { code: 0, status: 'passed', findings: [] },
     {
         code: 1,
         status: 'failed',
         findings: [{ file: '.github/workflows/caller.yml', rule: 'workflow-call' }],
-        note: undefined,
     },
-    {
-        code: 3,
-        status: 'error',
-        findings: [],
-        note: '<actionlint> failed with exit 3:\n.github/workflows/caller.yml:4:11: located defect [workflow-call]',
-    },
+    { code: 3, status: 'error', findings: [] },
 ] as const;
 
 export const WORKFLOW_TEXT_CASES = [
@@ -43,14 +37,6 @@ export const WORKFLOW_TEXT_CASES = [
         expected: 'uses: [$/unclosed\n',
     },
 ];
-
-export const OUTSIDE_GITHUB_ACTIONS = {
-    '.github/workflows/caller.yml':
-        'on: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: $/actions/setup\n',
-    'action.yml': 'name: Root\nruns:\n  using: composite\n  steps:\n    - uses: $/actions/setup\n',
-    'actions/setup/action.yml':
-        'name: Setup\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo safe\n',
-} as const;
 
 export const NGINX_UPSTREAM_CONFIG = `events {}
 http {
@@ -101,7 +87,6 @@ export const NGINX_FAILURE_CASES = [
         name: `an emergency at ${file}:${String(line)}`,
         stderr,
         status: 'failed' as const,
-        note: undefined,
         findings: [
             {
                 file,
@@ -115,7 +100,12 @@ export const NGINX_FAILURE_CASES = [
         name: 'an unavailable Docker daemon as missing',
         stderr: 'Cannot connect to the Docker daemon at unix:///var/run/docker.sock. Is the docker daemon running?',
         status: 'missing',
-        note: 'Start Docker, then run the check again.',
+        findings: [],
+    },
+    {
+        name: 'a failed run without an emergency line as an error',
+        stderr: 'nginx: [alert] could not open the error log file',
+        status: 'error',
         findings: [],
     },
 ] as const;

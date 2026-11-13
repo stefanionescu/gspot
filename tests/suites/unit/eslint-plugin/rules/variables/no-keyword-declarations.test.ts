@@ -6,7 +6,10 @@ buildRuleTester().run('no-keyword-declarations', noKeywordDeclarations, {
     invalid: [
         {
             code: 'var package; function read() { let package; }',
-            errors: [{ messageId: 'keyword' }, { messageId: 'keyword' }],
+            errors: [
+                { messageId: 'keyword', data: { name: 'package' } },
+                { messageId: 'keyword', data: { name: 'package' } },
+            ],
         },
     ],
 });

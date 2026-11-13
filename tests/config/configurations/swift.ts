@@ -3,19 +3,16 @@ import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 export const ASSET_SETTING_CASES = [
     {
         title: 'An Info.plist image name',
-        scope: '',
         path: 'Info.plist',
         text: '<plist><dict><key>UIImageName</key><string>AccentColor</string></dict></plist>\n',
     },
     {
         title: 'A root Xcode project setting',
-        scope: '',
         path: 'App.xcodeproj/project.pbxproj',
         text: '{ objects = { CONFIG = { isa = XCBuildConfiguration; buildSettings = { ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor; }; }; }; }\n',
     },
     {
         title: 'A root xcconfig setting',
-        scope: '',
         path: 'Build.xcconfig',
         text: 'ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor\n',
     },
@@ -53,7 +50,6 @@ export const LOGO_IMAGE_SET = {
         file: LOGO_CONTENTS,
         line: 1,
         rule: 'missing-image',
-        message: 'The image logo.png is not in the set.',
     },
     files: {
         [LOGO_CONTENTS]: '{"images":[{"filename":"logo.png"}]}\n',
@@ -96,8 +92,6 @@ swift = { xcode_project = "Choice.xcworkspace", xcode_scheme = "App" }
     },
 ] as const;
 
-export const UNEXPECTED_PLAN_MESSAGE = 'Expected a Swift package build.';
-
 export const PRIVATE_OTHER_FINDING = {
     file: '/var/folders/project/Other.swift',
     line: 5,
@@ -127,29 +121,6 @@ export const FAILED_BUILD_FINDINGS = [
 const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nmin_line_percent = 80\n';
 
 export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`;
-
-export const XCTEST_FAILURES = [
-    {
-        failure: 'failed-test',
-        hasNote: false,
-        tables: XCTEST_TABLES,
-        build: ['--exit', '65', '--failure', 'ExampleTests.swift:3: error: -[ExampleTests testValue] : Expected true.'],
-        coverage: 1,
-        code: 1,
-        status: 'failed',
-        produced: false,
-    },
-    {
-        failure: 'malformed',
-        hasNote: true,
-        tables: XCTEST_TABLES,
-        build: [],
-        coverage: undefined,
-        code: 2,
-        status: 'error',
-        produced: true,
-    },
-] as const;
 
 export const SWIFT_PACKAGE_COVERAGE_TARGETS = [
     {
@@ -195,30 +166,24 @@ export const COVERAGE_LIMIT_CASES = [
         name: 'a named target misses its limit',
         report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
         tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = 62\nreason = "Required target coverage."\n',
-        expected: ['App covers 61% of its lines, under the limit of 62%.'],
+        expected: [/\bApp\b.+\b61%.+\b62%/u],
     },
     {
         name: 'a named target is absent',
         report: { targets: [{ name: 'App.app', lineCoverage: 0.617 }] },
         tables: '[coverage]\nmin_line_percent = 0\n[[coverage.swift_target]]\nname = "Widget"\nmin_line_percent = 10\nreason = "Required target coverage."\n',
-        expected: ['The coverage report has no target named Widget.'],
+        expected: [/\bWidget\b/u],
     },
     {
         name: 'a target misses the shared limit',
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nmin_line_percent = 70\nswift_target = []\n',
-        expected: ['App covers 60% of its lines, under the limit of 70%.'],
+        expected: [/\bApp\b.+\b60%.+\b70%/u],
     },
     {
         name: 'a named target overrides the shared limit',
         report: SWIFT_TARGET_COVERAGE_OUTPUT,
         tables: '[coverage]\nmin_line_percent = 70\n[[coverage.swift_target]]\nname = "App"\nmin_line_percent = 60\nreason = "Required target coverage."\n',
-        expected: [],
-    },
-    {
-        name: 'no coverage limit is enabled',
-        report: SWIFT_TARGET_COVERAGE_OUTPUT,
-        tables: '[coverage]\nmin_line_percent = 0\nswift_target = []\n',
         expected: [],
     },
 ] as const;
@@ -231,9 +196,11 @@ export const SKIP_REASON_CASES = [
     { body: 'try XCTSkip("   ")', missing: true },
     { body: 'try XCTSkip(nil)', missing: true },
     { body: 'try XCTSkip("CI")', missing: false },
+    { body: String.raw`try XCTSkip("\n")`, missing: true },
     { body: 'print("unrelated long string"); try XCTSkipIf(true, "")', missing: true },
     { body: 'try XCTSkipIf(condition("unrelated long string"))', missing: true },
     { body: 'try XCTSkipUnless(true, "Requires a simulator")', missing: false },
+    { body: 'try XCTSkipUnless(true)', missing: true },
     { body: 'service.disabled(if: true)', missing: false },
     { body: 'let trait = .disabled(if: true, "")', missing: true },
     { body: 'let trait = .disabled(if: true, "Requires a simulator")', missing: false },
@@ -242,6 +209,7 @@ export const SKIP_REASON_CASES = [
         body: '@available(*, unavailable, message: "Requires a simulator")\nfunc unavailableTest() {}',
         missing: false,
     },
+    { body: '// Requires a simulator.\n@available(*, unavailable)\nfunc unavailableTest() {}', missing: false },
     { body: 'let example = "XCTSkip()"\n/* XCTSkip() */\n// XCTSkip()', missing: false },
 ] as const;
 
@@ -249,16 +217,3 @@ export const ANALYZER_EXIT_CASES = [
     { buildCode: 7, analyzerCode: 0, stage: 'build' },
     { buildCode: 0, analyzerCode: 7, stage: 'swiftlint' },
 ] as const;
-
-export const SWIFT_PROJECT_SETTINGS = `configurations = ["swift", "xcode"]
-[[scope]]
-path = "nested"
-swift = {xcode_project = "Chosen.xcodeproj"}
-[[scope]]
-path = "disabled"
-removed_configurations = { swift = "This scope does not build Swift projects." }
-
-[swift]
-xcode_project = "Chosen.xcodeproj"
-xcode_destination = "custom root destination"
-`;

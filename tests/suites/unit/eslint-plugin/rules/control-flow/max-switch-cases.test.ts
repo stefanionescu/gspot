@@ -2,12 +2,7 @@ import { maxSwitchCases } from '#eslint-plugin/rules/control-flow/max-switch-cas
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('max-switch-cases', maxSwitchCases, {
-    valid: [
-        { code: 'switch (value) { case 1: case 2: run(); default: finish(); }', options: [1] },
-        ['switch (value) {', ...Array.from({ length: 30 }, (_, index) => `case ${index.toString()}: break;`), '}'].join(
-            ' ',
-        ),
-    ],
+    valid: [{ code: 'switch (value) { case 1: case 2: run(); default: finish(); }', options: [1] }],
     invalid: [
         {
             code: 'switch (value) { case 1: break; case 2: break; default: finish(); }',

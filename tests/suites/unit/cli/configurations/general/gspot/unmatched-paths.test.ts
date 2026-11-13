@@ -1,17 +1,16 @@
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
-import { UNMATCHED_PATH_CASES } from '#tests/config/configurations/gspot/files.ts';
+import { UNMATCHED_PATH_CASES } from '#tests/config/configurations/general.ts';
 import { TERMS_SOURCE } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 test.each([...UNMATCHED_PATH_CASES])(
     'gspot/unmatched-paths reports each setting path without a tracked match: $name',
-    async ({ files, settings, messages }) => {
+    async ({ files, settings, unmatched }) => {
         const { configurations, ...tables } = settings;
         await using sandbox = await createGitSandbox({
             ...files,
@@ -23,25 +22,29 @@ test.each([...UNMATCHED_PATH_CASES])(
         });
         commitAll(sandbox.path);
         const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
-        expect(findings.map((finding) => finding.message)).toStrictEqual([...messages]);
+        expect(findings.map((finding) => finding.message)).toStrictEqual(
+            unmatched.map(([selector, where]) => expect.stringContaining(`${selector} under ${where} `) as string),
+        );
         expect(findings).toMatchObject(
-            messages.map(() => ({ check: 'gspot/unmatched-paths', file: 'gspot.toml', rule: 'unmatched-path' })),
+            unmatched.map(() => ({ check: 'gspot/unmatched-paths', file: 'gspot.toml', rule: 'unmatched-path' })),
         );
     },
 );
 
 test('an unmatched ignore path with an unescaped route group gets help to escape its brackets', async () => {
+    const ignores = ['app/(missing)/**', 'gone/**']
+        .map((path) => `[[ignore]]\ncheck = "structure/lone-files"\npaths = ["${path}"]\nreason = "A route group."\n`)
+        .join('');
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], {
-            tables: '[[ignore]]\ncheck = "structure/lone-files"\npaths = ["app/(missing)/**"]\nreason = "A route group."\n',
-        }),
+        'gspot.toml': buildSandboxSettings(['typescript'], { tables: ignores }),
         'app/(legal)/terms/page.tsx': TERMS_SOURCE,
     });
     commitAll(sandbox.path);
     const unmatched = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
-    expect(unmatched.map(({ message }) => message)).toStrictEqual([
-        String.raw`app/(missing)/** under [[ignore]] matches no tracked file or folder. If a folder name holds ( ) [ ], escape each with a backslash in a TOML literal string, such as 'app/\(legal\)/**'.`,
-    ]);
+    const [bracketed, unbracketed] = unmatched.map(({ message }) => message);
+    expect(unmatched).toHaveLength(2);
+    expect(bracketed).toStartWith(unbracketed!.replace('gone/**', 'app/(missing)/**'));
+    expect(bracketed!.length).toBeGreaterThan(unbracketed!.length);
 });
 
 test('an unmatched ignore points at its written record', async () => {
@@ -52,19 +55,6 @@ test('an unmatched ignore points at its written record', async () => {
     commitAll(sandbox.path);
     const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
     expect(findings).toMatchObject([{ file: 'gspot.toml', line: text.split('\n').indexOf('[[ignore]]') + 1 }]);
-});
-
-test('a missing scope with rule options leaves install usable and unmatched paths reports the typo', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript'], {
-            tables: '[[scope]]\npath = "missing"\ntools.eslint.rules = { eqeqeq = ["always"] }\n',
-        }),
-        'source.js': 'export const ready = true;\n',
-    });
-    await buildEslint(sandbox.path);
-    expect(await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths')).toMatchObject([
-        { file: 'gspot.toml', message: expect.stringContaining('scope.0.path') as string },
-    ]);
 });
 
 test('a scope pattern that starts at the repository root names its scope-relative form, and a typo does not', async () => {
@@ -80,5 +70,19 @@ test('a scope pattern that starts at the repository root names its scope-relativ
     expect(findings.map(({ message }) => message)).toStrictEqual([
         'api/api/functions/*/index.js under scope.0.javascript.entry_files matches no tracked file or folder. A path in a [[scope]] table is relative to that scope, so write "functions/*/index.js".',
         'api/api/absent/*.js under scope.0.javascript.entry_files matches no tracked file or folder.',
+    ]);
+});
+
+test('a negated path that names an existing file is matched', async () => {
+    const paths = ['src/**', '!src/kept.txt', '!gone/**'];
+    const tables = stringify({ format: { override: [{ paths, quotes: 'single' }] } });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['format'], { level: 'all', tables }),
+        'src/kept.txt': 'kept\n',
+    });
+    commitAll(sandbox.path);
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/unmatched-paths');
+    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
+        { rule: 'unmatched-path', message: expect.stringContaining('!gone/**') as string },
     ]);
 });

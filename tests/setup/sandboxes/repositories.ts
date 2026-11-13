@@ -1,7 +1,6 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { expect } from 'bun:test';
 import { createFileTree, type DirectoryJSON, testdir, type TestdirResult } from 'testdirs';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
@@ -9,19 +8,12 @@ import {
     BASH_SYNTAX_PUSH_CHECK,
     CHANGED_CONTEXT,
     HOOKS_SETTINGS,
+    PUSH_CONTENT,
     TEAMS_MIGRATION_PATH,
     TEAMS_TABLE_SQL,
 } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-
-const PUSH_CONTENT = {
-    base: 'echo base\n',
-    reviewed: 'echo reviewed\n',
-    broken: 'if then\n',
-    working: 'echo repaired only in the working tree\n',
-    settings: 'invalid working policy',
-} as const;
 
 const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
 
@@ -30,10 +22,12 @@ const NESTED_SCOPE_FILES = {
     'nested settings/source.txt': 'committed',
 } as const;
 
-export async function assertWorkingTreeKept(root: string, head: string): Promise<void> {
-    expect(runGitStep(root, ['rev-parse', 'HEAD'])).toBe(head);
-    expect(await readFile(join(root, 'gspot.toml'), 'utf8')).toBe(PUSH_CONTENT.settings);
-    expect(await readFile(join(root, 'changed.sh'), 'utf8')).toBe(PUSH_CONTENT.working);
+export async function readPushWorkingTree(root: string): Promise<{ head: string; settings: string; changed: string }> {
+    return {
+        head: runGitStep(root, ['rev-parse', 'HEAD']),
+        settings: await readFile(join(root, SETTINGS_FILE), 'utf8'),
+        changed: await readFile(join(root, 'changed.sh'), 'utf8'),
+    };
 }
 
 export async function preparePushRepository(

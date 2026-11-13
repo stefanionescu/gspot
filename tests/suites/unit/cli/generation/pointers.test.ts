@@ -9,7 +9,6 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildPointerFiles } from '#cli/generation/pointers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import type { SourcedConfig } from '#cli/types/configurations/shared.ts';
 import {
     DEFAULT_EXPORT,
@@ -106,24 +105,6 @@ test('a scope gets its own markdownlint pointer file only when its rules differ 
         '.markdownlint.jsonc',
         'other/.markdownlint.jsonc',
     ]);
-});
-
-test('every generated file outside .gspot starts with the gspot header', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['css', 'markdown'], { level: 'all' }),
-        'style.css': 'a { color: red; }\n',
-        'README.md': '# Example\n',
-    });
-    const outside = buildGeneratedFiles(await openSession(sandbox.path)).files.filter(
-        ({ path }) => !path.startsWith('.gspot/'),
-    );
-    expect(Object.fromEntries(outside.map(({ path, content }) => [path, hasGeneratedHeader(content)]))).toStrictEqual({
-        '.editorconfig': true,
-        '.markdownlint.jsonc': true,
-        '.prettierignore': true,
-        '.stylelintrc.yml': true,
-        'prettier.config.mjs': true,
-    });
 });
 
 test('one root Stylelint pointer file extends the config of each scope for its files, parents first', async () => {

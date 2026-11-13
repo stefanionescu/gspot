@@ -3,13 +3,20 @@ import http from 'node:http';
 import { expect, spyOn, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
-import { downloadArchive, explainReleaseAgeHold, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import {
+    downloadArchive,
+    explainReleaseAgeHold,
+    runInstallStep,
+    runRequiredInstallStep,
+} from '#cli/tools/installers/steps.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const ESLINT_RELEASE = {
@@ -139,11 +146,49 @@ test('a failed download behind a proxy says how to turn the proxy on', async () 
     });
     using _fetch = spyOn(globalThis, 'fetch').mockImplementation(refuse);
     const setProxy: unknown = Reflect.get(http, 'setGlobalProxyFromEnv');
+    using restore = new DisposableStack();
+    restore.defer(() => Reflect.set(http, 'setGlobalProxyFromEnv', setProxy));
     Reflect.deleteProperty(http, 'setGlobalProxyFromEnv');
     const failure = await captureRejection(
         downloadArchive(install.session, { url: 'https://example.com/a.zip', name: 'the archive', limit: 1 }),
     );
-    Reflect.set(http, 'setGlobalProxyFromEnv', setProxy);
     expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });
     expect(failure.message).toContain('NODE_USE_ENV_PROXY=1');
+});
+
+test('a release age of zero makes no registry lookup', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
+    using registry = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.reject(new TypeError('Unexpected lookup.')), { preconnect: fetch.preconnect }),
+    );
+    const output = 'npm error notarget No matching version found for eslint@10.13.0.';
+    expect(await explainReleaseAgeHold({ ...install, releaseAgeDays: 0 }, output, [ESLINT_RELEASE])).toBe('');
+    expect(registry).not.toHaveBeenCalled();
+});
+
+test('a download that answers 404 names the status and the URL', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
+    using _request = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.resolve(new Response('', { status: 404 })), { preconnect: fetch.preconnect }),
+    );
+    const error = await captureRejection(
+        downloadArchive(install.session, { url: 'https://example.com/styles.zip', name: 'styles', limit: 2 }),
+    );
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain('HTTP 404');
+    expect(error.message).toContain('https://example.com/styles.zip');
+});
+
+test('an install step past tool_timeout_seconds stops and names the setting', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: 'tool_timeout_seconds = 1\n' }),
+    });
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
+    using _slow = fakeCommands('slow-tool', () => Promise.resolve(buildProcessResult({ end: 'timed-out', code: 1 })));
+    const error = await captureRejection(runInstallStep(install, ['slow-tool'], { cwd: sandbox.path }));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toContain('(1s)');
+    expect(error.message).toContain('gspot set tool_timeout_seconds');
 });

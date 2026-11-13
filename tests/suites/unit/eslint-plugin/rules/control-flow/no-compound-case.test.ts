@@ -5,7 +5,6 @@ buildRuleTester().run('no-compound-case', noCompoundCase, {
     valid: [
         'switch (value) { case 1: case 2: break; default: break; }',
         'switch (true) { case first || second: break; }',
-        'switch (value) { case first && second: break; }',
         'switch (value) { case (first && second) || third: break; }',
     ],
     invalid: [

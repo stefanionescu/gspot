@@ -9,17 +9,6 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
-test('check names a package.json that does not parse, which gives the run no dependencies', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'packages/web' }] }),
-        'packages/web/package.json': '{"dependencies":{"react":19}}',
-    });
-    const result = await runGspot(sandbox.path, ['check', '--json']);
-    expect((JSON.parse(result.stdout) as { notes: string[] }).notes).toContain(
-        'packages/web/package.json does not parse, so gspot read no dependencies from it.',
-    );
-});
-
 test('check warns once for missing hooks, skips the warning for pre-push, and stops warning once the hooks run', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: `${HOOKS_SETTINGS}${BASH_SYNTAX_PUSH_CHECK}` }),

@@ -7,7 +7,7 @@ test('a tool that is missing in several scopes prints one line', () => {
     const missing = {
         ...ENVIRONMENT_CHECK,
         check: 'security/semgrep',
-        note: 'semgrep 1.181.0 is not installed. Run gspot install.',
+        note: 'semgrep 0.0.0-test is not installed. Run gspot install.',
     };
     const report = {
         ...FAILED_CHECK_REPORT,
@@ -21,7 +21,7 @@ test('a tool that is missing in several scopes prints one line', () => {
     };
     const text = formatRunReport(report, { verbose: false });
     expect(text).toContain(
-        'missing  semgrep 1.181.0 is not installed (security/semgrep in 2 scopes). Run gspot install.\n',
+        'missing  semgrep 0.0.0-test is not installed (security/semgrep in 2 scopes). Run gspot install.\n',
     );
     expect(text).toContain('Missing tools: 1 (run gspot install).');
 });

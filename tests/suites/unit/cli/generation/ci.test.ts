@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { delimiter, join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -14,33 +14,41 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { LINUX_PIPELINE, SETUP_ARGUMENTS, SETUP_CASES } from '#tests/config/generation/files.ts';
+import type { Pipeline } from '#cli/types/generation.ts';
+import { LINUX_PIPELINE, MISE_EXEC, SETUP_CASES } from '#tests/config/generation/files.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { readCallRecords } from '#tests/setup/system/programs.ts';
-import type { GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
+import type { CallRecord, GithubWorkflow, GitlabPipeline, ProcessOutput } from '#tests/types/setup.ts';
 
-test('the GitHub workflow refuses a command that holds a GitHub expression', () => {
-    const setupCommand = ['echo', '${{ secrets.DEPLOY_KEY }}'];
-    expect(() => buildGithubWorkflow({ ...LINUX_PIPELINE, setupCommand })).toThrow(
+test.each<Partial<Pipeline>>([
+    { setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }}'] },
+    { projectInstall: ['(cd ${{ github.token }} && npm ci)'] },
+])('the GitHub workflow refuses a GitHub expression in %j', (commands) => {
+    expect(() => buildGithubWorkflow({ ...LINUX_PIPELINE, ...commands })).toThrow(
         new GspotError('settings', GITHUB_EXPRESSION_MESSAGE),
     );
 });
 
-test('two operating systems get one job each, and only the Linux job uses the configured runner', () => {
+test('each operating system gets a lint job and a tests job, and only the Linux jobs use the configured runner', () => {
     const { jobs } = parse(
-        buildGithubWorkflow({ ...LINUX_PIPELINE, operatingSystems: ['linux', 'macos'], linuxRunner: 'linux-large' })
-            .content,
+        buildGithubWorkflow({
+            ...LINUX_PIPELINE,
+            operatingSystems: ['linux', 'macos'],
+            linuxRunner: 'linux-large',
+            testChecks: ['vitest/tests'],
+        }).content,
     ) as GithubWorkflow;
-    expect(Object.fromEntries(Object.entries(jobs).map(([name, job]) => [name, job['runs-on']]))).toStrictEqual({
-        'lint-linux': 'linux-large',
-        'lint-macos': CI_PINS.githubRunners.macos.label,
-    });
+    const macosRunner = CI_PINS.githubRunners.macos.label;
+    expect(Object.entries(jobs).map(([key, job]) => [key, job.name, job['runs-on']])).toStrictEqual([
+        ['lint-linux', 'lint (linux)', 'linux-large'],
+        ['lint-macos', 'lint (macos)', macosRunner],
+        ['tests-linux', 'tests (linux)', 'linux-large'],
+        ['tests-macos', 'tests (macos)', macosRunner],
+    ]);
 });
 
 test('test checks move to a tests job that differs from the lint job only in its check command', () => {
@@ -51,18 +59,6 @@ test('test checks move to a tests job that differs from the lint job only in its
     expect(jobs['lint']!.steps.at(-1)?.run).toEndWith(` -- ${CI_CHECK_COMMAND} --skip jest/tests,pytest/tests\n`);
     expect(jobs['tests']!.steps.at(-1)?.run).toEndWith(` -- ${CI_CHECK_COMMAND} --only jest/tests,pytest/tests\n`);
     expect(jobs['tests']!.steps.slice(0, -1)).toStrictEqual(jobs['lint']!.steps.slice(0, -1));
-});
-
-test('each operating system gets one pair of jobs', () => {
-    const { jobs } = parse(
-        buildGithubWorkflow({
-            ...LINUX_PIPELINE,
-            operatingSystems: ['linux', 'macos'],
-            testChecks: ['vitest/tests'],
-        }).content,
-    ) as GithubWorkflow;
-    expect(Object.keys(jobs)).toStrictEqual(['lint-linux', 'lint-macos', 'tests-linux', 'tests-macos']);
-    expect(jobs['tests-macos']?.name).toBe('tests (macos)');
 });
 
 test('a selected testing configuration gets a tests job on GitHub and one job on GitLab', async () => {
@@ -95,90 +91,60 @@ test('a selected testing configuration gets a tests job on GitHub and one job on
     expect(pipeline.gspot.script.at(-1)).toEndWith(CI_CHECK_COMMAND);
 });
 
-test('the swift configuration defaults the CI jobs to Linux and macOS', async () => {
+test('a scope with the swift configuration defaults the CI jobs to Linux and macOS', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['swift'], { tables: '[ci]\nenabled = true\n' }),
-        'Package.swift': '// swift-tools-version: 6.0\n',
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            tables: '[ci]\nenabled = true\n',
+            scopes: [{ path: 'ios', configurations: ['swift'] }],
+        }),
+        'ios/Package.swift': '// swift-tools-version: 6.0\n',
     });
-    await applyGeneratedFiles(sandbox.path);
-    const workflow = parse(await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8')) as GithubWorkflow;
+    const workflow = parse(
+        buildGeneratedFiles(await openSession(sandbox.path)).files.find(
+            ({ path }) => path === '.github/workflows/gspot.yml',
+        )!.content,
+    ) as GithubWorkflow;
     expect(Object.keys(workflow.jobs)).toStrictEqual(['lint-linux', 'lint-macos']);
 });
 
-test.each([...SETUP_CASES])(
-    'the %s job keeps setup exit %i and literal arguments before gspot',
-    async (provider, setupExit) => {
-        const pipeline = LINUX_PIPELINE;
-        await using sandbox = await createGitSandbox({ 'notes.txt': '1.2.3' });
-        await using programs = await createGitSandbox({});
-        runGitStep(sandbox.path, ['add', 'notes.txt']);
-        const commands = join(programs.path, 'commands.log');
-        const bin = join(programs.path, 'bin');
-        await mkdir(bin);
-        // mise exec loads the variables of the mise config files, so the fake sets one for the command it runs.
-        const miseExec = 'while [ "$1" != -- ]; do shift; done\nshift\nMISE_LOADED=1 exec "$@"\n';
-        await writeFile(join(bin, 'mise'), `#!/bin/bash\n[ "$1" = exec ] || exit 0\n${miseExec}`, { mode: 0o755 });
-        const recording = ['--record', commands, '--environment', 'MISE_LOADED', '--'];
-        await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', ...recording);
-        await writeProgramCommand(
-            programs.path,
-            'bin/project setup',
-            'fakes/tool',
-            '--record',
-            commands,
-            '--stdout',
-            'setup out\n',
-            '--stderr',
-            'setup err\n',
-            '--exit',
-            String(setupExit),
-            '--',
-        );
-        const setupPipeline = {
-            ...pipeline,
-            setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS],
-        };
-        const script =
-            provider === 'github'
-                ? (parse(buildGithubWorkflow(setupPipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
-                      (step) => step.run ?? [],
-                  )
-                : (parse(buildGitlabWorkflow(setupPipeline).content) as GitlabPipeline).gspot.script;
-        const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
-            cwd: sandbox.path,
-            env: {
-                PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
-                GITHUB_PATH: join(programs.path, 'github-path'),
-            },
-        });
-        expect(result.code, result.stdout + result.stderr).toBe(setupExit);
-        expect(result.stdout).toBe('setup out\n');
-        expect(result.stderr).toBe('setup err\n');
-        const gspotCalls = setupExit === 0 ? [['install'], ['check', '--base', '']] : [];
-        const calls = await readCallRecords(commands);
-        expect(calls.map((call) => call.arguments)).toStrictEqual([[...SETUP_ARGUMENTS], ...gspotCalls]);
-        const underMise = calls.filter((call) => call.environment['MISE_LOADED'] === '1');
-        expect(underMise.map((call) => call.arguments[0])).toStrictEqual(setupExit === 0 ? ['check'] : []);
-    },
-);
+/**
+Run the script of the lint job with a fake mise and a fake gspot that records its calls. With a setup exit code, the
+pipeline also runs a fake setup command that prints to both streams and exits with that code.
+*/
+const SETUP_ARGUMENTS = ['', 'two words', "a'b", 'line\nbreak'] as const;
 
 async function runPipelineScript(
     provider: 'github' | 'gitlab',
-    options: { mise: string; env: Record<string, string> },
-): Promise<{ code: number; gspotCalls: string[][] }> {
+    options: { mise: string; env?: Record<string, string>; setupExit?: number },
+): Promise<ProcessOutput & { calls: CallRecord[] }> {
     await using sandbox = await createGitSandbox({});
     await using programs = await createGitSandbox({});
     const commands = join(programs.path, 'commands.log');
     const bin = join(programs.path, 'bin');
     await mkdir(bin);
     await writeFile(join(bin, 'mise'), `#!/bin/bash\n${options.mise}`, { mode: 0o755 });
-    await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', '--record', commands, '--');
+    const recording = ['--record', commands, '--environment', 'MISE_LOADED', '--'];
+    await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', ...recording);
+    let pipeline: Pipeline = LINUX_PIPELINE;
+    if (options.setupExit !== undefined) {
+        const output = ['--stdout', 'setup out\n', '--stderr', 'setup err\n', '--exit', String(options.setupExit)];
+        await writeProgramCommand(
+            programs.path,
+            'bin/project setup',
+            'fakes/tool',
+            '--record',
+            commands,
+            ...output,
+            '--',
+        );
+        pipeline = { ...LINUX_PIPELINE, setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS] };
+    }
     const script =
         provider === 'github'
-            ? (parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
+            ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
                   (step) => step.run ?? [],
               )
-            : (parse(buildGitlabWorkflow(LINUX_PIPELINE).content) as GitlabPipeline).gspot.script;
+            : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
     const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
         cwd: sandbox.path,
         env: {
@@ -187,32 +153,46 @@ async function runPipelineScript(
             ...options.env,
         },
     });
-    const calls = existsSync(commands) ? await readCallRecords(commands) : [];
-    return { code: result.code, gspotCalls: calls.map((call) => call.arguments) };
+    return { ...result, calls: existsSync(commands) ? await readCallRecords(commands) : [] };
 }
 
+test.each([...SETUP_CASES])(
+    'the %s job keeps setup exit %i and literal arguments before gspot',
+    async (provider, setupExit) => {
+        const result = await runPipelineScript(provider, { mise: MISE_EXEC, setupExit });
+        expect(result.code, result.stdout + result.stderr).toBe(setupExit);
+        expect(result.stdout).toBe('setup out\n');
+        expect(result.stderr).toBe('setup err\n');
+        const gspotCalls = setupExit === 0 ? [['install'], ['check', '--base', '']] : [];
+        expect(result.calls.map((call) => call.arguments)).toStrictEqual([[...SETUP_ARGUMENTS], ...gspotCalls]);
+        const underMise = result.calls.filter((call) => call.environment['MISE_LOADED'] === '1');
+        expect(underMise.map((call) => call.arguments[0])).toStrictEqual(setupExit === 0 ? ['check'] : []);
+    },
+);
+
 test('the GitLab job compares with the merge request base, or else with the commit before the push', async () => {
-    const mise = '[ "$1" = exec ] || exit 0\nwhile [ "$1" != -- ]; do shift; done\nshift\nexec "$@"\n';
     const pushed = await runPipelineScript('gitlab', {
-        mise,
+        mise: MISE_EXEC,
         env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: '', CI_COMMIT_BEFORE_SHA: 'before' },
     });
-    expect(pushed).toStrictEqual({ code: 0, gspotCalls: [['install'], ['check', '--base', 'before']] });
+    expect(pushed.code).toBe(0);
+    expect(pushed.calls.map((call) => call.arguments)).toStrictEqual([['install'], ['check', '--base', 'before']]);
     const merged = await runPipelineScript('gitlab', {
-        mise,
+        mise: MISE_EXEC,
         env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: 'target', CI_COMMIT_BEFORE_SHA: 'before' },
     });
-    expect(merged).toStrictEqual({ code: 0, gspotCalls: [['install'], ['check', '--base', 'target']] });
+    expect(merged.code).toBe(0);
+    expect(merged.calls.map((call) => call.arguments)).toStrictEqual([['install'], ['check', '--base', 'target']]);
 });
 
 test.each(['github', 'gitlab'] as const)(
     'a failed install of gspot stops the %s job before gspot runs',
     async (provider) => {
         const failed = await runPipelineScript(provider, {
-            mise: '[ "$1" = install ] && exit 7\n[ "$1" = exec ] || exit 0\nwhile [ "$1" != -- ]; do shift; done\nshift\nexec "$@"\n',
+            mise: `[ "$1" = install ] && exit 7\n${MISE_EXEC}`,
             env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: '', CI_COMMIT_BEFORE_SHA: '' },
         });
-        expect(failed).toStrictEqual({ code: 7, gspotCalls: [] });
+        expect(failed).toMatchObject({ code: 7, calls: [] });
     },
 );
 
@@ -243,6 +223,18 @@ test('without a setup command, CI installs the locked dependencies of each proje
         `(cd web && mise exec ${CI_NODE} pnpm@10.30.0 -- pnpm install --frozen-lockfile)`,
         '(cd web && npx --no -- next typegen)',
     ]);
+});
+
+test('a Next.js scope without a lockfile gets no setup line', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: '[ci]\nenabled = true\nprovider = "github"\n',
+            scopes: [{ path: 'web', configurations: ['nextjs'] }],
+        }),
+        'web/package.json': '{"private":true,"dependencies":{"next":"16.0.0"}}',
+        'web/app/page.tsx': 'export default function Page() { return null; }\n',
+    });
+    expect(listProjectInstallLines(await openSession(sandbox.path))).toStrictEqual([]);
 });
 
 test('CI reads no local program version: npm runs bare, and an unpinned pnpm stays unpinned', async () => {

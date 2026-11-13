@@ -10,7 +10,7 @@ import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { hasToolBuild, isLinux } from '#tests/setup/system/platform.ts';
+import { hasLinuxDocker, hasToolBuild } from '#tests/setup/system/platform.ts';
 
 const NGINX_SERVER = `server {
     listen 443 ssl;
@@ -37,7 +37,7 @@ const NGINX_INCLUDE_FILES = {
     'proxy/unrelated.conf': 'include /outside/not-used.conf;\n',
 } as const;
 
-test.skipIf(!isLinux || Bun.which('docker') === null)(
+test.skipIf(!hasLinuxDocker())(
     'nginx/syntax follows include globs to the source line and tells invalid configuration from an unavailable image',
     async () => {
         await using sandbox = await testdir({

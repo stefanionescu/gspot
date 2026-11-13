@@ -6,7 +6,8 @@ import { expect, test } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
-import { NEST_SUFFIX_FILES, NESTJS_PREFIX_RESULTS, PREFIX_TREE } from '#tests/config/configurations/structure/files.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
+import { NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -35,7 +36,31 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
     const settings = buildSandboxSettings(['typescript'], { level: 'all' });
     await using sandbox = await createGitSandbox({
         'gspot.toml': settings,
-        ...PREFIX_TREE,
+        'cards/asset-card.ts': '',
+        'cards/asset-list.ts': '',
+        'cards/asset-row.ts': '',
+        'cards/other.ts': '',
+        'mixed/turn.ts': '',
+        'mixed/turn-flow/first.ts': '',
+        'mixed/turn-flow/second.ts': '',
+        'fine/index.ts': '',
+        'fine/index-page.ts': '',
+        'fine/first.ts': '',
+        'fine/second.ts': '',
+        'components/button.tsx': '',
+        'components/button.module.css': '',
+        'components/button.test.tsx': '',
+        'components/card.tsx': '',
+        'paired/api.ts': '',
+        'paired/api.d.ts': '',
+        'paired/view.mts': '',
+        'paired/view.d.mts': '',
+        'paired/social.png': '',
+        'paired/social.svg': '',
+        'npm/package.json': '{}',
+        'npm/package-lock.json': '{}',
+        'pnpm/pnpm-lock.yaml': '',
+        'pnpm/pnpm-workspace.yaml': '',
     });
 
     const options = buildRunOptions({ only: ['structure/shared-prefixes'] });
@@ -62,10 +87,7 @@ test('hook scripts under .husky do not count; other files beside them still do',
     const folder = '.husky';
     const hooks = Object.fromEntries(
         [folder, `${folder}/nested`, `app/${folder}`, `app/${folder}/nested`].flatMap((path) =>
-            ['hook-first.ts', 'hook-second.ts'].map((name) => [
-                `${path}/${name}`,
-                name.endsWith('.ts') ? '' : '#!/bin/sh\nexit 0\n',
-            ]),
+            ['hook-first.ts', 'hook-second.ts'].map((name) => [`${path}/${name}`, '']),
         ),
     );
     await using sandbox = await createGitSandbox({
@@ -83,14 +105,9 @@ test('hook scripts under .husky do not count; other files beside them still do',
         'src/action-one.ts': '',
         'src/action-two.ts': '',
     });
-    const result = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['structure/shared-prefixes'] }),
-    );
+    const checks = await runSharedPrefixes(sandbox.path);
 
-    expect(
-        result.report.checks.flatMap((check) => check.findings.map(({ file }) => file)).toSorted(compareText),
-    ).toStrictEqual(
+    expect(checks.flatMap((check) => check.findings.map(({ file }) => file)).toSorted(compareText)).toStrictEqual(
         [
             `${folder}-other/hook-first.ts`,
             `app/${folder}-other/hook-first.ts`,
@@ -113,15 +130,17 @@ test('NestJS kind suffixes do not count in NestJS scopes; JSX files and unknown 
             level: 'all',
             scopes: [{ path: 'app', configurations: ['nestjs'] }, { path: 'app/deep' }, { path: 'sibling' }],
         }),
-        ...NEST_SUFFIX_FILES,
+        'app/jsx.view.tsx': '',
+        'app/jsx.service.tsx': '',
+        'app/jsx.controller.tsx': '',
+        'app/custom.one.ts': '',
+        'app/custom.two.ts': '',
+        'app/custom.three.ts': '',
     });
-    const result = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['structure/shared-prefixes'] }),
-    );
-    expect(
-        result.report.checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) })),
-    ).toStrictEqual([...NESTJS_PREFIX_RESULTS]);
+    const checks = await runSharedPrefixes(sandbox.path);
+    expect(checks.map(({ scope, findings }) => ({ scope, paths: findings.map(({ file }) => file) }))).toStrictEqual([
+        ...NESTJS_PREFIX_RESULTS,
+    ]);
 });
 
 test('a folder that carries the prefix as its name and Swift files named after their types report nothing', async () => {
@@ -149,3 +168,8 @@ test('snake_case and PascalCase siblings share their first word', async () => {
         { file: 'snake/invoice_list.ts', rule: 'shared-prefix' },
     ]);
 });
+
+async function runSharedPrefixes(root: string): Promise<RunReport['checks']> {
+    const result = await runChecks(await openSession(root), buildRunOptions({ only: ['structure/shared-prefixes'] }));
+    return result.report.checks;
+}

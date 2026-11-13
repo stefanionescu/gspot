@@ -7,7 +7,6 @@ buildRuleTester().run('no-adjacent-multiline-if', noAdjacentMultilineIf, {
         'if (first) {\n run();\n}\nif (second) run();',
         'if (first) {\n run();\n} else if (second) run();',
         'if (first) {\n run();\n} ; if (second) run();',
-        'namespace App { if (first) {\n run();\n} if (second) run(); }',
     ],
     invalid: [
         'if (first) {\n run();\n} if (second) run();',

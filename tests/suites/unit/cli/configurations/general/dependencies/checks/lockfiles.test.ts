@@ -7,7 +7,6 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
     ALLOWED_GITHUB_REGISTRIES,
-    DEPENDENCIES_SANDBOX,
     HOST_LOCKFILE,
     LOCKFILE_DOWNLOAD_CASES,
     LOCKFILE_HOST_CASES,
@@ -82,7 +81,12 @@ test.each([...LOCKFILE_HOST_CASES])(
     'dependencies/lockfiles reports $expected.rule in $expected.file and passes after the fix',
     async (row) => {
         const sample = { check: 'dependencies/lockfiles', ...row };
-        await using sandbox = await createSandbox(DEPENDENCIES_SANDBOX);
+        await using sandbox = await createSandbox({
+            configurations: ['dependencies'],
+            files: {
+                'package.json': '{"name":"example","version":"1.0.0","private":true,"packageManager":"bun@1.4.2"}\n',
+            },
+        });
         await assertCheckSample(sandbox, sample);
     },
 );

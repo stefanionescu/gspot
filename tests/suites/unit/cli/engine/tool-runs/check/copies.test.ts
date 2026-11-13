@@ -13,10 +13,10 @@ import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands, fakeExecutableLookup, fakeNpmTool, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
 
 const PYVENV_HOME = 'home = /usr/bin\n';
 
@@ -59,44 +59,26 @@ test('a Python check that runs in a copy uses the environment that the working t
     ]);
 });
 
-test('a command run in a copy finds the secondary tools beside its program before a PATH folder', async () => {
+test('a command check that runs in a copy reports repository paths', async () => {
     await using sandbox = await createGitSandbox({});
-    const files = {
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/companion',
-                        stage: 'commit',
-                        paths: ['source.txt'],
-                        command: [join(sandbox.path, 'native/checker')],
-                    },
-                ],
-            }),
-        }),
-        'source.txt': '',
-        'copy/.keep': '',
+    const trace = join(sandbox.path, 'calls.log');
+    const check = {
+        id: 'project/copied',
+        stage: 'commit',
+        paths: ['source.txt'],
+        command: buildProgramCommand('fakes/tool', '--record', trace, '--', '{files}'),
     };
-    await createFileTree(sandbox.path, files);
-    await writeProgramCommand(sandbox.path, 'native/checker', 'processes/command', 'shellcheck', '--version');
-    await writeProgramCommand(
-        sandbox.path,
-        'native/shellcheck',
-        'fakes/tool',
-        '--line',
-        'ShellCheck version: 0.0.0-test',
-    );
-    await writeProgramCommand(sandbox.path, 'inactive/shellcheck', 'fakes/tool', '--exit', '7');
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [check] }) }),
+        'source.txt': 'input\n',
+    });
     const session = await openSession(sandbox.path);
-    const planned = planChecks(session, { stage: 'commit', only: ['project/companion'] })[0]!;
-    using _environment = overrideEnvironment({ PATH: join(sandbox.path, 'inactive') });
-    using _which = fakeExecutableLookup(join(sandbox.path, `native/shellcheck${isWindows ? '.cmd' : ''}`));
-
-    const result = await runCommandCheck(
-        { ...buildCheckSession(session, CHECK_GENERATION), root: join(sandbox.path, 'copy') },
-        planned,
-    );
+    const planned = planChecks(session, { stage: 'commit', only: ['project/copied'] })[0]!;
+    planned.check = { ...planned.check, run_in_copy: true };
+    const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
     expect(result.status, result.note).toBe('passed');
-    expect(result.command).toStrictEqual([join(sandbox.path, 'native/checker')]);
+    const [call] = await readCallRecords(trace);
+    expect(call?.cwd).toContain('.gspot-copies');
+    expect(call?.arguments).toStrictEqual(['source.txt']);
+    expect(result.command?.filter((argument) => argument.includes('.gspot-copies'))).toStrictEqual([]);
 });

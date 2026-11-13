@@ -5,17 +5,14 @@ import { expect, test } from 'bun:test';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import {
-    API_LANGUAGE_REASON,
-    EXCLUDED_CONFIGURATION_SETTINGS,
-    PARENT_REQUIREMENT_SETTINGS,
-    SCOPE_REMOVALS,
-} from '#tests/config/commands/edits.ts';
+import { EXCLUDED_CONFIGURATION_SETTINGS, SCOPE_REMOVALS } from '#tests/config/commands/edits.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+
+const API_LANGUAGE_REASON = 'The API uses another language.';
 
 test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ settings, files, scope, expected }) => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...files });
@@ -37,7 +34,12 @@ test.each([...SCOPE_REMOVALS])('remove bash --scope $scope: $name', async ({ set
 
 test('remove refuses a dependency required by a parent configuration and leaves all files unchanged', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': PARENT_REQUIREMENT_SETTINGS,
+        'gspot.toml': buildSandboxSettings(['markdown'], {
+            scopes: [
+                { path: 'api', configurations: ['typescript'] },
+                { path: 'api/child', configurations: ['bash'] },
+            ],
+        }),
         'api/entry.ts': 'export const VALUE = 1;\n',
         'api/child/entry.sh': 'echo child\n',
     });

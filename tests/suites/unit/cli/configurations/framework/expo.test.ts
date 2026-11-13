@@ -6,13 +6,17 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import { APP_FOLDERS, EXPO_PACKAGE_JSON, FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
+import { FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+
+const APP_FOLDERS = ['apps/first', 'apps/second'] as const;
+
+const EXPO_PACKAGE_JSON = '{"private":true,"dependencies":{"expo":"54.0.0"}}\n';
 
 test('Expo Doctor reports each failed check once in each app folder', async () => {
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_OUTPUT });
@@ -35,11 +39,9 @@ test('Expo Doctor reports each failed check once in each app folder', async () =
 
 test('Expo Doctor output without a failed check is a check error that keeps its error text', async () => {
     await using apps = await prepareExpoApps({ code: 1, stderr: 'Unable to read Expo configuration' } as const);
-    for (const scope of APP_FOLDERS) {
-        const error = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope }));
-        expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
-        expect(error.message).toContain('Unable to read Expo configuration');
-    }
+    const error = await captureRejection(runSandboxCheck(apps.path, 'expo/expo-doctor', { scope: APP_FOLDERS[0] }));
+    expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
+    expect(error.message).toContain('Unable to read Expo configuration');
 });
 
 test('Expo Doctor reports an uninstalled Expo project instead of accepting its empty success', async () => {

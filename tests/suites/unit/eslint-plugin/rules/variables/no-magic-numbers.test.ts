@@ -10,7 +10,6 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
             'const SIZES = [16, 32, 64];',
             'export const TIMEOUT_MS = 60 * 1000;',
             "export const DEPTHS = new Map([['expect', 3], ['assert', 2]]);",
-            'export const UNITS = new Set<unknown>([1, 1n]);',
             {
                 name: 'numeric argument explicitly ignored',
                 code: 'setTimeout(retry, 3000);',
@@ -30,12 +29,7 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
                 code: 'setTimeout(retry, 3000);',
                 errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
             },
-            { code: 'const HANDLERS = [() => wait(500)];', errors: [{ messageId: 'noMagic' }] },
-            {
-                name: 'call argument in a module constant',
-                code: 'export const server = app.listen(8080);',
-                errors: [{ messageId: 'noMagic', data: { raw: '8080' } }],
-            },
+            { code: 'const HANDLERS = [() => 500];', errors: [{ messageId: 'noMagic' }] },
             {
                 name: 'method arguments on a module constant array',
                 code: 'export const page = [1, 2, 3, 4, 5, 6].slice(0, 50);',

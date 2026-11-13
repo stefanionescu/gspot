@@ -32,12 +32,11 @@ test("Squawk uses each scope's assume_in_transaction setting", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { tables: SQUAWK_SCOPE_SETTINGS }),
         [SQUAWK_ROOT_MIGRATION_PATH]: UNWRAPPED_MIGRATION_SQL,
-        'transactional/supabase/migrations/0001_initial.sql': 'SELECT 1;\n',
         [SQUAWK_CHILD_MIGRATION_PATH]: UNWRAPPED_MIGRATION_SQL,
     });
 
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-    const command = ['check', SQUAWK_ROOT_MIGRATION_PATH, '--only', 'postgres/squawk', '--json'];
+    const command = ['check', '--only', 'postgres/squawk', '--json'];
     const failed = parseCheckReport(await spawnGspot(sandbox.path, command));
     expect(failed.code, failed.stdout + failed.stderr).toBe(1);
     expect(listFindingRows(failed.report)).toStrictEqual([

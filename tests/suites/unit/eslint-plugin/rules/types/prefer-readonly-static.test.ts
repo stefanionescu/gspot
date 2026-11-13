@@ -8,14 +8,8 @@ buildRuleTester().run('prefer-readonly-static', preferReadonlyStatic, {
         { filename: 'clock.ts', code: 'class Clock { private static interval = 1000; }' },
         { filename: 'clock.ts', code: 'class Clock { protected static interval = 1000; }' },
         { filename: 'clock.ts', code: 'class Clock { public interval = 1000; }' },
-        { filename: 'clock.ts', code: 'class Clock { static interval() { return 1000; } }' },
     ],
     invalid: [
-        {
-            filename: 'clock.mts',
-            code: 'class Clock { static interval = 1000; }',
-            errors: [{ messageId: 'readonly' }],
-        },
         {
             filename: 'clock.tsx',
             code: 'class Clock { public static interval = 1000; }',

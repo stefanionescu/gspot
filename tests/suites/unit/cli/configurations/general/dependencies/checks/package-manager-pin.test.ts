@@ -28,31 +28,24 @@ test('package-manager-pin reports a packageManager that differs from the bun pin
     expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
 });
 
-test('package-manager-pin gives the line to add beside a pnpm lockfile, with the mise version', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ name: 'shop', private: true }),
-        'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
-        'mise.toml': '[tools]\npnpm = "10.30.0"\n',
-        'gspot.toml': buildSandboxSettings(['javascript']),
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
-    expect(findings.map(({ message }) => message)).toStrictEqual([
-        'CI installs only a pinned pnpm. Add "packageManager": "pnpm@10.30.0" to package.json.',
-    ]);
-});
-
-test('package-manager-pin names no mise range in the line to add, because a packageManager field needs an exact version', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ name: 'shop', private: true }),
-        'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
-        'mise.toml': '[tools]\npnpm = "10"\n',
-        'gspot.toml': buildSandboxSettings(['javascript']),
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
-    expect(findings.map(({ message }) => message)).toStrictEqual([
-        'CI installs only a pinned pnpm. Add "packageManager": "pnpm@<version>" to package.json.',
-    ]);
-});
+test.each([
+    ['10.30.0', 'pnpm@10.30.0'],
+    ['10', 'pnpm@<version>'],
+])(
+    'package-manager-pin names the exact mise pin, or a placeholder for a range, in the line to add: %s',
+    async (pin, expected) => {
+        await using sandbox = await createGitSandbox({
+            'package.json': JSON.stringify({ name: 'shop', private: true }),
+            'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+            'mise.toml': `[tools]\npnpm = "${pin}"\n`,
+            'gspot.toml': buildSandboxSettings(['javascript']),
+        });
+        const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+        expect(findings.map(({ message }) => message)).toStrictEqual([
+            expect.stringContaining(`"packageManager": "${expected}"`) as string,
+        ]);
+    },
+);
 
 test('package-manager-pin uses the highest-precedence mise file in a folder', async () => {
     await using sandbox = await createGitSandbox({
@@ -74,6 +67,22 @@ test('package-manager-pin reports malformed mise syntax and still reads other mi
     const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
     expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'mise.toml', rule: 'syntax' },
+        { file: 'package.json', rule: 'package-manager-pin' },
+    ]);
+});
+
+test.each([
+    { form: 'npm:<tool>', tools: '"npm:bun" = "0.0.0-test.2"' },
+    { form: 'an array', tools: 'bun = ["0.0.0-test.2"]' },
+    { form: 'a { version } table', tools: 'bun = { version = "0.0.0-test.2" }' },
+])('package-manager-pin reads the mise pin written as $form', async ({ tools }) => {
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' }),
+        'mise.toml': `[tools]\n${tools}\n`,
+        'gspot.toml': buildSandboxSettings(['javascript']),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
         { file: 'package.json', rule: 'package-manager-pin' },
     ]);
 });

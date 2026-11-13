@@ -12,7 +12,7 @@ buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
         'const LIMIT = 3; function read(item) { if (item) return LIMIT; return LIMIT; }',
         'function read(item) { const result = {}; if (item) { result.size = 1; return result; } return result; }',
         'function read(item) { const result = {}; if (item) store(item); if (other) return result; return result; }',
-        'async function save(draft) { if (draft) { await store(); return true; } await publish(); return true; }',
+        'async function read(item) { const result = []; if (item) { await fill(result); return result; } return result; }',
     ],
     invalid: [
         {
@@ -24,6 +24,10 @@ buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
             errors: [{ messageId: 'invariant' }],
         },
         { code: 'const read = (item) => { if (item) return -1; return -1; };', errors: [{ messageId: 'invariant' }] },
+        {
+            code: 'function save(item) { if (item) { store(item); return 1; } if (other) { return 1; } return 1; }',
+            errors: [{ messageId: 'invariant' }],
+        },
         {
             code: 'function read(item) { switch (item) { case 1: return "same"; default: return "same"; } }',
             errors: [{ messageId: 'invariant' }],

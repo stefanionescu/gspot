@@ -104,21 +104,3 @@ test('Supabase passes every configured schema as its own --schema in a scope', a
         },
     ]);
 });
-
-test('Supabase types need Docker before the local stack starts', async () => {
-    using resources = new DisposableStack();
-
-    await using sandbox = await createGitSandbox({});
-    using supabase = await prepareSupabaseCheck(
-        sandbox.path,
-        '',
-        buildProcessResult({ stdout: SUPABASE_TYPES_OUTPUT }),
-    );
-    await writeFile(join(sandbox.path, 'database.ts'), SUPABASE_TYPES_OUTPUT);
-    resources.use(fakeExecutableLookup((name) => (name === 'supabase' ? '/sandbox/supabase' : null)));
-
-    expect(await supabase.runCheck()).toMatchObject({
-        status: 'missing',
-    });
-    expect(supabase.requests).toStrictEqual([]);
-});

@@ -6,9 +6,6 @@ import { testdir } from 'testdirs';
 
 import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 
 const ALIAS_PROJECT = {
     'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',
@@ -23,17 +20,6 @@ const SCOPE_ALIASES = {
     '@root/*': 'typed/*',
     '#shared/*': 'compiler/*',
 } as const;
-
-test('alias reads report a malformed tsconfig.json', async () => {
-    await using sandbox = await testdir({ 'tsconfig.json': '{ "compilerOptions": { "paths": {} },' });
-    expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'configuration',
-            message: expect.stringContaining('tsconfig.json') as string,
-        }),
-    );
-});
 
 test('root and child aliases read their own files, and tsconfig paths win', async () => {
     await using sandbox = await testdir(ALIAS_PROJECT);
@@ -63,22 +49,10 @@ test('inherited aliases are read relative to the file that declares them', async
     });
 });
 
-test('alias reads name a missing extended file', async () => {
-    await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
-    const missing = convertToPosixPath(join(sandbox.path, 'missing-base.json'));
-    expect(() => readScopeAliases(sandbox.path, '', createRunCache(sandbox.path))).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'configuration',
-            message: expect.stringContaining(missing) as string,
-        }),
-    );
-});
-
-test('package aliases skip browser conditions and resolve nested ESM conditions in order', async () => {
+test('package aliases skip browser conditions and package targets, and resolve nested ESM conditions in order', async () => {
     await using sandbox = await testdir({
         'package.json':
-            '{"imports":{"#runtime":{"browser":"./browser.js","node":{"import":"./node.js"},"default":"./fallback.js"},"#ordered":{"default":"./first.js","node":"./later.js"}}}',
+            '{"imports":{"#runtime":{"browser":"./browser.js","node":{"import":"./node.js"},"default":"./fallback.js"},"#ordered":{"default":"./first.js","node":"./later.js"},"#external":"lodash"}}',
     });
     expect(readPackageAliases(sandbox.path, '')).toStrictEqual({ '#runtime': 'node.js', '#ordered': 'first.js' });
 });

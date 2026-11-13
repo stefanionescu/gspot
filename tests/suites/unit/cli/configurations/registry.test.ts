@@ -17,3 +17,13 @@ test('every shipped check without a command has runnable code', () => {
     );
     expect(missing.map((check) => check.id)).toStrictEqual([]);
 });
+
+test('every registered check code belongs to a shipped check', () => {
+    const shipped = new Set(
+        readConfigurations()
+            .values()
+            .flatMap((configuration) => configuration.checks)
+            .map((check) => check.id),
+    );
+    expect(Object.keys(CHECK_CODE).filter((id) => !shipped.has(id))).toStrictEqual([]);
+});

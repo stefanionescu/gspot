@@ -28,5 +28,11 @@ buildRuleTester({ root }).run('no-duplicate-test-rows', noDuplicateTestRows, {
             output: 'import { it } from "bun:test";\nit.each([{ a: 1 }])("adds", () => {});',
             errors: [{ messageId: 'duplicate', line: 2 }],
         },
+        {
+            code: 'test.each([1, 2, 1] as const)("adds %d", () => {});',
+            filename,
+            output: 'test.each([1, 2] as const)("adds %d", () => {});',
+            errors: [{ messageId: 'duplicate' }],
+        },
     ],
 });

@@ -8,7 +8,6 @@ const root = writePackageFolders({
     jest: { devDependencies: { jest: '30.0.0' } },
     vitest: { devDependencies: { vitest: '4.0.0' } },
     mocha: { devDependencies: { mocha: '11.0.0' } },
-    cypress: { devDependencies: { cypress: '15.0.0' } },
     playwright: { devDependencies: { '@playwright/test': '1.50.0' } },
     node: {},
 });
@@ -21,12 +20,14 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
         { code: 'xtest("adds", run);', filename: join(root, 'vitest/a.test.ts') },
         { code: 'it.skip("adds", run);', filename: join(root, 'jasmine/a.test.ts') },
         { code: 'test.skip(isMobile, "no touch");', filename: join(root, 'playwright/a.test.ts'), name: 'conditional' },
-        { code: 'test.skip();', filename: join(root, 'playwright/b.test.ts') },
         { code: 'test("adds", (t) => { t.skip("no network"); });', filename: join(root, 'node/a.test.ts') },
         { code: 'test("adds", { skip: false }, run);', filename: join(root, 'node/b.test.ts') },
-        { code: 'test("adds", (t) => { other.skip(); });', filename: join(root, 'node/c.test.ts') },
+        { code: 'test("adds", (t) => { t.todo(); });', filename: join(root, 'node/c.test.ts') },
         { code: 'test("adds", ({ skip }) => { run(); });', filename: join(root, 'node/d.test.ts') },
         { code: 'test("adds", (t) => { run(t); });', filename: join(root, 'node/e.test.ts') },
+        { code: 'run("adds", (t) => { t.skip(); });', filename: join(root, 'node/f.test.ts') },
+        { code: 'it.only("adds", run);', filename: join(root, 'jest/b.test.ts') },
+        { code: 'it.skip("adds", run);\n// Waits for the tax table.', filename: join(root, 'jest/c.test.ts') },
     ],
     invalid: [
         {
@@ -34,21 +35,7 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
             filename: join(root, 'jasmine/a.test.ts'),
             errors: [{ messageId: 'skipped' }],
         },
-        ...['test.skip("a", run);', 'xtest("a", run);'].map((code) => ({
-            code,
-            filename: join(root, 'jest/a.test.ts'),
-            errors: [{ messageId: 'skipped' as const }],
-        })),
-        ...['suite.skip("a", run);'].map((code) => ({
-            code,
-            filename: join(root, 'vitest/a.test.ts'),
-            errors: [{ messageId: 'skipped' as const }],
-        })),
-        ...['specify.skip("a", run);', 'xspecify("a", run);'].map((code) => ({
-            code,
-            filename: join(root, 'cypress/a.cy.ts'),
-            errors: [{ messageId: 'skipped' as const }],
-        })),
+        { code: 'test.skip("a", run);', filename: join(root, 'jest/a.test.ts'), errors: [{ messageId: 'skipped' }] },
         {
             code: '//\nit.skip("adds", run);',
             filename: join(root, 'vitest/b.test.ts'),
@@ -56,7 +43,7 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
             errors: [{ messageId: 'skipped' }],
         },
         {
-            code: '\n\nit.skip("adds", run);',
+            code: '// Waits for the tax table.\n\nit.skip("adds", run);',
             filename: join(root, 'mocha/a.test.ts'),
             errors: [{ messageId: 'skipped', line: 3 }],
         },

@@ -1,21 +1,17 @@
 import { expect, test } from 'bun:test';
 
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { DOCKERIGNORE_PATTERNS } from '#cli/config/configurations/docker.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import {
     COMPOSE_SOURCES,
-    DOCKERIGNORE_ALLOWLISTS,
     DOCKERIGNORE_CASES,
     NGINX_COMPOSE,
     TRIVY_IMAGE_FINDINGS,
     TRIVY_REGISTRY_FAILURE,
+    TRIVY_REPORT,
 } from '#tests/config/configurations/docker.ts';
 import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -34,49 +30,55 @@ test('Compose docker-compose.production.yml runs after docker-compose.yml in one
         'docker-compose.yml': NGINX_COMPOSE,
         'docker-compose.production.yml': 'services: {app: {environment: {FEATURE: enabled}}}\n',
     });
-    const session = await openSession(sandbox.path);
     using resources = new DisposableStack();
     const fakes = fakeToolExecutables([{ ...getTool(readConfigurations().values(), 'docker'), version: '29.0.0' }]);
     resources.use(fakes);
     const toolRun = resources.use(fakeCommands().mockResolvedValue(buildProcessResult()));
-    const planned = planChecks(session, buildRunOptions({ stage: 'push', only: ['docker/compose'] }))[0]!;
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        CHECK_CODE['docker/compose'],
-        {},
-    );
-    expect(result.findings).toStrictEqual([]);
-    expect(result.status).toBe('passed');
+    expect(await runSandboxCheck(sandbox.path, 'docker/compose')).toStrictEqual([]);
     expect(
         toolRun.mock.calls.map(([command]) => command.filter((_, index) => command[index - 1] === '-f')),
     ).toStrictEqual([['docker-compose.yml', 'docker-compose.production.yml']]);
 });
 
-test.each([...DOCKERIGNORE_ALLOWLISTS])(
-    'docker/dockerignore respects ordered allowlist $text',
-    async ({ text, missing }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['docker']),
-            Dockerfile: 'FROM scratch\n',
-            '.dockerignore': text,
-        });
-        const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
-        const entries = missing.join(', ');
-        expect(findings).toStrictEqual(
-            missing.length === 0
-                ? []
-                : [
-                      expect.objectContaining({
-                          file: '.dockerignore',
-                          line: 1,
-                          rule: 'missing-entry',
-                          message: expect.stringContaining(entries) as string,
-                      }),
-                  ],
-        );
-    },
-);
+test.each(buildAllowlistCases())('docker/dockerignore respects ordered allowlist $text', async ({ text, missing }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker']),
+        Dockerfile: 'FROM scratch\n',
+        '.dockerignore': text,
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
+    const entries = missing.join(', ');
+    expect(findings).toStrictEqual(
+        missing.length === 0
+            ? []
+            : [
+                  expect.objectContaining({
+                      file: '.dockerignore',
+                      line: 1,
+                      rule: 'missing-entry',
+                      message: expect.stringContaining(entries) as string,
+                  }),
+              ],
+    );
+});
+
+function buildAllowlistCases(): Array<{ text: string; missing: string[] }> {
+    const ignored = readConfigurations()
+        .values()
+        .filter(({ name, always_selected: isAlwaysSelected }) => isAlwaysSelected || name === 'docker')
+        .flatMap((configuration) => configuration.ignored_paths)
+        .toArray();
+    const required = [...DOCKERIGNORE_PATTERNS, ...ignored].map((pattern) => `${pattern}\n`).join('');
+    const [, environmentFile] = DOCKERIGNORE_PATTERNS;
+    return [
+        { text: `${required}!.env\n`, missing: [environmentFile] },
+        { text: `${required}!**/.env\n`, missing: [environmentFile, '**/.env'] },
+        { text: '*\n!src\n', missing: ignored },
+        { text: `*\n!src\n${ignored.join('\n')}\n`, missing: [] },
+        { text: '!src\n*\n', missing: [] },
+        { text: '*\n!.env\n', missing: [environmentFile, ...ignored] },
+    ];
+}
 
 test.each([...DOCKERIGNORE_CASES])(
     "docker/dockerignore requires an ignore file with the patterns of each scope's configurations: $name",
@@ -87,7 +89,11 @@ test.each([...DOCKERIGNORE_CASES])(
         });
 
         const findings = await runSandboxCheck(sandbox.path, 'docker/dockerignore');
-        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...expectedFindings]);
+        expect(findings).toStrictEqual(
+            expectedFindings.map(({ entry, ...fields }) =>
+                matchFields<Finding>({ ...fields, message: expect.stringContaining(entry) as string }),
+            ),
+        );
     },
 );
 
@@ -98,11 +104,7 @@ test.each([...COMPOSE_SOURCES])('Trivy scans only service images in $name', asyn
     });
 
     using resources = new DisposableStack();
-    const { scan, findings } = await scanImages(
-        sandbox.path,
-        '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
-        resources,
-    );
+    const { scan, findings } = await scanImages(sandbox.path, TRIVY_REPORT, resources);
     expect(findings).toStrictEqual(TRIVY_IMAGE_FINDINGS.map((finding) => matchFields(finding)));
     expect(scan.mock.calls.map(([command, options]) => ({ image: command.at(-1), cwd: options.cwd }))).toStrictEqual([
         { image: 'nginx:1.27.2', cwd: sandbox.path },

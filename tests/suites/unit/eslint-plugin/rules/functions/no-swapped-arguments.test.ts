@@ -1,9 +1,7 @@
 import { noSwappedArguments } from '#eslint-plugin/rules/functions/no-swapped-arguments.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = noSwappedArguments;
-
-buildRuleTester().run('no-swapped-arguments', rule, {
+buildRuleTester().run('no-swapped-arguments', noSwappedArguments, {
     valid: [
         'function divide(dividend, divisor) {} divide(dividend, divisor);',
         'function divide(dividend, divisor) {} if (dividend < divisor) divide(divisor, dividend);',
@@ -13,7 +11,7 @@ buildRuleTester().run('no-swapped-arguments', rule, {
         'divide(divisor, dividend);',
         'function compare(a, b) {} list.sort((a, b) => { return compare(b, a); });',
         'function range(start, end) {} if (!start.isBefore(end)) range(end, start);',
-        'function merge(first, second) {} if (first.length > second.length) merge(second, first);',
+        'function merge(first, second) {} if (first.size() > second.size()) merge(second, first);',
         'function split({ head }, tail) {} split(tail, head);',
         'function mid(lo, hi) { return lo > hi ? mid(hi, lo) : 0; }',
         'function ff(a, b, c, d) {} ff(c, d, a, b);',
@@ -26,8 +24,8 @@ buildRuleTester().run('no-swapped-arguments', rule, {
             ],
         },
         {
-            code: 'class Point { constructor(x, y) {} } function shift(x, y) {} function move(x, y) { new Point(y, x); shift(y, x); }',
-            errors: [{ messageId: 'swapped', data: { first: 'y', second: 'x' }, column: 107 }],
+            code: 'function shift(x, y) {} function move(x, y) { shift(y, x); }',
+            errors: [{ messageId: 'swapped', data: { first: 'y', second: 'x' } }],
         },
         {
             code: 'function span(start, end, step) {} span(step, end, start);',
@@ -37,14 +35,13 @@ buildRuleTester().run('no-swapped-arguments', rule, {
             'function divide(dividend = 1, divisor = 2) {} divide(divisor, dividend);',
             'function ff(a, b, c, d) {} ff(d, 1, c, a);',
             'function divide(dividend, divisor) {} if (ready) divide(divisor, dividend);',
-            'function divide(dividend, divisor) {} if (0 < divisor) divide(divisor, dividend);',
             'function divide(dividend, divisor) {} if (dividend + divisor) divide(divisor, dividend);',
             'function compare(left, right) {} list.sort((left, right) => compare(right, left));',
         ].map((code) => ({ code, errors: [{ messageId: 'swapped' as const }] })),
     ],
 });
 
-buildTypedRuleTester().run('no-swapped-arguments', rule, {
+buildTypedRuleTester().run('no-swapped-arguments', noSwappedArguments, {
     valid: [
         'function pair(left: string, right: number) {} declare const left: number; declare const right: string; pair(right, left);',
     ],

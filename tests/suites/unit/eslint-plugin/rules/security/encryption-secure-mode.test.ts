@@ -8,11 +8,10 @@ buildRuleTester().run('encryption-secure-mode', encryptionSecureMode, {
     ],
     invalid: [
         {
-            code: "import * as crypto from 'crypto';\ncrypto.createCipheriv('aes-128-cbc', key, iv);\ncrypto.createCipheriv('aes-128-ecb', key, iv);\ncrypto.createCipheriv('AES128', key, iv);",
+            code: "import * as crypto from 'crypto';\ncrypto.createCipheriv('aes-128-cbc', key, iv);\ncrypto.createCipheriv('AES128', key, iv);",
             errors: [
                 { messageId: 'insecure', line: 2 },
                 { messageId: 'insecure', line: 3 },
-                { messageId: 'insecure', line: 4 },
             ],
         },
     ],

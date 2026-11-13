@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import * as processes from '#cli/system/processes.ts';
-import { ANALYZER_EXIT_CASES, UNEXPECTED_PLAN_MESSAGE } from '#tests/config/configurations/swift.ts';
+import { ANALYZER_EXIT_CASES } from '#tests/config/configurations/swift.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -40,7 +40,7 @@ test('analyzer: swift/swiftlint-analyze removes the old compiler files, so its c
 
     const input = prepared.planned;
     const plan = planSwiftBuild(prepared.session, input);
-    if (plan.kind !== 'package') throw new Error(UNEXPECTED_PLAN_MESSAGE);
+    if (plan.kind !== 'package') throw new Error('Expected a Swift package build.');
     const compilerState = join(plan.scratch, 'state');
     await mkdir(plan.scratch, { recursive: true });
     await writeFile(compilerState, 'incremental');

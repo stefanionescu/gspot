@@ -50,3 +50,13 @@ test('stale-lockfile reports a dependency that the pnpm-lock.yaml importer lacks
         'package.json declares react ^19.0.0, which pnpm-lock.yaml does not record.',
     );
 });
+
+test('stale-lockfile leaves out a scope that the root lockfile does not hold as a workspace', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'tools', configurations: [] }] }),
+        'package.json': '{"workspaces":["packages/*"]}',
+        'tools/package.json': '{"name":"tools","dependencies":{"zod":"^4.0.0"}}',
+        'package-lock.json': '{"lockfileVersion":3,"packages":{"":{}}}',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/stale-lockfile', { scope: 'tools' })).toStrictEqual([]);
+});

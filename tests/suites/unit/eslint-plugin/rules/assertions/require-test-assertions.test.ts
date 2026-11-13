@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { requireTestAssertions } from '#eslint-plugin/rules/assertions/require-test-assertions.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = requireTestAssertions;
 const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },
     jest: { devDependencies: { jest: '30.0.0' } },
@@ -29,7 +28,7 @@ writeFileSync(
 );
 writeFileSync(join(root, 'typed/a.test.ts'), '');
 
-buildRuleTester({ root }).run('require-test-assertions', rule, {
+buildRuleTester({ root }).run('require-test-assertions', requireTestAssertions, {
     valid: [
         'it("adds", () => { run(); });',
         'import { expect } from "chai";\nit("adds", () => { expect(add(1, 2)).to.equal(3); });',
@@ -41,11 +40,9 @@ buildRuleTester({ root }).run('require-test-assertions', rule, {
         'import { expect } from "chai";\nit("loads", (done) => { load().then(() => {}, done); });',
         'import { expect } from "chai";\nit("loads", (done) => { stream.subscribe({ error: done }); });',
         'import { it, expect } from "vitest";\nit("adds", () => { expect(add(1, 2)).toBe(3); });',
-        'import { it } from "mocha";\nimport sinon from "sinon";\nit("calls", () => { sinon.assert.calledOnce(spy); });',
         'import { it } from "mocha";\nimport request from "supertest";\nit("serves", () => request(app).get("/").expect(200));',
         'import test from "node:test";\nimport assert from "node:assert";\ntest("adds", (t) => { t.assert.ok(add(1, 2)); });',
         'import { expect } from "chai";\ndescribe("cart", () => { run(); });',
-        'import { test } from "uvu";\nimport * as assert from "uvu/assert";\ntest("adds", () => { assert.is(add(1, 2), 3); });',
         { code: 'it("shows", () => { cy.get("a").should("be.visible"); });', filename: join(root, 'cypress/a.cy.ts') },
         { code: 'test("adds", () => { expect(add(1, 2)).toBe(3); });', filename: join(root, 'jest/a.test.ts') },
     ],
@@ -77,7 +74,7 @@ buildRuleTester({ root }).run('require-test-assertions', rule, {
 buildRuleTester({
     root,
     languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
-}).run('require-test-assertions with types', rule, {
+}).run('require-test-assertions with types', requireTestAssertions, {
     valid: [
         {
             code: 'import { expect } from "chai";\nimport { checkTotal } from "./helpers";\nit("adds", () => { checkTotal(3); });',
@@ -91,5 +88,6 @@ buildRuleTester({
     invalid: [
         'import { expect } from "chai";\nimport { run } from "./plain";\nit("adds", () => { run(); });',
         'import { HttpTestingController } from "@angular/common/http/testing";\ndeclare const http: HttpTestingController;\nit("loads", () => { http.flush(); });',
+        'import { expect } from "chai";\nit("logs", () => { console.assert(ready); });',
     ].map((code) => ({ code, filename: join(root, 'typed/a.test.ts'), errors: [{ messageId: 'missing' as const }] })),
 });

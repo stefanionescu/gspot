@@ -4,18 +4,17 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { GSPOT_CHECK } from '#cli/config/manifests.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { CLI_BIN, runGspot } from '#tests/setup/cli/commands.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(
@@ -36,18 +35,8 @@ test('the pre-push report prints a command that reproduces the same findings', a
     expect(reproduction).toStrictEqual([`gspot check --only project/bash-syntax --base ${base.slice(0, 7)}`]);
     await using checkout = await testdir();
     runGitStep(sandbox.path, ['worktree', 'add', '--detach', checkout.path, broken]);
-    const repeated = await runCommand(
-        [
-            'bash',
-            '-c',
-            'runtime=$1; cli=$2; gspot() { "$runtime" "$cli" "$@"; }; eval "$3"',
-            'rerun',
-            process.execPath,
-            CLI_BIN,
-            reproduction[0]!.replace(GSPOT_CHECK, 'gspot check --json'),
-        ],
-        { cwd: checkout.path },
-    );
+    const parsed = await parseBashScript(reproduction[0]!);
+    const repeated = await runGspot(checkout.path, [...(parsed.commands[0]!.arguments as string[]), '--json']);
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
     const repeatedReport = runReportSchema.parse(JSON.parse(repeated.stdout));
     expect(repeatedReport.checks[0]?.findings).toStrictEqual(failedReport.checks[0]?.findings);

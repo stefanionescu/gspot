@@ -5,6 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -17,6 +18,11 @@ async function runWeakenings(root: string): Promise<{ rules: Array<string | unde
         rules: report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule)),
         notes: report.notes,
     };
+}
+
+async function listWeakeningRules(root: string): Promise<Array<string | undefined>> {
+    const findings = await runSandboxCheck(root, 'gspot/weakenings');
+    return findings.map(({ rule }) => rule);
 }
 
 async function writeFiles(root: string, files: Record<string, string>): Promise<void> {
@@ -58,8 +64,7 @@ test.each([
     await using sandbox = await createGitSandbox({ 'gspot.toml': base });
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), head);
-    const { rules: found } = await runWeakenings(sandbox.path);
-    expect(found).toStrictEqual([...rules]);
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual([...rules]);
 });
 
 test.each([
@@ -127,8 +132,7 @@ test('gspot/weakenings reports a scope that goes while its folder stays', async 
     });
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
-    const { rules } = await runWeakenings(sandbox.path);
-    expect(rules).toStrictEqual(['configuration']);
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual(['configuration']);
 });
 
 test('gspot/weakenings takes a reason through an ignore of the rule', async () => {
@@ -147,18 +151,17 @@ test('gspot/weakenings compares with the base of the run, not the last commit', 
     const base = commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'basic' }));
     commitAll(sandbox.path, 'lower the level');
-    const { report } = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['gspot/weakenings'], selection: { content: 'working-tree', base } }),
-    );
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ rule }) => rule))).toStrictEqual(['level']);
+    const session = await openSession(sandbox.path);
+    const check = getBuiltInCheck('gspot/weakenings', { content: 'working-tree', base });
+    const findings = await check(session, planSandboxCheck(session, 'gspot/weakenings'));
+    expect(findings.map(({ rule }) => rule)).toStrictEqual(['level']);
 });
 
 test('gspot/weakenings compares with the shipped defaults when gspot refuses the base gspot.toml', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': 'unknown_key = true\n' });
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([]));
-    expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['hooks', 'rule-files'], notes: [] });
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual(['hooks', 'rule-files']);
 });
 
 test('a base file with an unknown key still compares its level and switches', async () => {
@@ -169,4 +172,27 @@ test('a base file with an unknown key still compares its level and switches', as
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), head);
     expect(await runWeakenings(sandbox.path)).toStrictEqual({ rules: ['level'], notes: [] });
+});
+
+test('a rule file excluded at the head is a weakening', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([], { rules: true }) });
+    commitAll(sandbox.path);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings([], { rules: true, tables: '[rule_files]\nexclude = [".gspot/rules/TESTING.md"]\n' }),
+    );
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual(['rule-files']);
+});
+
+test('a scope limit raised without a reason is reported with its scope', async () => {
+    const base = buildSandboxSettings([], {
+        tables: '[[scope]]\npath = "app"\n[scope.limits]\nmax_file_lines = 100\n',
+    });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': base, 'app/a.md': '# A\n' });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'gspot.toml'), base.replace('= 100', '= 200'));
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/weakenings');
+    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
+        { rule: 'setting', message: expect.stringContaining('app') as string },
+    ]);
 });

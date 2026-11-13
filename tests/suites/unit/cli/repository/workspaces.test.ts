@@ -6,7 +6,7 @@ import { testdir } from 'testdirs';
 
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { compareText } from '#cli/system/text.ts';
-import { WORKSPACE_FILE_CASES } from '#tests/config/repository/setup.ts';
+import { WORKSPACE_FILE_CASES } from '#tests/config/repository.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -80,6 +80,16 @@ test('a workspace package.json that starts with a byte order mark stays a worksp
     });
 
     expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/marked', 'packages/plain']);
+});
+
+test('a ** workspace pattern leaves out .gspot', async () => {
+    await using sandbox = await testdir({
+        'package.json': '{"workspaces":["**"]}',
+        'packages/app/package.json': '{"name":"application"}',
+        '.gspot/package.json': '{"name":"private-tools"}',
+    });
+
+    expect(listWorkspaceFolders(sandbox.path)).toStrictEqual(['packages/app']);
 });
 
 test('workspace detection does not parse an unused lower-priority file', async () => {

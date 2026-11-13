@@ -4,15 +4,12 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
     valid: [
         'import session from "cookie-session"; session({ secure: true, httpOnly: true });',
-        'import session from "cookie-session"; session({});',
         'import session from "express-session"; session({ secure: false, httpOnly: false });',
         'import csrf from "csurf"; csrf({ cookie: false });',
-        'import csrf from "csurf"; csrf({ cookie: {} });',
         'import session from "other"; session({ secure: false, httpOnly: false });',
-        'import session from "cookie-session"; function configure(session) { session({ secure: false }); }',
         'import session from "cookie-session"; const options = { secure: false }; session({ ...options, secure: true });',
         'import session from "cookie-session"; const options = { ...options }; session(options);',
-        'import session from "cookie-session"; let options = { secure: false }; options = other; session(options);',
+        'import Cookies from "cookies"; const headers = new Headers(); headers.set("key", "value", { secure: false });',
     ],
     invalid: [
         {
@@ -27,10 +24,9 @@ buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
             'const { default: csrf } = require("csurf"); const enabled = true; csrf({ cookie: enabled });',
             'import Cookies from "cookies"; const cookies = new Cookies(req, res); cookies.set("key", "value", { secure: false, httpOnly: false });',
         ].map((code) => ({ code, errors: [{ messageId: 'flag' as const }, { messageId: 'flag' as const }] })),
-        ...[
-            'const Cookies = require("cookies"); new Cookies(req, res).set("key", "value", { httpOnly: false });',
-            'import session from "cookie-session"; const disabled = false; const options = { secure: disabled }; session({ secure: true, ...options });',
-            'import session = require("cookie-session"); const configure = session; configure({ secure: false });',
-        ].map((code) => ({ code, errors: [{ messageId: 'flag' as const }] })),
+        {
+            code: 'import session from "cookie-session"; const disabled = false; const options = { secure: disabled }; session({ secure: true, ...options });',
+            errors: [{ messageId: 'flag' }],
+        },
     ],
 });

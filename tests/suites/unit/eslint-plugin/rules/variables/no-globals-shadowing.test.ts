@@ -24,5 +24,12 @@ buildRuleTester().run('no-globals-shadowing', noGlobalsShadowing, {
             errors: [{ messageId: 'declaration', data: { kind: 'function', name: 'parseInt' } }],
         },
         { code: 'NaN++;', errors: [{ messageId: 'assignment' }] },
+        {
+            code: 'const read = (Set) => function (Map) {};',
+            errors: [
+                { messageId: 'declaration', data: { kind: 'parameter', name: 'Set' } },
+                { messageId: 'declaration', data: { kind: 'parameter', name: 'Map' } },
+            ],
+        },
     ],
 });

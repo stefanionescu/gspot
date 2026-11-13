@@ -10,23 +10,22 @@ import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import {
-    BIN_WORKSPACE_FILES,
-    CRLF_PACKAGE_FILES,
-    DECLARATION_COPY_FILES,
-    EXTERNAL_DEPENDENCY_FILES,
-    LOCKED_NPM_PROJECT_FILES,
-    TOOL_PROJECT_FILES,
-    VALUE_ONE_LINE,
-    WORKSPACE_LOCK_FILES,
-} from '#tests/config/engine/files.ts';
+import { VALUE_ONE_LINE } from '#tests/config/engine/files.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('an index copy links installed packages and redirects workspace links into the copy', async () => {
-    await using sandbox = await testdir(WORKSPACE_LOCK_FILES);
+    await using sandbox = await testdir({
+        'package.json': '{"workspaces":["packages/*"]}',
+        'bun.lock': '{}',
+        'packages/one/package.json': '{"name":"one"}',
+        'packages/two/package.json': '{"name":"two"}',
+        'node_modules/root/value.js': 'export const value = 1;',
+        'packages/two/node_modules/owned/value.js': 'export const value = 2;',
+        '.gitignore': 'node_modules/\n',
+    });
 
     await symlink('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'), 'dir');
     runGitStep(sandbox.path, ['init']);
@@ -43,7 +42,13 @@ test('an index copy links installed packages and redirects workspace links into 
 });
 
 test('a workspace bin into untracked build output is left out of the copy', async () => {
-    await using sandbox = await testdir(BIN_WORKSPACE_FILES);
+    await using sandbox = await testdir({
+        'package.json': '{"workspaces":["packages/*"]}',
+        'bun.lock': '{}',
+        'packages/cli/package.json': '{"name":"cli","bin":{"cli":"dist/cli.js"}}',
+        'packages/cli/dist/cli.js': 'console.log(1);',
+        '.gitignore': 'node_modules/\ndist/\n',
+    });
 
     await mkdir(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
     await symlink('../packages/cli', join(sandbox.path, 'node_modules/cli'), 'dir');
@@ -59,7 +64,10 @@ test('a workspace bin into untracked build output is left out of the copy', asyn
 test('a dot folder of node_modules reaches the copy only when it holds an install of its own', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        ...EXTERNAL_DEPENDENCY_FILES,
+        'package.json': '{}',
+        'bun.lock': '{}',
+        '.gitignore': 'node_modules/\n',
+        'node_modules/example/index.js': 'export const value = 1;',
         'node_modules/.cache/entry.txt': 'cache',
         'node_modules/.tools/node_modules/tool/index.d.ts': 'export declare const tool: number;',
     });
@@ -100,7 +108,12 @@ test.skipIf(!isWindows)(
 );
 
 test('a nested revision copy links each package of .gspot/node_modules', async () => {
-    await using sandbox = await testdir(TOOL_PROJECT_FILES);
+    await using sandbox = await testdir({
+        'project/.gspot/package.json': '{}',
+        'project/.gspot/bun.lock': '{}',
+        'project/.gspot/node_modules/example/index.js': VALUE_ONE_LINE,
+        '.gitignore': 'node_modules/\n',
+    });
 
     runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', '.']);
@@ -156,7 +169,14 @@ test('a copy leaves the virtual environment in the working tree and still checks
 });
 
 test('cancellation waits for the dependency copies to finish before removing the copy and keeps installed files', async () => {
-    await using sandbox = await testdir(LOCKED_NPM_PROJECT_FILES);
+    const files = {
+        '.gitignore': 'node_modules/\n',
+        'package.json': '{"name":"sample","version":"1.0.0"}\n',
+        'package-lock.json': '{"name":"sample","lockfileVersion":3,"packages":{}}\n',
+        'source.js': 'export const value = 1;\n',
+        'node_modules/item-0/value.js': 'export const value = 2;\n',
+    };
+    await using sandbox = await testdir(files);
 
     runGitStep(sandbox.path, ['init']);
     runGitStep(sandbox.path, ['add', '.']);
@@ -173,12 +193,17 @@ test('cancellation waits for the dependency copies to finish before removing the
     expect(cancelError.message).toBe('Canceled dependency copy');
     expect(existsSync(destination!)).toBe(false);
     expect(await readFile(join(sandbox.path, 'node_modules/item-0/value.js'), 'utf8')).toBe(
-        'export const value = 2;\n',
+        files['node_modules/item-0/value.js'],
     );
 });
 
 test('a package.json checked out with CRLF matches its LF blob in the index copy when Git converts line endings', async () => {
-    await using sandbox = await createGitSandbox(CRLF_PACKAGE_FILES);
+    await using sandbox = await createGitSandbox({
+        'package.json': '{\n    "name": "crlf"\n}\n',
+        'bun.lock': '{}\n',
+        '.gitignore': 'node_modules/\n',
+        'node_modules/example/index.js': VALUE_ONE_LINE,
+    });
 
     runGitStep(sandbox.path, ['config', 'core.autocrlf', 'true']);
     runGitStep(sandbox.path, ['add', '.']);
@@ -213,12 +238,20 @@ test('changed compiler settings omit declaration copies and leave a dependency n
 });
 
 test('an index copy clones an ignored declaration file that a tsconfig includes, and nothing outside the repository', async () => {
-    await using sandbox = await testdir(DECLARATION_COPY_FILES);
+    const files = {
+        'project/.gitignore': 'types/generated.d.ts\n',
+        'project/tsconfig.json': '{"include":["src/**/*.ts","types/*.d.ts","../outside.d.ts"]}',
+        'project/src/main.ts': 'export const value = 1;\n',
+        'project/types/generated.d.ts': 'declare const generated: string;\n',
+        'project/types/kept.d.ts': 'declare const kept: number;\n',
+        'outside.d.ts': 'declare const outside: boolean;\n',
+    };
+    await using sandbox = await testdir(files);
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init']);
     runGitStep(root, ['add', '.']);
     using copy = await copyRevision(root, { kind: 'index' });
-    expect(await readFile(join(copy.root, 'types/generated.d.ts'), 'utf8')).toBe('declare const generated: string;\n');
+    expect(await readFile(join(copy.root, 'types/generated.d.ts'), 'utf8')).toBe(files['project/types/generated.d.ts']);
     expect(existsSync(join(copy.root, 'outside.d.ts'))).toBe(false);
 });
 
@@ -249,4 +282,22 @@ test('a copy keeps tracked dependencies as the revision holds them', async () =>
     using copy = await copyRevision(sandbox.path, { kind: 'index' });
     const tracked = await lstat(join(copy.root, 'node_modules/tracked/index.js'));
     expect(tracked.isSymbolicLink()).toBe(false);
+});
+
+test('a copy with checked paths clones the ignored declarations of only the tsconfig files whose folder holds one', async () => {
+    await using sandbox = await testdir({
+        '.gitignore': '*.gen.d.ts\n',
+        'site/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
+        'site/types.gen.d.ts': 'declare const site: string;\n',
+        'site/src/page.ts': 'export const page = 1;\n',
+        'tools/tsconfig.json': '{"include":["src/**/*.ts","types.gen.d.ts"]}',
+        'tools/types.gen.d.ts': 'declare const tools: string;\n',
+        'tools/src/main.ts': 'export const main = 1;\n',
+    });
+    commitAll(sandbox.path);
+    using checked = await copyRevision(sandbox.path, { kind: 'index', paths: ['site/src/page.ts'] });
+    expect(existsSync(join(checked.root, 'site/types.gen.d.ts'))).toBe(true);
+    expect(existsSync(join(checked.root, 'tools/types.gen.d.ts'))).toBe(false);
+    using every = await copyRevision(sandbox.path, { kind: 'index' });
+    expect(existsSync(join(every.root, 'tools/types.gen.d.ts'))).toBe(true);
 });

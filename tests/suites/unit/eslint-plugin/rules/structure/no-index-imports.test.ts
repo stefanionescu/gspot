@@ -6,6 +6,12 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
         "vi.requireActual('@/turn/index.js');",
         "import { a } from '@scope/package/index';",
         "import { a } from '#app/myindex';",
+        {
+            code: "import text from './value.ts?raw&file=/index.ts';",
+            name: 'query text that ends in /index.ts is not an index import',
+        },
+        'const page = await import(route);',
+        'export const b = 1;\nexport { b as c };',
     ],
     invalid: [
         {
@@ -15,19 +21,7 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
         { code: "export * from './lib/index.js';", errors: [{ messageId: 'index' }] },
         { code: "const m = await import('./index.js');", errors: [{ messageId: 'index' }] },
         { code: "vi.mock('@/turn/index.js');", errors: [{ messageId: 'index' }] },
-        { code: "jest.requireActual('@/turn/index.js');", errors: [{ messageId: 'index' }] },
         { code: "const a = require('./lib/index.js');", errors: [{ messageId: 'index' }] },
-    ],
-});
-
-buildRuleTester().run('no-index-imports regressions', noIndexImports, {
-    valid: [
-        {
-            code: "import text from './value.ts?raw&file=/index.ts';",
-            name: 'query text that ends in /index.ts is not an index import',
-        },
-    ],
-    invalid: [
         {
             code: "import a = require('./lib/index');",
             name: 'an import-equals require of an index file reports',

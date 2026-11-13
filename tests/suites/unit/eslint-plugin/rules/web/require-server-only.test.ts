@@ -18,6 +18,7 @@ buildRuleTester().run('require-server-only', requireServerOnly, {
         },
         { code: "import {} from 'server-only';\nexport const secret = 1;", errors: [{ messageId: 'missing' }] },
         { code: 'export const secret = 1;', errors: [{ messageId: 'missing' }] },
+        { code: "import db from './db';\nexport const secret = 1;", errors: [{ messageId: 'missing' }] },
         { code: "import type {} from 'server-only';\nexport const secret = 1;", errors: [{ messageId: 'missing' }] },
     ],
 });

@@ -1,9 +1,7 @@
 import { noMixedReturnTypes } from '#eslint-plugin/rules/functions/no-mixed-return-types.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = noMixedReturnTypes;
-
-buildTypedRuleTester().run('no-mixed-return-types', rule, {
+buildTypedRuleTester().run('no-mixed-return-types', noMixedReturnTypes, {
     valid: [
         'function read(raw: boolean) { if (raw) return "1"; return "2"; }',
         'function check(raw: boolean) { if (raw) return "invalid"; return true; }',
@@ -12,6 +10,7 @@ buildTypedRuleTester().run('no-mixed-return-types', rule, {
         "type Result = { id: string } & ({ kind: 'a' } | { kind: 'b'; note: string }); declare const made: Result; function read(raw: boolean): Result { if (raw) return { id: '1', kind: 'a' }; return made; }",
         "function pick(raw: boolean) { if (raw) return ['a', 1] as const; return ['b']; }",
         "function pick<T extends string>(raw: boolean, name: T) { if (raw) return name; return 'x'; }",
+        'function read(raw: boolean): string | number | null { if (raw) return "1"; return null; }',
     ],
     invalid: [
         {

@@ -9,7 +9,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
-import type { Sandbox } from '#tests/types/setup.ts';
 
 const ANSIBLE_CONFIG = '[defaults]\ninventory = inventory\n';
 
@@ -27,6 +26,8 @@ const ANSIBLE_SANDBOX = {
     configurations: ['ansible'],
     files: { 'deploy/ansible.cfg': ANSIBLE_CONFIG, 'deploy/site.yml': ANSIBLE_PLAYBOOK },
 } as const;
+
+const ANSIBLE_LINT_CHECK = ['check', '--only', 'ansible/ansible-lint', '--json'] as const;
 
 const SHORT_ACTION_PLAYBOOK = ANSIBLE_PLAYBOOK.replace('ansible.builtin.systemd:', 'systemd:');
 
@@ -49,9 +50,7 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
             }),
         );
 
-        const failed = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-        ).report;
+        const failed = parseCheckReport(await spawnGspot(root, ANSIBLE_LINT_CHECK)).report;
         expect(failed.exitCode, JSON.stringify(failed)).toBe(1);
         expect(failed.checks.map(({ scope }) => scope)).toStrictEqual(['', 'app']);
         expect(listFindingRows(failed)).toStrictEqual([
@@ -60,44 +59,34 @@ describe.skipIf(!hasToolBuild('ansible-lint'))('ansible-lint', () => {
         ]);
         await writeFile(join(root, 'site.yml'), ANSIBLE_PLAYBOOK);
         await writeFile(join(root, 'app/site.yml'), ANSIBLE_PLAYBOOK);
-        const corrected = parseCheckReport(
-            await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-        ).report;
+        const corrected = parseCheckReport(await spawnGspot(root, ANSIBLE_LINT_CHECK)).report;
         expect(corrected.exitCode, JSON.stringify(corrected)).toBe(0);
     });
 
     test('uses the profile of level all next to the root and scope ansible.cfg files', async () => {
-        await assertLevelProfile(installedSandbox());
+        const { root } = installedSandbox();
+        await using _sourceChange = await writeSandboxChanges(installedSandbox(), {
+            files: {
+                'gspot.toml': buildSandboxSettings(['ansible'], {
+                    level: 'all',
+                    scopes: [{ path: 'app', configurations: ['ansible'] }],
+                }),
+                'deploy/ansible.cfg': ANSIBLE_CONFIG,
+                'deploy/site.yml': SHORT_ACTION_PLAYBOOK,
+                'app/deploy/ansible.cfg': ANSIBLE_CONFIG,
+                'app/deploy/site.yml': SHORT_ACTION_PLAYBOOK,
+            },
+        });
+
+        const checked = parseCheckReport(await spawnGspot(root, ANSIBLE_LINT_CHECK)).report;
+        expect(checked.exitCode, JSON.stringify(checked)).toBe(1);
+        expect(listFindingRows(checked)).toStrictEqual([
+            { file: 'deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
+            { file: 'app/deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
+        ]);
+        await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
+        await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
+        const fixed = parseCheckReport(await spawnGspot(root, ANSIBLE_LINT_CHECK)).report;
+        expect(fixed.exitCode, JSON.stringify(fixed)).toBe(0);
     });
 });
-
-async function assertLevelProfile(sandbox: Sandbox): Promise<void> {
-    const { root } = sandbox;
-    await using _sourceChange = await writeSandboxChanges(sandbox, {
-        files: {
-            'gspot.toml': buildSandboxSettings(['ansible'], {
-                level: 'all',
-                scopes: [{ path: 'app', configurations: ['ansible'] }],
-            }),
-            'deploy/ansible.cfg': ANSIBLE_CONFIG,
-            'deploy/site.yml': SHORT_ACTION_PLAYBOOK,
-            'app/deploy/ansible.cfg': ANSIBLE_CONFIG,
-            'app/deploy/site.yml': SHORT_ACTION_PLAYBOOK,
-        },
-    });
-
-    const checked = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    ).report;
-    expect(checked.exitCode, JSON.stringify(checked)).toBe(1);
-    expect(listFindingRows(checked)).toStrictEqual([
-        { file: 'deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
-        { file: 'app/deploy/site.yml', line: 6, rule: 'fqcn[action-core]' },
-    ]);
-    await writeFile(join(root, 'deploy/site.yml'), ANSIBLE_PLAYBOOK);
-    await writeFile(join(root, 'app/deploy/site.yml'), ANSIBLE_PLAYBOOK);
-    const fixed = parseCheckReport(
-        await spawnGspot(root, ['check', '--only', 'ansible/ansible-lint', '--json']),
-    ).report;
-    expect(fixed.exitCode, JSON.stringify(fixed)).toBe(0);
-}

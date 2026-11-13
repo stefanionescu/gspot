@@ -4,14 +4,14 @@ import { noEarlyTestReturn } from '#eslint-plugin/rules/testing/no-early-test-re
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 const root = writePackageFolders({
-    jest: { devDependencies: { jest: '30.0.0' } },
+    jestMocha: { devDependencies: { jest: '30.0.0', mocha: '11.0.0' } },
     vitest: { devDependencies: { vitest: '4.0.0' } },
     plain: {},
 });
 
 buildRuleTester({ root }).run('no-early-test-return', noEarlyTestReturn, {
     valid: [
-        { code: 'it("pays", () => { if (!ready) return; pay(); });', filename: join(root, 'jest/a.test.ts') },
+        { code: 'it("pays", () => { if (!ready) return; pay(); });', filename: join(root, 'jestMocha/a.test.ts') },
         { code: 'it("pays", () => { if (!ready) return; pay(); });', filename: join(root, 'plain/a.test.ts') },
         {
             code: 'import { it } from "mocha";\nit("pays", function () { if (!ready) { this.skip(); } pay(); });',
@@ -37,6 +37,10 @@ buildRuleTester({ root }).run('no-early-test-return', noEarlyTestReturn, {
         {
             code: 'import { test } from "@playwright/test";\nhelper("pays", () => { if (!ready) return; pay(); });',
             filename: join(root, 'plain/g.test.ts'),
+        },
+        {
+            code: 'import { test } from "@playwright/test";\nit("pays", () => { if (!ready) return; pay(); });',
+            filename: join(root, 'plain/h.test.ts'),
         },
     ],
     invalid: [

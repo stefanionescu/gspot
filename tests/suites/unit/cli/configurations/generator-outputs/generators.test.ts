@@ -4,11 +4,10 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { checkGeneratorOutputs } from '#cli/configurations/generator-outputs.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -35,7 +34,7 @@ async function prepareGeneratorCheck(root: string, scenario: (typeof GENERATOR_C
         'gspot.toml': buildSandboxSettings([scenario.configuration], { tables: scenario.tables }),
         'package.json': '{"private":true}\n',
         'schema.txt': 'failure',
-        'drizzle.config.ts': EMPTY_DEFAULT_SOURCE,
+        'drizzle.config.ts': '',
         'notes.txt': PROJECT_NOTES,
         [scenario.output]: 'original',
     });
@@ -59,7 +58,7 @@ test.each([...GENERATOR_CASES])(
         await using sandbox = await createGitSandbox({});
         const { session, planned } = await prepareGeneratorCheck(sandbox.path, row);
         const error = await captureRejection(
-            runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, { check: checkGeneratorOutputs }, {}),
+            runCheckCode(buildCheckSession(session, CHECK_GENERATION), planned, selectCheckCode(planned.check), {}),
         );
         expect(error).toMatchObject({ name: 'CheckStop', status: 'error' });
         expect(error.message).toContain('Generation failed\nfailure');
@@ -67,7 +66,7 @@ test.each([...GENERATOR_CASES])(
         const stale = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
-            { check: checkGeneratorOutputs },
+            selectCheckCode(planned.check),
             {},
         );
         expect(stale.findings.map(({ check, file, rule }) => ({ check, file, rule }))).toStrictEqual([
@@ -77,7 +76,7 @@ test.each([...GENERATOR_CASES])(
         const fresh = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
-            { check: checkGeneratorOutputs },
+            selectCheckCode(planned.check),
             {},
         );
         expect(fresh.findings).toStrictEqual([]);
@@ -86,3 +85,17 @@ test.each([...GENERATOR_CASES])(
         expect(await readFile(join(sandbox.path, 'untracked.txt'), 'utf8')).toBe(UNTRACKED_NOTES);
     },
 );
+
+test('a generator that writes under node_modules reports nothing stale', async () => {
+    await using sandbox = await createGitSandbox({});
+    const { session, planned } = await prepareGeneratorCheck(sandbox.path, GENERATOR_CASES[0]);
+    const command = buildProgramCommand('fakes/tool', '--write', 'node_modules/.cache/state.txt=state');
+    const check = { ...planned, check: { ...planned.check, command } };
+    const result = await runCheckCode(
+        buildCheckSession(session, CHECK_GENERATION),
+        check,
+        selectCheckCode(check.check),
+        {},
+    );
+    expect(result.findings).toStrictEqual([]);
+});

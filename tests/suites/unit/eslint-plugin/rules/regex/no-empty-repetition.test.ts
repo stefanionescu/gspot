@@ -2,7 +2,7 @@ import { noEmptyRepetition } from '#eslint-plugin/rules/regex/no-empty-repetitio
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-empty-repetition', noEmptyRepetition, {
-    valid: ['/(?:ab)+/u;', '/a*b/u;', 'new RegExp(pattern);'],
+    valid: ['/(?:ab)+/u;', '/(?:a*b)+/u;', 'new RegExp(pattern);'],
     invalid: [
         { code: '/(a*)*/u;', errors: [{ messageId: 'empty', data: { part: '(a*)' } }] },
         { code: '/(a|)*/u;', errors: [{ messageId: 'empty' }] },

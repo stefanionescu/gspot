@@ -6,7 +6,7 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test('licenses/allowed reads the license of a locked package, and an allowed_package record covers it', async () => {
+test('licenses/allowed reads the license of a locked package from osv-scanner', async () => {
     const lockfile = JSON.stringify({
         name: 'example',
         version: '1.0.0',

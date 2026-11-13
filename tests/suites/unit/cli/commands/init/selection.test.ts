@@ -7,6 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
@@ -16,7 +17,6 @@ import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import type { ToolPackageJson } from '#tests/types/setup.ts';
 
 const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 
@@ -50,6 +50,9 @@ test.each([...CONFIGURATION_CHOICES])(
                 .filter((configuration) => configuration.group !== 'general' && !configuration.always_selected)
                 .map(({ name }) => name),
         ).toStrictEqual([...row.selected]);
+        expect(selected.filter(({ always_selected }) => always_selected).map(({ name }) => name)).toStrictEqual(
+            listAlwaysSelected(),
+        );
     },
 );
 
@@ -101,9 +104,8 @@ test('the JavaScript tools and the ESLint config file appear only after gspot ad
     const tools = ['eslint', 'knip', 'typescript', '@gspothq/eslint-plugin'];
     const generated = join(sandbox.path, getManifestTarget('javascript', 'eslint/eslint.mjs'));
     const listSelectedTools = async (): Promise<string[]> => {
-        const { devDependencies } = JSON.parse(
-            await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8'),
-        ) as ToolPackageJson;
+        const text = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
+        const { devDependencies = {} } = packageJsonSchema.parse(JSON.parse(text));
         return tools.filter((name) => Object.hasOwn(devDependencies, name));
     };
 
@@ -176,7 +178,7 @@ test('init names an uninstalled tsconfig extension and the dependency install st
 test('init in a workspace whose root package.json holds only tools writes what the detection check expects', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({
-        'package.json': '{"name":"root","private":true,"devDependencies":{"typescript":"5.9.3"}}\n',
+        'package.json': '{"name":"root","private":true,"devDependencies":{"typescript":"5.0.0"}}\n',
         'pnpm-workspace.yaml': 'packages:\n  - "packages/*"\n',
         'packages/a/package.json': '{"name":"a","version":"1.0.0","dependencies":{"is-number":"7.0.0"}}\n',
         'packages/a/src/util.js': 'export const value = 1;\n',

@@ -1,12 +1,12 @@
 import { expect, test } from 'bun:test';
 
+import { JSON_PREVIEW_LENGTH } from '#cli/config/engine.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import {
-    EMPTY_JSON_CASES,
     FIX_FIELD_CASES,
     FLAT_JSON_FINDINGS,
     INVALID_FINDING_REPORTS,
@@ -64,7 +64,7 @@ test.each([
 });
 
 test.each([...FIX_FIELD_CASES])(
-    'a JSON finding is fixable only when the check has a fix command: %s fix field',
+    'a JSON finding of a check with a fix command is fixable when its fix field holds an edit: %s fix field',
     (name, fields, expected) => {
         const output = {
             format: 'json' as const,
@@ -80,14 +80,20 @@ test.each([...FIX_FIELD_CASES])(
         };
         const findings = parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' });
         expect(findings).toMatchObject([{ file: 'a.js', fixable: expected }]);
-        expect(
-            parseOutput({ runs: check.runs, id: check.id, output }, stdout, '', {
-                root: '/repo',
-                cwd: '/repo',
-            }),
-        ).toMatchObject([{ fixable: false }]);
     },
 );
+
+test('a finding of a check without a fix command is not fixable', () => {
+    const output = { format: 'json' as const, fields: { file: 'filePath', message: 'message', fixable: 'fix' } };
+    const stdout = JSON.stringify([
+        { filePath: '/repo/a.js', message: 'A message.', fix: { range: [0, 1], text: '' } },
+    ]);
+    const check = { runs: 'files' as const, id: 'javascript/eslint', output };
+    expect(parseOutput({ ...check, fix: ['formatter'] }, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([
+        { fixable: true },
+    ]);
+    expect(parseOutput(check, stdout, '', { root: '/repo', cwd: '/repo' })).toMatchObject([{ fixable: false }]);
+});
 
 test('a tool that counts lines from zero names its line base', () => {
     const stdout = JSON.stringify([{ file: 'a.sql', line: 0, column: 18, rule_name: 'r', message: 'm' }]);
@@ -110,14 +116,16 @@ test('lists nested two levels down read the file from the top and join several m
     ]);
 });
 
-test.each([...EMPTY_JSON_CASES])('an invalid JSON report is refused: %s', (stdout, start) => {
-    expect(() => parseJsonReport('x/y', { format: 'json', list: 'items' }, stdout)).toThrow(
-        matchFields<CheckStop>({
-            name: 'CheckStop',
-            status: 'error',
-            message: expect.stringContaining(start) as string,
-        }),
-    );
+test('output that holds no JSON is refused with the shortened start of its first line', () => {
+    let stop: unknown;
+    try {
+        parseJsonReport('x/y', { format: 'json', list: 'items' }, 'a'.repeat(JSON_PREVIEW_LENGTH + 20));
+    } catch (error) {
+        stop = error;
+    }
+    expect(stop).toMatchObject(matchFields<CheckStop>({ name: 'CheckStop', status: 'error' }));
+    const { message } = stop as CheckStop;
+    expect(message).toEndWith(` ${'a'.repeat(JSON_PREVIEW_LENGTH)}`);
 });
 
 test.each([...INVALID_FINDING_REPORTS])('a JSON report with $name is refused', ({ output, stdout }) => {

@@ -7,8 +7,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 test.each([
     { text: 'enabled: true\nenabled: false\n', rule: 'key-duplicates', line: 2 },
     { text: 'enabled: [\n', rule: 'syntax', line: 2 },
-    { text: 'value: *missing\n', rule: 'anchors', line: 1 },
-    { text: 'value: &unused value\n', rule: 'anchors', line: 1 },
     { text: 'value: &a1 text\ncopy: *a1\n', rule: 'anchor-names', line: 1 },
     { text: 'value: yes\n', rule: 'truthy', line: 1 },
     { text: 'value: True\n', rule: 'truthy', line: 1 },

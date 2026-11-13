@@ -15,7 +15,7 @@ import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { isLinux } from '#tests/setup/system/platform.ts';
+import { hasLinuxDocker } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 const DOCKER_SANDBOX = {
@@ -162,7 +162,26 @@ test.each([...LEVELS])(
     },
 );
 
-test.skipIf(!isLinux || Bun.which('docker') === null)(
+test('hadolint refuses a registry outside allowed_registries', async () => {
+    const source = 'FROM docker.io/library/debian:12\nUSER 1000\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docker'], {
+            tables: '[docker]\nallowed_registries = ["registry.example.com"]\n',
+        }),
+        Dockerfile: source,
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const command = ['check', '--only', 'docker/hadolint', '--json'];
+    const refused = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+    expect(listFindingRows(refused.report)).toStrictEqual([{ file: 'Dockerfile', line: 1, rule: 'DL3026' }]);
+    await writeFile(join(sandbox.path, 'Dockerfile'), source.replace('docker.io/library', 'registry.example.com'));
+    const allowed = parseCheckReport(await spawnGspot(sandbox.path, command));
+    expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
+    expect(listFindingRows(allowed.report)).toStrictEqual([]);
+});
+
+test.skipIf(!hasLinuxDocker())(
     'docker/trivy-image reports a private key in an image, errors on a broken config file, and passes a clean image',
     async () => {
         const prefix = `gspot-tools-image-${randomUUID()}`;

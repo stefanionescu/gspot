@@ -2,10 +2,7 @@ import { dynamicTemplates } from '#eslint-plugin/rules/security/dynamic-template
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('dynamic-templates', dynamicTemplates, {
-    valid: [
-        "import pug from 'pug';\npug.render('p Hello #{name}', { name });",
-        "import ejs from 'ejs';\nconst render = ejs.compile('<p><%= name %></p>');\nrender({ name });",
-    ],
+    valid: ["import ejs from 'ejs';\nconst render = ejs.compile('<p><%= name %></p>');\nrender({ name });"],
     invalid: [
         {
             code: "const pug = require('pug');\npug.render(`p Hello ${name}`);\npug.compile(template);\nimport ejs from 'ejs';\nejs.render('a' + b);\nejs.render('a' + 'b');",

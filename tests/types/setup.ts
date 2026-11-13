@@ -3,10 +3,8 @@ import type { z } from 'zod';
 
 import type { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { ManagedKeys } from '#cli/types/repository.ts';
 import type { Level } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import type { PROGRAM_NAMES } from '#tests/config/setup/programs.ts';
 
 export type SandboxWrite = {
     files: Record<string, string>;
@@ -70,12 +68,6 @@ export type PythonProject = AsyncDisposable & {
     rootConfiguration: Buffer<ArrayBuffer>;
 };
 
-export type ToolPackageJson = {
-    name: 'tools';
-    private: true;
-    devDependencies: Record<string, string>;
-};
-
 type MiseVersion = z.infer<typeof miseLockfileSchema>['tools'][string][number];
 
 export type MiseProject = { tools: Record<string, string | MiseVersion> };
@@ -95,7 +87,30 @@ export type ProcessCapture = Pick<
 
 export type ChildCapture = AsyncDisposable & { stdout: Promise<string>; stderr: Promise<string> };
 
-export type ProgramName = (typeof PROGRAM_NAMES)[number];
+export type ProgramName =
+    | 'fakes/tool'
+    | 'checks/search'
+    | 'checks/replacement'
+    | 'checks/arguments'
+    | 'checks/contents'
+    | 'checks/staged'
+    | 'checks/dependency'
+    | 'processes/output'
+    | 'processes/descendant'
+    | 'processes/process-group'
+    | 'checks/stylelint'
+    | 'processes/modules'
+    | 'processes/node-version'
+    | 'processes/cli'
+    | 'processes/command'
+    | 'fakes/git'
+    | 'fakes/swift'
+    | 'fakes/xcodebuild'
+    | 'processes/revisions'
+    | 'processes/assets'
+    | 'fakes/generator'
+    | 'fakes/site-build'
+    | 'fakes/package-bin';
 
 export type CallRecord = {
     arguments: string[];
@@ -153,12 +168,4 @@ export type LintFinding = { rule: Linter.LintMessage['ruleId']; file: string; li
 export type EslintConfiguration = {
     rules: Record<string, [Linter.Severity, ...unknown[]]>;
     settings: { next?: { rootDir: string } | undefined } & Record<string, unknown>;
-};
-
-export type PackageFieldScenario = {
-    project: Readonly<Record<string, string>>;
-    configurations: readonly string[];
-    tables: string;
-    unchanged: readonly string[];
-    changes: ManagedKeys[];
 };

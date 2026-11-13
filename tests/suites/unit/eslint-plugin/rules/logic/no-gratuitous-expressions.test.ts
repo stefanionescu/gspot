@@ -7,6 +7,7 @@ buildRuleTester().run('no-gratuitous-expressions', noGratuitousExpressions, {
         'function start(ready) { if (ready) { run(ready); } }',
         'function start(ready) { const reset = () => { ready = false; }; if (ready) { if (ready) run(reset); } }',
         'function f() { let ready = true; if (ready) { queue(() => { if (ready) go(); }); } ready = false; }',
+        'function start(ready, other) { if (ready && other) { run(); } else { if (ready) stop(); } }',
     ],
     invalid: [
         { code: 'if (true) run();', errors: [{ messageId: 'decided', data: { value: 'truthy' } }] },

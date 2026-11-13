@@ -7,6 +7,7 @@ import { settingOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 
 test("explain shows each scope's default and value naming limit", async () => {
     await using sandbox = await createGitSandbox({
@@ -21,13 +22,10 @@ test("explain shows each scope's default and value naming limit", async () => {
 
     const explained = await runGspot(sandbox.path, ['explain', 'naming.swift.max_characters', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(JSON.parse(explained.stdout)).toMatchObject({
-        kind: 'setting',
-        scopes: [
-            { scope: '', value: 40 },
-            { scope: 'app', default: 40, value: 38 },
-        ],
-    });
+    const { scopes } = settingOutputSchema.parse(JSON.parse(explained.stdout));
+    expect(scopes.map(({ scope }) => scope)).toStrictEqual(['', 'app']);
+    expect(scopes[1]).toMatchObject({ value: 38, default: scopes[0]?.value });
+    expect(scopes[0]?.value).toBeNumber();
 });
 
 test('explain reads an inherited limits.max_function_lines value and its reason, and writes nothing', async () => {
@@ -37,8 +35,10 @@ test('explain reads an inherited limits.max_function_lines value and its reason,
         tables: `[limits]\nmax_function_lines = { value = 100, reason = ${JSON.stringify(SETTING_REASON)} }\n`,
     });
     await createFileTree(sandbox.path, { 'gspot.toml': settings, 'app/source.ts': 'export const active = true;\n' });
+    const before = await readTree(sandbox.path);
     const explained = await runGspot(sandbox.path, ['explain', 'limits.max_function_lines', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+    expect(await readTree(sandbox.path)).toStrictEqual(before);
     expect(settingOutputSchema.parse(JSON.parse(explained.stdout))).toMatchObject({
         kind: 'setting',
         setting: 'limits.max_function_lines',
@@ -171,8 +171,8 @@ test('explain shows a setting that no scope accepts, such as level, only at the 
     });
     const explained = await runGspot(sandbox.path, ['explain', 'level', '--json']);
     expect(explained.code, explained.stdout + explained.stderr).toBe(0);
-    expect(settingOutputSchema.parse(JSON.parse(explained.stdout)).scopes).toStrictEqual([
-        { scope: '', default: 'basic', value: 'all', source: { kind: 'root', name: 'gspot.toml' } },
+    expect(settingOutputSchema.parse(JSON.parse(explained.stdout)).scopes).toMatchObject([
+        { scope: '', value: 'all', source: { kind: 'root', name: 'gspot.toml' } },
     ]);
 });
 

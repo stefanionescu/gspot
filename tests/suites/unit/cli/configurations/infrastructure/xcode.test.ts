@@ -33,12 +33,7 @@ test('Xcode sources follow group paths and target membership instead of duplicat
         'Synced/Excluded.swift': 'let excluded = 1\n',
     });
 
-    const broken = await runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({ only: ['xcode/files-without-target'] }),
-    );
-
-    expect(broken.report.checks[0]!.findings).toStrictEqual([
+    expect(await runSandboxCheck(sandbox.path, 'xcode/files-without-target')).toStrictEqual([
         matchFields({ file: 'Second/Shared.swift', rule: 'untargeted' }),
         matchFields({ file: 'Synced/Excluded.swift', rule: 'untargeted' }),
     ]);
@@ -103,42 +98,28 @@ test.each(['Logo Mark', 'Logo MarkImage', 'logo-markColor'])(
             [`App/Assets.xcassets/${name}.imageset/logo.png`]: new Uint8Array([0, 1, 2]),
             'App/Home.swift': 'let logo = Image(.logoMark)\n',
         });
-        const session = await openSession(sandbox.path);
-        const options = buildRunOptions({ stage: 'commit', only: ['xcode/unused-assets'] });
-        const referenced = await runChecks(session, options);
-
-        expect(referenced.report.checks[0]?.findings).toStrictEqual([]);
+        expect(await runSandboxCheck(sandbox.path, 'xcode/unused-assets')).toStrictEqual([]);
         await writeFile(join(sandbox.path, 'App/Home.swift'), 'let logo = Image(.differentLogo)\n');
-        const orphan = await runChecks(await openSession(session.root), options);
-
-        expect(orphan.report.checks[0]?.findings).toMatchObject([
+        expect(await runSandboxCheck(sandbox.path, 'xcode/unused-assets')).toMatchObject([
             { file: path, rule: 'unused-asset', message: expect.stringContaining(name) as string },
         ]);
     },
 );
 
-test.each([...ASSET_SETTING_CASES])(
-    '$title counts the asset and rejects an unrelated name',
-    async ({ scope, path, text }) => {
-        const asset = `${scope}Assets.xcassets/AccentColor.colorset/Contents.json`;
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['xcode'], {
-                level: 'all',
-                scopes: [],
-            }),
-            [asset]: '{}\n',
-            [path]: text,
-        });
-        const options = buildRunOptions({ stage: 'commit', only: ['xcode/unused-assets'] });
-        const referenced = await runChecks(await openSession(sandbox.path), options);
-
-        expect(listFindingRows(referenced.report)).toStrictEqual([]);
-        await writeFile(join(sandbox.path, path), text.replaceAll('AccentColor', 'DifferentAccentColor'));
-        const orphan = await runChecks(await openSession(sandbox.path), options);
-
-        expect(listFindingRows(orphan.report)).toStrictEqual([{ file: asset, line: 1, rule: 'unused-asset' }]);
-    },
-);
+test.each([...ASSET_SETTING_CASES])('$title counts the asset and rejects an unrelated name', async ({ path, text }) => {
+    const asset = 'Assets.xcassets/AccentColor.colorset/Contents.json';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['xcode'], { level: 'all' }),
+        [asset]: '{}\n',
+        [path]: text,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'xcode/unused-assets')).toStrictEqual([]);
+    await writeFile(join(sandbox.path, path), text.replaceAll('AccentColor', 'DifferentAccentColor'));
+    const orphan = await runSandboxCheck(sandbox.path, 'xcode/unused-assets');
+    expect(orphan.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: asset, line: 1, rule: 'unused-asset' },
+    ]);
+});
 
 test.each([...INVALID_RESOURCE_DOCUMENTS])(
     '$check reports malformed $path as a source finding',
@@ -149,9 +130,10 @@ test.each([...INVALID_RESOURCE_DOCUMENTS])(
             [path]: text,
         });
 
-        const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: [check] }));
-        expect(report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
-        expect(listFindingRows(report)).toStrictEqual([{ file: path, line: 1, rule: 'syntax' }]);
+        const findings = await runSandboxCheck(sandbox.path, check);
+        expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+            { file: path, line: 1, rule: 'syntax' },
+        ]);
     },
 );
 

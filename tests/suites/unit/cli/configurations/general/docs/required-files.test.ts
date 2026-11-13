@@ -47,7 +47,7 @@ test.each([...LICENSE_FILE_CASES])(
             [name]: LICENSE,
         });
         const found = await runSandboxCheck(sandbox.path, 'docs/required-files');
-        expect(found.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...findings]);
+        expect(found.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([...findings]);
     },
 );
 

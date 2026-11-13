@@ -4,13 +4,11 @@ import { join } from 'node:path';
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import * as prettier from 'prettier';
-import type { Options } from 'prettier';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { NESTED_YAML } from '#tests/config/setup/configurations.ts';
 import { GREETING_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -31,16 +29,14 @@ const PRETTIER_OPTIONS_BY_FILE = [
 test('a format override selector that EditorConfig cannot express is a settings error', async () => {
     const format = { override: [{ paths: ['src/*.+(ts|js)'], indent_width: 2 }] };
     const generated = buildGeneratedFile(
-        buildSandboxSettings(['javascript'], { rules: true, tables: stringify({ format }) }),
-        'eslint.config.mjs',
-        { 'app/source.js': 'export {};\n' },
+        buildSandboxSettings(['format'], { tables: stringify({ format }) }),
+        getManifestTarget('format', '.editorconfig'),
+        {},
     );
-    const error = await captureRejection(generated);
-    expect(error).toMatchObject({
+    expect(await captureRejection(generated)).toMatchObject({
         name: 'GspotError',
         code: 'settings',
-        message:
-            'EditorConfig cannot represent selector "src/*.+(ts|js)". Keep this override in a `[[format.override]]` record with a selector that EditorConfig can read.',
+        message: expect.stringContaining('"src/*.+(ts|js)"') as string,
     });
 });
 
@@ -60,42 +56,20 @@ test('Prettier loads the selected plugin through the root pointer file', async (
     ]);
 });
 
-test('Prettier keeps Markdown samples as written, and the plugin overrides come before your overrides', async () => {
+test('plugin overrides come before the format overrides', async () => {
     const settings = {
         configurations: ['astro'],
         format: { override: [{ paths: ['docs/**'], print_width: 80 }] },
     };
-    const pluginPolicy = JSON.parse(
+    const { overrides } = JSON.parse(
         await buildGeneratedFile(stringify(settings), getManifestTarget('format', 'prettier.json'), {
             'source.astro': '<h1>Example</h1>\n',
         }),
-    ) as Options;
-    expect(pluginPolicy['overrides']).toMatchObject([
-        { files: ['*.md', '*.mdx'], options: { embeddedLanguageFormatting: 'off' } },
-        { files: '*.astro', options: { parser: 'astro' } },
+    ) as { overrides: unknown[] };
+    expect(overrides.slice(-2)).toMatchObject([
+        { files: '*.astro' },
         { files: ['docs/**'], options: { printWidth: 80 } },
     ]);
-});
-
-test('a YAML indent override gives EditorConfig and Prettier the same width', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['format', 'javascript'], {
-            rules: true,
-            tables: stringify({ format: { indent_width: 6, override: [{ paths: ['**/*.yaml'], indent_width: 2 }] } }),
-        }),
-        'sample.yaml': NESTED_YAML,
-    });
-
-    await applyGeneratedFiles(sandbox.path);
-    const path = join(sandbox.path, 'sample.yaml');
-    const editor = await prettier.resolveConfig(path, { editorconfig: true, useCache: false });
-    const configuration = await prettier.resolveConfig(path, {
-        config: join(sandbox.path, 'prettier.config.mjs'),
-        editorconfig: false,
-        useCache: false,
-    });
-    expect(editor?.tabWidth).toBe(2);
-    expect(configuration?.tabWidth).toBe(2);
 });
 
 test('Prettier overrides agree in the root pointer file and editor lookup', async () => {

@@ -1,5 +1,3 @@
-import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
-
 export const DEPTRY_SCOPE_PATHS = {
     '': {
         excluded: ['.gspot/tool.py', 'app/main.py', 'app/nested/main.py', 'other/main.py'],
@@ -10,50 +8,10 @@ export const DEPTRY_SCOPE_PATHS = {
     other: { excluded: ['.gspot/tool.py'], kept: ['main.py'] },
 } as const;
 
-export const LOCKED_SCOPE_SETTINGS = {
-    level: 'all',
-    scopes: [
-        { path: 'locked', configurations: ['python'] },
-        { path: 'other', configurations: ['python'] },
-    ],
-} as const;
-
-export const REQUIREMENTS_FILE_FINDING = {
-    file: 'locked/requirements.txt',
-    line: 1,
-    rule: 'requirements-file',
-} as const;
-
-const CLEAN_PYTHON_MODULE = `"""Prices."""
-
-
-def _rounded(amount: float) -> float:
-    """Round to cents, half up."""
-    shifted = amount * 100
-    whole = int(shifted + 0.5)
-    return whole / 100
-
-
-def total(prices: list[float]) -> float:
-    """Add prices and round the sum."""
-    summed = sum(prices)
-    checked = max(summed, 0.0)
-    return _rounded(checked) + _rounded(0.0)
-
-
-__all__ = ["total"]
-`;
-
-export const PYTHON_MODULE_SANDBOX = {
-    configurations: ['python'],
-    cleanSource: CLEAN_PYTHON_MODULE,
-
-    files: {
-        'pyproject.toml': GOOGLE_PYPROJECT,
-        'example/__init__.py': '"""The test package."""\n',
-        'example/prices.py': CLEAN_PYTHON_MODULE,
-    },
-} as const;
+export const REQUIREMENTS_FILE_FINDINGS = [
+    { file: 'locked/requirements.txt', line: 1, rule: 'requirements-file' },
+    { file: 'locked/requirements/dev.txt', line: 1, rule: 'requirements-file' },
+] as const;
 
 export const PLACEHOLDER_DOCSTRING_CASES = [
     {
@@ -125,13 +83,6 @@ skip-checking-raises = true
     },
 ] as const;
 
-export const FAILED_STYLE_BATCH = {
-    code: 2,
-    stderr: 'The native command could not read its configuration.',
-    end: 'failed',
-    duration: 3,
-} as const;
-
 export const VULTURE_OUTPUT = [
     "app/main.py:1: unused import 'os' (90% confidence)",
     "app/nodes.py:1: unused function 'helper' (60% confidence)",
@@ -139,4 +90,13 @@ export const VULTURE_OUTPUT = [
     "app/nodes.py:4: unused variable 'value' (60% confidence)",
 ] as const;
 
-export const OS_SOURCE = 'import os\n';
+export const COVERAGE_PROJECT_FILES = [
+    { name: 'generated defaults', files: {}, generated: true },
+    { name: '.coveragerc', files: { '.coveragerc': '[run]\nomit = custom/**\n' }, generated: false },
+    {
+        name: 'pyproject coverage',
+        files: { 'pyproject.toml': '[tool.coverage.run]\nomit = ["custom/**"]\n' },
+        generated: false,
+    },
+    { name: 'setup.cfg coverage', files: { 'setup.cfg': '[coverage:run]\nomit = custom/**\n' }, generated: false },
+] as const;

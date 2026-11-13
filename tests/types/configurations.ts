@@ -1,6 +1,17 @@
-export type SizeCase = { file: string; rule: string; line: number; source: string; corrected: string; message: string };
+import type { Level } from '#cli/types/settings.ts';
 
-export type SourceRuleCase = { name?: string; source: string; rule: string; count: number };
+export type SizeCase = { rule: string; line: number; limit: number; source: string; corrected: string };
+
+export type SelectorSample = {
+    name: string;
+    configurations: readonly string[];
+    level: Level;
+    tables?: string;
+    files: Readonly<Record<string, string>>;
+    findings: Readonly<Record<string, readonly number[]>>;
+    corrected?: Readonly<Record<string, string>>;
+    message?: string;
+};
 
 export type ScriptFindingCase = {
     file: string;
@@ -9,18 +20,12 @@ export type ScriptFindingCase = {
 };
 
 export type RuffConfig = {
-    lint: {
-        select: string[];
-        pylint: {
-            'max-statements': number;
-            'max-args': number;
-            'max-branches': number;
-            'max-returns': number;
-        };
-        mccabe: { 'max-complexity': number };
-        'per-file-ignores'?: Record<string, string[]>;
-    };
+    lint: { 'per-file-ignores'?: Record<string, string[]> };
     format: { 'quote-style': string };
 };
 
-export type KnipConfig = { ignore: string[]; workspaces: Record<string, { entry: string[] }> };
+export type KnipConfig = {
+    ignore: string[];
+    ignoreBinaries: string[];
+    workspaces: Record<string, { entry: string[] }>;
+};

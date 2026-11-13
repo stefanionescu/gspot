@@ -19,6 +19,11 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
+async function writeValeProgram(root: string): Promise<string> {
+    const tool = getTool(readConfigurations().values(), 'vale');
+    return await writeProgramCommand(root, 'mise/bin/vale', 'fakes/tool', '--line', String(tool.version));
+}
+
 test('Vale packages are ready only with the generated vale.ini and the installed folders', async () => {
     await using sandbox = await testdir();
     expect(hasValePackages(sandbox.path)).toBe(false);
@@ -27,14 +32,6 @@ test('Vale packages are ready only with the generated vale.ini and the installed
     for (const folder of VALE_PACKAGE_FOLDERS)
         await createFileTree(sandbox.path, { [`${GSPOT_PATHS.valePackages}/${folder}/.keep`]: '' });
     expect(hasValePackages(sandbox.path)).toBe(true);
-});
-
-test('at level basic install installs no Vale packages', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['prose'], { level: 'basic' }) });
-
-    const session = await openSession(sandbox.path);
-    const context = await buildSandboxToolInstall(session);
-    expect(await installValePackages(context, [])).toBe('');
 });
 
 test('install reclaims interrupted Vale downloads while preserving live downloads', async () => {
@@ -69,14 +66,7 @@ test('a changed Vale archive is refused before sync and preserves installed pack
         [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
     });
     const session = await openSession(sandbox.path);
-    const tool = getTool(readConfigurations().values(), 'vale');
-    const miseBin = await writeProgramCommand(
-        sandbox.path,
-        'mise/bin/vale',
-        'fakes/tool',
-        '--line',
-        String(tool.version),
-    );
+    const miseBin = await writeValeProgram(sandbox.path);
     using _request = spyOn(globalThis, 'fetch').mockResolvedValue(new Response('replaced archive'));
     const install = await buildSandboxToolInstall(session);
     const error = await captureRejection(installValePackages(install, [miseBin]));
@@ -88,30 +78,40 @@ test('a changed Vale archive is refused before sync and preserves installed pack
     );
 });
 
-test.each(['the pinned releases', 'a deleted folder', 'other releases'] as const)(
-    'the Vale release file skips downloads only while it names the pinned releases and every package folder exists (%s)',
-    async (state) => {
-        const [first, ...kept] = VALE_PACKAGE_FOLDERS;
-        const releases = state === 'other releases' ? {} : VALE_PACKAGE_RELEASES;
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
-            [GSPOT_PATHS.valeReleases]: `${JSON.stringify(releases, null, JSON_INDENT)}\n`,
-            [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
-            ...Object.fromEntries(
-                (state === 'a deleted folder' ? kept : [first, ...kept]).map((folder) => [
-                    `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,
-                    'installed bytes',
-                ]),
-            ),
-        });
-        using _request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
-        const install = await buildSandboxToolInstall(await openSession(sandbox.path));
-        if (state !== 'the pinned releases') {
-            const failure = await captureRejection(installValePackages(install, []));
-            expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });
-            expect(failure.message).toContain('vale');
-            return;
-        }
-        expect(await installValePackages(install, [])).toBe('');
-    },
-);
+test('the Vale release file skips downloads while it names the pinned releases and every package folder exists', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+        [GSPOT_PATHS.valeReleases]: `${JSON.stringify(VALE_PACKAGE_RELEASES, null, JSON_INDENT)}\n`,
+        [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
+        ...Object.fromEntries(
+            VALE_PACKAGE_FOLDERS.map((folder) => [
+                `${GSPOT_PATHS.valePackages}/${folder}/terms.yml`,
+                'installed bytes',
+            ]),
+        ),
+    });
+    using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('Unexpected download'));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
+    expect(await installValePackages(install, [])).toBe('');
+    expect(request).not.toHaveBeenCalled();
+});
+
+test.each([
+    { name: 'a deleted folder', releases: VALE_PACKAGE_RELEASES, folders: VALE_PACKAGE_FOLDERS.slice(1) },
+    { name: 'other releases', releases: {}, folders: VALE_PACKAGE_FOLDERS },
+])('the Vale release file with $name downloads the packages again', async ({ releases, folders }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+        [GSPOT_PATHS.valeReleases]: `${JSON.stringify(releases, null, JSON_INDENT)}\n`,
+        [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
+        ...Object.fromEntries(
+            folders.map((folder) => [`${GSPOT_PATHS.valePackages}/${folder}/terms.yml`, 'installed bytes']),
+        ),
+    });
+    const miseBin = await writeValeProgram(sandbox.path);
+    using request = spyOn(globalThis, 'fetch').mockRejectedValue(new Error('The download failed.'));
+    const install = await buildSandboxToolInstall(await openSession(sandbox.path));
+    const failure = await captureRejection(installValePackages(install, [miseBin]));
+    expect(failure).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(request).toHaveBeenCalled();
+});

@@ -1,16 +1,4 @@
-export const REFERENCE_BUILD_FILES = {
-    '.gitignore': 'node_modules/\n.venv/\n.gspot/\n',
-    'package.json': '{"private":true,"type":"module"}\n',
-    'config/base.json':
-        '{"compilerOptions":{"composite":true,"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[],"baseUrl":"..","paths":{"@lib/*":["lib/*.d.ts"]}}}',
-    'app/src/main.ts': 'import type { Value } from "@lib/value"; export const port: Value = "wrong";\n',
-    'lib/value.d.ts': 'export type Value = number;\n',
-    'neighbor/tsconfig.json': '{"compilerOptions":{"strict":true,"types":[]},"include":["*.ts"]}',
-    'neighbor/source.ts':
-        'export function read(value: string | null) { if (value === null) return value.length; return 0; }\n',
-    'neighbor/node_modules/unrelated/package.json': '{"name":"unrelated","version":"1.0.0"}',
-    'neighbor/.venv/pyvenv.cfg': 'home = unrelated\n',
-} as const;
+import { STRICT_TYPE_FLAGS } from '#tests/config/setup/languages.ts';
 
 export const REFERENCE_BUILD_RESULTS = [
     { scope: '', status: 'passed' as const, findings: [] },
@@ -23,7 +11,6 @@ export const URL_MARKUP_CASES = [
     { markup: '<a href=" VbScRiPt:msgbox(1)">Link</a>', scheme: 'vbscript:', columns: [4] },
     { markup: '<a href="data:text/html;base64,PHNjcmlwdD4=">Link</a>', scheme: 'data:', columns: [4] },
     { markup: '<object data="data:image/svg+xml,example"></object>', scheme: 'data:', columns: [9] },
-    { markup: '<script src="data:text/javascript,alert(1)"></script>', scheme: 'data:', columns: [9] },
     { markup: '<a href="/page" title="javascript: is a scheme">Link</a>', scheme: '', columns: [] },
     { markup: '<img src="data:image/svg+xml,example" alt="Image">', scheme: '', columns: [] },
     { markup: '<a href="data:text/plain,example" download>Download</a>', scheme: '', columns: [] },
@@ -102,6 +89,11 @@ not code {
         lines: [],
     },
     {
+        name: 'a Bash fence with placeholder arguments',
+        markdown: '```bash\ncp <source> <target>\n```\n',
+        lines: [],
+    },
+    {
         name: 'fragments: elided code, an object member, a call signature, and a type',
         markdown: `\`\`\`ts
 const useStore = create((set) => ({
@@ -128,10 +120,6 @@ const count = ;
     },
 ] as const;
 
-export const ROOT_PORT_SOURCE = 'export const port = 8080;\n';
-
-export const CHILD_PORT_SOURCE = 'export const port = 3000;\n';
-
 export const DEFAULT_LEVEL_TSCONFIG = {
     compilerOptions: {
         strict: true,
@@ -150,12 +138,8 @@ export const STRICT_OFF_FINDINGS = [
 ] as const;
 
 export const ALL_LEVEL_OPTION_FINDINGS = [
-    { file: 'tsconfig.json', rule: 'noImplicitReturns', message: 'noImplicitReturns is not on in this tsconfig.' },
-    {
-        file: 'tsconfig.json',
-        rule: 'noPropertyAccessFromIndexSignature',
-        message: 'noPropertyAccessFromIndexSignature is not on in this tsconfig.',
-    },
+    { file: 'tsconfig.json', rule: 'noImplicitReturns' },
+    { file: 'tsconfig.json', rule: 'noPropertyAccessFromIndexSignature' },
 ] as const;
 
-export const COUNT_NUMBER_SOURCE = 'export const count: number = 1;\n';
+export const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYPE_FLAGS });

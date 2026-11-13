@@ -7,7 +7,7 @@ import { testdir } from 'testdirs';
 
 import { runProcess, streamProcess } from '#cli/system/processes.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
-import { CLEANING_TOOL, STOPPED_CAPTURES, STREAM_FAILURE, STUBBORN_TOOL } from '#tests/config/system.ts';
+import { STOPPED_CAPTURES, STREAM_FAILURE } from '#tests/config/system.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
 import {
@@ -144,13 +144,16 @@ async function stopTool(root: string, script: string): Promise<Awaited<ReturnTyp
 
 test.skipIf(isWindows)('a stopped tool gets SIGTERM, so it can clean up before it exits', async () => {
     await using sandbox = await testdir();
-    await stopTool(sandbox.path, CLEANING_TOOL);
+    await stopTool(
+        sandbox.path,
+        `trap 'echo cleaned > cleaned; exit 3' TERM; echo ready > ready; while :; do sleep 0.02; done`,
+    );
     expect(await readFile(join(sandbox.path, 'cleaned'), 'utf8')).toBe('cleaned\n');
 });
 
 test.skipIf(isWindows)('a tool that ignores SIGTERM stops with SIGKILL', async () => {
     await using sandbox = await testdir();
-    await stopTool(sandbox.path, STUBBORN_TOOL);
+    await stopTool(sandbox.path, `trap '' TERM; echo ready > ready; while :; do sleep 0.02; done`);
 });
 
 async function captureProcess(

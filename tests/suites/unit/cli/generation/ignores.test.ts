@@ -15,7 +15,6 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import {
-    IGNORE_LIST_FILES,
     IGNORE_LIST_SETTINGS,
     LANGUAGE_IGNORES,
     PATH_IGNORE_CASES,
@@ -86,31 +85,29 @@ test.each([true, false])('generated file lists include the CI workflow only when
     expect(attributes).not.toContain('.github/workflows/gspot.yml');
 });
 
-test('shared Markdown settings leave inherited pointer files out of generated path ignores', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['markdown'], {
+test.each([
+    {
+        name: 'a pointer file that the scopes inherit from the root',
+        settings: buildSandboxSettings(['markdown'], {
             scopes: [
                 { path: 'app', configurations: [] },
                 { path: 'docs', configurations: [] },
             ],
         }),
-        'README.md': '# Root\n',
-        'app/README.md': '# App\n',
-        'docs/README.md': '# Docs\n',
-    });
+        files: { 'README.md': '# Root\n', 'app/README.md': '# App\n', 'docs/README.md': '# Docs\n' },
+        patterns: ['/.markdownlint.jsonc'],
+    },
+    {
+        name: 'the pointer file of a scope with no root config',
+        settings: buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['markdown'] }] }),
+        files: { 'app/README.md': '# App\n' },
+        patterns: ['/app/.markdownlint.jsonc'],
+    },
+])('the generated path ignores name $name once', async ({ settings, files, patterns }) => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings, ...files });
     const session = await openSession(sandbox.path);
     const ignored = buildIgnoreSections(session, buildConfigs(session)).find(({ key }) => key === 'gspot')!.patterns;
-    expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/.markdownlint.jsonc']);
-});
-
-test('a Markdown scope with no root config keeps its pointer file', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'app', configurations: ['markdown'] }] }),
-        'app/README.md': '# App\n',
-    });
-    const session = await openSession(sandbox.path);
-    const ignored = buildIgnoreSections(session, buildConfigs(session)).find(({ key }) => key === 'gspot')!.patterns;
-    expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual(['/app/.markdownlint.jsonc']);
+    expect(ignored.filter((path) => path.endsWith('.markdownlint.jsonc'))).toStrictEqual([...patterns]);
 });
 
 test.each([...PRETTIER_IGNORE_CASES])(
@@ -170,7 +167,7 @@ test.each([...PATH_IGNORE_CASES])(
 
 test.each([...LANGUAGE_IGNORES])(
     '$name: Prettier ignores only the folders of the selected languages',
-    async ({ configurations, scopes, ignored, absent }) => {
+    async ({ configurations, scopes, ignored, kept }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(configurations, { rules: true, scopes }),
             'source.js': 'const value = 1;\n',
@@ -184,23 +181,28 @@ test.each([...LANGUAGE_IGNORES])(
         const files = new Map(buildGeneratedFiles(session).files.map(({ path, content }) => [path, content]));
         const prettierignore = files.get('.prettierignore')!;
         await writeFile(join(sandbox.path, '.prettierignore'), prettierignore);
-        for (const { path, pattern } of ignored) {
-            expect(prettierignore.split('\n')).toContain(pattern);
+        const paths = [...ignored.map((path) => [path, true] as const), ...kept.map((path) => [path, false] as const)];
+        for (const [path, expected] of paths) {
             const source = join(sandbox.path, 'web', path, path.endsWith('/') ? 'source.js' : '');
             const information = await prettier.getFileInfo(source, {
                 ignorePath: join(sandbox.path, '.prettierignore'),
                 withNodeModules: true,
                 resolveConfig: false,
             });
-            expect(information.ignored).toBe(true);
+            expect(information.ignored, path).toBe(expected);
         }
-        for (const path of absent) expect(prettierignore.split('\n')).not.toContain(path);
     },
 );
 
 test('the ignore lists name only the files that gspot writes, and Ruff gets only folders and Python files', async () => {
     await using sandbox = await createGitSandbox({
-        ...IGNORE_LIST_FILES,
+        'apps/web/package.json': '{"name":"web","private":true}\n',
+        'apps/web/source.js': 'export const value = 1;\n',
+        'apps/web/style.css': 'a { color: red; }\n',
+        'services/api/pyproject.toml': '[project]\nname = "api"\nversion = "0.1.0"\n',
+        'services/api/source.py': 'VALUE = 1\n',
+        'README.md': '# Example\n',
+        'source.js': 'export const other = 2;\n',
         'gspot.toml': buildSandboxSettings(['javascript', 'python', 'markdown'], IGNORE_LIST_SETTINGS),
     });
     const session = await openSession(sandbox.path);

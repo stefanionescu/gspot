@@ -1,9 +1,7 @@
 import { validThrowAssertions } from '#eslint-plugin/rules/assertions/valid-throw-assertions.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = validThrowAssertions;
-
-buildTypedRuleTester().run('valid-throw-assertions', rule, {
+buildTypedRuleTester().run('valid-throw-assertions', validThrowAssertions, {
     valid: [
         'import { expect } from "vitest";\ndeclare function parse(): number;\nexpect(() => parse()).toThrow();',
         'import { expect } from "vitest";\ndeclare const value: any;\nexpect(value).toThrow();',
@@ -25,6 +23,21 @@ buildTypedRuleTester().run('valid-throw-assertions', rule, {
                         {
                             messageId: 'wrap',
                             output: 'import { expect } from "vitest";\ndeclare function parse(): number;\nexpect(() => parse()).toThrow();',
+                        },
+                    ],
+                },
+            ],
+        },
+        {
+            code: 'import { expect } from "vitest";\ndeclare class Parser {}\nexpect(new Parser()).toThrow();',
+            errors: [
+                {
+                    messageId: 'value',
+                    data: { matcher: 'toThrow' },
+                    suggestions: [
+                        {
+                            messageId: 'wrap',
+                            output: 'import { expect } from "vitest";\ndeclare class Parser {}\nexpect(() => new Parser()).toThrow();',
                         },
                     ],
                 },
@@ -55,7 +68,7 @@ buildTypedRuleTester().run('valid-throw-assertions', rule, {
     ],
 });
 
-buildRuleTester().run('valid-throw-assertions without types', rule, {
+buildRuleTester().run('valid-throw-assertions without types', validThrowAssertions, {
     valid: ['import { expect } from "vitest";\nexpect(parse()).toThrow();'],
     invalid: [
         {

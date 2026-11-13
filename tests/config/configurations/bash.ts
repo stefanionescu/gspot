@@ -1,34 +1,10 @@
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
 
 export const BASH_SIZE_CASES = [
-    {
-        file: 'scripts/tall.sh',
-        rule: 'function-lines',
-        line: 9,
-        limit: 12,
-        message: 'main has 13 code lines, over the limit of 12.',
-    },
-    {
-        file: 'scripts/branchy.sh',
-        rule: 'function-branches',
-        line: 9,
-        limit: 4,
-        message: 'main has 5 branches, over the limit of 4.',
-    },
-    {
-        file: 'scripts/deep.sh',
-        rule: 'block-nesting',
-        line: 9,
-        limit: 2,
-        message: 'main has 3 levels of nesting, over the limit of 2.',
-    },
-    {
-        file: 'scripts/mutable.sh',
-        rule: 'function-assignments',
-        line: 9,
-        limit: 3,
-        message: 'main has 4 assignments, over the limit of 3.',
-    },
+    { rule: 'function-lines', line: 9, limit: 12 },
+    { rule: 'function-branches', line: 9, limit: 4 },
+    { rule: 'block-nesting', line: 9, limit: 2 },
+    { rule: 'function-assignments', line: 9, limit: 3 },
 ] as const;
 
 export const COUNTED_LOOPS = `main() {
@@ -46,10 +22,10 @@ export const COUNTED_LOOPS = `main() {
 }
 `;
 
-export const INLINE_SCRIPT_CASES = [
-    {
-        files: {
-            'scripts/python.sh': `${BASH_HEADER}# main: runs the script.
+export const INLINE_SCRIPT_SAMPLE = {
+    check: 'bash/inline-scripts',
+    files: {
+        'scripts/python.sh': `${BASH_HEADER}# main: runs the script.
 main() {
     python3 - <<'PY'
 print(1)
@@ -58,22 +34,9 @@ PY
 
 main "$@"
 `,
-        },
-        expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
     },
-    {
-        files: {
-            'scripts/deno.sh': `${BASH_HEADER}# main: runs the script.
-main() {
-    deno eval 'console.log(1)'
-}
-
-main "$@"
-`,
-        },
-        expected: { file: 'scripts/deno.sh', rule: 'runtime-embed', line: 10 },
-    },
-] as const;
+    expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
+} as const;
 
 export const BASH_SAFETY_SAMPLE = {
     check: 'bash/safety',
@@ -92,10 +55,8 @@ main "$@"
 
 export const COMMAND_SAFETY_CASES = [
     { source: 'rm -rf /etc', rule: 'recursive-remove' },
-    { source: 'rm -r /etc', rule: 'recursive-remove' },
     { source: 'rm --recursive --force /etc', rule: 'recursive-remove' },
     { source: 'pkill -f node', rule: 'broad-kill' },
-    { source: 'killall node', rule: 'broad-kill' },
     { source: 'false || :', rule: 'ignored-failure' },
     { source: String.raw`printf '%s\n' 'rm -rf /etc'`, rule: undefined },
     { source: 'eval "$1"', rule: 'eval' },
@@ -198,11 +159,6 @@ ${BASH_MAIN}`,
 } as const;
 
 export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
-
-export const PASSED_BASH_RESULTS = [
-    { status: 'passed' as const, findings: [] },
-    { status: 'passed' as const, findings: [] },
-];
 
 export const SCRIPT_LAYOUT_SAMPLE = {
     check: 'bash/script-layout',

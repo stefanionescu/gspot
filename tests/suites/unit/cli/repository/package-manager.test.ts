@@ -1,20 +1,9 @@
-import { existsSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
-import * as processes from '#cli/system/processes.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const PACKAGE_MANAGER_PIN_CASES = [
     [
@@ -46,19 +35,20 @@ const PACKAGE_MANAGER_PIN_CASES = [
     ],
 ] as const;
 
-const NON_EXACT_PNPM_VERSIONS = [
-    ['{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}', '^9.1.0', 'devEngines.packageManager'],
-    ['{"packageManager":"pnpm@^9.1.0"}', 'pnpm@^9.1.0', 'packageManager'],
-    ['{"packageManager":"pnpm"}', 'pnpm', 'packageManager'],
-] as const;
-
-const UNSUPPORTED_PACKAGE_MANAGERS = [
-    { field: 'packageManager', written: 'cnpm@9.0.0', packageJson: { packageManager: 'cnpm@9.0.0' } },
-    { field: 'packageManager', written: 'pnpm@9.0.0@x', packageJson: { packageManager: 'pnpm@9.0.0@x' } },
+const REFUSED_PACKAGE_MANAGER_PINS = [
     {
+        written: '^9.1.0',
         field: 'devEngines.packageManager',
+        packageJson: '{"devEngines":{"packageManager":{"name":"pnpm","version":"^9.1.0"}}}',
+    },
+    { written: 'pnpm@^9.1.0', field: 'packageManager', packageJson: '{"packageManager":"pnpm@^9.1.0"}' },
+    { written: 'pnpm', field: 'packageManager', packageJson: '{"packageManager":"pnpm"}' },
+    { written: 'cnpm@9.0.0', field: 'packageManager', packageJson: '{"packageManager":"cnpm@9.0.0"}' },
+    { written: 'pnpm@9.0.0@x', field: 'packageManager', packageJson: '{"packageManager":"pnpm@9.0.0@x"}' },
+    {
         written: '9.0.0',
-        packageJson: { devEngines: { packageManager: { name: 'cnpm', version: '9.0.0' } } },
+        field: 'devEngines.packageManager',
+        packageJson: '{"devEngines":{"packageManager":{"name":"cnpm","version":"9.0.0"}}}',
     },
 ] as const;
 
@@ -72,53 +62,15 @@ test.each([...PACKAGE_MANAGER_PIN_CASES])(
     },
 );
 
-test.each([...NON_EXACT_PNPM_VERSIONS])(
-    'a pnpm version that is not exact is refused with the written value and its field: %s',
-    async (packageJson, written, field) => {
-        await using sandbox = await createGitSandbox({
-            'package.json': packageJson,
-        });
+test.each([...REFUSED_PACKAGE_MANAGER_PINS])(
+    'a package manager pin gspot cannot use is refused with its field and written value: $written',
+    async ({ written, field, packageJson }) => {
+        await using sandbox = await createGitSandbox({ 'package.json': packageJson });
 
         const error = await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])));
         expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
         expect(error.message).toContain(`"${written}"`);
         expect(error.message).toContain(field);
-    },
-);
-
-test('a refused pinned package manager keeps project files and gives no install loop', async () => {
-    const files = { 'package.json': '{"packageManager":"bun@0.0.0"}\n' };
-    await using sandbox = await createGitSandbox({
-        ...files,
-        source: 'kept\n',
-        'gspot.toml': buildSandboxSettings([]),
-    });
-    await applyGeneratedFiles(sandbox.path);
-    const previous = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
-    const run = processes.runProcess;
-    using _boundary = spyOn(processes, 'runProcess').mockImplementation((command, options) =>
-        command[0] === 'mise'
-            ? Promise.resolve(buildProcessResult({ code: 1, stderr: 'The requested version is not available.' }))
-            : run(command, options),
-    );
-    const failure = await runGspot(sandbox.path, ['install', '--json']);
-    expect(failure.code).toBe(2);
-    expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'tool' });
-    for (const [path, content] of Object.entries(files))
-        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
-    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
-    expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
-});
-
-test.each([...UNSUPPORTED_PACKAGE_MANAGERS])(
-    'unsupported $field value $written names the package.json field',
-    async ({ field, written, packageJson }) => {
-        await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify(packageJson) });
-        const error = await captureRejection(Promise.try(() => detectPackageManager(sandbox.path, [])));
-        expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
-        expect(error.message).toContain(field);
-        expect(error.message).toContain(`"${written}"`);
     },
 );
 
@@ -134,9 +86,7 @@ test('a lockfile beside a later nested package selects its manager', async () =>
 });
 
 test('with no pin and no lockfile, the package manager is npm', async () => {
-    await using sandbox = await testdir({
-        'package.json': JSON.stringify({ scripts: { build: 'bun run compile', analyze: 'bunx next build' } }),
-    });
+    await using sandbox = await testdir({ 'package.json': '{"private":true}' });
     expect(detectPackageManager(sandbox.path, [])).toStrictEqual({ name: 'npm' });
 });
 

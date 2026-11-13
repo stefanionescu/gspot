@@ -6,7 +6,6 @@ import type { Identifier } from '#cli/types/configurations/general.ts';
 import {
     BASH_SOURCE_NAMES,
     DECLARATION_CASES,
-    DECLARATION_ORDER_CASES,
     IMPORT_NAME_LINES,
     JAVASCRIPT_PARAMETER_NAMES,
     NAME_POSITION_CASES,
@@ -55,13 +54,18 @@ test('Bash functions and variables are collected in source order', async () => {
         ...BASH_SOURCE_NAMES,
     ]);
 });
-test.each([...DECLARATION_ORDER_CASES])(
-    '$language declarations arrive in document order, including names on the same line',
-    async ({ file, source, language, expected }) => {
-        const found = await listIdentifiers(file, source, language);
-        expect(found.map(({ name }) => name)).toStrictEqual([...expected]);
-    },
-);
+test('javascript declarations arrive in document order, including names on the same line', async () => {
+    const source =
+        'const firstValue = 1;\nfunction loadValue(inputValue) { const innerValue = inputValue; }\nclass Book {}\n';
+    const found = await listIdentifiers('source.js', source, 'javascript');
+    expect(found.map(({ name }) => name)).toStrictEqual([
+        'firstValue',
+        'loadValue',
+        'inputValue',
+        'innerValue',
+        'Book',
+    ]);
+});
 test('JavaScript destructured and arrow parameters are declarations; object keys are not', async () => {
     const found = await listIdentifiers(
         'source.js',

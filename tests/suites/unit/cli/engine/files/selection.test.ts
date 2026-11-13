@@ -5,18 +5,11 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import { listCheckedFiles } from '#cli/engine/files.ts';
-import { planChecks } from '#cli/engine/plan.ts';
+import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    EDITORCONFIG_FILES,
-    PROJECT_PATH_IGNORES,
-    TSC_PUSH_OPTIONS,
-    TYPESCRIPT_SCOPES_SETTINGS,
-} from '#tests/config/engine/files.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { PROJECT_PATH_IGNORES, TSC_PUSH_OPTIONS, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
@@ -67,21 +60,6 @@ test.each([...PROJECT_PATH_IGNORES])(
     },
 );
 
-test('EditorConfig checks source files beyond the Prettier extensions and skips binary files', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['format']),
-        ...EDITORCONFIG_FILES,
-        'binary.dat': Buffer.from([0, 255, 0]),
-    });
-
-    const session = await openSession(sandbox.path);
-    const [planned] = planChecks(session, { stage: 'commit', only: ['format/editorconfig-checker'] });
-    expect(planned!.files.map(({ path }) => path).toSorted(compareText)).toStrictEqual(
-        [...Object.keys(EDITORCONFIG_FILES), 'gspot.toml'].toSorted(compareText),
-    );
-    expect(planned!.skip).toBeUndefined();
-});
-
 test(`a scope's per-scope check plans every file of its scope and covers only its test files`, async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['jest'], {
@@ -108,19 +86,23 @@ test(`a scope's per-scope check plans every file of its scope and covers only it
     ]);
 });
 
-test('deleting a file starts a check that any edit starts, and it reports the path that a doc still names', async () => {
+test('deleting a file starts a check that any edit starts, with the deleted path as its trigger', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs']),
         'README.md': '# Example\n\nRead `src/removed.ts`.\n',
         'src/removed.ts': 'export const value = 1;\n',
     });
-    await applyGeneratedFiles(sandbox.path);
     commitAll(sandbox.path);
     runGitStep(sandbox.path, ['rm', '--quiet', 'src/removed.ts']);
-    const { report } = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--staged', '--only', 'docs/missing-paths', '--json']),
-    );
-    expect(report.checks.flatMap(({ findings }) => findings.map(({ file }) => file))).toStrictEqual(['README.md']);
+    const selection = { content: 'index' as const, paths: ['src/removed.ts'] };
+    const planned = planChecks(await openSession(sandbox.path), {
+        stage: 'commit',
+        only: ['docs/missing-paths'],
+        selection,
+    });
+    expect(
+        planned.map((check) => ({ triggerPaths: check.triggerPaths, active: isActive(check, selection) })),
+    ).toStrictEqual([{ triggerPaths: ['src/removed.ts'], active: true }]);
 });
 
 test('a deleted generated path is not a trigger for a configured project check', async () => {
@@ -165,4 +147,19 @@ test('a link stays out of the file list of a tool and stays in the list of a bui
     expect(paths('format/prettier')).not.toContain('CLAUDE.md');
     expect(paths('format/prettier')).toContain('AGENTS.md');
     expect(paths('repository/local-files')).toContain('CLAUDE.md');
+});
+
+test('oversized and invalid UTF-8 files stay out of the planned files of a tool', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], { tables: '[repository]\nmax_file_kilobytes = 1\n' }),
+        'small.md': '# Small\n',
+        'large.md': 'x'.repeat(1025),
+        'latin1.md': Buffer.from([35, 32, 67, 97, 102, 233]),
+    });
+    runGitStep(sandbox.path, ['add', '-A']);
+    const [planned] = planChecks(await openSession(sandbox.path), { stage: 'all', only: ['format/prettier'] });
+    const paths = planned?.files.map(({ path }) => path);
+    expect(paths).toContain('small.md');
+    expect(paths).not.toContain('large.md');
+    expect(paths).not.toContain('latin1.md');
 });

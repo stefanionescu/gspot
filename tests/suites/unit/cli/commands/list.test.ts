@@ -3,7 +3,7 @@ import { createFileTree } from 'testdirs';
 
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
-import { LIST_SCOPE_SETTINGS, SHFMT_IGNORE_SETTINGS } from '#tests/config/commands/lookup.ts';
+import { LIST_SCOPE_SETTINGS } from '#tests/config/commands/lookup.ts';
 import { configurationsListOutputSchema, settingsListOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -11,7 +11,9 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('list shows selected and available configurations', async () => {
     await using sandbox = await createGitSandbox({});
-    const settings = buildSandboxSettings(['bash', 'nextjs'], SHFMT_IGNORE_SETTINGS);
+    const settings = buildSandboxSettings(['bash', 'nextjs'], {
+        ignore: { checks: ['bash/shfmt'], reason: 'Review this separately.' },
+    });
     await createFileTree(sandbox.path, {
         'gspot.toml': settings,
         'entry.sh': 'echo example\n',

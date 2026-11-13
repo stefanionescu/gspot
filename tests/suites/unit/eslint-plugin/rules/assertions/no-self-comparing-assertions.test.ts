@@ -7,6 +7,7 @@ buildRuleTester().run('no-self-comparing-assertions', noSelfComparingAssertions,
         'import { expect } from "chai";\nexpect(total).to.equal(3);',
         'import { expect } from "chai";\nexpect(1).to.equal(1);',
         'import { expect } from "chai";\nother(total).to.equal(total);',
+        'import { expect } from "chai";\ncart.add(item, item);',
     ],
     invalid: [
         {
@@ -18,8 +19,8 @@ buildRuleTester().run('no-self-comparing-assertions', noSelfComparingAssertions,
             errors: [{ messageId: 'duplicate', line: 2, column: 18 }],
         },
         {
-            code: 'import "chai/register-should";\nimport "chai";\ntotal.should.equal(total);',
-            errors: [{ messageId: 'duplicate', line: 3, column: 1 }],
+            code: 'import "chai";\ntotal.should.equal(total);',
+            errors: [{ messageId: 'duplicate', line: 2, column: 1 }],
         },
     ],
 });

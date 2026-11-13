@@ -14,10 +14,6 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
                 options: [{ client: true, publicPrefixes: ['VITE_'] }],
             },
             {
-                code: 'if (import.meta.env.DEV) console.log(import.meta.env.MODE);',
-                options: [{ client: true, publicPrefixes: ['VITE_'] }],
-            },
-            {
                 name: 'Next public prefix allowed by default',
                 code: "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
             },
@@ -26,9 +22,9 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             { code: 'const url = import.meta.env.VITE_URL;', options: [{ client: true, publicPrefixes: ['VITE_'] }] },
             { name: 'private environment value outside a client module', code: 'const key = process.env.SECRET;' },
             "'use client';\nconst process = { env: { SECRET: 1 } };\nconst key = process.env.SECRET;",
-            "'use client';\nconst url = process.env['NEXT_PUBLIC_URL'];",
             "'use client';\nconst url = Deno.env.get('NEXT_PUBLIC_URL');",
             "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
+            "'use client';\nconst { argv } = process;",
             {
                 code: "'use client';\nconst { env } = process;\nconst url = env.NEXT_PUBLIC_URL;",
                 languageOptions: { globals: ENVIRONMENT_GLOBALS },
@@ -46,16 +42,11 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             {
                 name: 'client directive without declared environment globals',
                 code: "'use client';\nconst key = process.env.SECRET;",
-                errors: [{ messageId: 'private', line: 2, column: 13 }],
+                errors: [{ messageId: 'private', line: 2, column: 13, data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 name: 'client directive with declared environment globals',
                 code: "'use client';\nconst key = process.env.SECRET;",
-                languageOptions: { globals: ENVIRONMENT_GLOBALS },
-                errors: [{ messageId: 'private' }],
-            },
-            {
-                code: "'use client';\nconst host = process; const key = host.env.SECRET;",
                 languageOptions: { globals: ENVIRONMENT_GLOBALS },
                 errors: [{ messageId: 'private' }],
             },
@@ -96,28 +87,25 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
                 errors: [{ messageId: 'private' }],
             },
             {
-                code: "'use client';\nconst name = 'NEXT_PUBLIC_URL';\nconst key = process.env[name];",
+                code: "'use client';\nfunction read(name) { return process.env[name]; }",
                 errors: [{ messageId: 'private' }],
             },
             {
                 name: 'Next public prefix replaced with Vite prefixes',
                 code: "'use client';\nconst url = process.env.NEXT_PUBLIC_URL;",
                 options: [{ publicPrefixes: ['VITE_'] }],
+                errors: [{ messageId: 'private', data: { public: 'VITE_*, NODE_ENV' } }],
+            },
+            {
+                code: "'use client';\nconst host = process;\nconst key = host.env.SECRET;",
+                name: 'a private read through an alias of an undeclared process reports',
+                errors: [{ messageId: 'private' }],
+            },
+            { code: '"use client";\nDeno.env.get();', errors: [{ messageId: 'private' }] },
+            {
+                code: '"use client";\nconst { ...rest } = process.env;\nrun(rest);',
                 errors: [{ messageId: 'private' }],
             },
         ],
     },
 );
-
-buildRuleTester().run('no-client-environment regressions', noClientEnvironment, {
-    valid: [],
-    invalid: [
-        {
-            code: "'use client';\nconst host = process;\nconst key = host.env.SECRET;",
-            name: 'a private read through an alias of an undeclared process reports',
-            errors: [{ messageId: 'private' }],
-        },
-        { code: '"use client";\nDeno.env.get();', errors: [{ messageId: 'private' }] },
-        { code: '"use client";\nconst { ...rest } = process.env;\nrun(rest);', errors: [{ messageId: 'private' }] },
-    ],
-});

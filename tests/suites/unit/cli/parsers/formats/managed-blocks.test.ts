@@ -23,7 +23,7 @@ test('a new block goes first in .gitattributes, so the rules of the repository k
     expect(runGitStep(sandbox.path, ['check-attr', 'eol', 'run.sh'])).toBe('run.sh: eol: lf');
 });
 
-test.each([...MALFORMED_BLOCKS])('every block operation refuses malformed markers in $path: $source', (context) => {
+test.each([...MALFORMED_BLOCKS])('findBlockSpan refuses malformed markers in $path: $source', (context) => {
     const { source, path } = context;
     const refusal = matchFields<GspotError>({
         name: 'GspotError',

@@ -1,12 +1,5 @@
 export const ROOT_EDITORCONFIG = 'root = true\n';
 
-export const UNKNOWN_IGNORE_ARGUMENTS = [
-    'ignore',
-    'bash/shelcheck',
-    '--reason',
-    'The sample check name is misspelled.',
-] as const;
-
 const PARENT_CONFIGURATION_SETTINGS = `configurations = ["markdown"]
 [rule_files]
 enabled = false
@@ -16,17 +9,6 @@ configurations = ["bash"]
 [[scope]]
 path = "api/child"
 configurations = ["python"]
-`;
-
-export const PARENT_REQUIREMENT_SETTINGS = `configurations = ["markdown"]
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-configurations = ["typescript"]
-[[scope]]
-path = "api/child"
-configurations = ["bash"]
 `;
 
 export const EXCLUDED_CONFIGURATION_SETTINGS = `configurations = ["typescript"]
@@ -69,16 +51,6 @@ export const SCOPE_REMOVALS = [
         },
     },
 ] as const;
-
-export const API_LANGUAGE_REASON = 'The API uses another language.';
-
-export const STOPPED_APPLY_FILES = {
-    'gspot.toml': `configurations = ["bash", "structure"]
-[rule_files]
-enabled = false
-`,
-    'entry.sh': 'echo example\n',
-} as const;
 
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },

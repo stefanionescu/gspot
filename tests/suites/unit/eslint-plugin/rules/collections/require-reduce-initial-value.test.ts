@@ -5,7 +5,7 @@ buildRuleTester().run('require-reduce-initial-value', requireReduceInitialValue,
     valid: [
         'const prices = [1, 2]; prices.reduce((sum, price) => sum + price, 0);',
         'prices.reduce((sum, price) => sum + price);',
-        '[1, 2].reduceRight((sum, price) => sum + price);',
+        '[1, 2].map((price) => price * 2);',
     ],
     invalid: [
         { code: '[1, 2].reduce((sum, price) => sum + price);', errors: [{ messageId: 'initial' }] },

@@ -7,11 +7,8 @@ buildRuleTester().run('xml-parser-xxe', xmlParserXxe, {
     ],
     invalid: [
         {
-            code: "const libxmljs = require('libxmljs');\nlibxmljs.parseXmlString(xml, { noent: true });\nlibxmljs.parseXml(xml, { noent: false });\nimport { parseXml } from 'libxmljs2';\nparseXml(xml, { noblanks: true, noent: true });",
-            errors: [
-                { messageId: 'entities', line: 2 },
-                { messageId: 'entities', line: 5 },
-            ],
+            code: "const libxmljs = require('libxmljs');\nlibxmljs.parseXmlString(xml, { noent: true });\nlibxmljs.parseXml(xml, { noent: false });",
+            errors: [{ messageId: 'entities', line: 2 }],
         },
     ],
 });

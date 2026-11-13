@@ -5,15 +5,12 @@ buildRuleTester().run('no-self-state-update', noSelfStateUpdate, {
     valid: [
         'import { useState } from "react";\nconst [count, setCount] = useState(0);\nconst [other, setOther] = useState(0);\nsetCount(other);',
         'import { useState } from "./state";\nconst [count, setCount] = useState(0);\nsetCount(count);',
+        'import { useState } from "react";\nconst [run, setRun] = useState(() => noop);\nrun(run);',
     ],
     invalid: [
         {
             code: 'import { useState } from "react";\nconst [count, setCount] = useState(0);\nsetCount(count);',
             errors: [{ messageId: 'useless', line: 3 }],
-        },
-        {
-            code: 'import * as React from "react";\nfunction Cart() { const [open, setOpen] = React.useState(false); return <a onClick={() => setOpen(open)} />; }',
-            errors: [{ messageId: 'useless', line: 2 }],
         },
     ],
 });

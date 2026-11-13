@@ -25,9 +25,9 @@ buildRuleTester({ root }).run('no-nested-vitest-mock', noNestedVitestMock, {
             errors: [{ messageId: 'scope', line: 2 }],
         },
         {
-            code: 'import { vitest } from "vitest";\nexport const mocked = vitest.mock("./store");',
+            code: 'import { vitest } from "vitest";\nexport default vitest.mock("./store");',
             filename: join(root, 'plain/b.test.ts'),
-            errors: [{ messageId: 'scope' }],
+            errors: [{ messageId: 'scope', line: 2 }],
         },
     ],
 });

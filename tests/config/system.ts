@@ -8,15 +8,6 @@ export const OUTSIDE_PATTERNS = [
     'src/{..,nested}/*.ts',
 ] as const;
 
-export const GLOB_FILES = {
-    'src/a.ts': '',
-    'src/.leaf.ts': '',
-    'src/Case.TS': '',
-    'src/nested/.inner/b.ts': '',
-    '.hidden/nested/c.ts': '',
-    'node_modules/.hidden/foreign.ts': '',
-} as const;
-
 export const LINKED_GLOBS = [
     { link: '.config', target: '../outside', pattern: '.config/sub/*.toml' },
     { link: '.config/sub', target: '../../outside/sub', pattern: '.config/sub/*.toml' },
@@ -31,9 +22,3 @@ export const STOPPED_CAPTURES = [
 ] as const;
 
 export const BASH_MANIFEST = '[configuration]\nname = "bash"\n';
-
-export const PACKAGE_FOLDER = 'workspace % café';
-
-export const CLEANING_TOOL = `trap 'echo cleaned > cleaned; exit 3' TERM; echo ready > ready; while :; do sleep 0.02; done`;
-
-export const STUBBORN_TOOL = `trap '' TERM; echo ready > ready; while :; do sleep 0.02; done`;

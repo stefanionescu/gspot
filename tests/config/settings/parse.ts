@@ -1,0 +1,220 @@
+export const PURGECSS_SAFELIST_TABLES = `[site]
+allowed_classes = []
+[[scope]]
+path = "app"
+configurations = []
+[[scope]]
+path = "app/deep"
+configurations = []
+[[scope]]
+path = "sibling"
+removed_configurations = { site = "This scope does not use the inherited site checks." }
+`;
+
+export const POSTGRES_ORIGIN = { kind: 'configuration', name: 'postgres' } as const;
+
+export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
+
+export const VALID_LICENSES = ['MIT', 'GPL-2.0-only WITH Classpath-exception-2.0'];
+
+export const INVALID_MARKDOWNLINT_NAMES = [
+    { name: 'no-hard-tabs', value: { spaces_per_tab: 4 } },
+    { name: 'default', value: false },
+    { name: 'whitespace', value: {} },
+];
+
+export const RULE_OPTION_REASON_TABLES = [
+    { name: 'root', tables: '[tools.eslint.rules]\nno-console = [{ allow = ["warn"], reason = true }]\n' },
+    {
+        name: 'override',
+        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules.no-console = [{ allow = ["warn"], reason = true }]\n',
+    },
+    {
+        name: 'plugin',
+        tables: '[[tools.eslint.plugins]]\nname = "local"\npath = "local.mjs"\nrules.custom = [{ reason = true }]\n',
+    },
+];
+
+export const DUPLICATED_REASON_ERRORS = [
+    {
+        key: 'limits.max_file_lines',
+        text: '[limits]\nmax_file_lines = { value = 400, reason = "x" }\n',
+    },
+    {
+        key: 'docs.allowed_urls',
+        text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
+    },
+];
+
+export const KEY_PATH_CASES = [
+    {
+        name: 'a package tag used as a license version',
+        configurations: ['licenses'],
+        options: {
+            tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
+        },
+        start: 'gspot.toml:4: licenses.allowed_package.0.version:',
+        correction: ['"latest"', '"^1.2.3"'],
+    },
+    {
+        name: 'an invalid naming exception regular expression',
+        configurations: ['naming'],
+        options: {
+            tables: '[[naming.exception]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
+        },
+        start: 'gspot.toml:4: naming.exception.0.ignored_names_pattern:',
+        correction: ['"("', '"^_"'],
+    },
+    {
+        name: 'empty override paths',
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
+        correction: ['paths = []', 'paths = ["src"]'],
+        start: 'gspot.toml:3: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths.',
+    },
+    {
+        name: 'numeric rule options',
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
+        correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
+        start: 'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq:',
+    },
+] as const;
+
+export const RULE_FILE_SETTINGS = {
+    configurations: ['javascript', 'security', 'css'],
+    tools: {
+        eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] },
+        stylelint: { plugins: [{ path: 'missing-root.mjs', rules: {} }] },
+    },
+    security: { semgrep_rules: ['missing-root.yml', 'present.yml'] },
+    scope: [
+        {
+            path: 'app',
+            tools: { eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] } },
+            security: { semgrep_rules: ['missing-scope.yml', 'present.yml'] },
+        },
+    ],
+} as const;
+
+export const RULE_FILE_ERRORS = [
+    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs',
+    'gspot.toml:5: tools.stylelint.plugins.0.path: missing-root.mjs',
+    'gspot.toml:8: security.semgrep_rules.0: missing-root.yml',
+    'gspot.toml:12: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs',
+    'gspot.toml:13: scope.0.security.semgrep_rules.0: missing-scope.yml',
+] as const;
+
+export const EMPTY_REASONS = ['', 'because'] as const;
+
+export const SCOPE_CONFIGURATION_SETTINGS = [
+    {
+        name: 'a sibling configuration does not expose its settings to another scope',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.sql]\ndialect = "sqlite"\n',
+        errors: ['gspot.toml:8: scope.1.sql.dialect:'],
+    },
+    {
+        name: 'a selected scope exposes its own configuration settings',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.sql]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
+        errors: [],
+    },
+    {
+        name: 'root settings remain available to a scope that selects their configuration',
+        text: 'configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
+        errors: [],
+    },
+] as const;
+
+export const UNKNOWN_TABLE_FIELDS = [
+    {
+        text: '[format]\nlevel = true\n',
+        path: ['format', 'level'],
+        setting: 'format.level',
+    },
+    {
+        text: '[[scope]]\npath = "app"\n[scope.format]\nlevel = true\n',
+        path: ['scope', 0, 'format', 'level'],
+        setting: 'format.level',
+    },
+    {
+        text: '[[tools.eslint.override]]\npaths = ["src/**"]\nlevel = true\n',
+        path: ['tools', 'eslint', 'override', 0, 'level'],
+        setting: 'tools.eslint.override.level',
+    },
+] as const;
+
+export const CONFIGURATION_CONFLICTS = [
+    {
+        text: 'configurations = ["bash"]\nremoved_configurations = { bash = "External checks cover Bash." }\n',
+        path: ['configurations'],
+    },
+    {
+        text: '[[scope]]\npath = "app"\nconfigurations = ["bash"]\nremoved_configurations = { bash = "External checks cover Bash." }\n',
+        path: ['scope', 0, 'configurations'],
+    },
+] as const;
+
+export const REVIEWED_REASON = 'Reviewed in tests.';
+
+export const POSTGRES_SCOPE_SETTINGS = {
+    level: 'basic',
+    rules: true,
+    scopes: [{ path: 'api', configurations: ['supabase'] }, { path: 'authored' }],
+    tables: 'postgres.client_schemas = ["client"]\n',
+} as const;
+
+export const OPENAPI_SCOPE_SETTINGS = {
+    level: 'basic',
+    rules: true,
+    scopes: [{ path: 'api' }],
+    tables: 'removed_configurations = { openapi = "This scope does not publish an OpenAPI document." }\n',
+} as const;
+
+export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
+[rule_files]
+enabled = false
+[limits.bash]
+max_file_lines = 100
+[swift]
+allowed_unused_imports = ["Foundation"]
+xcode_scheme = "5.0"
+[[ignore]]
+check = "bash/shellcheck"
+rule = "SC2086"
+paths = ["api/**"]
+reason = "The api scripts pass word lists on purpose."
+[[scope]]
+path = "api"
+configurations = ["bash"]
+limits.bash.max_file_lines = 80
+swift.xcode_scheme = "6.0"
+swift.allowed_unused_imports = ["UIKit"]
+[[scope]]
+path = "api/v1"
+configurations = ["bash"]
+limits.bash.max_file_lines = 60
+swift.xcode_scheme = "5.0"
+swift.allowed_unused_imports = ["SwiftUI"]
+[[scope]]
+path = "web"
+configurations = ["bash"]
+`;
+
+export const PROJECT_CHOICES = {
+    configurations: ['nextjs', 'javascript'],
+    removed_configurations: [],
+    scope: [
+        { path: 'app', configurations: [], removed_configurations: ['nextjs'] },
+        { path: 'app/worker', configurations: ['nextjs'], removed_configurations: [] },
+        { path: 'required', configurations: [], removed_configurations: ['javascript'] },
+    ],
+} as const;
+
+export const PROJECT_SCOPE_CASES = [
+    { scope: '', name: 'nextjs', selected: true },
+    { scope: 'app', name: 'nextjs', selected: false },
+    { scope: 'app/child', name: 'nextjs', selected: false },
+    { scope: 'app/worker', name: 'nextjs', selected: true },
+    { scope: 'sibling', name: 'nextjs', selected: true },
+    { scope: 'required', name: 'javascript', selected: true },
+] as const;

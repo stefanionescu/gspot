@@ -3,8 +3,10 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
@@ -114,4 +116,32 @@ test.each([
     );
     expect(findings).toHaveLength(1);
     expect(findings[0]?.message).toStartWith(`Line ${String(line)} `);
+});
+
+test('commitlint-pushed stops with an error when Git cannot read a pushed commit', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }) });
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['commitlint'], resources);
+    const { report } = await runChecks(
+        session,
+        buildRunOptions({
+            stage: 'push',
+            only: ['commits/commitlint-pushed'],
+            selection: { content: 'working-tree', commits: ['0'.repeat(40)] },
+        }),
+    );
+    expect(report.checks).toMatchObject([
+        {
+            check: 'commits/commitlint-pushed',
+            status: 'error',
+            note: expect.stringContaining('Cannot read the pushed commit messages') as string,
+        },
+    ]);
+});
+
+test('commits/references without a message file reports nothing', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'commits/references');
+    expect(await getBuiltInCheck('commits/references')(session, planned)).toStrictEqual([]);
 });

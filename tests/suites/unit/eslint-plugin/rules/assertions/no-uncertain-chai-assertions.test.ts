@@ -7,7 +7,7 @@ buildRuleTester().run('no-uncertain-chai-assertions', noUncertainChaiAssertions,
         'import { expect } from "chai";\nexpect(run).to.not.throw();',
         'import { expect } from "chai";\nexpect(cart).to.not.include("apple");',
         'import { expect } from "chai";\nexpect(cart).to.not.have.property("total");',
-        'import { expect } from "chai";\nexpect(run).to.change(cart, "total");',
+        'import { expect } from "chai";\nexpect(list).to.not.be.empty.and.have.members([1]);',
         'import { expect } from "chai";\nother(run).to.not.throw(TypeError);',
     ],
     invalid: [

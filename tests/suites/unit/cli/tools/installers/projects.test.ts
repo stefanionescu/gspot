@@ -41,7 +41,7 @@ function buildNpmLockfile(packageManager: 'bun' | 'npm', pins: Record<string, st
     });
 }
 
-test('Yarn 1.22.22 plans an npm tool lockfile without Yarn settings', async () => {
+test('a Yarn 1 repository plans the npm tool lockfile', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': JSON.stringify({ private: true, packageManager: 'yarn@1.22.22' }),
@@ -82,7 +82,7 @@ test('with no mise on PATH, the mise lockfile counts as current, because gspot i
     ]);
 });
 
-test('a changed npm tool lockfile installs into an empty node_modules, and a current one keeps it', async () => {
+test('a changed npm tool lockfile installs into an empty node_modules', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
         'package.json': '{"private":true,"packageManager":"bun@0.0.0-test"}',
@@ -97,9 +97,6 @@ test('a changed npm tool lockfile installs into an empty node_modules, and a cur
     const install = await buildSandboxToolInstall(session);
     await installNpmToolProject(install);
     expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'dropped'))).toBe(false);
-    await createFileTree(sandbox.path, { [`${GSPOT_PATHS.nodeModules}/kept/package.json`]: '{}\n' });
-    await installNpmToolProject(install);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules, 'kept'))).toBe(true);
 });
 
 test.each([

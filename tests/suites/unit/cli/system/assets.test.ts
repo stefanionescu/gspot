@@ -4,9 +4,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { BASH_MANIFEST, PACKAGE_FOLDER } from '#tests/config/system.ts';
+import { BASH_MANIFEST } from '#tests/config/system.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const PACKAGE_FOLDER = 'workspace % café';
 
 async function writePackageFolder(folder: string): Promise<string> {
     const root = join(import.meta.dir, '../../../../..');

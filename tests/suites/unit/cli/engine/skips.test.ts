@@ -5,7 +5,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listSettingReaders } from '#cli/engine/skips.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { NEXT_INTL_PROJECTS } from '#tests/config/engine/skips.ts';
+import { NEXT_INTL_PROJECTS } from '#tests/config/engine/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -179,5 +179,21 @@ test('limit readers belong to the requested language', async () => {
     ]);
     expect(listSettingReaders(session.settings, session.scopes[0]!, 'limits.swift.max_file_lines')).toStrictEqual([
         { check: 'swift/swiftlint', enabled: true },
+    ]);
+});
+
+test('an ignore of a parent folder turns the check off in a nested scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash'], {
+            scopes: [{ path: 'apps/web' }],
+            tables: '[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["apps"]\nreason = "The applications lint their own scripts."\n',
+        }),
+        'run.sh': '#!/usr/bin/env bash\n',
+        'apps/web/run.sh': '#!/usr/bin/env bash\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), { stage: 'commit', only: ['bash/shellcheck'] });
+    expect(planned.map(({ scope, skip }) => ({ scope: scope.path, cause: skip?.cause }))).toStrictEqual([
+        { scope: '', cause: undefined },
+        { scope: 'apps/web', cause: 'ignore' },
     ]);
 });

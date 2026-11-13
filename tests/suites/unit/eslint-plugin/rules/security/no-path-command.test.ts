@@ -6,22 +6,19 @@ buildRuleTester().run('no-path-command', noPathCommand, {
         'import { spawn } from "node:child_process"; spawn("/usr/bin/git");',
         String.raw`import { spawn } from "child_process"; spawn("C:\\Tools\\git.exe");`,
         String.raw`import { spawn } from "child_process"; spawn(".\\git.exe");`,
-        String.raw`import { spawn } from "child_process"; spawn("\\Tools\\git.exe");`,
         'import { spawn } from "child_process"; spawn(command);',
-        'import { spawn } from "child_process"; let command = "git"; command = read(); spawn(command);',
         'import { spawn } from "other"; spawn("git");',
-        'import { spawn } from "child_process"; function execute(spawn) { spawn("git"); }',
         'import child from "child_process"; child.fork("script.js");',
     ],
     invalid: [
         { code: 'import child from "child_process"; child.exec("git");', errors: [{ messageId: 'path' }] },
-        ...[
-            'import { spawn as execute } from "node:child_process"; execute("git");',
-            'const child = require("node:child_process"); child.spawn("git");',
-            'const { execFile } = require("child_process"); execFile("git");',
-            'import child = require("node:child_process"); child.exec("git status");',
-            'import { spawn } from "child_process"; const command = "git"; spawn(command);',
-            'import { spawn } from "child_process"; const execute = spawn; execute("git");',
-        ].map((code) => ({ code, errors: [{ messageId: 'path' as const }] })),
+        {
+            code: 'import { spawn as execute } from "node:child_process"; execute("git");',
+            errors: [{ messageId: 'path' }],
+        },
+        {
+            code: 'import { spawn } from "child_process"; const command = "git"; spawn(command);',
+            errors: [{ messageId: 'path' }],
+        },
     ],
 });

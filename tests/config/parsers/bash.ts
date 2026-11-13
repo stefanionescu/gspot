@@ -97,14 +97,8 @@ export const FORWARDING_CALL_CASES = [
 ] as const;
 
 export const TRAP_CALLS = [
-    { name: 'trap', count: 2, line: 1, forwards: false },
     { name: '_cleanup', count: 0, line: 1, forwards: false },
-    { name: 'EXIT', count: 0, line: 1, forwards: false },
-    { name: 'trap', count: 2, line: 2, forwards: false },
-    { name: 'EXIT', count: 0, line: 2, forwards: false },
     { name: '_quoted', count: 0, line: 2, forwards: false },
-    { name: 'trap', count: 2, line: 3, forwards: false },
-    { name: 'EXIT', count: 0, line: 3, forwards: false },
 ] as const;
 
 export const QUOTED_TRAP_CALLS = [

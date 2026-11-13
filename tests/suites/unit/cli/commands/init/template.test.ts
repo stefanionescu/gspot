@@ -213,6 +213,7 @@ test('init --from keeps a setting of a configuration that the new repository sel
     const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
+    expect(written['configurations']).toStrictEqual(['markdown', 'python']);
     expect(written['tools']).toMatchObject({ ruff: { rules: ['ANN'] } });
 });
 
@@ -232,16 +233,6 @@ test('init refuses --from beside --configurations before it reads anything', asy
         error: 'arguments',
         message: expect.stringContaining('--configurations') as string,
     });
-});
-
-test('init --from adds the detected configurations to the ones of the file', async () => {
-    using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using team = await testdir({ 'gspot.toml': 'configurations = ["markdown"]\n' });
-    await using sandbox = await createGitSandbox({ 'main.py': 'PORT = 8080\n' });
-    const result = await runGspot(sandbox.path, ['init', '--from', join(team.path, 'gspot.toml'), '--json']);
-    expect(result.code, result.stdout + result.stderr).toBe(0);
-    const written = parseTomlFile('gspot.toml', await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));
-    expect(written['configurations']).toStrictEqual(['markdown', 'python']);
 });
 
 test('in a monorepo, a framework of the file goes to the scope that detects it', async () => {

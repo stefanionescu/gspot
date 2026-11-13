@@ -37,7 +37,7 @@ const DEBUGGER_SAMPLE = {
 
 const eslintSandbox = shareInstalledSandbox({ ...ESLINT_SANDBOX, level: 'basic' });
 
-test('javascript/eslint lints a project that has no TypeScript', async () => {
+test('javascript/eslint runs with only the packages that the javascript configuration installs', async () => {
     await assertCheckSample(eslintSandbox(), DEBUGGER_SAMPLE);
 });
 

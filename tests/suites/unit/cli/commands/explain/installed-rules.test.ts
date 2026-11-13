@@ -12,7 +12,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { buildMiseInstall } from '#cli/tools/pins.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/configurations/general.ts';
+import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/setup/configurations.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';

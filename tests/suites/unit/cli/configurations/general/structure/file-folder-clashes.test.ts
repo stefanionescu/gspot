@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { FILE_FOLDER_CLASH_SAMPLE } from '#tests/config/configurations/structure/files.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -10,7 +10,28 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('structure/file-folder-clashes reports file-folder-clash in jobs/turn.sh and passes after the fix', async () => {
     await using sandbox = await createSandbox(BASH_SANDBOX);
-    await assertCheckSample(sandbox, FILE_FOLDER_CLASH_SAMPLE, BASH_SANDBOX.cleanSource);
+    await assertCheckSample(
+        sandbox,
+        {
+            check: 'structure/file-folder-clashes',
+            corrected: {
+                files: {
+                    'jobs/turned.sh': CLEAN_BASH_SCRIPT,
+                    'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
+                },
+            },
+            files: {
+                'jobs/turn.sh': CLEAN_BASH_SCRIPT,
+                'jobs/turn/first.sh': CLEAN_BASH_SCRIPT,
+            },
+            expected: {
+                file: 'jobs/turn.sh',
+                rule: 'file-folder-clash',
+                line: 1,
+            },
+        },
+        BASH_SANDBOX.cleanSource,
+    );
 });
 
 test('a Markdown file with an upper-case extension beside a folder of its name is not a clash', async () => {

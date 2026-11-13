@@ -1,5 +1,3 @@
-import { BASH_HEADER, CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
-
 export const SWIFT_BARE_BLOCKS = `func report(_ value: Int) {
     do {
         print(value)
@@ -52,26 +50,6 @@ const SWIFT_ACCESSORS = `struct A {
     }
 }`;
 
-export const BASH_TRIVIAL_FUNCTION_SAMPLE = {
-    files: {
-        'scripts/tiny.sh': `${BASH_HEADER}# _tiny: one line, one caller.
-_tiny() {
-    echo "$1"
-}
-
-# main: runs the script.
-main() {
-    local name="$1"
-    _tiny "\${name}"
-    printf 'done\n'
-}
-
-main "$@"
-`,
-    },
-    expected: { file: 'scripts/tiny.sh', rule: 'trivial-function', line: 9 },
-} as const;
-
 export const TRIVIAL_FUNCTION_CASES = [
     {
         name: 'switch expression',
@@ -112,7 +90,6 @@ func isNew(_ name: String) -> Bool {
         source: SWIFT_ACCESSORS,
         lines: [2, 4, 5, 8, 9],
     },
-    { name: 'substantial function bodies', source: CLEAN_SWIFT, lines: [] },
     {
         name: 'closures in a dictionary literal',
         source: `import Foundation

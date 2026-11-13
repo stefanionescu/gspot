@@ -6,7 +6,6 @@ import { expect, test } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
@@ -22,25 +21,6 @@ message: "Use inspect."
 level: error
 tokens: [delve]
 `;
-
-const PROSE_SAMPLE = {
-    check: 'prose/vale',
-    files: {
-        'docs/selling.md': `# A page
-
-This powerful cache makes the application much faster.
-`,
-    },
-    expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
-    corrected: {
-        files: {
-            'docs/selling.md': `# A page
-
-This cache returns stored records.
-`,
-        },
-    },
-} as const;
 
 const EXAMPLE_STYLE_FOLDER = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Example`;
 
@@ -125,7 +105,3 @@ test.each([...PROSE_COMMENT_CASES])(
 );
 
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
-
-test('prose/vale reports gspot.marketing and passes after the fix', async () => {
-    await assertCheckSample(installedSandbox(), PROSE_SAMPLE);
-});

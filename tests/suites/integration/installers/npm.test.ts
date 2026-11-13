@@ -126,6 +126,29 @@ test.concurrent.each([...PACKAGE_MANAGERS])(
     },
 );
 
+test('a repeated npm install keeps the lockfile and the modules with the registry offline', async () => {
+    await using sandbox = await createNpmProject('npm');
+    const { root, registry } = sandbox;
+    const first = await spawnGspot(root, ['install']);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const lockfile = await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8');
+    const marker = join(root, GSPOT_PATHS.nodeModules, 'prettier/keep.txt');
+    await writeFile(marker, 'installed modules');
+    const requests = registry.requests.filter((request) => request !== 'GET /npm');
+    for (const isOnline of [true, false]) {
+        if (!isOnline) registry[Symbol.dispose]();
+        const next = await spawnGspot(root, ['install', '--json']);
+        expect(next.code, next.stdout + next.stderr).toBe(0);
+        expect(JSON.parse(next.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
+        expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
+        expect(
+            registry.requests.filter((request) => request !== 'GET /npm'),
+            next.stdout,
+        ).toStrictEqual(requests);
+        expect(await readFile(marker, 'utf8')).toBe('installed modules');
+    }
+});
+
 test('registry settings from the repository .npmrc authenticate an isolated project', async () => {
     const token = 'synthetic-registry-credential';
     const requests = { rejected: 0, authenticated: 0 };

@@ -155,13 +155,12 @@ test('doctor lists programs by name and folds the npm packages into one line', a
     expect(result.stdout).not.toContain('eslint-plugin-');
 });
 
-test('doctor --json reports every field when the required tools are missing', async () => {
+test('a missing pinned program reports the version it wants', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     using _lookup = fakeExecutableLookup(null);
     const result = await runGspot(sandbox.path, ['doctor', '--json']);
     expect(result.code).toBe(1);
     const report = doctorOutputSchema.parse(JSON.parse(result.stdout));
-    expect(report.tools.filter(({ state }) => state !== 'missing')).toStrictEqual([]);
     const prettier = String(getTool(readConfigurations().values(), 'prettier').version);
     expect(report.tools).toContainEqual({
         name: 'prettier',

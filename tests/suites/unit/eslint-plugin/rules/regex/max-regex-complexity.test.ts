@@ -9,7 +9,7 @@ buildRuleTester().run('max-regex-complexity', maxRegexComplexity, {
             errors: [{ messageId: 'complex', data: { score: 42, threshold: 20 } }],
         },
         {
-            code: '/(?:a|b)+/u;',
+            code: '/(?=a+)/u;',
             options: [{ threshold: 2 }],
             errors: [{ messageId: 'complex', data: { score: 3, threshold: 2 } }],
         },

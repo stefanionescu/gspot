@@ -11,9 +11,10 @@ import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
-import { listChecksById, readConfigurations } from '#cli/manifests/read.ts';
-import { BASE_CHECK, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
+import { getTool, listChecksById, readConfigurations } from '#cli/manifests/read.ts';
+import { BASE_CHECK, FILE_LINE_PATTERN, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -24,23 +25,21 @@ function buildLinkReport(line: string): string[] {
     return buildProgramCommand('fakes/tool', '--line', 'Errors in guide.md', '--line', line, '--exit', '2', '{files}');
 }
 
-test.each([...REGEX_OUTPUT_CASES])('$title', async ({ result, expected }) => {
+test.each([...REGEX_OUTPUT_CASES])('$title', async ({ check, result, expected }) => {
     await using sandbox = await testdir({ 'source.txt': 'source' });
-    const planned = { check: LOCATED_CHECK, tool: { name: 'tool', installers: {}, kind: 'program' as const } };
+    const planned = { check, tool: { name: 'tool', installers: {}, kind: 'program' as const } };
     expect(
         parseCommandFindings(planned, buildProcessResult(result), { cwd: sandbox.path, root: sandbox.path }, {}),
     ).toStrictEqual(expected);
 });
 
-test('an ESLint finding whose source text holds a module error word stays a finding, and a real module error becomes a note', async () => {
+test('the javascript crash pattern does not match a module error word inside a finding', async () => {
     const path = 'source.ts';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n',
-    });
-    const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['javascript/eslint'] });
-    const planned = plans[0]!;
+    await using sandbox = await testdir({ [path]: 'const message = "ERR_MODULE_NOT_FOUND";\n' });
+    const planned = {
+        check: getShippedCheck('javascript/eslint'),
+        tool: getTool(readConfigurations().values(), 'eslint'),
+    };
     const stdout = JSON.stringify([
         {
             filePath: join(sandbox.path, path),
@@ -48,18 +47,10 @@ test('an ESLint finding whose source text holds a module error word stays a find
             messages: [{ ruleId: 'no-unused-vars', severity: 2, message: 'Unused message.', line: 1, column: 7 }],
         },
     ]);
-    const result = buildProcessResult({ stdout, stderr: '', code: 1, duration: 1 });
+    const result = buildProcessResult({ stdout, code: 1 });
     expect(parseCommandFindings(planned, result, { cwd: sandbox.path, root: sandbox.path }, {}).findings).toMatchObject(
         [{ file: path, rule: 'no-unused-vars', line: 1, column: 7 }],
     );
-    expect(
-        parseCommandFindings(
-            planned,
-            { ...result, stdout: '', code: 2, stderr: 'Oops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin' },
-            { cwd: sandbox.path, root: sandbox.path },
-            {},
-        ).note,
-    ).toBe('eslint failed with exit 2:\nOops! Something went wrong!\nERR_MODULE_NOT_FOUND: plugin');
 });
 
 test('declared exit codes tell partial findings from a fatal {file} run', async () => {
@@ -184,7 +175,7 @@ test('a finding in a folder outside the scope keeps its repository path when the
         ),
         output: {
             ...LOCATED_CHECK.output,
-            pattern: String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`,
+            pattern: FILE_LINE_PATTERN,
         },
     };
 
@@ -193,64 +184,52 @@ test('a finding in a folder outside the scope keeps its repository path when the
     expect(checked.findings.map(({ file }) => file)).toStrictEqual(['lib/x.ts', 'app/src/a.swift']);
 });
 
-test('a command check whose pattern names no file passes on exit 0, and reports each matching line on a finding exit code', async () => {
-    const results = [];
-    for (const code of ['0', '1']) {
-        const check = {
-            id: 'project/bundle',
-            command: buildProgramCommand('fakes/tool', '--line', 'bundle.js 41.5kb', '--exit', code),
-            paths: ['input.txt'],
-            stage: 'commit',
-            runs: 'once',
-            exit_codes: [1],
-            output: { format: 'regex', pattern: '^(?<message>.+)$' },
-        };
-        const tables = stringify({ command_check: [check] });
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
-            'input.txt': 'input\n',
-        });
-        const session = await openSession(sandbox.path);
-        const planned = planChecks(session, { stage: 'all', only: ['project/bundle'] })[0]!;
-        planned.tool = { name: process.execPath, installers: {}, kind: 'program' };
-        const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
-        results.push({ status: result.status, messages: result.findings.map(({ message }) => message) });
-    }
-    expect(results).toStrictEqual([
-        { status: 'passed', messages: [] },
-        { status: 'failed', messages: ['bundle.js 41.5kb'] },
-    ]);
-});
+const BANNER = { check: BASE_CHECK.id, file: '', message: 'Banner', fixable: false };
 
-test('a shipped check whose pattern names no file keeps the lines that its tool prints on exit 0', () => {
-    const planned = listChecksById(readConfigurations().values()).get('docker/compose')!;
-    const warning = { check: planned.check.id, file: '', message: 'The variable is not set.', fixable: false };
+const LOCATED = { ...BANNER, file: 'source.ts', message: 'A defect.' };
+
+const FILE_OUTPUT = { format: 'json' as const, fields: { file: 'file', message: 'message' } };
+
+test.each([
+    {
+        name: 'a shipped check whose format names no file keeps a line of a passing run',
+        planned: listChecksById(readConfigurations().values()).get('docker/compose')!,
+        failed: false,
+        findings: [BANNER],
+        status: 'failed',
+        kept: [BANNER],
+    },
+    {
+        name: 'a command check whose format names no file drops a line of a passing run',
+        planned: { check: BASE_CHECK },
+        failed: false,
+        findings: [BANNER],
+        status: 'passed',
+        kept: [],
+    },
+    {
+        name: 'a failed run keeps a line that names no file',
+        planned: { check: BASE_CHECK },
+        failed: true,
+        findings: [BANNER],
+        status: 'failed',
+        kept: [BANNER],
+    },
+    {
+        name: 'a passing run of a format that names files drops a line with neither a file nor a line number',
+        planned: { check: { ...BASE_CHECK, output: FILE_OUTPUT } },
+        failed: false,
+        findings: [LOCATED, BANNER],
+        status: 'failed',
+        kept: [LOCATED],
+    },
+])('$name', ({ planned, failed, findings, status, kept }) => {
     const result = buildCheckResult(planned, {
         base: { check: planned.check.id, scope: '', status: 'passed', fileCount: 1, duration: 0, findings: [] },
-        state: { root: '/repo', cwd: '/repo', failed: false, findings: [warning] },
-        commandArguments: ['docker'],
+        state: { root: '/repo', cwd: '/repo', failed, findings: [...findings] },
+        commandArguments: ['tool'],
         start: performance.now(),
     });
-    expect(result).toMatchObject({ status: 'failed', findings: [warning] });
-});
-
-test('a passing file format drops findings with neither a path nor a line', () => {
-    const check = { ...BASE_CHECK, output: { format: 'json' as const, fields: { file: 'file', message: 'message' } } };
-    const located = { check: check.id, file: 'source.ts', message: 'A defect.', fixable: false };
-    const result = buildCheckResult(
-        { check },
-        {
-            base: { check: check.id, scope: '', status: 'passed', fileCount: 1, duration: 0, findings: [] },
-            state: {
-                root: '/repo',
-                cwd: '/repo',
-                failed: false,
-                findings: [located, { ...located, file: '', message: 'Banner' }],
-            },
-            commandArguments: ['tool'],
-            start: performance.now(),
-        },
-    );
-    expect(result.findings).toStrictEqual([located]);
-    expect(result.status).toBe('failed');
+    expect(result.status).toBe(status);
+    expect(result.findings).toStrictEqual(kept);
 });

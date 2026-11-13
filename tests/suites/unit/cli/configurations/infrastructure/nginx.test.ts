@@ -122,7 +122,7 @@ test('a failed certificate step reports its error text, removes the scratch file
     }
 });
 
-test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, note, findings }) => {
+test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, status, findings }) => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['nginx']),
         'nginx.conf': 'events {}\nhttp { include /etc/nginx/conf.d/site.conf; }\n',
@@ -137,8 +137,21 @@ test.each(NGINX_FAILURE_CASES)('nginx/syntax reports $name', async ({ stderr, st
     expect(
         report.checks.map((check) => ({
             status: check.status,
-            note: check.note,
             findings: check.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
         })),
-    ).toStrictEqual([{ status, note, findings: [...findings] }]);
+    ).toStrictEqual([{ status, findings: [...findings] }]);
+});
+
+test('nginx that reads no nginx.conf stops with an error that names nginx.image', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['nginx']),
+        'nginx.conf': 'events {}\n',
+    });
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(sandbox.path, ['openssl', 'docker'], resources);
+    using _spawn = fakeCommands().mockResolvedValue(buildProcessResult());
+    const { report } = await runChecks(session, buildRunOptions({ only: ['nginx/syntax'] }));
+    expect(report.checks).toMatchObject([
+        { status: 'error', note: expect.stringContaining('nginx.image') as string, findings: [] },
+    ]);
 });

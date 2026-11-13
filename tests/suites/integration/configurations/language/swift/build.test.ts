@@ -11,7 +11,7 @@ import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { hasToolBuild, isMacos } from '#tests/setup/system/platform.ts';
+import { isMacos } from '#tests/setup/system/platform.ts';
 
 const SWIFT_PACKAGE_SANDBOX = {
     install: false,
@@ -44,14 +44,12 @@ public func pairSize(of count: Int) -> Int {
 const SWIFT_PACKAGE_CASES = [
     {
         check: 'swift/swiftlint-analyze',
-        tool: 'swiftlint',
         files: { 'Sources/App/Pair.swift': `import Foundation\n\n${PAIR_SIZE_SOURCE}` },
         expected: { file: 'Sources/App/Pair.swift', rule: 'unused_import', line: 1 },
         corrected: { files: { 'Sources/App/Pair.swift': PAIR_SIZE_SOURCE } },
     },
     {
         check: 'swift/periphery',
-        tool: 'periphery',
         files: {
             'Sources/App/Pair.swift': `${PAIR_SIZE_SOURCE}
 private func neverCalled() -> Int {
@@ -84,34 +82,37 @@ const XCODE_TOOL_PROJECT = `// !$*UTF8*$!
 }
 `;
 
-test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['swift']),
-        'Package.swift': SWIFT_LANGUAGE_PACKAGE,
-        'Sources/Example/Value.swift': 'public let value: Int = 1\n',
-    });
-    await using _cache = await redirectCacheFolder();
-    const command = ['check', '--only', 'swift/build', '--json'];
-    const first = await runGspot(sandbox.path, command);
-    expect(first.code, first.stdout + first.stderr).toBe(0);
-    const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: readCacheFolder() }));
-    expect(files).toHaveLength(1);
-    const compiledFile = join(readCacheFolder(), files[0]!);
-    const { mtimeMs: modified } = await stat(compiledFile);
-    const again = await runGspot(sandbox.path, command);
-    expect(again.code, again.stdout + again.stderr).toBe(0);
-    expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
-    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
-    const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
-    expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
-    expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-        { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
-    ]);
-    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
-    const repairedBuild = parseCheckReport(await runGspot(sandbox.path, command));
-    expect(repairedBuild.code, repairedBuild.stdout + repairedBuild.stderr).toBe(0);
-    expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-});
+test.skipIf(Bun.which('swift') === null)(
+    'swift/build reuses its compiled objects and still reports a changed source',
+    async () => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['swift']),
+            'Package.swift': SWIFT_LANGUAGE_PACKAGE,
+            'Sources/Example/Value.swift': 'public let value: Int = 1\n',
+        });
+        await using _cache = await redirectCacheFolder();
+        const command = ['check', '--only', 'swift/build', '--json'];
+        const first = await runGspot(sandbox.path, command);
+        expect(first.code, first.stdout + first.stderr).toBe(0);
+        const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: readCacheFolder() }));
+        expect(files).toHaveLength(1);
+        const compiledFile = join(readCacheFolder(), files[0]!);
+        const { mtimeMs: modified } = await stat(compiledFile);
+        const again = await runGspot(sandbox.path, command);
+        expect(again.code, again.stdout + again.stderr).toBe(0);
+        expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
+        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
+        const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
+        expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
+        expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+            { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
+        ]);
+        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
+        const repairedBuild = parseCheckReport(await runGspot(sandbox.path, command));
+        expect(repairedBuild.code, repairedBuild.stdout + repairedBuild.stderr).toBe(0);
+        expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+    },
+);
 
 test.skipIf(!isMacos)(
     'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
@@ -156,12 +157,10 @@ xcode_destination = "platform=macOS"
 describe.skipIf(!isMacos)('Swift package samples', () => {
     const installedSandbox = shareInstalledSandbox(SWIFT_PACKAGE_SANDBOX);
 
-    for (const sample of SWIFT_PACKAGE_CASES) {
-        test.skipIf(!hasToolBuild(sample.tool))(
-            `${sample.check} reports ${sample.expected.rule} in a Swift package and passes after the fix`,
-            async () => {
-                await assertCheckSample(installedSandbox(), sample);
-            },
-        );
-    }
+    test.each([...SWIFT_PACKAGE_CASES])(
+        '$check reports $expected.rule in a Swift package and passes after the fix',
+        async (sample) => {
+            await assertCheckSample(installedSandbox(), sample);
+        },
+    );
 });

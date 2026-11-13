@@ -1,13 +1,5 @@
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 
-export const DEPENDENCIES_SANDBOX = {
-    configurations: ['dependencies'],
-
-    files: {
-        'package.json': `{\n    "name": "example",\n    "version": "1.0.0",\n    "private": true,\n    "packageManager": "bun@1.4.2"\n}\n`,
-    },
-} as const;
-
 export const LOCKFILE_HOST_CASES = [
     {
         files: {

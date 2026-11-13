@@ -1,15 +1,21 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { listCommittedPaths, listRevisionFiles, readHead, writeIndexTree } from '#cli/repository/revisions/files.ts';
+import {
+    listCommittedPaths,
+    listRevisionFiles,
+    readCommittedTexts,
+    readHead,
+    writeIndexTree,
+} from '#cli/repository/revisions/files.ts';
 import type { GitFile } from '#cli/types/repository.ts';
-import { HASH_FORMATS, INDEX_PATH } from '#tests/config/repository/files.ts';
+import { HASH_FORMATS, INDEX_PATH } from '#tests/config/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
 
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await createGitSandbox({});
@@ -58,4 +64,32 @@ test('committed paths leave out files that changed since HEAD, and an unborn his
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'b'), 'changed\n');
     expect(await listCommittedPaths(sandbox.path, ['a', 'b'])).toStrictEqual(new Set(['a']));
+});
+
+test('an unmerged index refuses the index revision and names the path', async () => {
+    await using sandbox = await createGitSandbox({ 'source.txt': 'working content\n' });
+    stageUnmergedFile(sandbox.path, 'source.txt');
+    const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
+    expect(error.message).toContain('source.txt');
+});
+
+test('a nested root lists only its own files for the index and a commit', async () => {
+    await using sandbox = await testdir();
+    const { project } = await prepareNestedRepository(sandbox.path);
+    const head = await readHead(project);
+    const headFiles = await listRevisionFiles(project, { kind: 'commit', hash: head! });
+    expect(headFiles.map((file) => file.path)).toStrictEqual(['source.txt']);
+    const files = await listRevisionFiles(project, { kind: 'index' });
+    expect(files.map((file) => file.path)).toStrictEqual(['source.txt']);
+});
+
+test('committed texts leave out a link even when its path is asked for', async () => {
+    await using sandbox = await createGitSandbox({ 'target.txt': 'linked text\n' });
+    await symlink('target.txt', join(sandbox.path, 'link'));
+    commitAll(sandbox.path);
+    expect(await readCommittedTexts(sandbox.path, ['link', 'target.txt'], 'HEAD')).toStrictEqual(
+        new Map([['target.txt', 'linked text\n']]),
+    );
+    expect(await readCommittedTexts(sandbox.path, ['link'], 'HEAD')).toStrictEqual(new Map());
 });

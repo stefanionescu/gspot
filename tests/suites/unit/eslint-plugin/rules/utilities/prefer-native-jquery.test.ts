@@ -2,13 +2,7 @@ import { preferNativeJquery } from '#eslint-plugin/rules/utilities/prefer-native
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('prefer-native-jquery', preferNativeJquery, {
-    valid: [
-        'Array.isArray(rows);',
-        'const $ = select;\n$.isArray(rows);',
-        'import $ from "./dom";\n$.trim(name);',
-        '$.ajax(url);',
-        '$?.isArray(rows);',
-    ],
+    valid: ['Array.isArray(rows);', 'import $ from "./dom";\n$.trim(name);', '$.ajax(url);', '$?.isArray(rows);'],
     invalid: [
         {
             code: '$.isArray(rows);',

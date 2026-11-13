@@ -1,10 +1,12 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
+import { GSPOT_MISE_TOOL, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import {
     findGspotPinMismatch,
     readGspotPin,
@@ -46,6 +48,33 @@ test('the mise pin is a tool beside the others and keeps their Node.js pin', asy
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 
+test('the mise pin adds Node.js when mise.toml has none', async () => {
+    await using sandbox = await createGitSandbox({ 'mise.toml': '' });
+    writeMisePin(openFiles(sandbox.path));
+    const { tools } = parse(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')) as {
+        tools: Record<string, unknown>;
+    };
+    expect(Object.keys(tools)).toStrictEqual([NODE_TOOL, GSPOT_MISE_TOOL]);
+    expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
+});
+
+test('the gspot pin is the locked version of a range, and a range without a lockfile is no pin', async () => {
+    await using sandbox = await createGitSandbox({
+        'package.json': `{"devDependencies": {"${cliPackage.name}": "^0.0.1"}}\n`,
+    });
+    expect(readGspotPin(sandbox.path)).toBeUndefined();
+    await writeFile(
+        join(sandbox.path, 'package-lock.json'),
+        JSON.stringify({
+            packages: {
+                '': { devDependencies: { [cliPackage.name]: '^0.0.1' } },
+                [`node_modules/${cliPackage.name}`]: { version: '0.0.2' },
+            },
+        }),
+    );
+    expect(readGspotPin(sandbox.path)).toBe('0.0.2');
+});
+
 test('the pin keeps a sorted devDependencies block sorted, and goes last in an unsorted one', async () => {
     await using sorted = await createGitSandbox({
         'package.json': '{\n  "devDependencies": {\n    "@a/first": "1.0.0",\n    "zod": "1.0.0"\n  }\n}\n',
@@ -76,14 +105,15 @@ test('a package.json pin and a mise.toml pin that differ are both named, with th
 });
 
 test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {
-    await using sandbox = await testdir({
-        'package.json': JSON.stringify({
-            packageManager: 'pnpm@10.16.0',
-            devDependencies: { '@gspothq/cli': '0.0.0-test' },
-        }),
+    const packageJson = JSON.stringify({
+        packageManager: 'pnpm@10.16.0',
+        devDependencies: { '@gspothq/cli': '0.0.0-test' },
+    });
+    await using workspace = await testdir({
+        'package.json': packageJson,
         'pnpm-workspace.yaml': 'packages:\n  - packages/*\n',
     });
-    expect(selectStartRunner(sandbox.path).installCommand).toBe(
-        'pnpm add --workspace-root --save-dev --save-exact @gspothq/cli@<version>',
-    );
+    await using single = await testdir({ 'package.json': packageJson });
+    expect(selectStartRunner(workspace.path).installCommand).toContain('--workspace-root');
+    expect(selectStartRunner(single.path).installCommand).not.toContain('--workspace-root');
 });

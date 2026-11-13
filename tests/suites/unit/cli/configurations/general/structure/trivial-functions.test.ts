@@ -1,9 +1,7 @@
 import { expect, test } from 'bun:test';
 
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import {
     ACCESSOR_DECLARATIONS,
-    BASH_TRIVIAL_FUNCTION_SAMPLE,
     CALLER_CASES,
     NESTED_PYTHON_FUNCTIONS,
     PYTHON_INTERFACES,
@@ -12,9 +10,7 @@ import {
     TRIVIAL_FUNCTION_CASES,
 } from '#tests/config/configurations/structure/code.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
@@ -155,10 +151,4 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
     expect(findings.map(({ rule }) => rule)).toStrictEqual([...expected]);
-});
-
-test('structure/trivial-functions reports trivial-function in scripts/tiny.sh and passes after the fix', async () => {
-    const sample = { check: 'structure/trivial-functions', ...BASH_TRIVIAL_FUNCTION_SAMPLE };
-    await using sandbox = await createSandbox(BASH_SANDBOX);
-    await assertCheckSample(sandbox, sample, BASH_SANDBOX.cleanSource);
 });

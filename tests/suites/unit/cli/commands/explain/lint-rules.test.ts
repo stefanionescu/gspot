@@ -11,7 +11,7 @@ import { createFileTree } from 'testdirs';
 import { executableLayout } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import plugin from '#eslint-plugin/plugin.ts';
-import { RULE_PAGE_SETTINGS, RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';
+import { RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -33,14 +33,22 @@ async function readToolRules(name: string, specifier: string): Promise<Record<st
     return rules;
 }
 
+const RULE_PACKAGES = {
+    eslint: 'eslint/use-at-your-own-risk',
+    'eslint-plugin-n': 'eslint-plugin-n',
+    'typescript-eslint': 'typescript-eslint',
+    stylelint: 'stylelint',
+    '@gspothq/eslint-plugin': '@gspothq/eslint-plugin',
+} as const;
+
+async function readRulePage(tool: keyof typeof RULE_PACKAGES, key: string): Promise<unknown> {
+    const rules = await readToolRules(tool, RULE_PACKAGES[tool]);
+    const meta: unknown = Reflect.get(new Object(await rules[key]), 'meta');
+    return findValueAt(meta, ['docs', 'url']) ?? findValueAt(meta, ['url']);
+}
+
 async function writeRulePackages(root: string): Promise<void> {
-    for (const [name, specifier] of [
-        ['eslint', 'eslint/use-at-your-own-risk'],
-        ['eslint-plugin-n', 'eslint-plugin-n'],
-        ['typescript-eslint', 'typescript-eslint'],
-        ['stylelint', 'stylelint'],
-        ['@gspothq/eslint-plugin', '@gspothq/eslint-plugin'],
-    ] as const) {
+    for (const [name, specifier] of Object.entries(RULE_PACKAGES)) {
         const rules = await readToolRules(name, specifier);
         const metadata: Record<string, unknown> = {};
         for (const [key, rule] of Object.entries(rules)) {
@@ -69,7 +77,9 @@ test('explain reads installed rule metadata without executing generated configur
         '.gspot/configurations/javascript/eslint/eslint.mjs': 'throw new Error("Generated config executed");',
     });
     await writeRulePackages(sandbox.path);
-    for (const [check, rule, page] of RULE_PAGES) {
+    for (const { check, rule, tool, key } of RULE_PAGES) {
+        const page = await readRulePage(tool, key);
+        expect(page).toBeString();
         const result = await runGspot(sandbox.path, ['explain', check, rule, '--json']);
         expect(result.code, result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({ kind: 'lint-rule', check, rule, page });
@@ -142,7 +152,10 @@ test.each([
 
 test('explain gives Ruff summaries and reserves its full explanation for verbose output', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': RULE_PAGE_SETTINGS,
+        'gspot.toml': buildSandboxSettings(['python'], {
+            level: 'all',
+            scopes: [{ path: 'app', configurations: ['swift'] }],
+        }),
         'app/source.swift': 'let count = 1\n',
         [`.gspot/.venv/${executableLayout.environmentFolder}/ruff${isWindows ? '.exe' : ''}`]: '',
     });

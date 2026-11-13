@@ -3,19 +3,18 @@ import { dirname, relative, resolve } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#tests/config/configurations/framework.ts';
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
-import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
-async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<Finding[]> {
+async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<readonly Finding[]> {
     const scope = options.scope ?? '';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['svelte'], { scopes: scope === '' ? [] : [{ path: scope }] }),
@@ -23,11 +22,7 @@ async function runSvelteCheck(stdout: string, options: { scope?: string } = {}):
     });
     await fakeNpmTool(sandbox.path, 'svelte-check');
     using _run = fakeCommands().mockResolvedValue(buildProcessResult({ code: 1, stdout }));
-    const session = await openSession(sandbox.path);
-    return await getBuiltInCheck('svelte/svelte-check')(
-        session,
-        planSandboxCheck(session, 'svelte/svelte-check', { scope }),
-    );
+    return await runSandboxCheck(sandbox.path, 'svelte/svelte-check', { scope });
 }
 
 test.each([...SVELTE_PROJECTS])(

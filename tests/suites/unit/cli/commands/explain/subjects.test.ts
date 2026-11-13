@@ -8,7 +8,7 @@ import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import {
     EXPLAIN_SETTINGS,
-    PATH_IGNORES,
+    PATH_IGNORE,
     SYNTAX_CHECK_TABLES,
     UNKNOWN_SUBJECT_CASES,
 } from '#tests/config/commands/lookup.ts';
@@ -91,7 +91,7 @@ test('a configuration name stays a name, and a tracked or ./ path explains the f
         path: 'api/build.sh',
         scope: 'api',
         fileKind: 'source',
-        ignores: [...PATH_IGNORES],
+        ignores: [PATH_IGNORE],
     });
 });
 
@@ -109,13 +109,16 @@ test.each(['run.sh', './run.sh'])('explain resolves %s from its calling folder',
 
 test.each([...UNKNOWN_SUBJECT_CASES])(
     'explain of %s fails with an arguments error that names the subject',
-    async (subject, message) => {
+    async (subject, named) => {
         await using sandbox = await testdir({ 'gspot.toml': EXPLAIN_SETTINGS, 'api/build.sh': CLEAN_BASH_SCRIPT });
 
         commitAll(sandbox.path);
         const result = await runGspot(sandbox.path, ['explain', subject, '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout)).toMatchObject({ error: 'arguments', message });
+        expect(JSON.parse(result.stdout)).toMatchObject({
+            error: 'arguments',
+            message: expect.stringContaining(named) as string,
+        });
     },
 );
 

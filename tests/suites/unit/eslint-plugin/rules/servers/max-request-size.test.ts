@@ -12,14 +12,16 @@ buildRuleTester().run('max-request-size', maxRequestSize, {
         "import multer from 'multer';\nmulter(options);",
         "import multer from 'multer';\nmulter.memoryStorage();",
         "import formidable from 'formidable';\nconst form = formidable();\nform.maxFileSize = readLimit();",
-        "import formidable from 'formidable';\nconst form = formidable({ maxFileSize: 1000 });\nform.multiples = true;",
     ],
     invalid: [
         {
             code: "import formidable from 'formidable';\nlet form;\nform = formidable();",
             errors: [{ messageId: 'unlimited' }],
         },
-
+        {
+            code: "import formidable from 'formidable';\nconst form = formidable();\nform.multiples = true;",
+            errors: [{ messageId: 'unlimited', line: 2 }],
+        },
         {
             code: "const formidable = require('formidable');\nconst form = formidable();\nconst form2 = formidable();\nform2.maxFileSize = 1000;\nformidable({ maxFileSize: 10 * 1024 * 1024 });\nformidable({});\nconst multer = require('multer');\nmulter();\nmulter({ dest: 'x' });\nmulter({ limits: { fileSize: 9000000 } });\nmulter({ limits: {} });\nconst bodyParser = require('body-parser');\nbodyParser.json();\nbodyParser.json({ limits: '5mb' });",
             errors: [

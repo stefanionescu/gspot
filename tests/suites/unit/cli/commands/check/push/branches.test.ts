@@ -1,9 +1,10 @@
 import { expect, test } from 'bun:test';
 
 import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
+import { PUSH_WORKING_TREE } from '#tests/config/setup/sandboxes.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { assertWorkingTreeKept, createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { createGitSandbox, preparePushRepository, readPushWorkingTree } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('a new branch compares with the remote-tracking commit, and with a fetch mapping with the mapped commit', async () => {
@@ -41,7 +42,7 @@ test('a new branch still compares with refs/remotes/origin/main when the fetch r
     );
     expect(excluded.code, excluded.stdout + excluded.stderr).toBe(0);
     expect(pushOutputSchema.parse(JSON.parse(excluded.stdout)).revisions[0]?.commits).toStrictEqual([reviewed]);
-    await assertWorkingTreeKept(sandbox.path, broken);
+    expect(await readPushWorkingTree(sandbox.path)).toStrictEqual({ head: broken, ...PUSH_WORKING_TREE });
 });
 
 test('a new branch whose remote has no fetched commits checks every file of the tree', async () => {
@@ -58,5 +59,5 @@ test('a new branch whose remote has no fetched commits checks every file of the 
     expect(new Set(revisions[0]!.report.checks[0]?.findings.map((finding) => finding.file))).toStrictEqual(
         new Set(['legacy.sh']),
     );
-    await assertWorkingTreeKept(sandbox.path, broken);
+    expect(await readPushWorkingTree(sandbox.path)).toStrictEqual({ head: broken, ...PUSH_WORKING_TREE });
 });

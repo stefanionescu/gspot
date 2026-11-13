@@ -2,11 +2,10 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { ESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
 
 import { HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { IMPORT_CASES, IMPORT_FILES } from '#tests/config/configurations/javascript/plugins.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
@@ -39,26 +38,6 @@ test('a bundler scope drops only code suffixes, and its Node scripts keep every 
         filePath: 'app/tool.mjs',
     });
     expect(kept?.output).toBe('import { library } from "./library.mjs";\nexport { library };\n');
-});
-
-test('the import-cycles config parses TypeScript files and resolves their imports through the projects', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
-        'package.json': '{"private":true,"type":"module"}',
-        'tsconfig.json': '{"compilerOptions":{"strict":true,"paths":{"@/*":["./src/*"]}},"include":["src/**/*.ts"]}',
-        'src/first.ts': "import { second } from '@/second.ts';\nexport const first: number = second + 1;\n",
-        'src/second.ts': "import { first } from './first.ts';\nexport const second: number = first - 1;\n",
-    });
-    await buildEslint(sandbox.path);
-    const eslint = new ESLint({
-        cwd: sandbox.path,
-        overrideConfigFile: join(sandbox.path, getManifestTarget('javascript', 'eslint/import-cycles.mjs')),
-    });
-    const results = await eslint.lintFiles(['src/first.ts', 'src/second.ts']);
-    expect(results.flatMap(({ messages }) => messages.map(({ ruleId, line }) => ({ ruleId, line })))).toStrictEqual([
-        { ruleId: 'import-x/no-cycle', line: 1 },
-        { ruleId: 'import-x/no-cycle', line: 1 },
-    ]);
 });
 
 test('Supabase functions and a scope with deno.json ask for the real .ts extension', async () => {
@@ -158,4 +137,23 @@ test('javascript.import_boundaries keeps relative imports inside each folder, an
     const bounded = await buildEslint(sandbox.path, fix);
     const [fixed] = await bounded.lintText(source, target);
     expect(fixed?.output).toBe('import { session } from "@/features/auth/session.ts";\nexport { session };\n');
+});
+
+test('at level basic, the import rules apply in root and child scopes', async () => {
+    await using sandbox = await testdir({
+        ...IMPORT_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'basic',
+            tables: '[[scope]]\npath = "app"\nconfigurations = ["typescript"]\n',
+        }),
+    });
+    const eslint = await buildEslint(sandbox.path);
+    for (const file of ['src/source.ts', 'app/src/source.ts']) {
+        for (const [name, source, rule, count] of IMPORT_CASES) {
+            await createFileTree(sandbox.path, { [file]: source });
+            expect(await listLintFindings(eslint, sandbox.path, [file], [rule]), name).toStrictEqual(
+                Array.from({ length: count }, () => ({ file, rule, line: 1 })),
+            );
+        }
+    }
 });

@@ -1,4 +1,3 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 
 export const BUN_PROJECT_FILES = {
@@ -25,15 +24,6 @@ export const BUN_PROJECT_FILES = {
     }),
 } as const;
 
-export const VALE_INSTALLED_FILES = Object.fromEntries(
-    ['Google', 'write-good', 'proselint', 'alex', 'Harper', 'config/dictionaries'].map((folder) => [
-        `${GSPOT_PATHS.valePackages}/${folder}/.keep`,
-        '',
-    ]),
-);
-
-export const EMPTY_VALE_INI = 'Packages =\n';
-
 export const BASH_SANDBOX = {
     executable: ['scripts/a.sh', 'scripts/b.sh', 'scripts/build.sh'],
     cleanSource: CLEAN_BASH_SCRIPT,
@@ -45,3 +35,104 @@ export const BASH_SANDBOX = {
         'package.json': '{"private":true}\n',
     },
 } as const;
+
+export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
+
+export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
+
+export const UNMATCHED_PATH_CASES = [
+    {
+        name: 'primitive lists and nested record paths',
+        files: { 'scripts/kept.sh': 'echo kept\n', 'src/kept.txt': 'kept\n' },
+        settings: {
+            configurations: ['bash'],
+            import_rule: [{ name: 'core', paths: ['src/**', 'gone/**'] }],
+            structure: {
+                environment_readers: ['scripts/kept.sh', 'scripts/gone.sh'],
+            },
+        },
+        unmatched: [
+            ['gone/**', '[[import_rule]]'],
+            ['scripts/gone.sh', 'structure.environment_readers'],
+        ],
+    },
+    {
+        name: 'inherited paths are audited once from the repository root',
+        files: { 'app/kept.sh': 'echo kept\n', 'app/deep/kept.sh': 'echo kept\n' },
+        settings: {
+            configurations: ['bash'],
+            structure: {
+                environment_readers: ['root-gone.sh'],
+            },
+            scope: [
+                {
+                    path: 'app',
+                    structure: {
+                        environment_readers: ['kept.sh', 'gone.sh'],
+                    },
+                },
+                {
+                    path: 'app/deep',
+                    structure: {
+                        environment_readers: ['kept.sh', 'gone.sh'],
+                    },
+                },
+            ],
+        },
+        unmatched: [
+            ['root-gone.sh', 'structure.environment_readers'],
+            ['app/gone.sh', 'scope.0.structure.environment_readers'],
+            ['app/deep/gone.sh', 'scope.1.structure.environment_readers'],
+        ],
+    },
+    {
+        name: 'scope paths audit absent folders',
+        files: { 'app/deep/kept.sh': 'echo kept\n' },
+        settings: {
+            configurations: ['bash'],
+            scope: [{ path: 'app' }, { path: 'app/deep' }, { path: 'absent' }, { path: 'absent/nested' }],
+        },
+        unmatched: [
+            ['absent', 'scope.2.path'],
+            ['absent/nested', 'scope.3.path'],
+        ],
+    },
+    {
+        name: 'future destinations and URL patterns are not source selectors',
+        files: { 'src/kept.txt': 'kept\n' },
+        settings: {
+            configurations: ['site', 'supabase', 'docs'],
+            site: { build_folder: 'future/site' },
+            supabase: { types_file: 'future/types.ts' },
+            docs: {
+                allowed_urls: {
+                    value: ['https://example.com/**'],
+                    reason: 'A separate network pipeline validates these targets.',
+                },
+            },
+        },
+        unmatched: [],
+    },
+    {
+        name: 'a document that names a path does not make it tracked',
+        files: { 'docs/guide.md': 'The runner writes `.reports/output.json`.\n' },
+        settings: {
+            configurations: ['docs', 'structure', 'nextjs'],
+            command_check: [
+                { id: 'reports/collect', command: ['echo'], stage: 'commit', paths: ['.reports/command.json'] },
+            ],
+            ignore: [
+                {
+                    check: 'docs/lychee',
+                    paths: ['.reports/output.json', '.reports/unused.json'],
+                    reason: 'An obsolete source exclusion.',
+                },
+            ],
+        },
+        unmatched: [
+            ['.reports/command.json', '[[command_check]]'],
+            ['.reports/output.json', '[[ignore]]'],
+            ['.reports/unused.json', '[[ignore]]'],
+        ],
+    },
+] as const;

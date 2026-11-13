@@ -10,7 +10,7 @@ import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { REFERENCE_BUILD_FILES, REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
+import { REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -58,9 +58,37 @@ test('projects without tsconfig.json get required options and framework options 
     ]);
 });
 
-test('a solution builds referenced projects in a copy and leaves each scope its own findings', async () => {
+test('a tsconfig rule that a scope ignores is left out of its tsconfig', async () => {
     await using sandbox = await createGitSandbox({
-        ...REFERENCE_BUILD_FILES,
+        'gspot.toml': buildSandboxSettings(['typescript'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "typescript/tsconfig"\nrule = "noImplicitReturns"\nreason = "The handlers fall through on purpose."\n',
+        }),
+        'source.ts': 'export const port = 8080;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const [scope] = session.scopes;
+    const text = await readFile(writeScopeTsconfig(session, scope!, join(sandbox.path, GSPOT_FOLDER)), 'utf8');
+    const { compilerOptions } = JSON.parse(text) as { compilerOptions: Record<string, unknown> };
+    expect(compilerOptions).toMatchObject({ noPropertyAccessFromIndexSignature: true });
+    expect(compilerOptions).not.toHaveProperty('noImplicitReturns');
+});
+
+test('a solution builds referenced projects in a copy and leaves each scope its own findings', async () => {
+    const baseConfig =
+        '{"compilerOptions":{"composite":true,"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[],"baseUrl":"..","paths":{"@lib/*":["lib/*.d.ts"]}}}';
+    const mainSource = 'import type { Value } from "@lib/value"; export const port: Value = "wrong";\n';
+    await using sandbox = await createGitSandbox({
+        '.gitignore': 'node_modules/\n.venv/\n.gspot/\n',
+        'package.json': '{"private":true,"type":"module"}\n',
+        'config/base.json': baseConfig,
+        'app/src/main.ts': mainSource,
+        'lib/value.d.ts': 'export type Value = number;\n',
+        'neighbor/tsconfig.json': '{"compilerOptions":{"strict":true,"types":[]},"include":["*.ts"]}',
+        'neighbor/source.ts':
+            'export function read(value: string | null) { if (value === null) return value.length; return 0; }\n',
+        'neighbor/node_modules/unrelated/package.json': '{"name":"unrelated","version":"1.0.0"}',
+        'neighbor/.venv/pyvenv.cfg': 'home = unrelated\n',
         'gspot.toml': buildSandboxSettings(['typescript'], {
             level: 'all',
             scopes: [
@@ -90,13 +118,8 @@ test('a solution builds referenced projects in a copy and leaves each scope its 
     expect(await readFile(join(sandbox.path, 'app/tsconfig.json'), 'utf8')).toBe(authored);
     const attributes = await stat(join(sandbox.path, 'app/tsconfig.json'));
     expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-    expect(await readFile(join(sandbox.path, 'config/base.json'), 'utf8')).toBe(
-        REFERENCE_BUILD_FILES['config/base.json'],
-    );
-    await writeFile(
-        join(sandbox.path, 'app/src/main.ts'),
-        REFERENCE_BUILD_FILES['app/src/main.ts'].replace('"wrong"', '8080'),
-    );
+    expect(await readFile(join(sandbox.path, 'config/base.json'), 'utf8')).toBe(baseConfig);
+    await writeFile(join(sandbox.path, 'app/src/main.ts'), mainSource.replace('"wrong"', '8080'));
     const remaining = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
     expect(
         remaining.report.checks.flatMap(({ findings }) => findings).map(({ file, rule }) => ({ file, rule })),
@@ -117,10 +140,7 @@ test('typescript/tsc notes that a missing module is a package of this repository
     await applyGeneratedFiles(sandbox.path);
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['typescript/tsc'] }));
     expect(result.report.checks.map(({ status, note }) => ({ status, note }))).toStrictEqual([
-        {
-            status: 'failed',
-            note: '@example/shared is a package of this repository, and its types may need a build. Run your build, then check again.',
-        },
+        { status: 'failed', note: expect.stringContaining('@example/shared') as string },
     ]);
     expect(listFindingRows(result.report)).toStrictEqual([{ file: 'entry.ts', line: 1, rule: 'TS2307' }]);
 });

@@ -4,7 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-nested-functions', noNestedFunctions, {
     valid: [
         'function a() { function b() { function c() { function d() { function e() {} } } } }',
-        'describe("a", () => { it("b", () => { function c() { function d() { function e() { function f() { function g() {} } } } } }); });',
+        'describe.skip("a", () => { it("b", () => { function c() { function d() { function e() { function f() { function g() {} } } } } }); });',
     ],
     invalid: [
         {

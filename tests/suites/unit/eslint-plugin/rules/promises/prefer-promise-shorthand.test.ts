@@ -6,6 +6,7 @@ buildRuleTester().run('prefer-promise-shorthand', preferPromiseShorthand, {
         'new Promise((resolve) => { setTimeout(resolve, 1); });',
         'new Promise((resolve) => resolve());',
         'new Promise((resolve) => { start(); resolve(1); });',
+        'new Promise(start);',
     ],
     invalid: [
         {

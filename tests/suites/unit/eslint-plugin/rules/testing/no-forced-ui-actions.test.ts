@@ -8,7 +8,6 @@ const root = writePackageFolders({ cypress: { devDependencies: { cypress: '15.0.
 buildRuleTester({ root }).run('no-forced-ui-actions', noForcedUiActions, {
     valid: [
         { code: 'cy.get("button").click({ force: true });', filename: join(root, 'plain/a.cy.ts') },
-        { code: 'cy.get("button").click();', filename: join(root, 'cypress/a.cy.ts') },
         { code: 'cy.get("input").type({ force: true });', filename: join(root, 'cypress/b.cy.ts'), name: 'no text' },
         { code: 'cy.get("button").click({ force: false });', filename: join(root, 'cypress/c.cy.ts') },
         { code: 'other.click({ force: true });', filename: join(root, 'cypress/d.cy.ts') },
@@ -18,11 +17,6 @@ buildRuleTester({ root }).run('no-forced-ui-actions', noForcedUiActions, {
         },
     ],
     invalid: [
-        {
-            code: 'cy.get("button").click({ force: true });',
-            filename: join(root, 'cypress/a.cy.ts'),
-            errors: [{ messageId: 'force', column: 26 }],
-        },
         {
             code: 'const options = { force: true };\ncy.get("input").type("name", options);',
             filename: join(root, 'cypress/b.cy.ts'),

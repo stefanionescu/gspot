@@ -5,6 +5,7 @@ import ts from 'typescript';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -62,4 +63,20 @@ test('the extensionless import options reach only the scope that holds JavaScrip
         return config.compilerOptions.moduleResolution;
     });
     expect(selected).toStrictEqual(['Bundler', 'NodeNext']);
+});
+
+test('an ignore whose reason equals a built-in section title keeps its paths in the jsconfig exclude', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            rules: true,
+            tables: '[[ignore]]\npaths = ["legacy/**"]\nreason = "Build output"\n',
+        }),
+        'source.js': 'export const value = 1;\n',
+        'legacy/source.js': 'export const legacy = 1;\n',
+    });
+    const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
+    const content = files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!.content;
+    const jsconfig: unknown = JSON.parse(content);
+    expect(findValueAt(jsconfig, ['exclude'])).toContain('../../../legacy/**');
 });

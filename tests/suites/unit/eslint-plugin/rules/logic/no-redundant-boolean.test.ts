@@ -15,5 +15,6 @@ buildRuleTester().run('no-redundant-boolean', noRedundantBoolean, {
         'value && true;',
         'if (value || false) run();',
         '(value || true) ? first : second;',
+        'const result = false || value;',
     ].map((code) => ({ code, errors: [{ messageId: 'boolean' as const }] })),
 });

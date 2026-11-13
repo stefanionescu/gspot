@@ -1,8 +1,7 @@
-import { describe, test } from 'bun:test';
+import { test } from 'bun:test';
 
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 const SUPABASE_CASES = [
     {
@@ -49,10 +48,8 @@ verify_jwt = true
     },
 } as const;
 
-describe.skipIf(!hasToolBuild('deno'))('Supabase samples', () => {
-    const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);
+const installedSandbox = shareInstalledSandbox(SUPABASE_SANDBOX);
 
-    test.each([...SUPABASE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
-        await assertCheckSample(installedSandbox(), sample);
-    });
+test.each([...SUPABASE_CASES])('$check reports $expected.file and passes after the fix', async (sample) => {
+    await assertCheckSample(installedSandbox(), sample);
 });

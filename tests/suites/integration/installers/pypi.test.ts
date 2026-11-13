@@ -46,7 +46,7 @@ beforeAll(async () => {
 
 afterAll(() => resources.disposeAsync());
 
-test('Python tool project install with uv.toml keeps the authored project files', async () => {
+test('install from an authenticated uv.toml index keeps the authored project files', async () => {
     await using sandbox = await createGitSandbox({});
     await using project = await createIndexedPythonProject(sandbox.path);
     const { rootProject } = project;
@@ -154,6 +154,22 @@ test('install after a changed release age relocks the Python tools', async () =>
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['set', 'dependencies.min_release_age_days', '14']);
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.uvLockfile), 'utf8')).toContain('exclude-newer-span = "P14D"');
+});
+
+test('a repeated install reports No change while a uv-locked project matches its lockfile', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['python']),
+        'pyproject.toml':
+            '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.10"\ndependencies = []\n',
+        'main.py': 'VALUE = 1\n',
+    });
+    const locked = await runCommand(['uv', 'lock'], { cwd: sandbox.path });
+    expect(locked.code, locked.stdout + locked.stderr).toBe(0);
+    commitAll(sandbox.path);
+    await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
+    const repeated = await spawnGspot(sandbox.path, ['install', '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
+    expect(JSON.parse(repeated.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
 });
 
 async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {

@@ -5,23 +5,24 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import cliPackage from '#cli-package' with { type: 'json' };
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text.ts';
 import * as locate from '#cli/tools/locate.ts';
-import type { Finding } from '#cli/types/engine/run.ts';
-import { QUALITY_SEARCH_ARGUMENTS, SCOPE_CHECK_FILES, SCOPE_FINDINGS } from '#tests/config/engine/run.ts';
-import { listFindingRows, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import type { CallRecord } from '#tests/types/setup.ts';
 
-const CANCELED_CHECK_NOTE = 'The check was canceled.';
+function parseJsonLines<Line>(text: string): Line[] {
+    const lines = text.trim().split('\n');
+    return lines.map((line) => JSON.parse(line) as Line);
+}
 
 function selectFailingCheckCode() {
     return {
@@ -75,9 +76,7 @@ test('a check whose code fails because the run was canceled reports the cancella
     expect(await waitForFile(marker)).toBe(true);
     controller.abort(130);
     const result = await running;
-    expect(result.report.checks).toMatchObject([
-        { check: 'site/build', status: 'canceled', note: CANCELED_CHECK_NOTE },
-    ]);
+    expect(result.report.checks).toMatchObject([{ check: 'site/build', status: 'canceled' }]);
     await waitForExit(Number(await readFile(marker, 'utf8')));
 });
 
@@ -100,21 +99,15 @@ test('a run canceled during its tool lookups reports the check canceled', async 
 });
 
 test('a path ignore keeps the check and its fixer off those paths, and a run of only ignored paths is skipped', async () => {
+    const search = ['--text', 'corrected\n', '--match', 'differs', '--log', 'checked.txt', '--', '{files}'];
+    const record = ['--record', 'fixed.txt', '--text', 'corrected\n', '--', '{files}'];
     const settings = buildSandboxSettings([], {
         tables: stringify({
             command_check: [
                 {
                     id: 'project/quality',
-                    command: buildProgramCommand('checks/search', ...QUALITY_SEARCH_ARGUMENTS),
-                    fix: buildProgramCommand(
-                        'fakes/tool',
-                        '--record',
-                        'fixed.txt',
-                        '--text',
-                        'corrected\n',
-                        '--',
-                        '{files}',
-                    ),
+                    command: buildProgramCommand('checks/search', ...search),
+                    fix: buildProgramCommand('fakes/tool', ...record),
                     paths: ['inputs/**'],
                     stage: 'commit',
                 },
@@ -134,25 +127,21 @@ test('a path ignore keeps the check and its fixer off those paths, and a run of 
         'inputs/skip café.txt': 'defect\n',
         'inputs/skip-keep.txt': 'defect\n',
     });
-    const commandArguments = ['check', '--only', 'project/quality', '--fix', '--json'];
-    const corrected = parseCheckReport(await runGspot(sandbox.path, commandArguments));
-    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    const options = buildRunOptions({ cwd: sandbox.path, only: ['project/quality'], fix: true });
+    const corrected = await runChecks(await openSession(sandbox.path), options);
+    expect(corrected.report.exitCode).toBe(0);
     expect(corrected.report.checks[0]).toMatchObject({ status: 'passed', fileCount: 2, findings: [] });
-    const checkedLog = await readFile(join(sandbox.path, 'checked.txt'), 'utf8');
-    const fixedCalls = await readCallRecords(join(sandbox.path, 'fixed.txt'));
+    const checked = await readFile(join(sandbox.path, 'checked.txt'), 'utf8');
+    const fixed = await readFile(join(sandbox.path, 'fixed.txt'), 'utf8');
     const fileLists = [
-        ...checkedLog
-            .trim()
-            .split('\n')
-            .map((line) => JSON.parse(line) as string[]),
-        ...fixedCalls.map((call) => call.arguments),
+        ...parseJsonLines<string[]>(checked),
+        ...parseJsonLines<CallRecord>(fixed).map((call) => call.arguments),
     ];
     for (const files of fileLists)
         expect(files.toSorted(compareText)).toStrictEqual(['inputs/regular.txt', 'inputs/skip-keep.txt']);
-    const checked = await readFile(join(sandbox.path, 'checked.txt'), 'utf8');
-    const fixed = await readFile(join(sandbox.path, 'fixed.txt'), 'utf8');
-    const skipped = parseCheckReport(await runGspot(sandbox.path, [...commandArguments, '--', 'inputs/skip café.txt']));
-    expect(skipped.code, skipped.stdout + skipped.stderr).toBe(0);
+    const paths = ['inputs/skip café.txt'];
+    const skipped = await runChecks(await openSession(sandbox.path), { ...options, paths, pathArguments: paths });
+    expect(skipped.report.exitCode).toBe(0);
     expect(skipped.report.checks[0]).toMatchObject({ status: 'skipped', cause: 'ignore', findings: [] });
     expect(await readFile(join(sandbox.path, 'checked.txt'), 'utf8')).toBe(checked);
     expect(await readFile(join(sandbox.path, 'fixed.txt'), 'utf8')).toBe(fixed);
@@ -186,12 +175,10 @@ test('a path ignore covers its own paths, not the scopes below or beside it', as
         'app/child/cleanup.sh': source,
         'sibling/cleanup.sh': source,
     });
-    const command = ['check', '--only', 'bash/safety', '--json'];
-    const broken = parseCheckReport(await runGspot(sandbox.path, command));
-    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-    expect(listFindingRows(broken.report)).toStrictEqual([
-        { file: 'app/child/cleanup.sh', line: 2, rule: 'recursive-remove' },
-        { file: 'sibling/cleanup.sh', line: 2, rule: 'recursive-remove' },
+    const { report } = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['bash/safety'] }));
+    expect(report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule })))).toStrictEqual([
+        { file: 'app/child/cleanup.sh', rule: 'recursive-remove' },
+        { file: 'sibling/cleanup.sh', rule: 'recursive-remove' },
     ]);
 });
 
@@ -275,7 +262,7 @@ test('a check that fails inside gspot reports the internal error note, and its s
         'gspot.toml': buildSandboxSettings([]),
         'source.txt': 'Input.\n',
     });
-    const note = `repository/encoding stopped because of an internal error in gspot. Report it at ${cliPackage.bugs.url}, with the stack that --verbose prints.`;
+    const note = formatUnexpectedError('repository/encoding');
     const concise = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ only: ['repository/encoding'], selectCheckCode: selectFailingCheckCode }),
@@ -292,23 +279,29 @@ test('a check that fails inside gspot reports the internal error note, and its s
     ]);
 });
 
-test.each([...SCOPE_FINDINGS])("each check in a scope reads only that scope's files: $check", async (row) => {
-    await using sandbox = await createGitSandbox({
-        ...SCOPE_CHECK_FILES,
-        'gspot.toml': buildSandboxSettings(['site', 'supabase', 'translations', 'cloudflare'], {
-            level: 'all',
-            scopes: [{ path: 'apps/backend' }],
-            tables: '[translations]\nmessages_folder = "messages"\nbase_locale = "en"\n[scope.translations]\nmessages_folder = "messages"\n',
-        }),
-    });
-
-    const result = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', row.check, '--json']));
-    expect(result.code, `${row.check}: ${result.stdout}${result.stderr}`).toBe(1);
-    expect(
-        result.report.checks.map(({ scope, findings }) => ({ scope, findings })),
-        row.check,
-    ).toStrictEqual([
-        { scope: '', findings: row.root.map((finding) => matchFields<Finding>(finding)) },
-        { scope: 'apps/backend', findings: row.nested.map((finding) => matchFields<Finding>(finding)) },
-    ]);
-});
+test.each([
+    { name: 'no cause', options: undefined, cause: 'condition' },
+    { name: 'the cause replaced', options: { skipCause: 'replaced' as const }, cause: 'replaced' },
+])(
+    'a check that stops as skipped reports the skip cause it gives, condition by default: $name',
+    async ({ options, cause }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings([]),
+            'source.txt': 'Input.\n',
+        });
+        const { report } = await runChecks(
+            await openSession(sandbox.path),
+            buildRunOptions({
+                only: ['repository/encoding'],
+                selectCheckCode: () => ({
+                    check: () => {
+                        throw new CheckStop('skipped', 'No input.', options);
+                    },
+                }),
+            }),
+        );
+        expect(report.checks.map(({ status, cause: reported }) => ({ status, cause: reported }))).toStrictEqual([
+            { status: 'skipped', cause },
+        ]);
+    },
+);

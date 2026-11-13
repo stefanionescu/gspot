@@ -9,7 +9,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { FORMAT_SETTINGS, PRETTIER_PATH_IGNORE } from '#tests/config/commands/setup.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -123,10 +122,18 @@ test('removing rules from a fresh clone removes the managed AGENTS.md block', as
 
 test('an ignore of every path skips the check and keeps its configured tool and files', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
-    await using sandbox = await createGitSandbox({ 'gspot.toml': FORMAT_SETTINGS, 'sample.json': '{"value":1}\n' });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['format']),
+        'sample.json': '{"value":1}\n',
+    });
     const initial = await runGspot(sandbox.path, ['install', '--json']);
     expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-    await writeFile(join(sandbox.path, 'gspot.toml'), FORMAT_SETTINGS + PRETTIER_PATH_IGNORE);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['format'], {
+            tables: '[[ignore]]\ncheck = "format/prettier"\npaths = ["**/*.json"]\nreason = "These files retain generated formatting."\n',
+        }),
+    );
     const removed = await runGspot(sandbox.path, ['install', '--json']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const report = installOutputSchema.parse(JSON.parse(removed.stdout));

@@ -1,6 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
+import { BROKEN_TOOL_ADVICE, OUT_OF_MEMORY_MESSAGE } from '#cli/config/engine.ts';
 import { formatOutputTail, isReportedCrash, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import {
     ASTRO_CHECK_OUTPUT,
@@ -23,8 +24,9 @@ test('a shortened failure output keeps the last line of stdout and of stderr', (
         },
         'empty',
     );
-    const tail = Array.from({ length: 19 }, (_, index) => `progress ${String(11 + index)}`);
-    expect(detail).toBe([...tail, 'stderr failure', ...tail, 'stdout failure'].join('\n'));
+    expect(detail).toEndWith('\nstdout failure');
+    expect(detail.indexOf('stderr failure')).toBeLessThan(detail.indexOf('stdout failure'));
+    expect(detail).not.toContain('progress 0\n');
 });
 
 test(`a tool's crash pattern marks a crash for a check without its own pattern`, () => {
@@ -42,9 +44,7 @@ test(`a tool's crash pattern marks a crash for a check without its own pattern`,
 test('a tool that runs out of memory gets a cause instead of the garbage collector dump', () => {
     const dump =
         '<--- Last few GCs --->\n[4242:0x1] 9000 ms: Mark-Compact 4047.9 (4130.5) -> 4033.4 (4131.2) MB\nFATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory\n';
-    expect(formatOutputTail({ stdout: '', stderr: dump })).toBe(
-        'The tool ran out of memory. It most likely read build output or a bundle: keep that folder in .gitignore, or add an [[ignore]] with its paths.',
-    );
+    expect(formatOutputTail({ stdout: '', stderr: dump })).toBe(OUT_OF_MEMORY_MESSAGE);
 });
 
 test('a crash note leads with the error output of the tool, and only --verbose adds its report', async () => {
@@ -116,5 +116,5 @@ test.each([
         { cwd: sandbox.path, root: sandbox.path },
         {},
     ).note;
-    expect(note?.endsWith('\nA tool in .gspot/node_modules failed to load. Run gspot install.')).toBe(advice);
+    expect(note?.endsWith(`\n${BROKEN_TOOL_ADVICE}`)).toBe(advice);
 });

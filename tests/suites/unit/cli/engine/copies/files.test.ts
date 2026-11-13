@@ -9,7 +9,6 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { TEST_WORKSPACE_FILES, WORKSPACE_SOURCE_FILES } from '#tests/config/engine/files.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -48,7 +47,16 @@ test('a copy isolates workspace sources and links external dependencies and exec
 });
 
 test('a workspace member that is no scope brings its own dependency store into the copy', async () => {
-    await using sandbox = await createGitSandbox({ ...TEST_WORKSPACE_FILES, 'gspot.toml': buildSandboxSettings([]) });
+    const prettierPackage = '{"name":"prettier"}';
+    const files = {
+        'package.json': '{"private":true,"workspaces":["tests"]}',
+        'tests/package.json': '{"name":"tests"}',
+        'tests/app.js': 'import "vue";',
+        'node_modules/.bun/vue@3/node_modules/vue/package.json': '{"name":"vue"}',
+        [GSPOT_PATHS.npmProject]: '{"private":true}',
+        [`${GSPOT_PATHS.nodeModules}/prettier/package.json`]: prettierPackage,
+    } as const;
+    await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': buildSandboxSettings([]) });
 
     await mkdir(join(sandbox.path, 'tests/node_modules'));
     await symlink('../../node_modules/.bun/vue@3/node_modules/vue', join(sandbox.path, 'tests/node_modules/vue'));
@@ -57,9 +65,11 @@ test('a workspace member that is no scope brings its own dependency store into t
     const planned = planSandboxCheck(session, 'gspot/generated-files', { paths });
     using copy = await createCheckCopy(session, planned, [GSPOT_PATHS.npmProject]);
     const scratch = copy.path;
-    expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe('{"name":"vue"}');
+    expect(await readFile(join(scratch, 'tests/node_modules/vue/package.json'), 'utf8')).toBe(
+        files['node_modules/.bun/vue@3/node_modules/vue/package.json'],
+    );
     expect(await readFile(join(scratch, `${GSPOT_PATHS.nodeModules}/prettier/package.json`), 'utf8')).toBe(
-        '{"name":"prettier"}',
+        prettierPackage,
     );
 });
 
@@ -97,13 +107,12 @@ test('a dependency link that points at nothing is left out of the copy', async (
     expect(await readFile(join(copy.path, 'node_modules/.bin/tool'), 'utf8')).toBe('#!/bin/sh\n');
 });
 
-test("a check's copy holds its files and dependencies, plus an extra file when asked", async () => {
+test("a check's copy holds its files, plus an extra file when asked", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'selected.js': 'export const selected = 1;',
         'unselected.js': 'export const unselected = 2;',
         'document.json': '{"value":3}',
-        'node_modules/tool/value.js': 'export const dependency = 4;',
     });
 
     const session = await openSession(sandbox.path);
@@ -146,11 +155,33 @@ test('the copy of a check that runs per file leaves out a tracked file over the 
 });
 
 test('workspace dependency copies of a revision keep exactly the sources the check imports', async () => {
+    const files = {
+        'package.json': '{"private":true,"workspaces":["apps/*","packages/*"],"dependencies":{"unused":"workspace:*"}}',
+        'bun.lock': '{}',
+        '.gitignore': 'node_modules/\ndist/\n',
+        'apps/web/package.json': '{"name":"web","dependencies":{"core":"workspace:*"}}',
+        'apps/web/main.js': 'import {value} from "core"; console.log(value);',
+        'packages/core/package.json':
+            '{"name":"core","type":"module","main":"value.js","dependencies":{"utility":"workspace:*"}}',
+        'packages/core/value.js': 'import {suffix} from "utility"; export const value = "staged" + suffix;',
+        'packages/utility/package.json':
+            '{"name":"utility","type":"module","main":"value.js","dependencies":{"core":"workspace:*"}}',
+        'packages/utility/value.js': 'export const suffix = " dependency";',
+        'packages/unused/package.json': '{"name":"unused","type":"module"}',
+        'packages/unused/private.txt': 'Unselected workspace bytes',
+        'packages/unused/private.js': 'export const unused = 1;',
+        'tsconfig.json':
+            '{"compilerOptions":{"allowJs":true,"moduleResolution":"Bundler","module":"ESNext","paths":{"#alias/*":["packages/aliased/*"]}}}',
+        'apps/web/tsconfig.json': '{"extends":"../../tsconfig.json","include":["*.js"]}',
+        'apps/web/alias.js': 'import {aliasValue} from "#alias/value"; export const value = aliasValue;',
+        'packages/aliased/package.json': '{"name":"aliased","type":"module"}',
+        'packages/aliased/value.js': 'export const aliasValue = "alias source";',
+    } as const;
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             scopes: [{ path: 'apps/web', configurations: ['javascript'] }],
         }),
-        ...WORKSPACE_SOURCE_FILES,
+        ...files,
     });
 
     await mkdir(join(sandbox.path, 'node_modules'));
@@ -171,7 +202,19 @@ test('workspace dependency copies of a revision keep exactly the sources the che
     expect(output.code, output.stderr).toBe(0);
     expect(output.stdout.trim()).toBe('staged dependency');
     expect(await readFile(join(copy.path, 'packages/aliased/value.js'), 'utf8')).toBe(
-        WORKSPACE_SOURCE_FILES['packages/aliased/value.js'],
+        files['packages/aliased/value.js'],
     );
     expect(existsSync(join(copy.path, 'packages/unused/private.txt'))).toBe(false);
+});
+
+test('a canceled check copy removes its folder', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'selected.js': 'export const selected = 1;',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'format/prettier');
+    session.cancelSignal = AbortSignal.abort();
+    await captureRejection(createCheckCopy(session, planned));
+    expect(existsSync(join(sandbox.path, '.gspot-copies'))).toBe(false);
 });

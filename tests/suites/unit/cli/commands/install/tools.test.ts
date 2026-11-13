@@ -7,11 +7,11 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 
 import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import * as processes from '#cli/system/processes.ts';
 import * as installers from '#cli/tools/installers/install.ts';
-import { FAILED_NPM_VERSION } from '#tests/config/commands/setup.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
@@ -38,7 +38,9 @@ test('writing the generated files starts no npm, and install reports a failed np
         'entry.sh': 'echo example\n',
     });
 
-    using npm = fakeCommands('npm', () => Promise.resolve(buildProcessResult(FAILED_NPM_VERSION)));
+    using npm = fakeCommands('npm', () =>
+        Promise.resolve(buildProcessResult({ code: 7, stderr: 'version lookup failed' })),
+    );
     await applyGeneratedFiles(sandbox.path);
     expect(npm).not.toHaveBeenCalled();
     const before = await readTree(sandbox.path);
@@ -136,4 +138,29 @@ test('an install that leaves a tool missing says so in its summary', async () =>
     const result = await runGspot(sandbox.path, ['install', '--json']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
     expect(JSON.parse(result.stdout)).toMatchObject({ summary: TOOLS_MISSING_MESSAGE });
+});
+
+test('a refused pinned package manager keeps project files and gives no install loop', async () => {
+    const files = { 'package.json': '{"packageManager":"bun@0.0.0"}\n' };
+    await using sandbox = await createGitSandbox({
+        ...files,
+        source: 'kept\n',
+        'gspot.toml': buildSandboxSettings([]),
+    });
+    await applyGeneratedFiles(sandbox.path);
+    const previous = await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8');
+    const run = processes.runProcess;
+    using _boundary = spyOn(processes, 'runProcess').mockImplementation((command, options) =>
+        command[0] === 'mise'
+            ? Promise.resolve(buildProcessResult({ code: 1, stderr: 'The requested version is not available.' }))
+            : run(command, options),
+    );
+    const failure = await runGspot(sandbox.path, ['install', '--json']);
+    expect(failure.code).toBe(2);
+    expect(JSON.parse(failure.stdout)).toMatchObject({ error: 'tool' });
+    for (const [path, content] of Object.entries(files))
+        expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(content);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.npmProject), 'utf8')).toBe(previous);
+    expect(existsSync(join(sandbox.path, `${GSPOT_FOLDER}/bun.lock`))).toBe(false);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.nodeModules))).toBe(false);
 });

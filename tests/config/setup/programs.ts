@@ -1,7 +1,5 @@
 import { SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
 
-export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
-
 export const ROOT_LABEL = 'the root';
 
 export const GSPOT_ENVIRONMENT = { NO_COLOR: '1', CI: '1' } as const;
@@ -17,32 +15,6 @@ export const OFFLINE_ENVIRONMENT = {
     no_proxy: undefined,
     MISE_OFFLINE: '1',
 } as const;
-
-export const PROGRAM_NAMES = [
-    'fakes/tool',
-    'checks/search',
-    'checks/replacement',
-    'checks/arguments',
-    'checks/contents',
-    'checks/staged',
-    'checks/dependency',
-    'processes/output',
-    'processes/descendant',
-    'processes/process-group',
-    'checks/stylelint',
-    'processes/modules',
-    'processes/node-version',
-    'processes/cli',
-    'processes/command',
-    'fakes/git',
-    'fakes/swift',
-    'fakes/xcodebuild',
-    'processes/revisions',
-    'processes/assets',
-    'fakes/generator',
-    'fakes/site-build',
-    'fakes/package-bin',
-] as const;
 
 export const WAIT_INTERVAL_MILLISECONDS = 60_000;
 

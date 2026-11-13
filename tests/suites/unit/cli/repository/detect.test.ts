@@ -5,13 +5,13 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectConditions, detectConfigurations } from '#cli/repository/detect.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
-import { TRACKED_SOURCE } from '#tests/config/repository/files.ts';
+import { PYTHON_DEPENDENCY_CASES, TRACKED_SOURCE } from '#tests/config/repository.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -130,8 +130,17 @@ test('detection proposes a language from an extension and the always-selected co
     const names = new Set(plans.map(({ configuration }) => configuration.name));
     const evidence = plans.map(({ configuration, ...found }) => ({ ...found, name: configuration.name }));
     expect(evidence).toContainEqual({ name: 'bash', evidence: '1 .sh file', count: 1 });
-    expect(evidence).toContainEqual({ name: 'gspot', evidence: 'every repository' });
+    expect(evidence).toContainEqual({ name: 'gspot', evidence: EVERY_REPOSITORY_EVIDENCE });
     expect(listAlwaysSelected().filter((name) => !names.has(name))).toStrictEqual([]);
+});
+
+test('a nested scope proposes no configuration only because it is always selected', () => {
+    const plans = detectConfigurations(
+        { root: process.cwd(), files: [{ path: 'app/a.sh', ...TRACKED_SOURCE }], dependencyFiles: [] },
+        'app',
+    );
+    expect(plans.map(({ configuration }) => configuration.name)).toContain('bash');
+    expect(plans.filter(({ evidence }) => evidence === EVERY_REPOSITORY_EVIDENCE)).toStrictEqual([]);
 });
 
 test('TypeScript declarations in .d.ts need a tsconfig.json to propose typescript', async () => {
@@ -285,4 +294,28 @@ test('site detection excludes a server framework even when a sitemap is present'
         'public/sitemap.xml': '<urlset/>',
     });
     expect(await detectSandboxConfigurations(sandbox.path)).not.toContain('site');
+});
+
+test('detection leaves the tool projects in .gspot out, and reads your pyproject.toml', async () => {
+    const python = '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["pytest==8.4.2"]\n';
+    await using sandbox = await createGitSandbox({
+        [GSPOT_PATHS.pythonProject]: python,
+        [GSPOT_PATHS.npmProject]: '{"dependencies":{"react":"19.1.1"}}',
+    });
+    const before = await detectSandboxConfigurations(sandbox.path);
+    expect(before).not.toContain('pytest');
+    expect(before).not.toContain('react');
+    await writeFile(join(sandbox.path, 'pyproject.toml'), python);
+    expect(await detectSandboxConfigurations(sandbox.path)).toContain('pytest');
+});
+
+test('detection names each test framework that the package installs', async () => {
+    const dependencies = { '@nestjs/core': '11.2.3', jest: '30.2.0' };
+    await using sandbox = await createGitSandbox({ 'package.json': JSON.stringify({ dependencies }) });
+    const initial = await detectSandboxConfigurations(sandbox.path);
+    expect(initial).toContain('jest');
+    expect(initial).not.toContain('vitest');
+    const added = JSON.stringify({ dependencies: { ...dependencies, vitest: '4.1.11' } });
+    await writeFile(join(sandbox.path, 'package.json'), added);
+    expect(await detectSandboxConfigurations(sandbox.path)).toContain('vitest');
 });

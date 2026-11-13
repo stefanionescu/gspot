@@ -1,19 +1,19 @@
-import { chmod, rm, writeFile } from 'node:fs/promises';
+import { chmod, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { listRepositoryFiles, readLinguistPatterns, readRepositoryRoot } from '#cli/repository/read.ts';
-import { listRevisionFiles } from '#cli/repository/revisions/files.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository/files.ts';
+import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
@@ -36,7 +36,7 @@ test('a Git ownership refusal while finding the root stays a Git error', async (
     expect(error.message).toContain(refused.stderr.trim());
 });
 
-test('a broken Git index is reported instead of a folder walk', async () => {
+test('a broken Git index is a Git error', async () => {
     await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
 
     const cwd = sandbox.path;
@@ -47,16 +47,6 @@ test('a broken Git index is reported instead of a folder walk', async () => {
     await writeFile(join(cwd, '.git', 'index'), 'corrupt index');
     const error = await captureRejection(readTestRepository(cwd));
     expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
-});
-
-test('a .git file that points at a missing folder is reported, not read as a folder without Git', async () => {
-    await using sandbox = await testdir({
-        '.git': 'gitdir: missing\n',
-        'source.ts': 'export {};\n',
-    });
-
-    const listError = await captureRejection(readTestRepository(sandbox.path));
-    expect(listError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index', async () => {
@@ -76,15 +66,10 @@ test.skipIf(!isWindows)('on Windows the executable bit comes from the Git index'
     ]);
 });
 
-test('an unmerged index keeps the working file readable but refuses a staged revision', async () => {
+test('an unmerged index lists each stage and keeps the working file readable', async () => {
     await using sandbox = await createGitSandbox({ 'source.txt': 'working content\n' });
 
-    const hash = runGitStep(sandbox.path, ['hash-object', '-w', 'source.txt']);
-    const update = runBlockingCommand(['git', 'update-index', '--index-info'], {
-        cwd: sandbox.path,
-        stdin: [1, 2, 3].map((stage) => `100644 ${hash} ${String(stage)}\tsource.txt\n`).join(''),
-    });
-    expect(update.code, update.stderr).toBe(0);
+    stageUnmergedFile(sandbox.path, 'source.txt');
     const { index } = await readTestRepository(sandbox.path);
     expect(index.map(({ path, stage }) => ({ path, stage }))).toStrictEqual([
         { path: 'source.txt', stage: 1 },
@@ -95,9 +80,6 @@ test('an unmerged index keeps the working file readable but refuses a staged rev
     expect(files).toMatchObject([
         { path: 'source.txt', size: Buffer.byteLength('working content\n'), executable: false, isSymlink: false },
     ]);
-    const error = await captureRejection(listRevisionFiles(sandbox.path, { kind: 'index' }));
-    expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
-    expect(error.message).toContain('source.txt');
 });
 
 test('the index keeps deleted tracked paths and encoded names and leaves out untracked files', async () => {
@@ -141,4 +123,17 @@ test('a tracked .gitattributes that is missing from the working tree is refused,
             message: expect.stringContaining('app/.gitattributes') as string,
         }),
     );
+});
+
+test('a gitlink is a submodule path and not a tracked file', async () => {
+    await using sandbox = await testdir({ 'source.txt': 'source\n' });
+    await using outside = await testdir({ 'source.txt': 'outside source\n' });
+    const commitId = commitAll(sandbox.path);
+    const path = 'vendor/external project';
+    runGitStep(sandbox.path, ['update-index', '--add', '--cacheinfo', `160000,${commitId},${path}`]);
+    await mkdir(join(sandbox.path, 'vendor'));
+    await symlink(outside.path, join(sandbox.path, path), 'dir');
+    const { index, files } = await readTestRepository(sandbox.path);
+    expect(listSubmodulePaths(index)).toStrictEqual([path]);
+    expect(files.map((file) => file.path)).toStrictEqual(['source.txt']);
 });

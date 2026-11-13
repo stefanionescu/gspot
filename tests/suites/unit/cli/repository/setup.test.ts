@@ -4,22 +4,24 @@ import { dirname, join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { readHooks, readRepositorySetup } from '#cli/repository/setup.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    HOOK_FOLDER_FILES,
-    LINKED_RUFF_SECTION,
-    PRETTIER_SETTINGS_FILES,
-    SIMPLE_GIT_HOOKS_PACKAGES,
-} from '#tests/config/repository/setup.ts';
+import { LINKED_RUFF_SECTION, SIMPLE_GIT_HOOKS_PACKAGES } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
 test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
-    await using sandbox = await createGitSandbox(PRETTIER_SETTINGS_FILES);
+    await using sandbox = await createGitSandbox({
+        'src/.prettierrc.json': '{"semi":false}',
+        'vendor/.prettierrc.json': '{"semi":true}',
+        [`${GSPOT_FOLDER}/.prettierrc.json`]: '{"tabWidth":8}',
+        [GSPOT_PATHS.npmProject]: 'unowned malformed output',
+    });
 
     const repository = await readTestRepository(sandbox.path);
     const discovered = await readRepositorySetup(createRunCache(sandbox.path), { files: repository.files });
@@ -82,7 +84,13 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
 });
 
 test('hook discovery reports only the hook folder that core.hooksPath points into, and leaves gspot and task scripts out', async () => {
-    await using sandbox = await createGitSandbox(HOOK_FOLDER_FILES);
+    await using sandbox = await createGitSandbox({
+        '.githooks/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.husky/pre-commit': '#!/bin/sh\nexit 0\n',
+        '.git-hooks/pre-commit': '#!/bin/sh\nexit 0\n',
+        [`${GSPOT_PATHS.hooks}/pre-commit`]: '#!/bin/sh\nexit 0\n',
+        '.mise/tasks/hook/pre-commit': '#!/bin/sh\nexit 0\n',
+    });
 
     const { hooks } = await readHooks({ root: sandbox.path });
     expect(hooks).toStrictEqual([]);
@@ -159,7 +167,7 @@ test('hook discovery lists a hooks folder once when core.hooksPath names it by i
     expect(hooks).toStrictEqual([{ kind: 'hooksPath', path: '.githooks', files: ['pre-commit'] }]);
 });
 
-test('hook discovery includes executable Git hooks and leaves gspot hooks out', async () => {
+test('with core.hooksPath at .gspot/hooks, hook discovery reports no other hooks', async () => {
     await using sandbox = await createGitSandbox({ '.git/hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await chmod(join(sandbox.path, '.git/hooks/pre-commit'), 0o755);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);

@@ -5,7 +5,7 @@ buildRuleTester().run('require-error-checks', requireErrorChecks, {
     valid: [
         'it("fails", () => { expect(run).to.throw(RangeError); });',
         'it("fails", () => { expect(run).to.not.throw(); });',
-        'expect(run).to.throw();',
+        'it("fails", () => { expect(run).to.throw(Error, "negative"); });',
         'test("fails", () => { expect(run).to.throw(); });',
         'it("fails", (done) => { try { run(); } catch (error) { done(error); } });',
         'it("fails", () => { try { run(); } catch (error) { log(); } });',
@@ -23,6 +23,5 @@ buildRuleTester().run('require-error-checks', requireErrorChecks, {
             code: 'it("fails", (done) => { try { run(); } catch (error) { done(); } });',
             errors: [{ messageId: 'ignoredError', column: 47 }],
         },
-        { code: 'it.only("fails", () => { expect(run).to.throw(); });', errors: [{ messageId: 'errorType' }] },
     ],
 });

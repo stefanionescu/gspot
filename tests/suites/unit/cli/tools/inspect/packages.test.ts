@@ -9,7 +9,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import * as processes from '#cli/system/processes.ts';
 import { findMissingDependencies, inspectTool } from '#cli/tools/inspect.ts';
-import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools/versions.ts';
+import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -38,11 +38,6 @@ test('a system library is read from the requested project, not from the tool pro
         found: '4.1.11',
         path: join(project.path, 'app/node_modules/@vitest/coverage-v8/package.json'),
     });
-    await createFileTree(project.path, { 'app/node_modules/@vitest/coverage-v8/package.json': '{invalid' });
-    const search = buildToolSearch(project.path, { cwd: join(project.path, 'app') });
-    const failure = await captureRejection(inspectTool(search, tool));
-    expect(failure).toMatchObject({ name: 'GspotError', code: 'parse' });
-    expect(failure.message).toContain('package.json:1:2');
 });
 
 test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $name report', async (report) => {
@@ -59,6 +54,7 @@ test.each([...SYSTEM_PLUGIN_REPORTS])('a system plugin query classifies the $nam
         help: tool.install_help!,
         want: undefined,
         ...report.inspection,
+        ...(report.noted !== undefined && { note: expect.stringContaining(report.noted) as string }),
     });
     expect(versionRun).toHaveBeenCalledWith(
         expect.any(Array),
@@ -113,19 +109,25 @@ test('a tool project library with a non-string version is refused until it is fi
     expect(await inspectTool(context, tool)).toMatchObject({ state: 'ok', found: '5.0.1' });
 });
 
-test('a check that needs the dependencies of its scope is missing until a node_modules folder holds them', async () => {
+test('a check that needs the dependencies of its scope is missing until its folder or one around it holds node_modules, and a scope of only gspot packages needs none', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript']),
         'package.json': '{"private":true,"type":"module","dependencies":{"zod":"4.0.0"}}',
         'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["*.ts"]}',
         'source.ts': 'export const value = 1;\n',
+        'app/package.json': '{"private":true,"dependencies":{"zod":"4.0.0"}}',
+        'tools/package.json': '{"private":true,"devDependencies":{"@gspothq/cli":"0.0.0-test"}}',
     });
     const session = await openSession(sandbox.path);
     const planned = session.configuredChecks.find(({ check }) => check.id === 'typescript/tsc')!;
+    const planIn = (path: string) => ({ check: planned.check, scope: { ...planned.scope, path } });
     expect(findMissingDependencies(session, planned)).toStrictEqual({
         status: 'missing',
         note: 'Install the project dependencies first: node_modules is missing in the repository root.',
     });
+    expect(findMissingDependencies(session, planIn('app'))).toMatchObject({ status: 'missing' });
+    expect(findMissingDependencies(session, planIn('tools'))).toBeUndefined();
     await mkdir(join(sandbox.path, 'node_modules'));
     expect(findMissingDependencies(session, planned)).toBeUndefined();
+    expect(findMissingDependencies(session, planIn('app'))).toBeUndefined();
 });

@@ -12,6 +12,7 @@ buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {
         'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = _.cloneDeep(settings.theme); copy.theme.font.size = 1; }',
         'import _ from "lodash"; function save(settings) { const copy = _.clone(settings); copy.theme = _.clone(settings.theme); copy.theme.color = "red"; }',
         'import _ from "lodash"; function f(k) { const copy = _.clone(settings); switch (k) { case 1: copy.theme = {}; copy.theme.color = \'red\'; break; } }',
+        'import _ from "lodash"; const copy = _.clone(...sources); copy.theme.color = "red";',
     ],
     invalid: [
         {

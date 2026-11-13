@@ -5,18 +5,16 @@ import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { RUFF_SUPPRESSIONS } from '#tests/config/integration/general.ts';
 import {
     PARAMETER_LIMIT_CASE,
     PYTEST_SAMPLE,
-    RUFF_FORMAT_CASES,
     RUFF_SANDBOX,
+    RUFF_SUPPRESSIONS,
     RUFF_VERSION_CASES,
     UNUSED_IMPORT_SOURCE,
     VERSION_SOURCE,
 } from '#tests/config/integration/python.ts';
 import { listFindingRows, parseCheckReport, readSuppressionResults, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
@@ -26,7 +24,6 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
-import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
@@ -103,20 +100,22 @@ quotes = "double"
         buildSandboxChanges(RUFF_SANDBOX.files, sourceFiles),
     );
 
-    for (const { file, formatted } of RUFF_FORMAT_CASES) {
+    const unformatted = parseCheckReport(
+        await spawnGspot(root, ['check', 'sample.py', '--only', 'python/ruff-format', '--json']),
+    );
+    expect(
+        unformatted.report.checks.flatMap(({ findings }) => findings.map(({ file, fixable }) => ({ file, fixable }))),
+    ).toStrictEqual([{ file: 'sample.py', fixable: true }]);
+    const ruff = buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff');
+    const formats = [
+        { file: 'sample.py', formatted: "VALUE = 'example'\n" },
+        { file: 'app/sample.py', formatted: 'VALUE = "example"\n' },
+    ];
+    for (const { file, formatted } of formats) {
         const fixed = await spawnGspot(root, ['check', file, '--only', 'python/ruff-format', '--fix', '--json']);
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await readFile(join(root, file), 'utf8')).toBe(formatted);
-        const editor = runBlockingCommand(
-            [
-                buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
-                'format',
-                '--check',
-                '--no-cache',
-                file,
-            ],
-            { cwd: root, env: {} },
-        );
+        const editor = runBlockingCommand([ruff, 'format', '--check', '--no-cache', file], { cwd: root, env: {} });
         expect(editor.code, editor.stdout + editor.stderr).toBe(0);
     }
 });
@@ -236,29 +235,20 @@ function listScopeRules(
 }
 
 test('Ruff reports a function past the default parameter limit', async () => {
-    const scenario = PARAMETER_LIMIT_CASE;
+    const { language, file, source, finding } = PARAMETER_LIMIT_CASE;
     const { root } = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),
         buildSandboxChanges(RUFF_SANDBOX.files, {
-            'gspot.toml': buildSandboxSettings([scenario.language], { level: 'all' }),
-            [scenario.file]: scenario.source,
+            'gspot.toml': buildSandboxSettings([language], { level: 'all' }),
+            [file]: source,
         }),
     );
-    const result = runBlockingCommand(
-        [
-            buildVenvExecutablePath(join(root, GSPOT_PATHS.pythonEnvironment), 'ruff'),
-            'check',
-            '--config',
-            getManifestTarget('python', 'ruff.toml'),
-            '--output-format',
-            'json',
-            scenario.file,
-        ],
-        { cwd: root },
-    );
-    const findings = JSON.parse(result.stdout) as LinterJsonFinding[];
-    expect(findings.filter((finding) => finding.code === 'PLR0913')).toMatchObject([scenario.finding]);
+    const result = parseCheckReport(await spawnGspot(root, ['check', file, '--only', 'python/ruff', '--json']));
+    expect(result.code, result.stdout + result.stderr).toBe(1);
+    expect(listFindingRows(result.report).filter(({ rule }) => rule === finding.rule)).toStrictEqual([
+        { file, ...finding },
+    ]);
 });
 
 test('suppression detection agrees with Ruff on every noqa comment form and place', async () => {

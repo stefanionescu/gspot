@@ -3,34 +3,6 @@ console.log("result");
 process.exit(0);
 `;
 
-export const ENGINE_SCOPES = `[[tools.eslint.override]]
-paths = ["browser/**"]
-runtime = "browser"
-[[scope]]
-path = "old"
-[[scope]]
-path = "new"
-[[scope]]
-path = "old/legacy"
-[[scope]]
-path = "browser"
-`;
-
-export const ENGINE_PACKAGES = {
-    'package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
-    'old/package.json': '{"private":true,"type":"module","engines":{"node":">=18.0.0"}}',
-    'new/package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
-    'old/legacy/package.json': '{"private":true,"type":"module","engines":{"node":">=22.0.0"}}',
-} as const;
-
-export const ENGINE_PATHS = [
-    'old/source.js',
-    'old/source.cjs',
-    'new/source.js',
-    'old/legacy/source.js',
-    'browser/source.js',
-] as const;
-
 const NODE_SCRIPT_SOURCE = `#!/usr/bin/env node
 const unused = 1;
 console.log(process.cwd());
@@ -150,12 +122,6 @@ export const EXTENSIONLESS_SCRIPT_CASES = [
         everyLevel: [{ ruleId: 'no-undef', line: 2 }],
     },
     {
-        file: 'scripts/engine',
-        source: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
-        corrected: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
-        everyLevel: [],
-    },
-    {
         file: 'child/scripts/engine',
         source: '#!/usr/bin/env node\nconsole.log(Object.groupBy([1], String));\n',
         corrected: '#!/usr/bin/env node\nconsole.log(Object.fromEntries([["group", [1]]]));\n',
@@ -220,10 +186,3 @@ export const EXTENSIONLESS_SCRIPT_RULES = [
     'n/no-unsupported-features/es-builtins',
     'n/file-extension-in-import',
 ] as const;
-
-export const ENGINE_FINDINGS = [
-    { ruleId: 'n/no-unsupported-features/es-builtins', line: 1 },
-    { ruleId: 'n/no-unsupported-features/node-builtins', line: 2 },
-] as const;
-
-export const ENGINE_SOURCE = 'export const grouped = Object.groupBy([1], String);\nprocess.loadEnvFile();\n';

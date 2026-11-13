@@ -8,29 +8,27 @@ import { readMigrations, selectFrozenMigrations } from '#cli/configurations/data
 import { planChecks } from '#cli/engine/plan.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
-import {
-    DEFAULT_MIGRATION_FOLDER_FILES,
-    MALFORMED_MIGRATION_PATH,
-    POSTGRES_CHECKS,
-    ROW_SECURITY_SQL,
-} from '#tests/config/configurations/database.ts';
-import { FROZEN_MIGRATION_CASES, FROZEN_MIGRATION_PATHS } from '#tests/config/parsers/comments.ts';
-import { getBuiltInCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { FROZEN_MIGRATION_CASES, FROZEN_MIGRATION_PATHS } from '#tests/config/configurations/database.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, and the other postgres checks skip', async () => {
+    const path = 'migrations/1_teams.sql';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['postgres'], {
             level: 'all',
             tables: '[postgres]\nfrozen_through = "all"\nclient_schemas = ["public"]\n',
         }),
-        [MALFORMED_MIGRATION_PATH]: 'CREATE TABLE ;',
+        [path]: 'CREATE TABLE ;',
     });
-    const checks = [...POSTGRES_CHECKS];
+    const checks = (readConfigurations().get('postgres')?.checks ?? [])
+        .filter(({ command }) => command === undefined)
+        .map(({ id }) => id);
+    expect(checks).toContain('postgres/migration-order');
 
     const failed = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: checks }));
 
@@ -38,7 +36,7 @@ test('postgres/migration-order reports a migration that does not parse at its li
     expect(syntax?.status).toBe('failed');
     expect(syntax?.findings.map(({ file, line, column, rule }) => ({ file, line, column, rule }))).toStrictEqual([
         {
-            file: MALFORMED_MIGRATION_PATH,
+            file: path,
             line: 1,
             column: 14,
             rule: 'syntax',
@@ -64,12 +62,18 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['postgres'], { scopes: [{ path: 'app', configurations: ['postgres'] }] });
     await createFileTree(sandbox.path, { 'gspot.toml': settings });
+    const files = {
+        'supabase/migrations/1_first.sql': 'CREATE TABLE first_table(id int);',
+        'db/migrations/2_second.sql': 'CREATE TABLE second_table(id int);',
+        'migrations/3_third.sql': 'CREATE TABLE third_table(id int);',
+        'migrations/4_rollback.down.sql': 'invalid SQL;',
+        'custom/5_custom.sql': 'CREATE TABLE custom_table(id int);',
+        'custom_extra/6_ignored.sql': 'invalid SQL;',
+    };
     for (const folder of ['', 'app'])
         await createFileTree(
             sandbox.path,
-            Object.fromEntries(
-                Object.entries(DEFAULT_MIGRATION_FOLDER_FILES).map(([path, text]) => [join(folder, path), text]),
-            ),
+            Object.fromEntries(Object.entries(files).map(([path, text]) => [join(folder, path), text])),
         );
 
     const session = await openSession(sandbox.path);
@@ -111,31 +115,8 @@ test.each(['prisma/migrations/20260101000000_init/migration.sql', 'drizzle/0001_
         expect(migrations.map(({ version }) => version)).toStrictEqual([
             path.startsWith('prisma/') ? '20260101000000' : '0001',
         ]);
-        expect(
-            await getBuiltInCheck('postgres/grants')(session, planSandboxCheck(session, 'postgres/grants')),
-        ).toMatchObject([{ file: path, rule: 'grant-all' }]);
     },
 );
-
-test('unpadded migration versions replay in numeric order', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['postgres']),
-        'migrations/9_create.sql': 'CREATE TABLE teams (id int);',
-        'migrations/10_secure.sql': ROW_SECURITY_SQL,
-    });
-
-    commitAll(sandbox.path);
-    await createFileTree(sandbox.path, {
-        'migrations/8_earlier.sql': 'SELECT 8;',
-    });
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'postgres/migration-order');
-    const { migrations } = await readMigrations(session, input);
-    expect(migrations.map((migration) => migration.version)).toStrictEqual(['8', '9', '10']);
-    expect(await getBuiltInCheck('postgres/migration-order')(session, input)).toMatchObject([
-        { file: 'migrations/8_earlier.sql', rule: 'order' },
-    ]);
-});
 
 test('Flyway component versions remain distinct and dollar-quoted down markers stay inside their function', async () => {
     await using sandbox = await createGitSandbox({

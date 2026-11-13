@@ -1,9 +1,7 @@
 import { preferReadonlyProps } from '#eslint-plugin/rules/react/prefer-readonly-props.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = preferReadonlyProps;
-
-buildTypedRuleTester().run('prefer-readonly-props', rule, {
+buildTypedRuleTester().run('prefer-readonly-props', preferReadonlyProps, {
     valid: [
         'function Badge(props: Readonly<{ label: string }>) { return <b>{props.label}</b>; }',
         'function Badge({ label }: { readonly label: string }) { return <b>{label}</b>; }',
@@ -14,11 +12,10 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
         'function Badge(props: { label: string }) { return props.label; }',
         'function badge(props: { label: string }) { return <b>{props.label}</b>; }',
         'function Badge(props: { label: string }) { function view() { return <b />; } return view; }',
-    ].map((code) => ({ code, filename: 'react.tsx' })),
+    ],
     invalid: [
         {
             code: 'function Badge(props: { label: string }) { return <b>{props.label}</b>; }',
-            filename: 'react.tsx',
             errors: [
                 {
                     messageId: 'mutable',
@@ -47,7 +44,6 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
             ['function Badge(props: ', '{ readonly label: string; title: string }', ') { return <></>; }'],
         ].map(([head = '', type = '', tail = '']) => ({
             code: `${head}${type}${tail}`,
-            filename: 'react.tsx',
             errors: [
                 {
                     messageId: 'mutable' as const,
@@ -57,7 +53,6 @@ buildTypedRuleTester().run('prefer-readonly-props', rule, {
         })),
         {
             code: 'function Card(props: Record<"title", string>) { return <div>{props.title}</div>; }',
-            filename: 'react.tsx',
             errors: [
                 {
                     messageId: 'mutable',

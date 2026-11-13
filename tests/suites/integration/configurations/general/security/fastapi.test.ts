@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { describe, expect, test } from 'bun:test';
 
-import { SEMGREP_CHECK, SEMGREP_CHECK_ID, SEMGREP_SANDBOX } from '#tests/config/integration/semgrep.ts';
+import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
@@ -73,7 +73,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
         ];
         await assertCheckSample(installedSandbox(), {
             ...buildSandboxChanges(SEMGREP_SANDBOX.files, files),
-            check: SEMGREP_CHECK_ID,
+            check: 'security/semgrep',
             apply: true,
             expected: findings[0]!,
             findings,
@@ -101,7 +101,7 @@ describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
             buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
         );
         await writeFile(join(root, getManifestTarget('fastapi', 'semgrep.yml')), 'rules: [');
-        const invalid = parseCheckReport(await spawnGspot(root, SEMGREP_CHECK));
+        const invalid = parseCheckReport(await spawnGspot(root, ['check', '--only', 'security/semgrep', '--json']));
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(2);
         expect(
             invalid.report.checks.filter(({ status }) => status === 'error').map(({ scope }) => scope),

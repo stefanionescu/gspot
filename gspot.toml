@@ -235,7 +235,7 @@ reason = "These samples hold session links so that the tests see gspot report th
 [[ignore]]
 check = "prose/vale"
 rule = "gspot.home-paths"
-paths = ["tests/config/integration/prose.ts", "tests/suites/unit/cli/configurations/general/commits/checks.test.ts", "tests/suites/unit/cli/configurations/general/gspot/suppressions/reasons.test.ts"]
+paths = ["tests/config/integration/prose.ts", "tests/suites/unit/cli/configurations/general/commits/checks.test.ts", "tests/suites/unit/cli/configurations/general/gspot/suppressions.test.ts"]
 reason = "These samples hold home folders so that the tests see gspot report them."
 
 [[ignore]]

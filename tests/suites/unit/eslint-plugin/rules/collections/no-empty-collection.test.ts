@@ -6,7 +6,6 @@ buildRuleTester().run('no-empty-collection', noEmptyCollection, {
         'function list() { const names = []; names.push("a"); return names.map(String); }',
         'function list() { const names = ["a"]; return names.map(String); }',
         'function list() { const names = []; names[0] = "a"; return names.join(); }',
-        'function list(fill) { const names = []; fill(names); return names.join(); }',
         'function list(names) { names = []; return names.join(); }',
     ],
     invalid: [
@@ -23,7 +22,7 @@ buildRuleTester().run('no-empty-collection', noEmptyCollection, {
             errors: [{ messageId: 'empty', column: 55 }],
         },
         {
-            code: 'export function list() { const names = Array(); return names.join(); }',
+            code: 'function list() { const names = Array(); return names.join(); }',
             errors: [{ messageId: 'empty' }],
         },
     ],

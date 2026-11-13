@@ -12,6 +12,7 @@ export const PRETTIER_IGNORE_SETTINGS = {
 export const PRETTIER_IGNORE_CASES = [
     { file: 'src/dist/source.ts', ignored: true },
     { file: 'generated/source.ts', ignored: true },
+    { file: 'vendored/source.ts', ignored: true },
     { file: 'authored/omitted.ts', ignored: true },
     { file: 'authored/kept.ts', ignored: false },
     { file: 'pnpm-lock.yaml', ignored: true },
@@ -22,22 +23,15 @@ export const LANGUAGE_IGNORES = [
         name: 'Swift without JavaScript',
         configurations: ['format', 'markdown', 'swift'],
         scopes: [],
-        ignored: [
-            { path: '.build/', pattern: '.build/' },
-            { path: 'DerivedData/', pattern: 'DerivedData/' },
-            { path: 'Pods/', pattern: '**/Pods/**' },
-        ],
-        absent: ['**/node_modules/**', 'package-lock.json', '**/.venv/**', 'uv.lock'],
+        ignored: ['.build/', 'DerivedData/', 'Pods/'],
+        kept: ['node_modules/', 'package-lock.json', '.venv/', 'uv.lock'],
     },
     {
         name: 'a JavaScript child of Python',
         configurations: ['format', 'markdown', 'python'],
         scopes: [{ path: 'web', configurations: ['javascript'] }],
-        ignored: [
-            { path: '.venv/', pattern: '**/.venv/**' },
-            { path: 'node_modules/', pattern: '**/node_modules/**' },
-        ],
-        absent: ['.build/', 'Package.resolved'],
+        ignored: ['.venv/', 'node_modules/'],
+        kept: ['.build/', 'Package.resolved'],
     },
 ] as const;
 
@@ -71,16 +65,6 @@ export const IGNORE_LIST_SETTINGS = {
     ],
 } as const;
 
-export const IGNORE_LIST_FILES = {
-    'apps/web/package.json': '{"name":"web","private":true}\n',
-    'apps/web/source.js': 'export const value = 1;\n',
-    'apps/web/style.css': 'a { color: red; }\n',
-    'services/api/pyproject.toml': '[project]\nname = "api"\nversion = "0.1.0"\n',
-    'services/api/source.py': 'VALUE = 1\n',
-    'README.md': '# Example\n',
-    'source.js': 'export const other = 2;\n',
-} as const;
-
 export const SETUP_CASES = [
     ['github', 0],
     ['github', 29],
@@ -88,7 +72,12 @@ export const SETUP_CASES = [
     ['gitlab', 29],
 ] as const;
 
-export const SETUP_ARGUMENTS = ['', 'two words', "a'b", 'line\nbreak'] as const;
+/**
+The body of a fake mise that runs the command after `--` of `mise exec`. mise exec loads the variables of the mise
+config files, so the fake sets one for the command it runs.
+*/
+export const MISE_EXEC =
+    '[ "$1" = exec ] || exit 0\nwhile [ "$1" != -- ]; do shift; done\nshift\nMISE_LOADED=1 exec "$@"\n';
 
 export const LINUX_PIPELINE = {
     version: '1.2.3',

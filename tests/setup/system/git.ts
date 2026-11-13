@@ -24,6 +24,16 @@ export function commitAll(cwd: string, message = 'init'): string {
 }
 
 /**
+Put a file into the index at stages 1, 2, and 3, the way an unresolved merge leaves it.
+*/
+export function stageUnmergedFile(cwd: string, path: string): void {
+    const hash = runGitStep(cwd, ['hash-object', '-w', path]);
+    const stdin = [1, 2, 3].map((stage) => `100644 ${hash} ${String(stage)}\t${path}\n`).join('');
+    const result = runBlockingCommand(['git', 'update-index', '--index-info'], { cwd, stdin });
+    if (result.code !== 0) throw new Error(`Git update-index --index-info failed: ${result.stderr}`);
+}
+
+/**
 Make a test file executable: set its file mode, and on Windows, whose file systems keep no mode bits, set the mode in
 the Git index too.
 */

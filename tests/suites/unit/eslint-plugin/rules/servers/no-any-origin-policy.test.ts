@@ -4,6 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-any-origin-policy', noAnyOriginPolicy, {
     valid: [
         "import cors from 'cors';\nimport express from 'express';\nconst app = express();\napp.use(cors({ origin: ['https://app.example.com'] }));",
+        "import express from 'express';\nconst app = express();\napp.get('/v', function (req, res) {\n  const origin = req.header('Origin');\n  if (origin === 'https://trusted.example.com') res.setHeader('Access-Control-Allow-Origin', origin);\n});",
         ...[
             'app.use(express.json());',
             "app.get('/', handler);",
@@ -13,7 +14,7 @@ buildRuleTester().run('no-any-origin-policy', noAnyOriginPolicy, {
     ],
     invalid: [
         {
-            code: "const http = require('http');\nconst express = require('express');\nconst cors = require('cors');\nconst app = express();\nhttp.createServer(function (req, res) {\n  res.writeHead(200, { 'Access-Control-Allow-Origin': '*' });\n});\napp.use(cors());\napp.use(cors({ origin: '*' }));\napp.use(cors({ credentials: true }));\napp.get('/', function (req, res) {\n  res.setHeader('Access-Control-Allow-Origin', req.headers.origin);\n});\napp.get('/v', function (req, res) {\n  const origin = req.header('Origin');\n  if (origin === 'https://trusted.example.com') {}\n  res.setHeader('Access-Control-Allow-Origin', origin);\n});",
+            code: "const http = require('http');\nconst express = require('express');\nconst cors = require('cors');\nconst app = express();\nhttp.createServer(function (req, res) {\n  res.writeHead(200, { 'Access-Control-Allow-Origin': '*' });\n});\napp.use(cors());\napp.use(cors({ origin: '*' }));\napp.use(cors({ credentials: true }));\napp.get('/', function (req, res) {\n  res.setHeader('Access-Control-Allow-Origin', req.headers.origin);\n});",
             errors: [
                 { messageId: 'permissive', line: 6 },
                 { messageId: 'permissive', line: 8 },
@@ -24,6 +25,10 @@ buildRuleTester().run('no-any-origin-policy', noAnyOriginPolicy, {
         },
         {
             code: "import http from 'http';\nhttp.createServer((req, res) => { res.writeHead(200, { 'access-control-allow-origin': '*' }); });",
+            errors: [{ messageId: 'permissive' }],
+        },
+        {
+            code: "import express from 'express';\nconst app = express();\napp.get('/v', function (req, res) {\n  res.setHeader('Access-Control-Allow-Origin', req.header('Origin'));\n});",
             errors: [{ messageId: 'permissive' }],
         },
         ...[

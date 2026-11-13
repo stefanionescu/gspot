@@ -1,56 +1,11 @@
 export const ESCAPED_SCOPE_CONFIGURATIONS = ['javascript', 'react'] as const;
 
-export const NESTED_ESLINT_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'app/package.json':
-        '{"name":"nested-app","version":"0.0.0-test","type":"module","devDependencies":{"zod":"0.0.0-test"}}\n',
-    'app/spec/read.js':
-        'import { z } from "zod";\nexport function read(value) { return z.string().parse(value); }\nconsole.log("test");\n',
-    'app/scripts/build.js': 'console.log("script");\nprocess.exit(0);\n',
-    'app/.mise/tasks/build.js': 'console.log("task");\nprocess.exit(0);\n',
-    'app/source.js': 'console.log("source");\nprocess.exit(0);\n',
-} as const;
-
-export const NESTED_ESLINT_PATHS = [
-    'app/spec/read.js',
-    'app/scripts/build.js',
-    'app/.mise/tasks/build.js',
-    'app/source.js',
-] as const;
-
 export const NESTED_ESLINT_RULES = [
     'n/no-unpublished-import',
     'n/no-process-exit',
     'unicorn/no-process-exit',
     'no-console',
 ] as const;
-
-export const WILDCARD_ESLINT_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'app/read.js': 'console.log("test");\n',
-    'app/build.js': 'console.log("script");\n',
-    'sibling/read.js': 'console.log("source");\n',
-    'sibling/build.js': 'console.log("source");\n',
-} as const;
-
-export const COALESCING_SOURCE = `export function fallback(value) {
-    const alternate = value || {};
-    return alternate ?? {};
-}
-export const known = (value) => value ?? { known: true };
-`;
-
-export const CONFIGURATION_RULE_OPTIONS = {
-    tables: '[tools.eslint.rules]\n"@typescript-eslint/no-floating-promises" = [{ ignoreVoid = true }]\n',
-    files: {
-        'package.json': '{"private":true,"type":"module"}\n',
-        'tsconfig.json':
-            '{"compilerOptions":{"strict":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["source.ts"]}\n',
-        'source.ts': 'void Promise.resolve();\nPromise.resolve();\n',
-    },
-} as const;
-
-export const RUNTIME_CASES = [{ runtime: 'browser' }, { runtime: 'worker' }, { runtime: 'react-native' }] as const;
 
 export const FRAMEWORK_RUNTIME_CASES = [
     {
@@ -85,26 +40,6 @@ export const RUNTIME_OVERRIDE_SETTINGS = {
         { path: 'native/server', configurations: ['javascript'] },
     ],
 } as const;
-
-export const RUNTIME_GLOBAL_FINDINGS = [
-    { file: 'server.js', messages: [] },
-    { file: 'native/src/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }] },
-    {
-        file: 'native/src/browser.js',
-        messages: [
-            { ruleId: 'no-undef', line: 2, message: "'__DEV__' is not defined." },
-            { ruleId: 'no-undef', line: 3, message: "'process' is not defined." },
-        ],
-    },
-    { file: 'web/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: "'process' is not defined." }] },
-    { file: 'native/scripts/build.js', messages: [] },
-    { file: 'native/server/source.js', messages: [] },
-    { file: 'web/scripts/build.js', messages: [] },
-    {
-        file: 'native/scripts/worker.js',
-        messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }],
-    },
-];
 
 export const WINDOW_UNDEFINED_MESSAGE = "'window' is not defined.";
 

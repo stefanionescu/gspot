@@ -3,22 +3,27 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { CONFLICTING_CONFIG_CASES } from '#tests/config/configurations/gspot/files.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
-test.each([...CONFLICTING_CONFIG_CASES])(
-    'gspot/conflicting-configs at level %s reports the settings file of each tool gspot runs',
-    async (level, expected) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['commits'], { level }),
-            '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n',
-        });
-        const findings = await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs');
-        expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([...expected]);
-    },
-);
+test('gspot/conflicting-configs reports the settings file of a tool only at a level where gspot runs the tool', async () => {
+    const files = { '.commitlintrc.json': '{"extends":["@commitlint/config-conventional"]}\n' };
+    await using basic = await createGitSandbox({
+        ...files,
+        'gspot.toml': buildSandboxSettings(['commits'], { level: 'basic' }),
+    });
+    expect(await runSandboxCheck(basic.path, 'gspot/conflicting-configs')).toStrictEqual([]);
+    await using all = await createGitSandbox({
+        ...files,
+        'gspot.toml': buildSandboxSettings(['commits'], { level: 'all' }),
+    });
+    const findings = await runSandboxCheck(all.path, 'gspot/conflicting-configs');
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: '.commitlintrc.json', rule: 'conflicting-config' },
+    ]);
+});
 
 test('gspot/conflicting-configs reports a settings file at a project root, and no source file that shares its name', async () => {
     await using sandbox = await createGitSandbox({
@@ -63,7 +68,7 @@ test('gspot/conflicting-configs reports a tool section that no generated file ed
     ]);
 });
 
-test('gspot/conflicting-configs reports an lint command until it goes', async () => {
+test('gspot/conflicting-configs reports a lint command until it goes', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript']),
         'package.json': '{\n  "private": true,\n  "scripts": { "lint": "eslint ." }\n}\n',
@@ -83,4 +88,19 @@ test('gspot/conflicting-configs reports an lint command until it goes', async ()
         '{\n  "private": true,\n  "scripts": { "lint": "gspot check" }\n}\n',
     );
     expect(await runSandboxCheck(sandbox.path, 'gspot/conflicting-configs')).toStrictEqual([]);
+});
+
+test('conflicting-configs on selected paths reports only those paths', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+        'package.json': '{\n  "private": true,\n  "scripts": { "lint": "eslint ." }\n}\n',
+        'knip.json': '{}\n',
+        'main.js': 'export const value = 1;\n',
+    });
+    const session = await openSession(sandbox.path);
+    const check = getBuiltInCheck('gspot/conflicting-configs', { content: 'index', paths: ['package.json'] });
+    const findings = await check(session, planSandboxCheck(session, 'gspot/conflicting-configs'));
+    expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'package.json', rule: 'lint-command' },
+    ]);
 });

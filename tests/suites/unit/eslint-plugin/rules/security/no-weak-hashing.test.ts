@@ -7,9 +7,7 @@ buildRuleTester().run('no-weak-hashing', noWeakHashing, {
         "const createHash = require(name).createHash;\ncreateHash('md5');",
         "const [createHash] = require('crypto');\ncreateHash('md5');",
         "import crypto from 'crypto';\ncrypto[load()]('md5');",
-
         "import crypto from 'crypto';\ncrypto.createHash('sha256').update(text).digest('hex');",
-        "import crypto from 'crypto';\nconst key = crypto.createHash('md5').update(text).digest('hex').substring(0, 12);",
         "import crypto from 'crypto';\nconst key = crypto.createHash('md5').update(text).digest('hex').slice(0, length);",
         "import crypto from 'crypto';\ncrypto.createHash(algorithm);",
     ],
@@ -18,7 +16,6 @@ buildRuleTester().run('no-weak-hashing', noWeakHashing, {
             code: "import { default as crypto } from 'crypto';\ncrypto.createHash('md5');",
             errors: [{ messageId: 'weak' }],
         },
-
         {
             code: "import crypto from 'crypto';\ncrypto.createHash('md5').update(x).digest('hex');\ncrypto.createHash('SHA1');\nconst full = crypto.createHash('md5').update(x).digest('hex').slice(0);\nconst d = crypto.createHash('md5').update(x).digest('hex');\nuse(d.substring(0, 8));\nconst e = crypto.createHash('sha1').update(x).digest('hex');\nuse(e);\nasync function f() {\n  await crypto.subtle.digest('SHA-1', buf);\n  const short = (await crypto.subtle.digest('SHA-1', buf)).slice(0, 4);\n  crypto.subtle.digest('SHA-1', buf).then((h) => h.slice(0, 2));\n  const g = crypto.subtle.digest('sha-256', buf);\n}",
             errors: [

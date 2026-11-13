@@ -5,7 +5,7 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import type { TomlTable } from '#cli/types/settings.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -127,4 +127,15 @@ test('unignore --paths from a subfolder removes only the repository-relative pat
             reason: 'The scripts deliberately split words.',
         },
     ]);
+});
+
+test('a bare unignore exits 2, names --paths, and keeps every ignore', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: '[[ignore]]\npaths = ["data/**"]\nreason = "Product facts copy the packaging."\n',
+        }),
+        'data/facts.txt': 'facts\n',
+    });
+    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['unignore'], 'arguments');
+    expect(refusal.message).toContain('gspot unignore --paths <path>');
 });

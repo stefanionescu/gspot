@@ -5,47 +5,61 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { HOOKS_CHANGED_NOTE, STALE_LOCKFILE_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatHeader } from '#cli/generation/header.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { EDITED_STYLELINT_PACKAGE, STYLELINT_PACKAGE_FIELDS } from '#tests/config/generation/generate.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/generate.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import type { PackageFieldScenario } from '#tests/types/setup.ts';
-
-async function applyPackageFields(root: string, scenario: PackageFieldScenario): Promise<Map<string, string>> {
-    const session = await openSession(root);
-    const generated = buildGeneratedFiles(session);
-    expect(generated.managedKeys).toStrictEqual(scenario.changes);
-    const writer = openFiles(root);
-    await writeGeneratedFiles(session, generated, writer);
-    const authored = new Map<string, string>(Object.entries(scenario.project));
-    for (const path of scenario.unchanged) expect(await readFile(join(root, path), 'utf8')).toBe(authored.get(path)!);
-    return new Map(
-        await Promise.all(
-            Object.keys(scenario.project).map(
-                async (path) => [path, await readFile(join(root, path), 'utf8')] as const,
-            ),
-        ),
-    );
-}
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
+    const project = {
+        'package.json': STYLELINT_PACKAGE_JSON,
+        'source.css': 'a { opacity: 1; }\n',
+        'app/package.json': STYLELINT_PACKAGE_JSON,
+        'app/source.css': 'a { opacity: 1; }\n',
+        'app/child/package.json': STYLELINT_PACKAGE_JSON,
+        'app/child/source.css': 'a { opacity: 1; }\n',
+        'other/package.json': STYLELINT_PACKAGE_JSON,
+        'other/source.css': 'a { opacity: 1; }\n',
+        'plain/package.json': '{"private":true}\n',
+    };
+    const scopes = [{ path: 'app' }, { path: 'app/child' }, { path: 'other' }];
     await using sandbox = await createGitSandbox({
-        ...STYLELINT_PACKAGE_FIELDS.project,
-        'gspot.toml': buildSandboxSettings(STYLELINT_PACKAGE_FIELDS.configurations, {
-            level: 'all',
-            rules: true,
-            tables: STYLELINT_PACKAGE_FIELDS.tables,
-        }),
+        ...project,
+        'gspot.toml': buildSandboxSettings(['css'], { level: 'all', rules: true, scopes }),
     });
-    const installed = await applyPackageFields(sandbox.path, STYLELINT_PACKAGE_FIELDS);
+    const selected = await openSession(sandbox.path);
+    const fields = buildGeneratedFiles(selected);
+    expect(fields.managedKeys).toStrictEqual([
+        { path: 'package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
+        {
+            path: 'app/child/package.json',
+            keys: [{ key: ['stylelint'], value: { extends: '../../.gspot/configurations/css/stylelint.json' } }],
+        },
+        {
+            path: 'app/package.json',
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
+        },
+        {
+            path: 'other/package.json',
+            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
+        },
+    ]);
+    await writeGeneratedFiles(selected, fields, openFiles(sandbox.path));
+    expect(await readFile(join(sandbox.path, 'plain/package.json'), 'utf8')).toBe(project['plain/package.json']);
+    const installed = new Map<string, string>();
+    for (const path of Object.keys(project)) installed.set(path, await readFile(join(sandbox.path, path), 'utf8'));
     await writeFile(join(sandbox.path, 'app/package.json'), EDITED_STYLELINT_PACKAGE);
     installed.set('app/package.json', EDITED_STYLELINT_PACKAGE);
     await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { level: 'all', rules: true }));
@@ -56,15 +70,13 @@ test('removing css drops its managed stylelint field and keeps authored fields b
         { path: 'app/child/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
         { path: 'other/package.json', keys: [{ key: ['stylelint'], value: undefined }] },
     ]);
-    const writer = openFiles(sandbox.path);
-    await writeGeneratedFiles(session, generated, writer);
+    await writeGeneratedFiles(session, generated, openFiles(sandbox.path));
     for (const [path, source] of installed) {
+        const written = await readFile(join(sandbox.path, path), 'utf8');
         if (['package.json', 'app/child/package.json', 'other/package.json'].includes(path)) {
-            const expected = JSON.parse(source) as Record<string, unknown>;
-            delete expected['stylelint'];
-            const contents: unknown = JSON.parse(await readFile(join(sandbox.path, path), 'utf8'));
-            expect(contents).toStrictEqual(expected);
-        } else expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(source);
+            const { stylelint: _stylelint, ...expected } = JSON.parse(source) as Record<string, unknown>;
+            expect(JSON.parse(written) as unknown).toStrictEqual(expected);
+        } else expect(written).toBe(source);
     }
     const settled = await openSession(sandbox.path);
     const output = buildGeneratedFiles(settled);
@@ -89,7 +101,6 @@ test('writing a mise project preserves its lockfile and asks for an install afte
     const report = await writeGeneratedFiles(session, output, writer);
     expect(await readFile(join(sandbox.path, '.gspot/mise.lock'), 'utf8')).toBe('version = 1\n');
     expect(await listInstallNotes(session, output, report)).toContain(HOOKS_CHANGED_NOTE);
-    runGitStep(sandbox.path, ['init', '--quiet']);
     runGitStep(sandbox.path, ['config', 'core.hooksPath', '.gspot/hooks']);
     output.files[1]!.content = '#!/bin/sh\nexit 1\n';
     const configured = await openSession(sandbox.path);
@@ -142,10 +153,30 @@ test('writing the generated files preserves a copied header example and removes 
     expect(existsSync(join(sandbox.path, 'docs/.markdownlint.jsonc'))).toBe(false);
 });
 
-test('an unchanged settings edit that writes generated files does not say No change', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': 'level = "basic"\n' + buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['set', 'level', 'basic']);
-    expect(result.stdout).toStartWith('gspot.toml already says this.\n');
-    expect(result.stdout).toContain('wrote ');
-    expect(result.stdout).not.toContain('No change:');
+test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once', async () => {
+    const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': settings });
+    await applyGeneratedFiles(sandbox.path);
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', GSPOT_PATHS.hooks]);
+    await writeFile(join(sandbox.path, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
+    await applyGeneratedFiles(sandbox.path);
+    expect(existsSync(join(sandbox.path, GSPOT_PATHS.hooks, 'pre-commit'))).toBe(false);
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBeUndefined();
+});
+
+test('switching the level and back writes the same files', async () => {
+    await using sandbox = await createGitSandbox({});
+    await writeFile(join(sandbox.path, 'source.js'), 'export const value = 1;\n');
+    const outputs: Array<Array<{ path: string; content: string }>> = [];
+    for (const level of ['basic', 'all', 'basic'] as const) {
+        const settings = buildSandboxSettings(['javascript'], { rules: true, level });
+        await writeFile(join(sandbox.path, 'gspot.toml'), settings);
+        const session = await openSession(sandbox.path);
+        const output = buildGeneratedFiles(session);
+        const writer = openFiles(sandbox.path);
+        await writeGeneratedFiles(session, output, writer);
+        outputs.push(output.files.map(({ path, content }) => ({ path, content })));
+    }
+    expect(outputs[1]).not.toStrictEqual(outputs[0]);
+    expect(outputs[2]).toStrictEqual(outputs[0]);
 });

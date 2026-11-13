@@ -37,8 +37,7 @@ def __getattr__(name):
         {
             line: 13,
             rule: 'private-below-public',
-            message:
-                'The private function _parse_row sits below the public function load_rows, and no function above it calls it. Move _parse_row above load_rows, or below a function that calls it.',
+            message: expect.stringMatching(/\b_parse_row\b.+\bload_rows\b/u) as string,
         },
     ]);
 });

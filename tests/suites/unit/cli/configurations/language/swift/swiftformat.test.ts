@@ -2,7 +2,6 @@ import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { SWIFT_PROJECT_SETTINGS } from '#tests/config/configurations/swift.ts';
 import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
@@ -32,8 +31,14 @@ test('SwiftFormat uses the Xcode project you choose in each scope', async () => 
     const files = {
         'source.swift': CLEAN_SWIFT,
         'nested/source.swift': CLEAN_SWIFT,
-        'disabled/source.swift': CLEAN_SWIFT,
-        'gspot.toml': SWIFT_PROJECT_SETTINGS,
+        'gspot.toml': `configurations = ["swift", "xcode"]
+[[scope]]
+path = "nested"
+swift = {xcode_project = "Chosen.xcodeproj"}
+
+[swift]
+xcode_project = "Chosen.xcodeproj"
+`,
         'Unused.xcodeproj/project.pbxproj': 'not native plist syntax',
         'Chosen.xcodeproj/project.pbxproj': BUILD_SETTINGS_PBXPROJ,
         'nested/Chosen.xcodeproj/project.pbxproj': BUILD_SETTINGS_PBXPROJ.replace(

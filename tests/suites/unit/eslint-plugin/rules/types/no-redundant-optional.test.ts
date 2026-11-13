@@ -13,7 +13,10 @@ buildRuleTester().run('no-redundant-optional', noRedundantOptional, {
 });
 
 buildTypedRuleTester().run('no-redundant-optional with types', noRedundantOptional, {
-    valid: ['type Name = string; type User = { name?: Name };'],
+    valid: [
+        'type Name = string; type User = { name?: Name };',
+        'type User = { name?: ReturnType<() => string | undefined> };',
+    ],
     invalid: [
         {
             code: 'type Maybe = string | undefined; type User = { name?: Maybe };',

@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
-test('typos.toml lists each allowed word once and keeps quoted paths', async () => {
+test('typos.toml writes allowed words and ignored paths as TOML strings that add no table', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];
     const paths = ['docs/"draft"/**', 'generated/draft/**', 'café/**'];
     const reason = 'An upstream name.\n[files]\nextend-exclude = ["**"]';

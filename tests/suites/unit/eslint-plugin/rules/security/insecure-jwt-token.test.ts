@@ -5,6 +5,7 @@ buildRuleTester().run('insecure-jwt-token', insecureJwtToken, {
     valid: [
         "import jwt from 'jsonwebtoken';\njwt.sign(claims, key, { algorithm: 'RS256' });",
         "import jwt from 'jsonwebtoken';\njwt.verify(token, key);",
+        "import jose from 'jose';\njose.sign(payload, key, { algorithm: 'none' });",
     ],
     invalid: [
         {

@@ -8,11 +8,11 @@ buildRuleTester().run('unverified-certificate', unverifiedCertificate, {
     ],
     invalid: [
         {
-            code: "import https from 'https';\nimport tls from 'tls';\nconst request = require('request');\nhttps.request({ host: 'x', rejectUnauthorized: false });\nconst options = { rejectUnauthorized: false };\nhttps.request(options, cb);\ntls.connect(443, 'x', { rejectUnauthorized: false });\nhttps.request({ rejectUnauthorized: true });",
+            code: "import https from 'https';\nimport tls from 'tls';\nhttps.request({ host: 'x', rejectUnauthorized: false });\nconst options = { rejectUnauthorized: false };\nhttps.request(options, cb);\ntls.connect(443, 'x', { rejectUnauthorized: false });\nhttps.request({ rejectUnauthorized: true });",
             errors: [
-                { messageId: 'unverified', line: 4 },
+                { messageId: 'unverified', line: 3 },
+                { messageId: 'unverified', line: 5 },
                 { messageId: 'unverified', line: 6 },
-                { messageId: 'unverified', line: 7 },
             ],
         },
     ],

@@ -1,22 +1,24 @@
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { SESSION_FILES } from '#tests/config/engine/tool-runs.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
+import { compareText } from '#cli/system/text.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 
-test('a run uses the cancel signal supplied when its session opens', async () => {
+test('all selects the always-selected configurations from an empty list', async () => {
     await using sandbox = await createGitSandbox({
-        ...SESSION_FILES,
-        'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { rules: true }),
+        'gspot.toml': buildSandboxSettings([], { level: 'all' }),
+        'source.js': 'export const port = 8080;\n',
+        'guide.md': '# Guide\n',
+        'app/package.json': '{"name":"app","private":true}',
+        'app/source.js': 'export const port = 3000;\n',
     });
-    using resources = createRunResources();
-    const session = await openSession(sandbox.path, { resources, cancelSignal: AbortSignal.abort() });
-    const result = await runChecks(session, buildRunOptions({ only: ['naming/identifiers'] }));
-    expect(result.report.exitCode).toBe(2);
-    expect(result.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
-        { check: 'naming/identifiers', status: 'canceled', findings: [] },
-    ]);
+    commitAll(sandbox.path);
+    const session = await openSession(sandbox.path);
+    const selected = new Set(
+        session.scopes.flatMap((scope) => scope.configurations.map((configuration) => configuration.name)),
+    );
+    expect([...selected].toSorted(compareText)).toStrictEqual(listAlwaysSelected().toSorted(compareText));
 });

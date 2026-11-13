@@ -1,16 +1,18 @@
 import { readFile, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { delimiter, dirname, join } from 'node:path';
 
+import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
+import { testdir } from 'testdirs';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { LINE_BREAK } from '#cli/config/system.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createNpmProject } from '#tests/setup/sandboxes/projects/npm.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
+import type { GithubWorkflow } from '#tests/types/setup.ts';
 
 test.each([true, false])(
     'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %p)',
@@ -37,41 +39,37 @@ test.each([true, false])(
     },
 );
 
-test('a repeated npm install keeps the lockfile and the modules with the registry offline', async () => {
-    await using sandbox = await createNpmProject('npm');
-    const { root, registry } = sandbox;
-    const first = await spawnGspot(root, ['install']);
-    expect(first.code, first.stdout + first.stderr).toBe(0);
-    const lockfile = await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8');
-    const marker = join(root, GSPOT_PATHS.nodeModules, 'prettier/keep.txt');
-    await writeFile(marker, 'installed modules');
-    const requests = registry.requests.filter((request) => request !== 'GET /npm');
-    for (const isOnline of [true, false]) {
-        if (!isOnline) registry[Symbol.dispose]();
-        const next = await spawnGspot(root, ['install', '--json']);
-        expect(next.code, next.stdout + next.stderr).toBe(0);
-        expect(JSON.parse(next.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
-        expect(await readFile(join(root, GSPOT_FOLDER, 'package-lock.json'), 'utf8')).toBe(lockfile);
-        expect(
-            registry.requests.filter((request) => request !== 'GET /npm'),
-            next.stdout,
-        ).toStrictEqual(requests);
-        expect(await readFile(marker, 'utf8')).toBe('installed modules');
-    }
-});
-
-test('a repeated install reports No change while a uv-locked project matches its lockfile', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python']),
-        'pyproject.toml':
-            '[project]\nname = "example"\nversion = "1.0.0"\nrequires-python = ">=3.10"\ndependencies = []\n',
-        'main.py': 'VALUE = 1\n',
+test('the generated GitHub command installs gspot with empty mise state', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': stringify({
+            configurations: [],
+            rule_files: { enabled: false },
+            ci: { enabled: true, provider: 'github' },
+        }),
     });
-    const locked = await runCommand(['uv', 'lock'], { cwd: sandbox.path });
-    expect(locked.code, locked.stdout + locked.stderr).toBe(0);
-    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['init', '-q']);
     await runGspotStep({ root: sandbox.path, run: spawnGspot }, ['install']);
-    const repeated = await spawnGspot(sandbox.path, ['install', '--json']);
-    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-    expect(JSON.parse(repeated.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
+    const workflow = Bun.YAML.parse(
+        await readFile(join(sandbox.path, '.github/workflows/gspot.yml'), 'utf8'),
+    ) as GithubWorkflow;
+    const command = workflow.jobs['lint']!.steps.find((step) => step.name === 'Install gspot')!.run!;
+    const env = {
+        GITHUB_PATH: join(sandbox.path, 'github-path'),
+        MISE_CONFIG_DIR: join(sandbox.path, 'config'),
+        MISE_DATA_DIR: join(sandbox.path, 'data'),
+        MISE_STATE_DIR: join(sandbox.path, 'state'),
+        MISE_CACHE_DIR: join(sandbox.path, 'cache'),
+        MISE_CEILING_PATHS: dirname(sandbox.path),
+    };
+
+    const installed = await runCommand(['bash', '-e', '-c', command], { cwd: sandbox.path, env });
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const githubPath = await readFile(env.GITHUB_PATH, 'utf8');
+    const added = githubPath.split(LINE_BREAK).filter((path) => path !== '');
+    const result = await runCommand(['bash', '-e', '-c', 'gspot --version'], {
+        cwd: sandbox.path,
+        env: { ...env, PATH: [...added, readEnvironmentVariable('PATH') ?? ''].join(delimiter) },
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    expect(result.stdout.trim()).toBe(cliPackage.version);
 });

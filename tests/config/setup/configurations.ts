@@ -1,3 +1,6 @@
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
+
 export const COMMAND_PLAYBOOK = `---
 - name: Deploy the service
   hosts: all
@@ -64,34 +67,6 @@ export const LICENSE = `MIT License
 Copyright (c) 2026 Alex Garcia
 `;
 
-export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
-
-export const NOTES_MARKDOWN = '# Notes\n';
-
-export const CONFIG_PROJECT = {
-    '.github/workflows/check.yml': `name: Check
-on: push
-jobs:
-  check:
-    runs-on: ubuntu-latest
-    steps:
-      - run: echo example
-`,
-    'package.json': '{"name":"example","private":true,"type":"module"}\n',
-    'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}\n',
-    'pyproject.toml': `[project]
-name = "example"
-version = "1.0.0"
-`,
-    'src/index.ts': 'export const answer = 42;\n',
-    'query.sql': 'SELECT 1;\n',
-    'nginx.conf': 'events {}\nhttp {}\n',
-    'source.swift': 'let answer = 42\n',
-    'script.sh': '#!/usr/bin/env bash\nprintf "example\\n"\n',
-} as const;
-
-export const NESTED_YAML = 'parent:\n child: value\n';
-
 export const CALLER_WORKFLOW = `on: workflow_dispatch
 jobs:
   caller:
@@ -125,3 +100,15 @@ export const NEXT_MESSAGES = {
 } as const;
 
 export const VALE_PACKAGES_INI = `StylesPath = ../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
+
+export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
+name = "local"
+path = "tools/lint/plugin.mjs"
+rules = { "no-forbidden" = [] }
+`;
+
+export const VALE_INSTALLED_FILES = Object.fromEntries(
+    VALE_PACKAGE_FOLDERS.map((folder) => [`${GSPOT_PATHS.valePackages}/${folder}/.keep`, '']),
+);
+
+export const EMPTY_VALE_INI = 'Packages =\n';

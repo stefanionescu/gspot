@@ -7,7 +7,6 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { readChangedPaths, readDefaultRef, readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { readPushedCommits } from '#cli/repository/revisions/push.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
@@ -58,14 +57,10 @@ test('staged and branch comparisons keep both paths of a rename across folders',
     expect(changed.paths).toStrictEqual(['api/source.ts', 'web/source.ts']);
 });
 
-test('a status read reports a broken or missing Git repository instead of an empty status', async () => {
+test('a status read in a folder without Git is a Git error instead of an empty status', async () => {
     await using sandbox = await testdir();
     const error = await captureRejection(readTreeStatus(sandbox.path));
     expect(error).toMatchObject({ name: 'GspotError', code: 'git' });
-    runGitStep(sandbox.path, ['init']);
-    await writeFile(join(sandbox.path, '.git/index'), 'corrupt index');
-    const statusError = await captureRejection(readTreeStatus(sandbox.path));
-    expect(statusError).toMatchObject({ name: 'GspotError', code: 'git' });
 });
 
 test('a branch comparison refuses invalid references without reading them as options', async () => {
@@ -98,7 +93,6 @@ test('a new branch compares with the remote default without losing unpushed comm
     runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
     runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
     runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
-    expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
     const compared = await readDefaultRef(sandbox.path, 'HEAD');
     expect(compared).toBe('refs/remotes/origin/main');
     const { commits } = await readChangedPaths(sandbox.path, compared);

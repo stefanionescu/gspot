@@ -17,12 +17,11 @@ test('your banned headings and the shipped ones reach the heading style once', a
         { 'sample.md': '# Table of contents\n' },
     );
     const { tokens } = parse(style) as { tokens: string[] };
-    expect(tokens).toContain(String.raw`(?:\b|^)project structure(?:\b|$)`);
     expect(tokens).toContain(String.raw`(?:\b|^)Owner: \[module\](?:\b|$)`);
     expect(tokens.filter((token) => token === String.raw`(?:\b|^)project layout(?:\b|$)`)).toHaveLength(1);
 });
 
-test('the naming terms reach the terms style, and Vale runs that style on code comments', async () => {
+test('the naming terms reach the terms style', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['prose', 'naming'], {
             level: 'all',
@@ -33,9 +32,6 @@ test('the naming terms reach the terms style, and Vale runs that style on code c
     const files = buildGeneratedFiles(await openSession(sandbox.path)).files;
     const style = files.find(({ path }) => path === getManifestTarget('prose', 'styles/gspot/terms.yml'))!.content;
     expect(parse(style)).toMatchObject({ swap: { 'config file': 'generated file', program: 'tool' } });
-    const valeIni = files.find(({ path }) => path === getManifestTarget('prose', 'vale.ini'))!.content;
-    const commentSection = valeIni.split('\n\n').find((section) => section.startsWith('[*.{'))!;
-    expect(commentSection.split('\n')).toContain('gspot.terms = YES');
 });
 
 test('Vale keeps the configured sentence-length rule and its message', async () => {

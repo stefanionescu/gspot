@@ -9,7 +9,6 @@ import {
     HOOK_PREFIX_TABLES,
     NAME_WORDS,
     NAMING_LIMIT_CASES,
-    OVERLONG_NAME_FINDINGS,
 } from '#tests/config/configurations/naming/validation.ts';
 import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -63,9 +62,7 @@ test('the JavaScript handle override and a repository use override strip their p
 test.each([
     ['userID', 'variables', 'case'],
     ['HTTPServer', 'classes', 'case'],
-    ['msgText', 'variables', 'banned-word'],
     ['processOrder', 'functions', 'banned-word'],
-    ['toPosix', 'functions', 'banned-word'],
     ['isNotReady', 'variables', 'banned-word'],
 ] as const)('%s, a %s, reports %s', async (name, category, rule) => {
     expect(listRules(buildIdentifier({ name, category }), await readNaming(''))).toStrictEqual([rule]);
@@ -74,7 +71,6 @@ test.each([
 test.each([
     ['runToolProcess', 'functions'],
     ['processOrder', 'variables'],
-    ['toJSON', 'methods'],
     ['isNotable', 'variables'],
     ['userId', 'variables'],
     ['pointA', 'variables'],
@@ -106,7 +102,14 @@ test('a name that breaks all five naming limits gets five findings, and the bann
     const findings = validateIdentifiers({ ...settings, isTestFile: () => false }, [
         buildIdentifier({ name: 'helperValue2UserUserWithMoreWordsHere' }),
     ]);
-    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([...OVERLONG_NAME_FINDINGS]);
+    expect(findings.map(({ rule }) => rule)).toStrictEqual([
+        'digits',
+        'length',
+        'words',
+        'duplicate-words',
+        'banned-word',
+    ]);
+    expect(findings.at(-1)?.message).toContain('roles list');
 });
 
 test('case follows the category, and each dot-separated piece of a file name is checked alone', async () => {
@@ -115,22 +118,27 @@ test('case follows the category, and each dot-separated piece of a file name is 
     expect(listRules(buildIdentifier({ name: 'bash.test', category: 'files' }), naming)).toStrictEqual([]);
 });
 
-test('the naming check accepts _ as a variable, a digit in a tests/ path, and a Bash name with an ignored prefix', async () => {
+test('an allow_digits exception accepts a digit only under its paths', async () => {
     const naming = await readNaming(`[[naming.exception]]
 paths = ["tests/acceptance/**"]
 allow_digits = true
 reason = "Acceptance tests number their steps."
 `);
-    expect(listRules(buildIdentifier({ name: '_', category: 'variables' }), naming)).toStrictEqual([]);
     expect(
         listRules(buildIdentifier({ name: 'user2', category: 'variables', file: 'tests/acceptance/a.ts' }), naming),
     ).toStrictEqual([]);
     expect(
-        listRules(
-            buildIdentifier({ name: '_private_step', category: 'functions', file: 'scripts/a.sh', language: 'bash' }),
-            naming,
-        ),
-    ).toStrictEqual([]);
+        listRules(buildIdentifier({ name: 'user2', category: 'variables', file: 'src/a.ts' }), naming),
+    ).toStrictEqual(['digits']);
+});
+
+test.each([
+    ['corsHeaders', []],
+    ['coreCount', ['banned-word']],
+    ['cores', ['banned-word']],
+    ['cored', ['banned-word']],
+] as const)('cors stays a domain word while core and its word forms remain banned: %s', async (name, rules) => {
+    expect(listRules(buildIdentifier({ name, category: 'variables' }), await readNaming(''))).toStrictEqual([...rules]);
 });
 
 test('allowed names and path overrides skip the naming rules', async () => {

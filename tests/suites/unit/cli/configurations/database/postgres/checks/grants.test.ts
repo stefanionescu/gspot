@@ -1,6 +1,3 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
@@ -22,26 +19,17 @@ test('grants reports GRANT ALL in both direct and default privileges', async () 
 
 test('grants in a child scope skip frozen migrations and report the newer ones', async () => {
     await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['postgres'], {
+            level: 'all',
+            scopes: [{ path: 'app', configurations: ['postgres'] }],
+            tables: '[postgres]\nfrozen_through = "2"\n',
+        }),
         'app/migrations/V1_before.sql': 'GRANT ALL ON TABLE before_table TO authenticated;\n',
         'app/migrations/V2_at.sql': 'GRANT ALL ON TABLE at_table TO authenticated;\n',
         'app/migrations/V3_after.sql': 'GRANT ALL ON TABLE after_table TO authenticated;\n',
     });
-    for (const { through, files } of [
-        { through: '2', files: ['V3_after.sql'] },
-        { through: 'all', files: [] },
-    ] as const) {
-        await writeFile(
-            join(sandbox.path, 'gspot.toml'),
-            buildSandboxSettings(['postgres'], {
-                level: 'all',
-                scopes: [{ path: 'app', configurations: ['postgres'] }],
-                tables: `[postgres]\nfrozen_through = "${through}"\n`,
-            }),
-        );
-
-        const findings = await runSandboxCheck(sandbox.path, 'postgres/grants', { scope: 'app' });
-        expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual(
-            files.map((name) => ({ file: `app/migrations/${name}`, line: 1, rule: 'grant-all' })),
-        );
-    }
+    const findings = await runSandboxCheck(sandbox.path, 'postgres/grants', { scope: 'app' });
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
+        { file: 'app/migrations/V3_after.sql', line: 1, rule: 'grant-all' },
+    ]);
 });

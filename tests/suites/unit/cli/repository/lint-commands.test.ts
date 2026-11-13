@@ -114,29 +114,21 @@ test('lint commands: a hook id or a pygrep pattern that only names a tool gives 
     expect(await listRows(sandbox.path)).toStrictEqual([]);
 });
 
-test('lint commands: a devDependency names its own line, and not a script that calls the same tool', async () => {
+test('lint commands: a devDependency that gspot pins names its own line and both versions', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': JSON.stringify(
-            { scripts: { lint: 'eslint' }, devDependencies: { eslint: '^8.57.0' } },
+            { scripts: { lint: 'eslint' }, devDependencies: { eslint: '^8.57.0', vitest: '^3.0.0' } },
             null,
             2,
         ),
     });
     const rows = await listRows(sandbox.path);
-    expect(rows.filter(({ source }) => source === 'dependency').map(({ line }) => line)).toStrictEqual([6]);
+    expect(
+        rows.filter(({ source }) => source === 'dependency').map(({ line, command }) => [line, command]),
+    ).toStrictEqual([[6, 'eslint ^8.57.0, and gspot pins 10.13.0']]);
 });
 
-test('lint commands: a root devDependency that gspot pins names both versions', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ devDependencies: { eslint: '^8.57.0', vitest: '^3.0.0' } }, null, 2),
-    });
-    const rows = await listRows(sandbox.path);
-    expect(rows.map(({ line, command }) => [line, command])).toStrictEqual([
-        [3, 'eslint ^8.57.0, and gspot pins 10.13.0'],
-    ]);
-});
-
-test('lint commands: the settings of a covered tool count', async () => {
+test('lint commands: the settings of a tool count only while gspot runs the tool that covers it', async () => {
     await using sandbox = await createGitSandbox({
         'pyproject.toml': '[project]\nname = "app"\n\n[tool.black]\nline-length = 100\n',
         'setup.cfg': '[flake8]\nmax-line-length = 100\n',
@@ -150,11 +142,13 @@ test('lint commands: the settings of a covered tool count', async () => {
         ['.isort.cfg', 1, '.isort.cfg', 'isort'],
         ['mypy.ini', 1, 'mypy.ini', 'mypy'],
     ]);
+    const { files } = await readTestRepository(sandbox.path);
+    const withoutOwner = listLintCommands({ root: sandbox.path, files, tools: new Set(['ruff']), pins: {} });
+    expect(withoutOwner.map(({ tool }) => tool)).toStrictEqual(['black', 'flake8', 'isort']);
 });
 
-test('lint commands: a gspot command, and the files of gspot, do not count', async () => {
+test('lint commands: the files of gspot do not count', async () => {
     await using sandbox = await createGitSandbox({
-        'package.json': JSON.stringify({ scripts: { lint: 'gspot check --only javascript/eslint' } }),
         '.gspot/package.json': JSON.stringify({ scripts: { lint: 'eslint .' } }),
     });
     expect(await listRows(sandbox.path)).toStrictEqual([]);

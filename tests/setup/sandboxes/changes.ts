@@ -9,7 +9,6 @@ import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 import { markExecutable, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import type { Sandbox, SandboxChanges, SandboxWrite } from '#tests/types/setup.ts';
@@ -24,12 +23,6 @@ async function deleteLeftover(root: string, path: string): Promise<void> {
             throw error;
         }
     }
-}
-
-function resetHead(root: string, head: SpawnResult): void {
-    if (head.code === 0) runGitStep(root, ['reset', '--soft', head.stdout.trim()]);
-    else if (runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: root, env: {} }).code === 0)
-        runGitStep(root, ['update-ref', '-d', 'HEAD']);
 }
 
 async function writeChanges(root: string, changes: SandboxWrite): Promise<void> {
@@ -75,7 +68,9 @@ export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): 
             ]).split('\0');
             runGitStep(cwd, ['add', '-A'], environment);
             runGitStep(cwd, ['read-tree', '-u', '--reset', savedTree], environment);
-            resetHead(cwd, head);
+            if (head.code === 0) runGitStep(cwd, ['reset', '--soft', head.stdout.trim()]);
+            else if (runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd, env: {} }).code === 0)
+                runGitStep(cwd, ['update-ref', '-d', 'HEAD']);
             runGitStep(cwd, ['read-tree', index]);
             for (const path of ignoredAfter) if (path !== '' && !ignored.has(path)) await deleteLeftover(cwd, path);
         } finally {

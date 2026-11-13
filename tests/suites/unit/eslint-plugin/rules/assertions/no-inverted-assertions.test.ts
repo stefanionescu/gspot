@@ -4,7 +4,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-inverted-assertions', noInvertedAssertions, {
     valid: [
         'it("adds", () => { assert.equal(total, 3); });',
-        'assert.equal(3, total);',
         'it("adds", () => { assert.equal(3, 4); });',
         'it("adds", () => { assert.ok(3, total); });',
         'describe("cart", () => { assert.equal(3, total); });',

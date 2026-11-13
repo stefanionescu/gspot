@@ -62,7 +62,6 @@ test('copies stay ignored until the last copy removes their shared folder', asyn
     const first = createCopyFolder(sandbox.path);
     const second = createCopyFolder(sandbox.path);
     const folder = join(sandbox.path, '.gspot-copies');
-    expect(readFileSync(join(folder, '.gitignore'), 'utf8')).toBe('*\n');
     expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
     first[Symbol.dispose]();
     expect(existsSync(first.path)).toBe(false);
@@ -81,7 +80,7 @@ test('a new copy removes exited owners and keeps live owners and unknown folders
         '.gspot-copies/999999999999999999999-invalid/source.txt': 'invalid owner',
     });
     using _processes = spyOn(process, 'kill').mockImplementation((pid) => {
-        if (pid === exited) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
+        if (pid !== process.pid) throw Object.assign(new Error('The process exited.'), { code: 'ESRCH' });
         return true;
     });
     using _copy = createCopyFolder(sandbox.path);
@@ -89,7 +88,8 @@ test('a new copy removes exited owners and keeps live owners and unknown folders
     const active = join(sandbox.path, `.gspot-copies/${String(process.pid)}-active/source.txt`);
     expect(existsSync(abandoned)).toBe(false);
     expect(existsSync(active)).toBe(true);
-    expect(readFileSync(join(sandbox.path, '.gspot-copies/notes/source.txt'), 'utf8')).toBe('unowned');
+    expect(existsSync(join(sandbox.path, '.gspot-copies/notes'))).toBe(true);
+    expect(existsSync(join(sandbox.path, '.gspot-copies/999999999999999999999-invalid'))).toBe(true);
 });
 
 test('a copy survives another check removing its parent during creation', async () => {

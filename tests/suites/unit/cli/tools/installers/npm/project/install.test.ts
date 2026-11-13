@@ -51,7 +51,17 @@ test('a failed installation hides credentials', async () => {
     const token = 'synthetic-registry-failure-token';
     const password = 'synthetic-registry-password/with spaces';
     const registry = `https://alex:${encodeURIComponent(password)}@registry.example.com/`;
-    const source = `registry=${registry}\n//registry.example.com/:_authToken=${token}\n`;
+    const encodedPassword = 'synthetic-encoded-password';
+    const authSecret = 'synthetic-auth-secret';
+    const authPair = `alex:${authSecret}`;
+    const source = [
+        `registry=${registry}`,
+        `//registry.example.com/:_authToken=${token}`,
+        '//legacy.example.com/:username=alex',
+        `//legacy.example.com/:_password=${Buffer.from(encodedPassword).toString('base64')}`,
+        `//basic.example.com/:_auth=${Buffer.from(authPair).toString('base64')}`,
+        '',
+    ].join('\n');
     const packageJson = JSON.stringify({ ...NPM_TOOL_PROJECT, devDependencies: { prettier: '3.8.1' } });
     const previous = packageJson;
     const lockfile = JSON.stringify({
@@ -66,7 +76,7 @@ test('a failed installation hides credentials', async () => {
     });
     const session = await openSession(sandbox.path);
     const failure = {
-        stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}`,
+        stdout: `Downloading ${registry}private-check-tool\n${password}\n${token}\n${encodedPassword}\n${authPair}`,
         stderr: `${refusal} from ${registry}private-check-tool`,
     };
     using _bun = fakeCommands('mise', (command) =>
@@ -77,7 +87,7 @@ test('a failed installation hides credentials', async () => {
     const install = await buildNpmToolInstall(session);
     const installationError = await captureRejection(installNpmTools(install));
     expect(installationError).toMatchObject({ name: 'GspotError', code: 'install' });
-    for (const secret of [password, encodeURIComponent(password), token])
+    for (const secret of [password, encodeURIComponent(password), token, encodedPassword, authSecret])
         expect(installationError.message).not.toContain(secret);
     expect(installationError.message).toContain(`${refusal} from https://[redacted]@registry.example.com/`);
 });

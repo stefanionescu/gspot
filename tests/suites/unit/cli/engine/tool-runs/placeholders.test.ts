@@ -6,58 +6,60 @@ import { createFileTree } from 'testdirs';
 
 import { GENERATED_HEADER_TEXT } from '#cli/config/generation/files.ts';
 import { planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
+import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 import { expandCommand, listCopyFiles, replacePlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { CAFE_SOURCE_PATH, GENERATE_ARGUMENTS, WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-async function writeListSetting(root: string, placeholder: string, generateCommand: readonly string[]): Promise<void> {
-    const command = [
-        ...buildProgramCommand('checks/arguments', '--equals', JSON.stringify(GENERATE_ARGUMENTS), '--'),
-        placeholder,
-    ];
+const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
+
+async function writeListSetting(root: string, placeholder: string): Promise<void> {
     const tables = stringify({
-        openapi: { document: 'openapi.json', generate_command: [...generateCommand] },
-        command_check: [{ id: 'sandbox/arguments', command, paths: ['openapi.json'], stage: 'push' }],
+        openapi: { document: 'openapi.json', generate_command: GENERATE_ARGUMENTS },
+        command_check: [
+            {
+                id: 'sandbox/arguments',
+                command: [...buildProgramCommand('fakes/tool'), placeholder],
+                paths: ['openapi.json'],
+                stage: 'push',
+            },
+        ],
     });
     await createFileTree(root, { 'gspot.toml': buildSandboxSettings(['openapi'], { tables }), 'openapi.json': '{}\n' });
 }
 
 test('a list setting expands into one command argument per value, keeping empty and multiword ones', async () => {
     await using sandbox = await createGitSandbox({});
-    await writeListSetting(sandbox.path, '{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
-    const result = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json', '--verbose']),
-    );
-    expect(result.code, result.stderr).toBe(0);
-    expect(result.report.checks).toMatchObject([
-        {
-            check: 'sandbox/arguments',
-            status: 'passed',
-            command: [
-                ...buildProgramCommand('checks/arguments', '--equals', JSON.stringify(GENERATE_ARGUMENTS), '--'),
-                ...GENERATE_ARGUMENTS,
-            ],
-        },
-    ]);
+    await writeListSetting(sandbox.path, '{setting:openapi.generate_command}');
+    const session = buildCheckSession(await openSession(sandbox.path), CHECK_GENERATION);
+    const planned = planChecks(session, { stage: 'push', only: ['sandbox/arguments'] })[0]!;
+    expect(
+        expandCommand(session, planned, ['before', '{setting:openapi.generate_command}'], {
+            files: [],
+            scopePath: '',
+            root: sandbox.path,
+        }),
+    ).toStrictEqual(['before', ...GENERATE_ARGUMENTS]);
 });
 
 test('a list setting inside one command argument is refused', async () => {
     await using sandbox = await createGitSandbox({});
-    await writeListSetting(sandbox.path, 'prefix{setting:openapi.generate_command}', GENERATE_ARGUMENTS);
-    const inline = parseCheckReport(await runGspot(sandbox.path, ['check', '--only', 'sandbox/arguments', '--json']));
-    expect(inline.code).toBe(2);
-    expect(inline.report.checks.map(({ check, status, note }) => ({ check, status, note }))).toStrictEqual([
+    await writeListSetting(sandbox.path, 'prefix{setting:openapi.generate_command}');
+    const { report } = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ only: ['sandbox/arguments'] }),
+    );
+    expect(report.exitCode).toBe(2);
+    expect(report.checks.map(({ check, status, note }) => ({ check, status, note }))).toStrictEqual([
         {
             check: 'sandbox/arguments',
             status: 'error',
@@ -113,17 +115,7 @@ test('a Markdown command run in a copy keeps the config files its manifest write
 });
 
 test('per-file commands keep the arguments after the file', async () => {
-    const command = buildProgramCommand(
-        'fakes/tool',
-        '--record',
-        '-',
-        '--environment',
-        'TOOL_RELEASE',
-        '--',
-        '{file}',
-        'config',
-        '--quiet',
-    );
+    const command = buildProgramCommand('fakes/tool', '{file}', 'config', '--quiet');
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], {
             tables: stringify({
@@ -143,16 +135,12 @@ test('per-file commands keep the arguments after the file', async () => {
         tool: { name: 'echo', installers: {}, kind: 'program' },
         toolPath: process.execPath,
     });
-    const result = await runProcess(setup.commandLines[0]!.commandArguments, {
-        cwd: setup.cwd,
-        env: setup.env,
-    });
-    expect(result.code, result.stderr).toBe(0);
-    const call = JSON.parse(result.stdout) as { arguments: string[]; environment: Record<string, string | null> };
-    expect({ arguments: call.arguments, environment: call.environment }).toStrictEqual({
-        arguments: [CAFE_SOURCE_PATH, 'config', '--quiet'],
-        environment: { TOOL_RELEASE: 'v3.4.0' },
-    });
+    expect(setup.commandLines[0]?.commandArguments.slice(-3)).toStrictEqual([
+        'inputs/café source.txt',
+        'config',
+        '--quiet',
+    ]);
+    expect(setup.env['TOOL_RELEASE']).toBe('v3.4.0');
 });
 
 test('scalar placeholders select generated pointer files, scope, and boolean settings', async () => {

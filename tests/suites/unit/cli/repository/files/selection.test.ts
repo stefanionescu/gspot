@@ -4,13 +4,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildFileMatcher, listCoveredFiles } from '#cli/repository/files/selection.ts';
-import {
-    JEST_CASES,
-    JEST_PATHS,
-    MIGRATION_CASES,
-    PRETTIER_PLUGIN_CASES,
-    TRACKED_SOURCE,
-} from '#tests/config/repository/files.ts';
+import { JEST_CASES, JEST_PATHS, TRACKED_SOURCE } from '#tests/config/repository.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const configurationsByName = readConfigurations();
@@ -77,49 +71,52 @@ test('with bash selected, structure covers the Bash script and not README.md', (
     expect(owned.map((file) => file.path)).toStrictEqual(['a.sh']);
 });
 
-test.each([...PRETTIER_PLUGIN_CASES])(
-    'the Prettier plugin files follow the selected configurations %j',
-    (configurationNames, expected) => {
-        const configurationsByName = readConfigurations();
+test.each([
+    [['format', 'typescript'], ['src/index.ts']],
+    [
+        ['format', 'typescript', 'astro'],
+        ['src/Page.astro', 'src/index.ts'],
+    ],
+] as const)('the Prettier plugin files follow the selected configurations %j', (configurationNames, expected) => {
+    const configurationsByName = readConfigurations();
 
-        const files = [
-            { path: 'src/Page.astro', ...TRACKED_SOURCE },
-            { path: 'src/App.svelte', ...TRACKED_SOURCE },
-            { path: 'src/index.ts', ...TRACKED_SOURCE },
-        ];
-        expect(
-            listCoveredFiles(configurationsByName.get('format')!.files, files, {
-                configurations: selectConfigurations([...configurationNames]),
-                path: '',
-                settings: { test_files: [], valuesByKey: {} },
-            }).map((coveredFile) => coveredFile.path),
-        ).toStrictEqual([...expected]);
-    },
-);
-
-test.each(MIGRATION_CASES)(
-    'migration paths in scope "%s" are covered and other file kinds are not',
-    (scope, expected) => {
-        const configurationsByName = readConfigurations();
-
-        const files = ['migrations/V1_root.sql', 'app/migrations/V2_first.sql', 'other/migrations/V3_other.sql'].map(
-            (path) => ({
-                path,
-                ...TRACKED_SOURCE,
-            }),
-        );
-        const table = configurationsByName.get('postgres')!.files;
-        const options = {
-            configurations: selectConfigurations(['postgres']),
-            path: scope,
+    const files = [
+        { path: 'src/Page.astro', ...TRACKED_SOURCE },
+        { path: 'src/App.svelte', ...TRACKED_SOURCE },
+        { path: 'src/index.ts', ...TRACKED_SOURCE },
+    ];
+    expect(
+        listCoveredFiles(configurationsByName.get('format')!.files, files, {
+            configurations: selectConfigurations([...configurationNames]),
+            path: '',
             settings: { test_files: [], valuesByKey: {} },
-        };
-        const owned = listCoveredFiles(table, files, options);
-        expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
-        expect(listCoveredFiles({ ...table, kinds: ['binary'] }, files, options)).toStrictEqual([]);
-        expect(listCoveredFiles({ ...table, paths: [] }, files, options)).toStrictEqual([]);
-    },
-);
+        }).map((coveredFile) => coveredFile.path),
+    ).toStrictEqual([...expected]);
+});
+
+test.each([
+    ['', ['migrations/V1_root.sql']],
+    ['app', ['app/migrations/V2_first.sql']],
+] as const)('migration paths in scope "%s" are covered and other file kinds are not', (scope, expected) => {
+    const configurationsByName = readConfigurations();
+
+    const files = ['migrations/V1_root.sql', 'app/migrations/V2_first.sql', 'other/migrations/V3_other.sql'].map(
+        (path) => ({
+            path,
+            ...TRACKED_SOURCE,
+        }),
+    );
+    const table = configurationsByName.get('postgres')!.files;
+    const options = {
+        configurations: selectConfigurations(['postgres']),
+        path: scope,
+        settings: { test_files: [], valuesByKey: {} },
+    };
+    const owned = listCoveredFiles(table, files, options);
+    expect(owned.map((file) => file.path)).toStrictEqual([...expected]);
+    expect(listCoveredFiles({ ...table, kinds: ['binary'] }, files, options)).toStrictEqual([]);
+    expect(listCoveredFiles({ ...table, paths: [] }, files, options)).toStrictEqual([]);
+});
 
 test.each([...JEST_CASES])('Jest covers the test paths of scope "$scope" with $tests', ({ scope, tests, expected }) => {
     const configurationsByName = readConfigurations();

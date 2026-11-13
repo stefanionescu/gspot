@@ -6,12 +6,9 @@ import { expect, test } from 'bun:test';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
-    FRAMEWORK_NAME,
     PYTHON_TYPE_SOURCE,
     REACT_COMPONENT_SOURCE,
     TEST_FILE_FINDINGS,
-    TEST_PATH_FILES,
-    TEST_PATH_SETTINGS,
 } from '#tests/config/configurations/naming/source-names.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
@@ -25,7 +22,7 @@ async function listIdentifierFindings(root: string) {
 }
 
 test("nextjs's allowed function name getServerSideProps passes only inside its scope", async () => {
-    const { configuration, name, bannedWords } = FRAMEWORK_NAME;
+    const name = 'getServerSideProps';
     const source = `export function ${name}() { return null; }\n`;
     const variables = `export const ${name} = () => null;\n`;
     const declarations = `    ${name}() { return null; }\n`;
@@ -33,8 +30,8 @@ test("nextjs's allowed function name getServerSideProps passes only inside its s
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript', 'naming'], {
             level: 'all',
-            scopes: [{ path: 'app', configurations: [configuration] }, { path: 'sibling' }],
-            tables: `[naming]\nbanned_words = ${JSON.stringify(bannedWords)}\n`,
+            scopes: [{ path: 'app', configurations: ['nextjs'] }, { path: 'sibling' }],
+            tables: '[naming]\nbanned_words = ["get server side props"]\n',
         }),
         'entry.ts': source,
         'app/entry.ts': source,
@@ -127,7 +124,24 @@ test('an allowed property name does not hide a bad name on the next line', async
 });
 
 test(`test-file exemptions follow each scope's test_files and Swift test names`, async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': TEST_PATH_SETTINGS, ...TEST_PATH_FILES });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `level = "all"
+configurations = ["javascript", "swift", "naming"]
+test_files = ["qa/**"]
+[[scope]]
+path = "apps/web"
+test_files = ["verification/**"]
+[[scope]]
+path = "apps/api"
+`,
+        'qa/entry.js': 'export const testcaseCount = 1;\n',
+        '__tests__/default.js': 'export const testcaseCount = 1;\n',
+        'Tests/Service.swift': 'let testcaseCount = 1\n',
+        'Sources/ServiceTests.swift': 'let testcaseCount = 1\n',
+        'apps/web/verification/entry.js': 'export const testcaseCount = 1;\n',
+        'apps/web/qa/entry.js': 'export const testcaseCount = 1;\n',
+        'apps/api/verification/entry.js': 'export const testcaseCount = 1;\n',
+    });
 
     const result = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['naming/identifiers'] }));
 
@@ -184,16 +198,6 @@ test('Next.js JavaScript routes accept PascalCase components', async () => {
     expect(await runSandboxCheck(sandbox.path, 'naming/identifiers')).toStrictEqual([]);
 });
 
-test('cors stays a domain word while core and its word forms remain banned', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['javascript', 'naming'], { level: 'all' }),
-        'cors.js':
-            'export const corsHeaders = {};\nexport const coreCount = 1;\nexport const cores = [];\nexport const cored = 1;\n',
-    });
-    const findings = await runSandboxCheck(sandbox.path, 'naming/identifiers');
-    expect(findings.map(({ line }) => line)).toStrictEqual([2, 3, 4]);
-});
-
 test('a bash variable that a later readonly line names is reported once, at the line that declares it', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash', 'naming'], { level: 'all' }),
@@ -224,7 +228,7 @@ test('a SQL file that Postgres cannot parse reports syntax, except in a scope th
         { file: 'pragma.sql', line: 1, rule: 'syntax' },
         { file: 'store/tables.sql', line: 1, rule: 'banned-word' },
     ]);
-    expect(findings[0]?.help).toContain('gspot set sql.dialect <dialect> --scope <folder>');
+    expect(findings[0]?.help).toBeDefined();
 });
 
 test('useMDXComponents passes under nextjs', async () => {

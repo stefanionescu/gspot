@@ -6,11 +6,11 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect } from 'bun:test';
 import type { z } from 'zod';
 
-import { planInit } from '#cli/generation/setup/planner.ts';
+import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import { runProgram } from '#cli/main.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { CheckResult, RunReport } from '#cli/types/engine/run.ts';
-import type { InitPlanning } from '#cli/types/generation.ts';
+import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
 import type { Level, TomlTable } from '#cli/types/settings.ts';
 import type { CancelableSpawnOptions, CommandFailureJson, ErrorCode } from '#cli/types/system.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
@@ -23,6 +23,14 @@ import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import type { FindingRow, ProcessOutput, Sandbox, StdinOptions } from '#tests/types/setup.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
+
+function parseInitArguments(commandArguments: readonly string[]): InitOptions {
+    const { values } = parseArgs({
+        args: [...commandArguments],
+        options: { configurations: { type: 'string', multiple: true }, level: { type: 'string' } },
+    });
+    return { configurations: values.configurations, level: values.level as Level | undefined };
+}
 
 export function listFindingRows(report: RunReport): FindingRow[] {
     return report.checks.flatMap(({ findings }) => findings.map(({ file, line, rule }) => ({ file, line, rule })));
@@ -59,17 +67,20 @@ export async function runGspot(
 export async function planSandboxInit(
     root: string,
     commandArguments: readonly string[] = [],
-): Promise<Pick<InitPlanning, 'plan'> & { settings: TomlTable }> {
+): Promise<Pick<InitPlanning, 'plan' | 'settingsText'> & { settings: TomlTable }> {
     commitAll(root);
-    const { values } = parseArgs({
-        args: [...commandArguments],
-        options: { configurations: { type: 'string', multiple: true }, level: { type: 'string' } },
-    });
-    const { plan, settingsText } = await planInit(root, {
-        configurations: values.configurations,
-        level: values.level as Level | undefined,
-    });
-    return { plan, settings: parse(settingsText) as TomlTable };
+    const { plan, settingsText } = await planInit(root, parseInitArguments(commandArguments));
+    return { plan, settingsText, settings: parse(settingsText) as TomlTable };
+}
+
+export async function applySandboxInit(
+    root: string,
+    commandArguments: readonly string[] = [],
+): Promise<Pick<InitPlanning, 'plan'> & { report: ApplyReport }> {
+    commitAll(root);
+    const initPlan = await planInit(root, parseInitArguments(commandArguments));
+    const report = await writeInitFiles(root, initPlan);
+    return { plan: initPlan.plan, report };
 }
 
 export function parseCheckReport(output: ProcessOutput): ProcessOutput & { report: z.infer<typeof runReportSchema> } {

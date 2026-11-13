@@ -3,7 +3,6 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-redundant-assignment', noRedundantAssignment, {
     valid: [
-        'function pick(ready) { let mode = "fast"; mode = "slow"; return mode; }',
         'function pick(ready) { let mode = "fast"; if (ready) { mode = "slow"; } mode = "fast"; return mode; }',
         'function pick(ready) { let mode; mode = "fast"; mode = "fast"; return mode; }',
         'function pick(mode = "fast") { mode = "fast"; return mode; }',
@@ -15,6 +14,8 @@ buildRuleTester().run('no-redundant-assignment', noRedundantAssignment, {
         'function pick() { let index = 0; for (index = 0; index < 3; index++) read(index); return index; }',
         'function pick(ready) { while (ready()) { let mode = "fast"; read(mode); mode = "slow"; mode = "fast"; read(mode); } }',
         'function pick(options) { let mode = "fast"; ({ mode = "fast" } = options); return mode; }',
+        'function pick() { let count = 0; count += 0; return count; }',
+        'function pick() { let mode = "fast"; mode = mode; return mode; }',
     ],
     invalid: [
         {

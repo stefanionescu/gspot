@@ -8,6 +8,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -93,6 +94,23 @@ test('tsconfig reads share one run cache per run and keep folders apart', async 
     await writeFile(join(first.path, 'base.json'), '{');
     const invalid = createRunCache(first.path);
     expect(() => readTsconfig(invalid.root, path, invalid)).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'configuration' }),
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'configuration',
+            message: expect.stringContaining('tsconfig.json') as string,
+        }),
+    );
+});
+
+test('a tsconfig that extends a missing file names that file', async () => {
+    await using sandbox = await testdir({ 'tsconfig.json': '{"extends":"./missing-base.json"}' });
+    const cache = createRunCache(sandbox.path);
+    const missing = convertToPosixPath(join(sandbox.path, 'missing-base.json'));
+    expect(() => readTsconfig(cache.root, join(cache.root, 'tsconfig.json'), cache)).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'configuration',
+            message: expect.stringContaining(missing) as string,
+        }),
     );
 });

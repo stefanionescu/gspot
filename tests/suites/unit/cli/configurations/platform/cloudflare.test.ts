@@ -62,3 +62,18 @@ test.each(SECURITY_HEADER_CASES)(
         );
     },
 );
+
+test('cloudflare/headers in a nested scope reads only the _headers file of that scope', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['cloudflare'], { level: 'all', scopes: [{ path: 'apps/backend' }] }),
+        _headers:
+            '/*\n    X-Content-Type-Options: nosniff\n    Referrer-Policy: same-origin\n    X-Frame-Options: DENY\n',
+        'apps/backend/_headers': '/*\n    X-Content-Type-Options: nosniff\n',
+    });
+    expect(await runSandboxCheck(sandbox.path, 'cloudflare/headers', { scope: '' })).toStrictEqual([]);
+    const nested = await runSandboxCheck(sandbox.path, 'cloudflare/headers', { scope: 'apps/backend' });
+    expect(nested.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'apps/backend/_headers', rule: 'missing-header' },
+        { file: 'apps/backend/_headers', rule: 'missing-header' },
+    ]);
+});

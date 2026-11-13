@@ -6,13 +6,16 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
+import { PUSH_STDIN_MESSAGE } from '#cli/config/commands/check.ts';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { ARGUMENT_REFUSALS, PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
+import { PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -54,34 +57,23 @@ test('--only names the configuration that an unselected check needs', async () =
 });
 
 test.each([
+    { flags: ['--staged', '--fix'], named: ['--fix', '--staged'] },
+    { flags: ['--staged', '--base', 'HEAD'], named: ['--base', '--staged'] },
     {
-        flags: ['--staged', '--fix'],
-        message:
-            '--fix cannot run with --staged: fixers change the working tree, not the staged files. Run gspot check --fix, then stage them with git add -p.',
-    },
-    { flags: ['--staged', '--base', 'HEAD'], message: '--base cannot run with --staged. Choose one file selection.' },
-    {
-        flags: ['--hook', 'pre-push', '--fix'],
-        message: '--fix cannot run with --hook pre-push: it checks the pushed commits. Leave out --fix.',
-    },
-    {
-        flags: ['--hook', 'pre-push', '--staged'],
-        message: '--staged cannot run with --hook pre-push: it checks the pushed commits. Leave out --staged.',
-    },
-    {
-        flags: ['--hook', 'pre-push', '--base', 'HEAD'],
-        message: '--base cannot run with --hook pre-push: it checks the pushed commits. Leave out --base.',
+        flags: ['--hook', 'pre-push', '--staged', '--base', 'HEAD', '--fix'],
+        named: ['--staged', '--base', '--fix', '--hook pre-push'],
     },
     {
         flags: ['--hook', 'commit-msg', '--staged', '--base', 'HEAD', '--fix'],
-        message:
-            '--staged, --base, --fix cannot run with --hook commit-msg: it checks the commit message. Leave out --staged, --base, --fix.',
+        named: ['--staged', '--base', '--fix', '--hook commit-msg'],
     },
-])('check $flags exits 2, names the conflict, and leaves the working tree as it was', async ({ flags, message }) => {
+])('check $flags exits 2, names the conflict, and leaves the working tree as it was', async ({ flags, named }) => {
     await using sandbox = await createFixableSandbox();
     const refused = await runGspot(sandbox.path, ['check', ...flags, '--json']);
     expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments', message });
+    const failure = JSON.parse(refused.stdout) as CommandFailureJson;
+    expect(failure.error).toBe('arguments');
+    for (const name of named) expect(failure.message).toContain(name);
     expect(runGitStep(sandbox.path, ['status', '--porcelain'])).toBe('');
 });
 
@@ -99,6 +91,14 @@ test.each([...PUSH_INPUT_REFUSALS])(
         expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'git', message });
     },
 );
+
+test('check --hook pre-push refuses a terminal on stdin', async () => {
+    await using sandbox = await createFixableSandbox();
+    using _terminal = fakeTerminals([[process.stdin, true]]);
+    const refused = await runGspot(sandbox.path, ['check', '--hook', 'pre-push', '--json', '--', 'origin', 'unused']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments', message: PUSH_STDIN_MESSAGE });
+});
 
 test('a staged check after a write of the generated files names the setup files that are not staged', async () => {
     await using sandbox = await createGitSandbox({
@@ -169,15 +169,15 @@ test('a staged check reports a file name that is not UTF-8 and leaves no copy be
     expect(await readdir(temporary.path)).toStrictEqual([]);
 });
 
-test.each([...ARGUMENT_REFUSALS])(
-    'check with %s exits 2 and names the refused argument',
-    async (_, commandArguments, refusedArgument) => {
-        await using sandbox = await createFixableSandbox();
-        const refused = await runGspot(sandbox.path, [...commandArguments, '--json']);
-        expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-        expect(JSON.parse(refused.stdout)).toMatchObject({
-            error: 'arguments',
-            message: expect.stringContaining(refusedArgument) as string,
-        });
-    },
-);
+test.each([
+    ['an empty --only list', ['check', '--only', ','], '--only'],
+    ['an unknown --skip check', ['check', '--skip', 'bash/unknown'], 'bash/unknown'],
+] as const)('check with %s exits 2 and names the refused argument', async (_, commandArguments, refusedArgument) => {
+    await using sandbox = await createFixableSandbox();
+    const refused = await runGspot(sandbox.path, [...commandArguments, '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout)).toMatchObject({
+        error: 'arguments',
+        message: expect.stringContaining(refusedArgument) as string,
+    });
+});

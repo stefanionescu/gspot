@@ -1,17 +1,5 @@
 const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
 
-export const DOCKERIGNORE_ALLOWLISTS = [
-    { text: `${REQUIRED_DOCKERIGNORE}!.env\n`, missing: ['.env'] },
-    { text: `${REQUIRED_DOCKERIGNORE}!**/.env\n`, missing: ['.env', '**/.env'] },
-    { text: '*\n!src\n', missing: ['**/coverage/**', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'] },
-    { text: '*\n!src\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n', missing: [] },
-    { text: '!src\n*\n', missing: [] },
-    {
-        text: '*\n!.env\n',
-        missing: ['.env', '**/coverage/**', '**/.env', '**/.env.*', '**/.dev.vars', '**/.dev.vars.*'],
-    },
-] as const;
-
 export const DOCKERIGNORE_CASES = [
     {
         name: 'each scope lists the folders of its own configurations',
@@ -19,18 +7,11 @@ export const DOCKERIGNORE_CASES = [
         options: { level: 'all', rules: true, scopes: [{ path: 'app', configurations: ['python'] }] },
         files: {
             Dockerfile: 'FROM scratch\n',
+            '.dockerignore': REQUIRED_DOCKERIGNORE,
             'app/Dockerfile': 'FROM scratch\n',
+            'app/.dockerignore': REQUIRED_DOCKERIGNORE,
         },
-        findings: [
-            {
-                file: 'Dockerfile',
-                rule: 'missing-file',
-            },
-            {
-                file: 'app/Dockerfile',
-                rule: 'missing-file',
-            },
-        ],
+        findings: [{ file: 'app/.dockerignore', rule: 'missing-entry', entry: '**/__pycache__/**' }],
     },
     {
         name: 'a Dockerfile-specific ignore',
@@ -76,12 +57,7 @@ export const DOCKERIGNORE_CASES = [
             'other/Dockerfile': 'FROM scratch\n',
             'other/.dockerignore': REQUIRED_DOCKERIGNORE,
         },
-        findings: [
-            {
-                file: 'affected/Dockerfile',
-                rule: 'missing-file',
-            },
-        ],
+        findings: [{ file: 'affected/Dockerfile', rule: 'missing-file', entry: '**/coverage/**' }],
     },
     {
         name: 'a specific ignore taking precedence over the general ignore',
@@ -92,12 +68,7 @@ export const DOCKERIGNORE_CASES = [
             '.dockerignore': REQUIRED_DOCKERIGNORE,
             'Dockerfile.dockerignore': '.git\n',
         },
-        findings: [
-            {
-                file: 'Dockerfile.dockerignore',
-                rule: 'missing-entry',
-            },
-        ],
+        findings: [{ file: 'Dockerfile.dockerignore', rule: 'missing-entry', entry: '**/coverage/**' }],
     },
 ] as const;
 
@@ -116,9 +87,12 @@ services: {app: {image: nginx:1.27.2}, copy: {image: nginx:1.27.2}, env: {image:
     },
 ] as const;
 
+export const TRIVY_REPORT =
+    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
+
 export const TRIVY_REGISTRY_FAILURE = {
     code: 1,
-    stdout: '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}',
+    stdout: TRIVY_REPORT,
     stderr: 'FATAL registry authentication failed',
 } as const;
 

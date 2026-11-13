@@ -11,7 +11,7 @@ buildRuleTester().run('no-weak-keys', noWeakKeys, {
             code: "const crypto = require('crypto');\ncrypto.generateKeyPairSync('rsa', { modulusLength: 1024 });\ncrypto.generateKeyPairSync('rsa', { modulusLength: 2048 });\nconst opts = { namedCurve: 'secp112r1' };\ncrypto.generateKeyPairSync('ec', opts);",
             errors: [
                 { messageId: 'shortKey', line: 2 },
-                { messageId: 'weakCurve', line: 4 },
+                { messageId: 'weakCurve', line: 4, data: { curve: 'secp112r1' } },
             ],
         },
         {

@@ -20,6 +20,7 @@ buildRuleTester().run('no-small-switch', noSmallSwitch, {
 buildTypedRuleTester().run('no-small-switch with types', noSmallSwitch, {
     valid: [
         'declare function assertNever(value: never): never; declare const mode: "dark"; switch (mode) { case "dark": paint(); break; default: assertNever(mode); }',
+        'declare function assertNever(value: never): never; declare const mode: "dark"; function paint() { switch (mode) { case "dark": return 1; default: return assertNever(mode); } }',
     ],
     invalid: [
         {

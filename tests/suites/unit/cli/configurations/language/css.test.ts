@@ -1,13 +1,12 @@
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 import type { Config } from 'stylelint';
 import type stylelintModule from 'stylelint';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text.ts';
-import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -16,71 +15,15 @@ const { default: stylelint } = (await import(Bun.resolveSync('stylelint', toolMo
     default: typeof stylelintModule;
 };
 
-test('a CSS-only scope checks properties inside a vue component style', async () => {
-    const path = 'Card.vue';
-    const code = '<style>p { nonexistent-property: red; }</style>\n';
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['css']),
-        [path]: code,
-    });
-    const session = await openSession(sandbox.path);
-    const generated = buildGeneratedFiles(session).files.find(
-        ({ path: file }) => file === getConfigPath(session, 'stylelint', ''),
-    )!;
-    const config = JSON.parse(generated.content) as Config;
-    const result = await stylelint.lint({
-        code,
-        codeFilename: join(sandbox.path, path),
-        config,
-        configBasedir: toolModules,
-    });
-    expect(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule))).toStrictEqual([
-        'property-no-unknown',
-    ]);
+test('level basic turns off each Stylelint rule that only level all runs', async () => {
+    const config = JSON.parse(
+        await buildGeneratedFile(buildSandboxSettings(['css']), getManifestTarget('css', 'stylelint.json'), {
+            'site.css': '',
+        }),
+    ) as { rules: Record<string, unknown> };
+    const levelOff = getTool(readConfigurations().values(), 'stylelint').off?.basic ?? [];
+    expect(levelOff.map((rule) => [rule, config.rules[rule]])).toStrictEqual(levelOff.map((rule) => [rule, null]));
 });
-
-test.each([
-    [
-        'basic',
-        [
-            'declaration-property-unit-allowed-list',
-            'declaration-property-value-disallowed-list',
-            'property-disallowed-list',
-        ],
-    ],
-    [
-        'all',
-        [
-            'declaration-property-unit-allowed-list',
-            'declaration-property-value-disallowed-list',
-            'property-disallowed-list',
-            'selector-disallowed-list',
-            'selector-max-id',
-            'selector-max-specificity',
-        ],
-    ],
-] as const)(
-    'level %s reports physical properties, fixed font sizes, and ID and state selectors',
-    async (level, expected) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['css'], { level }),
-            'site.css': 'a {\n    color: red;\n}\n',
-        });
-        const output = buildGeneratedFiles(await openSession(sandbox.path)).files.find(
-            (file) => file.path === getManifestTarget('css', 'stylelint.json'),
-        )!;
-        const result = await stylelint.lint({
-            code: '.is-active {\n    float: left;\n}\n\n#page {\n    font-size: 14px;\n}\n\n.a .b .c .d {\n    margin-left: 1rem;\n}\n',
-            codeFilename: `${sandbox.path}/site.css`,
-            config: JSON.parse(output.content) as Config,
-            configBasedir: toolModules,
-        });
-        const reported = new Set(result.results.flatMap(({ warnings }) => warnings.map(({ rule }) => rule)));
-        expect(
-            [...reported].filter((rule) => /disallowed|allowed|selector-max/u.test(rule)).toSorted(compareText),
-        ).toStrictEqual([...expected]);
-    },
-);
 
 test('a scope with CSS Modules files accepts composes, :global, and @value in them only', async () => {
     await using sandbox = await createGitSandbox({

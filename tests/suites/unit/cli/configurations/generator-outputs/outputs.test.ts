@@ -3,9 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
@@ -25,14 +23,13 @@ test('a [[command_check]] with outputs reports an output that differs from what 
         'generated/api.ts': 'export const version = 1;\n',
     });
     commitAll(sandbox.path);
-    const stale = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/codegen'] }));
-    expect(
-        stale.report.checks.flatMap(({ findings }) => findings.map(({ file, rule }) => ({ file, rule }))),
-    ).toStrictEqual([{ file: 'generated/api.ts', rule: 'stale' }]);
+    const stale = await runSandboxCheck(sandbox.path, 'project/codegen');
+    expect(stale.map(({ file, rule }) => ({ file, rule }))).toStrictEqual([
+        { file: 'generated/api.ts', rule: 'stale' },
+    ]);
     expect(await readFile(join(sandbox.path, 'generated/api.ts'), 'utf8')).toBe('export const version = 1;\n');
     await writeFile(join(sandbox.path, 'generated/api.ts'), 'export const version = 2;\n');
-    const fresh = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/codegen'] }));
-    expect(fresh.report.failed).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'project/codegen')).toStrictEqual([]);
 });
 
 test('an unchanged binary output passes and a changed one reports stale', async () => {
@@ -45,20 +42,12 @@ test('an unchanged binary output passes and a changed one reports stale', async 
         'generated/image.bin': Buffer.from(BINARY_OUTPUT_HEX, 'hex'),
     });
     commitAll(sandbox.path);
-    const fresh = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/image'] }));
-    expect(fresh.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
-        { status: 'passed', findings: [] },
-    ]);
+    expect(await runSandboxCheck(sandbox.path, 'project/image')).toStrictEqual([]);
     const output = join(sandbox.path, 'generated/image.bin');
     const changed = Buffer.from([0, 255, 129]);
     await writeFile(output, changed);
-    const stale = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/image'] }));
-    expect(stale.report.checks.map(({ status }) => status)).toStrictEqual(['failed']);
-    expect(
-        stale.report.checks.flatMap(({ findings }) =>
-            findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
-        ),
-    ).toStrictEqual([
+    const stale = await runSandboxCheck(sandbox.path, 'project/image');
+    expect(stale.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
         {
             file: 'generated/image.bin',
             line: 1,

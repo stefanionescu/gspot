@@ -1,40 +1,4 @@
-export const SELECTOR_FILES = {
-    'native/App.jsx':
-        'const list = <FlatList data={items} />;\nconst scroll = <ScrollView>{items.map(renderItem)}</ScrollView>;\n',
-    'forms/Fields.jsx': `const checkbox = <input type="checkbox" value="a" {...register("choice")} />;
-const radio = <input type="radio" value="a" {...register("choice")} />;
-const text = <input type="text" value="a" {...register("choice")} />;
-const memberCheckbox = <input type="checkbox" value="a" {...form.register("choice")} />;
-const memberRadio = <input type="radio" value="a" {...form.register("choice")} />;
-const memberText = <input type="text" value="a" {...form.register("choice")} />;
-`,
-} as const;
-
-export const SELECTOR_LIBRARY_FILES = {
-    'counter.js':
-        "import { useStore } from './store.js';\nexport function readCount() {\n    return useStore((state) => state.count);\n}\n",
-    'cart.js':
-        "import { useStore } from 'zustand';\nimport { cartStore, useCartStore } from './store.js';\nexport function readCart() {\n    const whole = useCartStore();\n    return [whole];\n}\n",
-    'router.js':
-        'const byId = publicProcedure.input(schema);\nexport const appRouter = router({\n    order: publicProcedure.input(schema).query(({ input }) => pool.query(sql)),\n});\n',
-} as const;
-
-export const FRAMEWORK_SELECTOR_CASES = [
-    {
-        configuration: 'nestjs',
-        language: 'typescript',
-        file: 'source.ts',
-        source: 'import { Res, Response, forwardRef } from "@nestjs/common";\nexport class Controller {\n    first(@Res() response: unknown) { return response; }\n    second(@Response({ passthrough: true }) response: unknown) { return response; }\n}\nforwardRef(() => Controller);\n',
-        lines: [3, 6],
-    },
-    {
-        configuration: 'react-native',
-        language: 'javascript',
-        file: 'source.jsx',
-        source: 'import { TouchableOpacity, Pressable } from "react-native";\nAsyncStorage.setItem("accessToken", value);\nAsyncStorage.setItem("theme", value);\nexport const button = <Pressable />;\n',
-        lines: [1, 2],
-    },
-] as const;
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 
 export const DUPLICATE_RULE_CASES = [
     {
@@ -50,36 +14,12 @@ export const DUPLICATE_RULE_CASES = [
         rules: ['no-unused-vars', '@typescript-eslint/no-unused-vars'],
     },
     {
-        file: 'eval.js',
-        source: 'export const result = eval(process.env.SCRIPT);\n',
-        kept: 'gspot/no-code-eval',
-        rules: ['security/detect-eval-with-expression', 'gspot/no-code-eval'],
-    },
-    {
-        file: 'buffer.js',
-        source: 'export const result = new Buffer(8);\n',
-        kept: 'n/no-deprecated-api',
-        rules: ['security/detect-new-buffer', 'n/no-deprecated-api'],
-    },
-    {
-        file: 'slow-regex.js',
-        source: 'export const pattern = /^(a+)+$/;\n',
-        kept: 'regexp/no-super-linear-backtracking',
-        rules: ['regexp/no-super-linear-backtracking', 'security/detect-unsafe-regex'],
-    },
-    {
         file: 'empty.test.js',
         source: "import { test } from '@jest/globals';\n\ntest('counts the rows', () => {});\n",
         kept: 'jest/expect-expect',
         rules: ['gspot/require-test-assertions', 'jest/expect-expect'],
     },
 ] as const;
-
-export const DUPLICATE_RULE_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    'tsconfig.json':
-        '{"compilerOptions":{"target":"ESNext","module":"NodeNext","moduleResolution":"NodeNext","types":[]},"include":["*.ts"]}\n',
-} as const;
 
 export const IMPORT_RULE_CASES = [
     { level: 'basic', declarations: 'none' },
@@ -208,28 +148,91 @@ configurations = ["javascript"]
 test_files = ["app/verification/**", "app/qa/**"]
 `;
 
-export const TEST_IMPORT_RULE_CASES = [
-    { path: 'app/source.js', importPath: '../storage/value.js', count: 1 },
-    { path: 'app/qa/check.js', importPath: '../../storage/value.js', count: 0 },
-    { path: 'app/verification/check.js', importPath: '../../storage/value.js', count: 1 },
-    { path: 'app/example.test.js', importPath: '../storage/value.js', count: 1 },
-    { path: 'apps/api/app/source.js', importPath: '../storage/value.js', count: 1 },
-    { path: 'apps/api/app/verification/check.js', importPath: '../../storage/value.js', count: 0 },
-    { path: 'apps/api/app/example.spec.js', importPath: '../storage/value.js', count: 1 },
-] as const;
-
-export const ENVIRONMENT_READER_PATHS = [
-    'src/source.js',
-    'config/env.js',
-    'app/src/source.js',
-    'app/src/env/source.js',
-    'sibling/src/source.js',
-    'app/deep/src/source.js',
-    'literal/src/source.js',
-    'literal/config/env.js',
-] as const;
-
-export const TEST_IMPORT_TSCONFIG =
-    '{"compilerOptions":{"strict":true,"noEmit":true,"target":"ES2022","module":"NodeNext","moduleResolution":"NodeNext","baseUrl":".","paths":{"@/*":["./*"]},"types":[]},"include":["**/*.ts"]}';
-
 export const HOST_MODULE = '../../scripts/app.js';
+
+export const TRPC_IMPORTS = [
+    { source: 'import { router } from "./private/router.js";', line: 2 },
+    { source: 'import {\n router\n} from "./private/router.js";', line: 4 },
+    { source: 'export { router } from "./private/router.js";', line: 2 },
+    { source: 'const router = require("./private/router.js");', line: 2 },
+    { source: 'const router = import("./private/router.js");', line: 2 },
+    { source: 'import { router } from "#private/router";', line: 2 },
+    { source: 'import { router } from "@private/router";', line: 2 },
+    { source: 'import { type router as Router, router } from "./private/router.js";', line: 2 },
+    { source: 'import router from "./private/router.js";', line: 2 },
+    { source: 'import * as router from "./private/router.js";', line: 2 },
+    { source: 'import "./private/router.js";', line: 2 },
+    { source: 'export { type router as Router, router } from "./private/router.js";', line: 2 },
+    { source: 'export * from "./private/router.js";', line: 2 },
+] as const;
+
+export const TRPC_TYPES = `import type { router } from "./private/router.js";
+import { type router as Router } from "./private/router.js";
+export type { router as RouterExport } from "./private/router.js";
+export { type router as SpecifierExport } from "./private/router.js";
+export type * from "./private/router.js";
+`;
+
+export const TRPC_MODULES = `[trpc]
+server_files = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]
+
+[[import_rule]]
+name = "server"
+paths = ["private/**", "app/api/trpc/**", "app/private/**", "app/child/private/**", "flat/router.ts"]
+[[import_rule]]
+name = "client"
+paths = ["client/**"]
+[[import_rule]]
+name = "storage"
+paths = ["storage/**"]
+`;
+
+export const DRIZZLE_SCOPE_SETTINGS = {
+    level: 'all',
+    rules: true,
+    scopes: [{ path: 'app', configurations: ['drizzle'] }],
+    tables: '[scope.drizzle]\nclient_names = ["connection"]\n',
+} as const;
+
+export const MATCHING_SCOPE_SETTINGS = `[[scope]]
+path = "same"
+configurations = []
+[[scope]]
+path = "same/deep"
+configurations = []
+[[scope]]
+path = "different"
+configurations = []
+test_files = ["custom/**"]
+`;
+
+const PORT_SOURCE =
+    '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
+
+export const TYPED_RULE_PROJECTS = [
+    {
+        name: 'a root TypeScript project',
+        configurations: ['typescript'],
+        tables: '',
+        files: {
+            'package.json': '{"private":true,"type":"module"}\n',
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"noEmit":true},"include":["**/*.ts"]}\n',
+            'source.ts': PORT_SOURCE,
+        },
+        file: 'source.ts',
+    },
+    {
+        name: 'a TypeScript scope under a root without TypeScript',
+        configurations: [],
+        tables: '[[scope]]\npath = "api"\nconfigurations = [ "typescript" ]\n',
+        files: {
+            'package.json': '{"name":"example","private":true,"type":"module","workspaces":["api"]}\n',
+            'api/package.json': '{"name":"api","private":true,"type":"module"}\n',
+            'api/tsconfig.json': JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] }) + '\n',
+            'api/src/port.ts': PORT_SOURCE,
+        },
+        file: 'api/src/port.ts',
+    },
+] as const;
+
+export const INDEX_ONLY_REEXPORTS = '{ value = "index-only", reason = "The package exports its public index files." }';

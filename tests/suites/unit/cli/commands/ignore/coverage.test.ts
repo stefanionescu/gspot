@@ -6,6 +6,7 @@ import { parse, stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
+import { findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { BROKEN_IF_SCRIPT, TERMS_SOURCE } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
@@ -116,7 +117,8 @@ test('ignore without a check keeps the paths out of every check and every config
     const saved = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
     expect(saved['ignore']).toStrictEqual([{ paths: ['data/**'], reason }]);
     const typos = await readFile(join(sandbox.path, getManifestTarget('spelling', 'typos.toml')), 'utf8');
-    expect(typos).toEndWith(`  # ${reason}\n  "data/**",\n]\n`);
+    expect(findValueAt(parse(typos), ['files', 'extend-exclude'])).toContain('data/**');
+    expect(typos).toContain(`# ${reason}`);
     const removed = await runGspot(sandbox.path, ['unignore', '--paths', 'data/**']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);
     const contents: unknown = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8'));

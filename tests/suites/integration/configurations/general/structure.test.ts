@@ -5,7 +5,8 @@ import { expect, test } from 'bun:test';
 
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 const DUPLICATED_METADATA = JSON.stringify(
@@ -35,10 +36,9 @@ const COUNT_STEPS = Array.from(
     (_, index) => `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
 ).join('\n');
 
-const installedSandbox = shareInstalledSandbox({
-    configurations: ['bash', 'typescript', 'python'],
-    files: {},
-});
+const installedSandbox = shareInstalledSandbox({ configurations: [], files: {} });
+
+const LANGUAGE_SETTINGS = buildSandboxSettings(['bash', 'typescript', 'python'], { level: 'all' });
 
 async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
     const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'structure/jscpd', '--json']));
@@ -49,8 +49,9 @@ async function runJscpdCheck(root: string, code: number): Promise<RunReport> {
 test('structure/jscpd reports a copied Bash function on the second file and ignores identical JSON files', async () => {
     const firstScript = `#!/usr/bin/env bash\nset -euo pipefail\n\ncount_first() {\n    local total=0\n${COUNT_STEPS}\n    printf '%s\\n' "$total"\n}\n\ncount_first\n`;
     const { root } = installedSandbox();
-    await using _change = await changeSandbox(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
+            'gspot.toml': LANGUAGE_SETTINGS,
             'scripts/first.sh': firstScript,
             'metadata/first.json': DUPLICATED_METADATA,
             'metadata/second.json': DUPLICATED_METADATA,
@@ -81,8 +82,9 @@ test('structure/jscpd reports a copied Bash function on the second file and igno
 
 test('structure/jscpd skips an import list that two TypeScript files share and reports a copied function', async () => {
     const { root } = installedSandbox();
-    await using _change = await changeSandbox(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
+            'gspot.toml': LANGUAGE_SETTINGS,
             'first.ts': `${SHARED_IMPORTS}\n\nexport const first = value0 + value1;\n`,
             'second.ts': `${SHARED_IMPORTS}\n\nexport const second = value2 * value3;\n`,
         },
@@ -106,8 +108,9 @@ test('structure/jscpd skips an import list that two TypeScript files share and r
 
 test('structure/jscpd skips shared Python imports and reports duplicated executable statements', async () => {
     const { root } = installedSandbox();
-    await using _change = await changeSandbox(installedSandbox(), {
+    await using _change = await writeSandboxChanges(installedSandbox(), {
         files: {
+            'gspot.toml': LANGUAGE_SETTINGS,
             'first.py': `${SHARED_PYTHON_IMPORTS}\nprint("first")\n`,
             'second.py': `${SHARED_PYTHON_IMPORTS}\nprint("second")\n`,
         },

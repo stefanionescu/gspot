@@ -21,7 +21,6 @@ const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.m
 
 function countStatements(node: TSESTree.Node, visitorKeys: TSESLint.SourceCode['visitorKeys']): number {
     if (TYPE_DECLARATIONS.has(node.type)) return 0;
-    if ('declare' in node && node.declare) return 0;
     const isExpressionBody = ASTUtils.isFunction(node) && node.body.type !== AST_NODE_TYPES.BlockStatement;
     const isStatement = node.type.endsWith('Statement') && !NON_EXECUTABLE_STATEMENTS.has(node.type);
     const own = Number(isExpressionBody || isStatement || EXECUTABLE_DECLARATIONS.has(node.type));

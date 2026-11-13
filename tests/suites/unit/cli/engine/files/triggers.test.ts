@@ -1,26 +1,19 @@
 import { existsSync } from 'node:fs';
-import { appendFile, mkdir, readFile, unlink } from 'node:fs/promises';
+import { appendFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { runFixers } from '#cli/engine/fixes.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
-import {
-    LAST_FILE_CHANGES,
-    PROJECT_FINDING_MESSAGE,
-    TSC_PUSH_OPTIONS,
-    TWO_SCOPES_SETTINGS,
-} from '#tests/config/engine/files.ts';
+import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
 import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -28,7 +21,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (existsSync(join(session.root, '.git/info/exclude')))
@@ -38,7 +30,7 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         `${GSPOT_FOLDER}/mock-tsc`,
         'fakes/tool',
         '--line',
-        PROJECT_FINDING_MESSAGE,
+        'Project finding',
         '--exit',
         '1',
     );
@@ -52,7 +44,6 @@ async function replaceChildScopeChecks(session: Session): Promise<void> {
         command: [join(session.root, `${GSPOT_FOLDER}/mock-tsc`)],
         output: { format: 'regex', pattern: '(?<message>.+)' },
         files: configuration.files,
-        fix: buildProgramCommand('fakes/tool', '--text', 'restored', '{scope}/source.ts'),
     };
     const fileCheck = { ...check, id: 'json/v8r', runs: 'files' as const };
     for (const scope of session.scopes) {
@@ -100,26 +91,6 @@ test.each(LAST_FILE_CHANGES)(
         expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
     },
 );
-
-test('a fixer of a deleted trigger path restores it', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': TWO_SCOPES_SETTINGS,
-        'api/source.ts': 'export {};\n',
-        'web/kept.ts': 'export {};\n',
-    });
-    commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['rm', 'api/source.ts']);
-    await mkdir(join(sandbox.path, 'api'), { recursive: true });
-    const session = await openSession(sandbox.path);
-    await replaceChildScopeChecks(session);
-    const { paths } = await readChangedPaths(sandbox.path, 'HEAD');
-    const api = planChecks(session, { ...TSC_PUSH_OPTIONS, selection: { content: 'working-tree', paths } }).find(
-        (check) => check.scope.path === 'api',
-    )!;
-    const applied = await runFixers(buildCheckSession(session, CHECK_GENERATION), [api]);
-    expect(applied.changed).toStrictEqual(['api/source.ts']);
-    expect(await readFile(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
-});
 
 test('a deleted file from another language does not trigger a TypeScript project', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });

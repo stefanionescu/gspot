@@ -10,8 +10,7 @@ import { createFileTree, type TestdirResult } from 'testdirs';
 import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { SCRIPT_SPACES, STAGED_PACKAGE_JSON, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
-import { NOTES_MARKDOWN } from '#tests/config/setup/configurations.ts';
+import { NOTES_MARKDOWN, UPPERCASE_NOTES_MARKDOWN } from '#tests/config/commands/check.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
@@ -22,6 +21,8 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const SCRIPT_SPACES = 'script with spaces.sh';
 
 async function createCaseClashingSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({});
@@ -101,10 +102,16 @@ test('a staged check reads index bytes and file modes, converts no line endings,
 
 test('a staged check with unstaged work reuses the locked dependencies and isolates source edits', async () => {
     await using sandbox = await createGitSandbox({});
+    const packageJson = {
+        name: 'snapshot-project',
+        private: true,
+        type: 'module',
+        dependencies: { dependency: '1.0.0' },
+    };
     const lockfile = JSON.stringify({
-        name: STAGED_PACKAGE_JSON.name,
+        name: packageJson.name,
         lockfileVersion: 3,
-        packages: { '': STAGED_PACKAGE_JSON, 'node_modules/dependency': { version: '1.0.0' } },
+        packages: { '': packageJson, 'node_modules/dependency': { version: '1.0.0' } },
     });
     const command = buildProgramCommand(
         'checks/dependency',
@@ -115,7 +122,7 @@ test('a staged check with unstaged work reuses the locked dependencies and isola
     );
     await createFileTree(sandbox.path, {
         '.gitignore': `${GSPOT_FOLDER}/\nnode_modules/\n`,
-        'package.json': JSON.stringify(STAGED_PACKAGE_JSON),
+        'package.json': JSON.stringify(packageJson),
         'package-lock.json': lockfile,
         'node_modules/dependency/package.json':
             '{"name":"dependency","version":"1.0.0","type":"module","exports":"./index.js"}',
@@ -193,7 +200,7 @@ test.skipIf(isCaseFolding())('staged paths that differ only by letter case keep 
 test('staged checks use index bytes and settings on an unborn branch while preserving unstaged edits', async () => {
     await using sandbox = await createGitSandbox({});
     const settings = buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK });
-    await createFileTree(sandbox.path, { 'gspot.toml': settings, 'script with spaces.sh': BROKEN_IF_SCRIPT });
+    await createFileTree(sandbox.path, { 'gspot.toml': settings, [SCRIPT_SPACES]: BROKEN_IF_SCRIPT });
     runGitStep(sandbox.path, ['add', '-A']);
     const index = runGitStep(sandbox.path, ['ls-files', '--stage', '-z']);
     await writeFile(join(sandbox.path, SCRIPT_SPACES), 'echo repaired only in the working tree\n');
@@ -224,7 +231,7 @@ test('staged checks use index bytes and settings on an unborn branch while prese
 test('staged checks read an indexed file when its working file is missing', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_CHECK }),
-        'script with spaces.sh': 'echo indexed\n',
+        [SCRIPT_SPACES]: 'echo indexed\n',
     });
 
     runGitStep(sandbox.path, ['add', '-A']);

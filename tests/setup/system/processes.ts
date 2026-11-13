@@ -17,17 +17,6 @@ function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limit
     throw new Error(message);
 }
 
-function hasExited(pid: number): boolean {
-    try {
-        process.kill(pid, 0);
-        return false;
-    } catch (error) {
-        if (hasErrorCode(error, 'ESRCH')) return true;
-        if (pid < 0 && hasErrorCode(error, 'EPERM')) return true;
-        throw error;
-    }
-}
-
 function buildSpawnOptions(options: CancelableSpawnOptions & { timeoutSeconds: number }) {
     return {
         cwd: options.cwd,
@@ -77,7 +66,13 @@ export async function waitForExit(pid: number): Promise<void> {
     if (pid === 0 || !Number.isSafeInteger(pid)) throw new Error(`Invalid child PID: ${String(pid)}.`);
     const deadline = performance.now() + CHILD_WAIT_MILLISECONDS - MILLISECONDS_PER_SECOND;
     while (performance.now() < deadline) {
-        if (hasExited(pid)) return;
+        try {
+            process.kill(pid, 0);
+        } catch (error) {
+            if (hasErrorCode(error, 'ESRCH')) return;
+            if (pid < 0 && hasErrorCode(error, 'EPERM')) return;
+            throw error;
+        }
         await Bun.sleep(POLL_INTERVAL_MILLISECONDS);
     }
     process.kill(pid, 'SIGKILL');

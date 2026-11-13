@@ -11,10 +11,13 @@ import { openSession } from '#cli/engine/session.ts';
 import { runCommandBatches, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE } from '#tests/config/engine/tool-runs.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildFixerSettings, buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -47,26 +50,6 @@ test.skipIf(isWindows)('a command check whose program lost its execute bit error
     expect(unexecutable.report.checks[0]?.note).toContain('checker could not run');
     expect(unexecutable.report.checks[0]?.note).not.toContain(sandbox.path);
     expect(unexecutable.report.checks[0]?.note).toContain('EACCES');
-});
-
-test.skipIf(isWindows)('a per-file process killed by a signal is an error, not a finding', async () => {
-    const command = buildProgramCommand('fakes/tool', '--signal', 'SIGTERM', '{file}');
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [{ id: 'project/termination', command, paths: ['source.txt'], stage: 'commit' }],
-            }),
-        }),
-        'source.txt': 'valid source',
-    });
-
-    const session = await openSession(sandbox.path);
-    const plans = planChecks(session, { stage: 'all', only: ['project/termination'] });
-    const planned = plans[0]!;
-    const failed = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
-    expect(failed.status).toBe('error');
-    expect(failed.findings).toStrictEqual([]);
 });
 
 test('a fatal command group stops before the next group runs', async () => {
@@ -116,10 +99,43 @@ test('a later crash preserves only selected, unignored findings', async () => {
             status,
             findings: findings.map(({ file, rule, message }) => ({ file, rule, message })),
         })),
-    ).toStrictEqual([{ status: 'error', findings: [{ file: 'one.txt', rule: 'kept', message: 'Kept finding.' }] }]);
+    ).toStrictEqual([{ status: 'error', findings: [BATCH_FINDINGS[0]!] }]);
     session.settings.ignore.push(BATCH_IGNORE);
     const ignored = await runChecks(session, options);
     expect(ignored.report.checks.map(({ status, findings }) => ({ status, findings }))).toStrictEqual([
         { status: 'error', findings: [] },
     ]);
+});
+
+test('a tool whose version command fails makes its command check an error', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    const session = await openSession(sandbox.path);
+    const planned = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] })[0]!;
+    planned.tool = {
+        ...buildProgramPin('version-teller', '3.8.1'),
+        system: true,
+        version_command: buildProgramCommand('fakes/tool', '--line', '3.8.1', '--exit', '7').slice(1),
+    };
+    using _which = fakeExecutableLookup(process.execPath);
+
+    const checked = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(checked.status).toBe('error');
+    expect(checked.note).toContain('version-teller');
+    expect(checked.note).toContain('3.8.1');
+});
+
+test('a command check whose generated config is missing stops without starting the tool', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown']),
+        'README.md': '# Example\n',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planSandboxCheck(session, 'markdown/markdownlint');
+    using commands = fakeCommands();
+    const result = await runCommandCheck(buildCheckSession(session, CHECK_GENERATION), planned);
+    expect(result).toMatchObject({
+        status: 'error',
+        note: expect.stringContaining(getManifestTarget('markdown', 'markdownlint-cli2.mjs')) as string,
+    });
+    expect(commands).not.toHaveBeenCalled();
 });

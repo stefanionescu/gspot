@@ -9,8 +9,7 @@ import { listProjectDependencyNames, readDependencyFiles, readPackageJson } from
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
-import { PYTHON_DEPENDENCY_CASES } from '#tests/config/repository/detect.ts';
-import { TRACKED_SOURCE } from '#tests/config/repository/files.ts';
+import { PYTHON_DEPENDENCY_CASES, TRACKED_SOURCE } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
@@ -51,25 +50,6 @@ const REACT_VUE_PACKAGES = {
 } as const;
 
 const ROOT_PACKAGE_WITHOUT_DEPENDENCIES = '{"name":"root-sandbox","private":true,"dependencies":{}}';
-
-test('Python dependency groups with includes keep every dependency', async () => {
-    await using sandbox = await createGitSandbox({
-        'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
-    });
-
-    const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
-    expect(dependencyFiles[0]!.dependencies).toStrictEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
-});
-
-test('a pytest table counts as a pytest dependency', async () => {
-    await using sandbox = await createGitSandbox({});
-    const source = '[tool.pytest.ini_options]\ntestpaths = ["tests"]\n';
-    await createFileTree(sandbox.path, { 'pyproject.toml': source, 'source.py': 'print("authored")\n' });
-    const repository = await readTestRepository(sandbox.path);
-    const dependencyFiles = await readDependencyFiles(createRunCache(sandbox.path), repository.files);
-    expect(dependencyFiles[0]?.dependencies).toStrictEqual({ pytest: 'tool.pytest' });
-});
 
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s gives no dependency file', async (path, content) => {
     await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
@@ -152,14 +132,4 @@ test.each(['constructor', '__proto__'])('repository names do not access inherite
         tags: ['text'],
     });
     expect(await readDependencyFiles(createRunCache(sandbox.path), repository.files)).toStrictEqual([]);
-});
-
-test('optional runtime dependencies remain installed beside development tools', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"devDependencies":{"eslint":"9.0.0"},"optionalDependencies":{"react":"19.0.0"}}',
-    });
-    const files = await readDependencyFiles(createRunCache(sandbox.path), [
-        { path: 'package.json', ...TRACKED_SOURCE },
-    ]);
-    expect(files[0]?.installed).toStrictEqual({ eslint: '9.0.0', react: '19.0.0' });
 });

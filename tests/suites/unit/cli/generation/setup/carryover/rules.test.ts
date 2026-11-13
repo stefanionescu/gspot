@@ -1,10 +1,8 @@
-import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
 import { expect, test } from 'bun:test';
 
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 
 test('init adds the Ruff rules that gspot does not run, and carries each rule that the config turns off as an ignore', async () => {
     await using sandbox = await createGitSandbox({
@@ -36,17 +34,6 @@ test('init lists Ruff I as dropped, because gspot sets the import order', async 
     const { plan, settings } = await planSandboxInit(sandbox.path, ['--configurations', 'python']);
     expect(settings['tools']).toBeUndefined();
     expect(plan.carryover.find(({ path }) => path === 'ruff.toml')).toMatchObject({ carried: [], dropped: ['I'] });
-});
-
-test('init lists a format script that calls a formatter it does not know, with the way to keep it', async () => {
-    await using sandbox = await createGitSandbox({
-        'package.json': '{"scripts":{"format":"oxfmt .","test":"true"}}',
-        'main.ts': 'export {};\n',
-    });
-    const { plan } = await planSandboxInit(sandbox.path, []);
-    expect(plan.lintCommands.filter(({ command }) => command === 'oxfmt .')).toMatchObject([
-        { file: 'package.json', line: 1, fix: expect.stringContaining('gspot ignore format/prettier') as string },
-    ]);
 });
 
 test('init lists the Ruff format options it carries in the Ruff row', async () => {
@@ -135,10 +122,13 @@ test('init compares the rules that the commitlint of the repository prints', asy
             'type-enum': [2, 'always', ['special']],
         },
     };
-    await mkdir(join(sandbox.path, 'node_modules/.bin'), { recursive: true });
-    const program = join(sandbox.path, 'node_modules/.bin/commitlint');
-    await writeFile(program, `#!/bin/sh\necho '${JSON.stringify(printed)}'\n`);
-    await chmod(program, 0o755);
+    await writeProgramCommand(
+        sandbox.path,
+        'node_modules/.bin/commitlint',
+        'fakes/tool',
+        '--stdout',
+        JSON.stringify(printed),
+    );
     const { plan, settings } = await planSandboxInit(sandbox.path, ['--level', 'all']);
     expect(settings['tools']).toStrictEqual({
         commitlint: { rules: { 'subject-case': ['always', 'lower-case'] } },

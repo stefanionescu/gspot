@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { getPosition } from '#cli/system/text.ts';
-import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES, SELECT_SQL } from '#tests/config/parsers/comments.ts';
+import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/config/parsers/comments.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
 test('empty SQL has no statements', async () => {
@@ -32,7 +32,7 @@ test('psql commands and variables keep error positions and PostgreSQL casts', as
     const broken = await parseSqlFile(text, createRunCache(process.cwd()));
     expect(broken.error).toStrictEqual({ text: `syntax error at or near "${TYPO.select}"`, line: 4, column: 1 });
     const corrected = await parseSqlFile(
-        text.replace(`${TYPO.select} 2`, () => SELECT_SQL),
+        text.replace(`${TYPO.select} 2`, () => 'SELECT 2'),
         createRunCache(process.cwd()),
     );
     expect(corrected.error).toBeUndefined();

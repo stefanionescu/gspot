@@ -29,26 +29,6 @@ const AUTHORED_VALE_FILES = {
 
 const GOOGLE_RULE_PATH = `${GSPOT_PATHS.valePackages}/Google/Passive.yml`;
 
-const VALE_INSTALL_FAILURES = [
-    {
-        name: 'timeout',
-        fakeArguments: ['--wait'],
-        named: '(1s)',
-        settings: 'tool_timeout_seconds = 1\n',
-    },
-    {
-        name: 'its error',
-        fakeArguments: [
-            '--stderr',
-            'Registry request failed: https://alex:synthetic-password@example.com/styles.zip',
-            '--exit',
-            '7',
-        ],
-        named: 'https://[redacted]@example.com/styles.zip',
-        settings: '',
-    },
-] as const;
-
 const installedSandbox = shareInstalledSandbox(PROSE_SANDBOX);
 
 test('gspot install restores deleted Vale dictionaries, and prose/vale passes again', async () => {
@@ -91,33 +71,32 @@ test('a Vale reinstall for new package releases replaces an edited package and k
     expect(await readFile(join(sandbox.root, GOOGLE_RULE_PATH))).toStrictEqual(previous);
 });
 
-test.each([...VALE_INSTALL_FAILURES])(
-    'a failed Vale package install reports $name and keeps the installed packages',
-    async ({ fakeArguments, named, settings }) => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['prose'], { level: 'all', tables: settings }),
-            [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
-            [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
-            'guide.md': 'Authored text.\n',
-        });
+test('a failed Vale package install reports its error and keeps the installed packages', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['prose'], { level: 'all' }),
+        [GSPOT_PATHS.valeConfig]: VALE_PACKAGES_INI,
+        [`${GSPOT_PATHS.valePackages}/Google/terms.yml`]: PREVIOUS_BYTES,
+        'guide.md': 'Authored text.\n',
+    });
 
-        const session = await openSession(sandbox.path);
-        const tool = getTool(readConfigurations().values(), 'vale');
-        const miseBin = join(sandbox.path, 'mise/bin');
-        const version = String(tool.version);
-        await writeProgramCommand(
-            sandbox.path,
-            'mise/bin/vale',
-            'fakes/tool',
-            '--version-line',
-            version,
-            ...fakeArguments,
-        );
-        const request = await buildSandboxToolInstall(session);
-        const failure = await captureRejection(installValePackages(request, [miseBin]));
-        expect(failure.message).toContain(named);
-        expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
-            PREVIOUS_BYTES,
-        );
-    },
-);
+    const session = await openSession(sandbox.path);
+    const tool = getTool(readConfigurations().values(), 'vale');
+    const miseBin = join(sandbox.path, 'mise/bin');
+    await writeProgramCommand(
+        sandbox.path,
+        'mise/bin/vale',
+        'fakes/tool',
+        '--version-line',
+        String(tool.version),
+        '--stderr',
+        'Registry request failed: https://alex:synthetic-password@example.com/styles.zip',
+        '--exit',
+        '7',
+    );
+    const request = await buildSandboxToolInstall(session);
+    const failure = await captureRejection(installValePackages(request, [miseBin]));
+    expect(failure.message).toContain('https://[redacted]@example.com/styles.zip');
+    expect(await readFile(join(sandbox.path, `${GSPOT_PATHS.valePackages}/Google/terms.yml`), 'utf8')).toBe(
+        PREVIOUS_BYTES,
+    );
+});

@@ -10,7 +10,7 @@ buildRuleTester({ root }).run('no-test-retries', noTestRetries, {
         { code: 'jest.retryTimes(3);', filename: join(root, 'plain/a.test.ts') },
         { code: 'const jest = other;\njest.retryTimes(3);', filename: join(root, 'jest/a.test.ts') },
         { code: 'it("adds", function () { this.retries(2); });', filename: join(root, 'plain/b.test.ts') },
-        { code: 'this.retries(2);', filename: join(root, 'plain/c.test.ts') },
+        { code: 'client.retryTimes(3);', filename: join(root, 'jest/b.test.ts') },
     ],
     invalid: [
         { code: 'jest.retryTimes(3);', filename: join(root, 'jest/a.test.ts'), errors: [{ messageId: 'retry' }] },

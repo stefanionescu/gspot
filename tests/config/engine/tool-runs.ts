@@ -1,11 +1,3 @@
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-
-export const SESSION_FILES = {
-    'package.json': '{"private":true,"packageManager":"bun@1.2.3"}\n',
-    'entry.js': 'export const target = 1;\n',
-    [`${GSPOT_FOLDER}/.keep`]: '',
-};
-
 const FAILED_RUN = { code: 1 } as const;
 
 export const BASE_CHECK = {
@@ -43,19 +35,37 @@ export const ESLINT_MANIFEST_TOOL = {
     crash_pattern: '^Oops! Something went wrong',
 } as const;
 
+const GROUPED_CHECK = {
+    ...BASE_CHECK,
+    output: {
+        format: 'grouped',
+        file_pattern: '^(?<file>.+):$',
+        pattern: String.raw`^  (?<line>\d+): (?<message>.+)$`,
+    },
+} as const;
+
 export const REGEX_OUTPUT_CASES = [
     {
         title: 'regex output that names no real file on a failed run is a check error',
+        check: LOCATED_CHECK,
         result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\n' },
         expected: { note: 'tool failed with exit 1:\n2026-09-19T02: FATAL' },
     },
     {
+        title: 'grouped output that names no real file on a failed run is a check error',
+        check: GROUPED_CHECK,
+        result: { ...FAILED_RUN, stdout: 'missing.ts:\n  1: A defect.' },
+        expected: { note: 'tool failed with exit 1:\nmissing.ts:\n  1: A defect.' },
+    },
+    {
         title: 'a failed run that prints nothing is a check error',
+        check: LOCATED_CHECK,
         result: FAILED_RUN,
         expected: { note: 'tool failed with exit 1 and printed nothing.' },
     },
     {
         title: 'regex output with one real file on a failed run keeps every finding',
+        check: LOCATED_CHECK,
         result: { ...FAILED_RUN, stdout: '2026-09-19T02: FATAL\nsource.txt: located defect\n' },
         expected: {
             findings: [
@@ -65,8 +75,6 @@ export const REGEX_OUTPUT_CASES = [
         },
     },
 ];
-
-export const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 
 export const WORKSPACE_SCOPE_CASES = [
     { scopePath: '', expected: [] },
@@ -79,8 +87,10 @@ export const ASTRO_CHECK_SUMMARY = [
     '- \u{1B}[1m\u{1B}[31m1 error\u{1B}[39m\u{1B}[22m',
 ].join('\n');
 
+export const TYPE_ERROR_MESSAGE = "Type 'string' is not assignable to type 'number'.";
+
 export const ASTRO_CHECK_OUTPUT = [
-    "\u{1B}[96msrc/env.ts\u{1B}[0m:\u{1B}[93m1\u{1B}[0m:\u{1B}[93m14\u{1B}[0m - \u{1B}[91merror\u{1B}[0m\u{1B}[90m ts(2322): \u{1B}[0mType 'string' is not assignable to type 'number'.",
+    `\u{1B}[96msrc/env.ts\u{1B}[0m:\u{1B}[93m1\u{1B}[0m:\u{1B}[93m14\u{1B}[0m - \u{1B}[91merror\u{1B}[0m\u{1B}[90m ts(2322): \u{1B}[0m${TYPE_ERROR_MESSAGE}`,
     '',
     "\u{1B}[7m1\u{1B}[0m export const count: number = 'three';",
     '\u{1B}[7m \u{1B}[0m \u{1B}[91m             ~~~~~\u{1B}[0m',
@@ -89,8 +99,6 @@ export const ASTRO_CHECK_OUTPUT = [
 ].join('\n');
 
 export const FILE_LINE_PATTERN = String.raw`^(?<file>[^:]+):(?<line>\d+): (?<message>.*)$`;
-
-export const CAFE_SOURCE_PATH = 'inputs/café source.txt';
 
 export const CRASH_TAIL_CASES = [
     {
@@ -127,34 +135,6 @@ export const BATCH_IGNORE = {
     reason: 'This case verifies ignores on error results.',
 };
 
-export const COVERAGE_PROJECT_FILES = [
-    { name: 'generated defaults', files: {}, generated: true },
-    { name: '.coveragerc', files: { '.coveragerc': '[run]\nomit = custom/**\n' }, generated: false },
-    {
-        name: 'pyproject coverage',
-        files: { 'pyproject.toml': '[tool.coverage.run]\nomit = ["custom/**"]\n' },
-        generated: false,
-    },
-    { name: 'setup.cfg coverage', files: { 'setup.cfg': '[coverage:run]\nomit = custom/**\n' }, generated: false },
-] as const;
-
-export const FILELESS_COVERAGE_CASES = [
-    {
-        check: 'vitest/tests',
-        code: 1,
-        output: 'ERROR: Coverage for lines (50%) does not meet global threshold (80%)',
-        message: 'Coverage for lines (50%) does not meet global threshold (80%)',
-    },
-    {
-        check: 'pytest/tests',
-        code: 1,
-        output: 'FAIL Required test coverage of 80% not reached. Total coverage: 50%',
-        message: 'FAIL Required test coverage of 80% not reached. Total coverage: 50%',
-    },
-    { check: 'pytest/tests', code: 5, output: 'no tests ran in 0.01s', message: 'no tests ran in 0.01s' },
-    { check: 'jest/tests', code: 1, output: '  ● Test suite failed to run', message: '● Test suite failed to run' },
-] as const;
-
 export const TOOL_PATTERN_CASES = [
     {
         check: 'dependencies/syncpack',
@@ -174,7 +154,7 @@ export const TOOL_PATTERN_CASES = [
         code: 2,
         output: '[warn] source.ts\n[warn] Code style issues found in the above file. Run Prettier with --write to fix.\n[error] broken.ts: SyntaxError: Expression expected. (2:7)',
         expected: [
-            { file: 'source.ts', message: 'Not formatted the way Prettier formats it.', fixable: true },
+            { file: 'source.ts', fixable: true },
             { file: 'broken.ts', line: 2, column: 7, message: 'Expression expected.', fixable: false },
         ],
     },
@@ -199,8 +179,30 @@ export const TOOL_PATTERN_CASES = [
             },
         ],
     },
+    {
+        check: 'pytest/tests',
+        code: 1,
+        output: 'FAIL Required test coverage of 80% not reached. Total coverage: 50%',
+        expected: [
+            {
+                file: '',
+                message: 'FAIL Required test coverage of 80% not reached. Total coverage: 50%',
+                fixable: false,
+            },
+        ],
+    },
+    {
+        check: 'pytest/tests',
+        code: 5,
+        output: 'no tests ran in 0.01s',
+        expected: [{ file: '', message: 'no tests ran in 0.01s', fixable: false }],
+    },
+    {
+        check: 'jest/tests',
+        code: 0,
+        output: '  ● Console\n\n    console.log\n      hello\n',
+        expected: [],
+    },
 ] as const;
 
 export const LOWERCASE_SELECT_SQL = 'select 1;\n';
-
-export const TYPE_ERROR_MESSAGE = "Type 'string' is not assignable to type 'number'.";

@@ -1,21 +1,39 @@
 import { expect, test } from 'bun:test';
 
 import {
-    CONFLICTING_LOCAL_PLUGIN_FILES,
     CONFLICTING_LOCAL_PLUGIN_TABLES,
-    DUPLICATE_PLUGIN_ERROR,
     LOCAL_PLUGIN,
-    LOCAL_PLUGIN_TABLES,
-    SCOPE_PLUGIN_FILES,
-    SCOPE_PLUGIN_FINDINGS,
     SCOPE_PLUGIN_TABLES,
 } from '#tests/config/configurations/javascript/plugins.ts';
+import { LOCAL_PLUGIN_TABLES } from '#tests/config/setup/configurations.ts';
 import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+
+const SCOPE_PLUGIN_FILES = {
+    '.gitignore': 'node_modules/\n',
+    'package.json': '{"private":true,"type":"module"}\n',
+    'tools/lint/plugin.mjs': LOCAL_PLUGIN,
+    'source.js': 'export const forbidden = 1;\n',
+    'outside/source.js': 'export const forbidden = 1;\n',
+    'app/package.json': '{"private":true,"type":"module"}\n',
+    'app/tools/lint/plugin.mjs': LOCAL_PLUGIN,
+    'app/source.js': 'export const forbidden = 1;\n',
+    'app/nested/package.json': '{"private":true,"type":"module"}\n',
+    'app/nested/source.js': 'export const forbidden = 1;\n',
+};
+
+const SCOPE_PLUGIN_FINDINGS = [
+    { file: 'app/nested/source.js', rule: 'local/no-forbidden', line: 1 },
+    { file: 'app/nested/source.js', rule: 'scoped/no-forbidden', line: 1 },
+    { file: 'app/source.js', rule: 'local/no-forbidden', line: 1 },
+    { file: 'app/source.js', rule: 'scoped/no-forbidden', line: 1 },
+    { file: 'outside/source.js', rule: 'local/no-forbidden', line: 1 },
+    { file: 'source.js', rule: 'local/no-forbidden', line: 1 },
+];
 
 test('a scope plugin reaches its scope and an inherited root plugin reaches nested files', async () => {
     await using sandbox = await createGitSandbox({
@@ -58,6 +76,14 @@ test('a plugin package loads from .gspot/node_modules and reports with its rule 
     ]);
 });
 
+const CONFLICTING_LOCAL_PLUGIN_FILES = {
+    'package.json': '{"private":true,"type":"module"}\n',
+    'first/package.json': '{"private":true,"type":"module"}\n',
+    'second/package.json': '{"private":true,"type":"module"}\n',
+    'first/tools/lint/first.mjs': LOCAL_PLUGIN,
+    'second/tools/lint/second.mjs': LOCAL_PLUGIN,
+};
+
 test('one plugin name with two modules is a settings error that names both paths', async () => {
     const error = await captureRejection(
         buildGeneratedFile(
@@ -66,5 +92,7 @@ test('one plugin name with two modules is a settings error that names both paths
             CONFLICTING_LOCAL_PLUGIN_FILES,
         ),
     );
-    expect(error).toMatchObject(DUPLICATE_PLUGIN_ERROR);
+    expect(error).toMatchObject({ code: 'settings' });
+    for (const path of ['first/tools/lint/first.mjs', 'second/tools/lint/second.mjs'])
+        expect(error.message).toContain(path);
 });

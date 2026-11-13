@@ -1,45 +1,6 @@
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-
-export const SYNCPACK_PACKAGE_FILES = {
-    'package.json': '{"name":"root","private":true,"dependencies":{"shared-library":"1.0.0"}}\n',
-    'packages/app/package.json': '{"name":"app","private":true,"dependencies":{"shared-library":"2.0.0"}}\n',
-} as const;
-
-export const SQL_COMMAND_CHECK = { id: 'project/read-sql', paths: ['**/*.sql'], stage: 'commit' };
-
-export const SQL_SEARCH_ARGUMENTS = [
-    '--text',
-    'CREATE FUNCTION',
-    '--report',
-    'message',
-    '--message',
-    'Replace the sample function.',
-    '--',
-    '{files}',
-];
-
 export const SETTING_REASON = 'The project contract requires this reviewed exception.';
 
 export const HOOKS_SETTINGS = '[hooks]\nenabled = true\n';
-
-const REPLACED_CONFIGS = {
-    'typos.toml': `[default.extend-words]
-# The device identifier API name.
-udid = "udid"
-`,
-    '.shellcheckrc': 'disable=SC2086,SC2034\n',
-    '.markdownlint.jsonc': '// Keep long prose lines.\n{ "MD013": false, "MD033": true, }\n',
-    '.eslintrc.json': '{ "rules": { "eqeqeq": "error" } }\n',
-    '.prettierrc': '{ "semi": false }\n',
-} as const;
-
-export const INIT_FILES = {
-    ...REPLACED_CONFIGS,
-    'scripts/a.sh': CLEAN_BASH_SCRIPT,
-    'src/a.js': 'export const a = 1;\n',
-    'README.md': '# test\n',
-    'quality/lint.sh': CLEAN_BASH_SCRIPT,
-} as const;
 
 export const RULE_TESTER_ROOT = '/repo';
 
@@ -114,6 +75,16 @@ const BASH_SYNTAX_OUTPUT = String.raw`output = { format = "regex", pattern = "^.
 export const BASH_SYNTAX_CHECK = `${BASH_SYNTAX_COMMAND}stage = "commit"\n${BASH_SYNTAX_OUTPUT}`;
 
 export const BASH_SYNTAX_PUSH_CHECK = `${BASH_SYNTAX_COMMAND}stage = "push"\n${BASH_SYNTAX_OUTPUT}`;
+
+export const PUSH_CONTENT = {
+    base: 'echo base\n',
+    reviewed: 'echo reviewed\n',
+    broken: 'if then\n',
+    working: 'echo repaired only in the working tree\n',
+    settings: 'invalid working policy',
+} as const;
+
+export const PUSH_WORKING_TREE = { settings: PUSH_CONTENT.settings, changed: PUSH_CONTENT.working } as const;
 
 export const TEAMS_TABLE_SQL = 'CREATE TABLE teams (id integer PRIMARY KEY);\n';
 

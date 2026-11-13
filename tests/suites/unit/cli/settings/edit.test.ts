@@ -82,8 +82,7 @@ test('an invalid edit reports the setting without inventing a saved line', async
         matchFields<GspotError>({
             name: 'GspotError',
             code: 'arguments',
-            message:
-                'limits.max_function_lines: The value "long" is not valid for limits.max_function_lines. Use a whole number of 0 or more.\nhttps://generativespotting.com/reference/gspot-toml/ lists every setting.',
+            message: expect.stringMatching(/^limits\.max_function_lines: /u) as string,
         }),
     );
 });

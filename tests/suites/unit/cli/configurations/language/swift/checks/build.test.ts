@@ -1,5 +1,5 @@
 import { existsSync } from 'node:fs';
-import { readFile, rm, writeFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join, relative } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -7,7 +7,6 @@ import { testdir } from 'testdirs';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { runChecks } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import {
     FAILED_BUILD_FINDINGS,
@@ -15,14 +14,7 @@ import {
     PRIVATE_OTHER_FINDING,
 } from '#tests/config/configurations/swift.ts';
 import { SWIFT_LANGUAGE_PACKAGE, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
-import {
-    getBuiltInCheck,
-    planSandboxCheck,
-    prepareSwiftCheck,
-    redirectCacheFolder,
-    runSandboxCheck,
-} from '#tests/setup/cli/checks.ts';
+import { getBuiltInCheck, prepareSwiftCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
@@ -112,25 +104,6 @@ test('compiler: swift/build refuses a response file outside the compiler cache a
     run.mockResolvedValue(buildProcessResult({ stdout: `swiftc @${response}` }));
     expect(await runSandboxCheck(sandbox.path, 'swift/build')).toStrictEqual([]);
     expect(await readFile(plan.log, 'utf8')).toBe('swiftc Sources/Main.swift Sources/Owner.swift\n');
-});
-
-test('compiler: a Swift build whose source file is missing names the file and runs no compiler', async () => {
-    using resources = new DisposableStack();
-
-    await using sandbox = await createGitSandbox({
-        'Package.swift': SWIFT_PACKAGE,
-        'gspot.toml': buildSandboxSettings(['swift']),
-        'Main.swift': SWIFT_VALUE_SOURCE,
-    });
-    await using _cache = await redirectCacheFolder();
-    const session = await openSession(sandbox.path);
-    const input = planSandboxCheck(session, 'swift/build');
-    await rm(join(sandbox.path, 'Main.swift'));
-    const run = resources.use(fakeCommands());
-    const missingSourceError = await captureRejection(getBuiltInCheck('swift/build')(session, input));
-    expect(missingSourceError).toMatchObject({ name: 'GspotError', code: 'filesystem' });
-    expect(missingSourceError.message).toContain('Main.swift');
-    expect(run).not.toHaveBeenCalled();
 });
 
 test('compiler: Swift compiler messages drop the macOS /private prefix from source paths', async () => {

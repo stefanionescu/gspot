@@ -4,6 +4,7 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('aws-opensearchservice-domain', awsOpensearchserviceDomain, {
     valid: [
         "import * as opensearch from 'aws-cdk-lib/aws-opensearchservice';\nnew opensearch.Domain(this, 'Search', { encryptionAtRest: { enabled: true } });",
+        "import * as os from 'aws-cdk-lib/aws-opensearchservice';\nnew os.Domain(...args);",
     ],
     invalid: [
         {
@@ -15,6 +16,10 @@ buildRuleTester().run('aws-opensearchservice-domain', awsOpensearchserviceDomain
                     line: 2,
                 },
             ],
+        },
+        {
+            code: "import * as os from 'aws-cdk-lib/aws-opensearchservice';\nnew os.Domain(this, 'b', { version: os.EngineVersion.ELASTICSEARCH_7_10 });",
+            errors: [{ messageId: 'omitted', data: { property: 'encryptionAtRest', engine: 'Elasticsearch' } }],
         },
         {
             code: "import * as os from 'aws-cdk-lib/aws-opensearchservice';\nnew os.Domain(this, 'b', { encryptionAtRest: { enabled: false } });",

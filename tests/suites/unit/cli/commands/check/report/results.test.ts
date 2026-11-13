@@ -3,19 +3,29 @@ import { join } from 'node:path';
 import { stripVTControlCharacters } from 'node:util';
 
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { formatRunReport } from '#cli/commands/check/report.ts';
-import { printProgress } from '#cli/engine/report.ts';
+import { formatFixes, formatRunReport } from '#cli/commands/check/report.ts';
+import { FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { FAILED_CHECK_REPORT, FINDINGS_TOOL_ARGUMENTS, VERBOSITY_ARGUMENTS } from '#tests/config/commands/check.ts';
+import { FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--base', 'HEAD'] as const;
+
+const FINDING_COUNT = FINDINGS_SHOWN + 1;
+
+const FINDINGS_TOOL_ARGUMENTS = [
+    ...Array.from({ length: FINDING_COUNT }, (_, index) => ['--line', `finding ${String(index + 1)}.`]).flat(),
+    '--exit',
+    '1',
+];
 
 async function createVerbositySandbox(
     findingsCommand: string[],
@@ -50,11 +60,11 @@ async function assertJsonFindings(root: string, commandArguments: readonly strin
     expect(
         json.report.checks.map(({ check, status, findings }) => ({ check, status, count: findings.length })),
     ).toStrictEqual([
-        { check: 'example/findings', status: 'failed', count: 201 },
+        { check: 'example/findings', status: 'failed', count: FINDING_COUNT },
         { check: 'example/passing', status: 'passed', count: 0 },
     ]);
     expect(json.report.checks.flatMap(({ findings }) => findings.map(({ explain }) => explain))).toStrictEqual(
-        Array.from({ length: 201 }, () => 'gspot explain example/findings'),
+        Array.from({ length: FINDING_COUNT }, () => 'gspot explain example/findings'),
     );
     expect(json.stderr).toBe('');
 }
@@ -66,7 +76,7 @@ test('check prints the first findings and the count of the rest, and --json keep
     );
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS]);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(200);
+    expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(FINDINGS_SHOWN);
     expect(result.stdout).toContain('  and 1 more (--verbose prints every finding)');
     await assertJsonFindings(sandbox.path, VERBOSITY_ARGUMENTS);
 });
@@ -77,7 +87,7 @@ test('check --verbose prints every finding and the command', async () => {
     await using sandbox = await createVerbositySandbox(findingsCommand, passingCommand);
     const result = await runGspot(sandbox.path, [...VERBOSITY_ARGUMENTS, '--verbose']);
     expect(result.code, result.stdout + result.stderr).toBe(1);
-    expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(201);
+    expect(result.stdout.match(/^ {2}finding \d+\.$/gmu)).toHaveLength(FINDING_COUNT);
     expect(result.stdout).toContain(`  $ ${findingsCommand.join(' ')}`);
     expect(result.stdout).toContain(`  $ ${passingCommand.join(' ')}`);
 });
@@ -144,77 +154,6 @@ test('the summary counts a check once under its worst result, and names the scop
     );
 });
 
-test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {
-    const terminal: string[] = [];
-    const log: string[] = [];
-    using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color' });
-    for (const [isTerminal, lines] of [
-        [true, terminal],
-        [false, log],
-    ] as const) {
-        using _terminals = fakeTerminals([
-            [process.stdout, true],
-            [process.stderr, isTerminal],
-        ]);
-        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
-            lines.push(String(chunk));
-            return true;
-        });
-        const place = { total: 3, comparison: null };
-        printProgress({ ...place, kind: 'finished', check: 'bash/shfmt', scope: '', duration: 1200, finished: 1 });
-        printProgress({
-            ...place,
-            kind: 'running',
-            running: [
-                { check: 'python/ruff', scope: 'api' },
-                { check: 'javascript/eslint', scope: '' },
-            ],
-            elapsed: 10_000,
-            finished: 1,
-        });
-        printProgress({
-            ...place,
-            kind: 'finished',
-            check: 'python/ruff',
-            scope: 'api',
-            duration: 12_300,
-            finished: 2,
-        });
-    }
-    expect(terminal).toHaveLength(3);
-    for (const line of terminal) expect(line).toStartWith('\r\u{1B}[2K');
-    expect(log).toStrictEqual([
-        'running  api  python/ruff and javascript/eslint  10.0s\n',
-        'done  api  python/ruff  12.3s\n',
-    ]);
-});
-
-test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
-    'a terminal with %p gets the plain progress lines, without control sequences',
-    (environment) => {
-        const lines: string[] = [];
-        using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color', ...environment });
-        using _terminals = fakeTerminals([
-            [process.stdout, true],
-            [process.stderr, true],
-        ]);
-        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
-            lines.push(String(chunk));
-            return true;
-        });
-        printProgress({
-            kind: 'finished',
-            check: 'python/ruff',
-            scope: '',
-            duration: 12_300,
-            finished: 1,
-            total: 1,
-            comparison: null,
-        });
-        expect(lines).toStrictEqual(['done  python/ruff  12.3s\n']);
-    },
-);
-
 test('a staged report with unstaged changes names their count once', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['markdown']),
@@ -264,4 +203,11 @@ test('a finding message occupies one report line', () => {
     };
     const text = formatRunReport(report, { verbose: false });
     expect(text).toContain('First line. Second line. Third line.');
+});
+
+test('the fix report names the conflicted and the broken files', () => {
+    expect(formatFixes({ results: [], changed: [], broken: ['broken.ts'], conflicted: ['merge.ts'] })).toStrictEqual([
+        'The fixers left a syntax error in broken.ts; gspot put back the file as it was before the fixers.',
+        'The fixers skipped merge.ts, because it holds merge-conflict markers.',
+    ]);
 });

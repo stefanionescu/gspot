@@ -1,38 +1,32 @@
 import { join, sep } from 'node:path';
 
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { executableLayout } from '#cli/system/paths.ts';
-import * as processes from '#cli/system/processes.ts';
 import { compareText } from '#cli/system/text.ts';
-import { OS_SOURCE, VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
-import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
+import { buildPythonToolFiles, fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python'], { level: 'all', scopes: [{ path: 'child' }] }),
         'app/nodes.py': 'def helper():\n    return 1\n',
-        'app/main.py': OS_SOURCE,
+        'app/main.py': 'import os\n',
         'child/other.py': 'VALUE = 1\n',
         [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'vulture')]: 'stub',
         ...buildPythonToolFiles('vulture'),
     });
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['vulture'], resources);
+    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'vulture')]);
     const output = [...VULTURE_OUTPUT].join('\n').replaceAll('app/', () => `app${sep}`);
-    const spawn = resources.use(
-        spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: output, code: 3 })),
-    );
-    const checked = await runChecks(session, buildRunOptions({ only: ['python/vulture'] }));
-    expect(listFindingRows(checked.report)).toStrictEqual([
+    using spawn = fakeCommands().mockResolvedValue(buildProcessResult({ stdout: output, code: 3 }));
+    const findings = await runSandboxCheck(sandbox.path, 'python/vulture');
+    expect(findings.map(({ file, line, rule }) => ({ file, line, rule }))).toStrictEqual([
         { file: 'app/nodes.py', line: 1, rule: 'unused-function' },
         { file: 'app/nodes.py', line: 3, rule: 'unreachable-code' },
     ]);

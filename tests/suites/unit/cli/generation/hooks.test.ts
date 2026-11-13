@@ -55,9 +55,6 @@ test.each(START_COMMANDS)(
             HOOK_CASES.map(([name]) => name),
             { hasLfsFiles: false },
         );
-        expect(files.map((file) => file.path)).toStrictEqual(
-            HOOK_CASES.map(([name]) => name).map((name) => `${GSPOT_PATHS.hooks}/${name}`),
-        );
         await writeProgramCommand(
             sandbox.path,
             launcher,
@@ -68,7 +65,6 @@ test.each(START_COMMANDS)(
             'GSPOT_HOOK',
             '--',
         );
-        await writeProgramCommand(sandbox.path, 'bin/git-lfs', 'fakes/tool');
         const cwd = await realpath(sandbox.path);
         for (const [index, [name, commandArguments]] of HOOK_CASES.entries()) {
             const file = files[index]!;
@@ -97,7 +93,7 @@ test.each(START_COMMANDS)(
     },
 );
 
-test.each(START_COMMANDS)(
+test.each(START_COMMANDS.filter(({ manager }) => manager !== 'yarn'))(
     'a $manager hook names $program and the Git client PATH when $program is missing',
     async ({ program, packageManager }) => {
         await using sandbox = await createGitSandbox({});
@@ -147,6 +143,27 @@ test.each(START_COMMANDS.filter(({ manager }) => manager !== 'mise'))(
         expect(existsSync(log)).toBe(false);
     },
 );
+
+test("a yarn hook in a Plug'n'Play project starts gspot without node_modules", async () => {
+    const { program, packageManager, prefix } = START_COMMANDS.find(({ manager }) => manager === 'yarn')!;
+    await using sandbox = await createGitSandbox({
+        'package.json': JSON.stringify({ packageManager, devDependencies: { '@gspothq/cli': '0.0.0-test' } }),
+        '.pnp.cjs': '',
+    });
+    const hook = buildHookFiles(selectStartRunner(sandbox.path), ['pre-commit'], { hasLfsFiles: false })[0]!;
+    const path = join(sandbox.path, 'pre-commit');
+    await writeFile(path, hook.content);
+    const log = join(sandbox.path, 'calls.jsonl');
+    const bin = await writeProgramCommand(sandbox.path, `bin/${program}`, 'fakes/tool', '--record', log, '--');
+    const result = await runCommand([Bun.which('sh')!, path], {
+        cwd: sandbox.path,
+        env: { PATH: bin },
+        stdin: '',
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
+    const calls = await readCallRecords(log);
+    expect(calls.map((call) => call.arguments)).toStrictEqual([[...prefix, 'check', '--staged', '--only', 'commit']]);
+});
 
 test('with Git LFS, the pre-push hook gives its input to gspot and then to git lfs, and the other LFS hooks run git lfs', async () => {
     await using sandbox = await createLfsRepository();

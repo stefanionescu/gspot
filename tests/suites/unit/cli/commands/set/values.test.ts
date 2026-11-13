@@ -10,7 +10,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { ROOT_EDITORCONFIG, STOPPED_APPLY_FILES, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
+import { ROOT_EDITORCONFIG, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { settingsListOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
@@ -56,7 +56,10 @@ test('set names -- when a value reads as an option, and takes the values after -
 });
 
 test('set keeps its change in gspot.toml and exits 2 when the write of the generated files then stops', async () => {
-    await using sandbox = await createGitSandbox(STOPPED_APPLY_FILES);
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['bash', 'structure']),
+        'entry.sh': 'echo example\n',
+    });
 
     await applyGeneratedFiles(sandbox.path);
     const generated = join(sandbox.path, '.editorconfig');
@@ -74,9 +77,11 @@ test('set keeps its change in gspot.toml and exits 2 when the write of the gener
     ]);
     expect(stopped.code, stopped.stdout + stopped.stderr).toBe(2);
     expect(JSON.parse(stopped.stdout)).toMatchObject({ error: 'writing' });
-    expect(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain(
-        '[limits]\nbash = { max_file_lines = { value = 200, reason = "Generated scripts need this limit." } }',
-    );
+    const written = parse(await readFile(join(sandbox.path, 'gspot.toml'), 'utf8')) as TomlTable;
+    expect(findValueAt(written, ['limits', 'bash', 'max_file_lines'])).toStrictEqual({
+        value: 200,
+        reason: 'Generated scripts need this limit.',
+    });
     expect(await readFile(authored, 'utf8')).toBe(ROOT_EDITORCONFIG);
 });
 
@@ -274,4 +279,12 @@ test('an edit in one scope does not say it turns off a check that the other scop
     const result = await runGspot(sandbox.path, ['set', 'limits.max_file_lines', '100']);
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.stdout).not.toContain('This turns off');
+});
+
+test('an unchanged settings edit that writes generated files does not say No change', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': 'level = "basic"\n' + buildSandboxSettings([]) });
+    const result = await runGspot(sandbox.path, ['set', 'level', 'basic']);
+    expect(result.stdout).toStartWith('gspot.toml already says this.\n');
+    expect(result.stdout).toContain('wrote ');
+    expect(result.stdout).not.toContain('No change:');
 });

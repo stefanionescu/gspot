@@ -5,7 +5,6 @@ buildRuleTester().run('prefer-immediate-return', preferImmediateReturn, {
     valid: [
         'function read() { const result = fetch(); log(result); return result; }',
         'function read() { const result: Response = fetch(); return result; }',
-        'function read() { const result = fetch(() => result); return result; }',
         'function read() { const result = fetch(); return transform(result); }',
         'function read() { const result = fetch(); return other; }',
     ],

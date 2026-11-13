@@ -1,16 +1,14 @@
-import { existsSync } from 'node:fs';
 import { chmod, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { STOCK_LFS_PRE_PUSH } from '#tests/config/tools/installers.ts';
+import { STOCK_LFS_PRE_PUSH } from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
@@ -27,25 +25,14 @@ test('a gspot.toml without hooks installs none', async () => {
     expect(await readHookStatus(session, session.repository)).toStrictEqual({ ready: true, text: 'none' });
 });
 
-test('turning hooks off removes .gspot/hooks and unsets core.hooksPath at once', async () => {
-    await using sandbox = await testdir();
-    const root = sandbox.path;
-    const settings = buildSandboxSettings([], { tables: HOOKS_SETTINGS });
-    await createFileTree(root, { 'gspot.toml': settings });
-    runGitStep(sandbox.path, ['init', '-q']);
-    await applyGeneratedFiles(root);
-    const ownPath = GSPOT_PATHS.hooks;
-    runGitStep(root, ['config', 'core.hooksPath', ownPath]);
-    const hook = join(root, `${GSPOT_PATHS.hooks}/pre-commit`);
-    await writeFile(join(root, 'gspot.toml'), settings.replace('enabled = true', 'enabled = false'));
-    await applyGeneratedFiles(root);
-    expect(existsSync(hook)).toBe(false);
-    expect(await readGitSetting(root, 'core.hooksPath')).toBeUndefined();
-    const session = await openSession(root);
-    runGitStep(root, ['config', 'core.hooksPath', '.githooks']);
-    const steps: Array<readonly string[]> = [];
-    expect(await installHooks(session, steps)).toHaveProperty('note', '');
-    expect(await readGitSetting(root, 'core.hooksPath')).toBe('.githooks');
+test('hooks turned off leave a foreign core.hooksPath unchanged', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: '[hooks]\nenabled = false\n' }),
+    });
+    runGitStep(sandbox.path, ['config', 'core.hooksPath', '.githooks']);
+    const session = await openSession(sandbox.path);
+    expect(await installHooks(session, [])).toHaveProperty('note', '');
+    expect(await readGitSetting(sandbox.path, 'core.hooksPath')).toBe('.githooks');
 });
 
 test('the hooks that git lfs install wrote are not other hooks, so install points Git at the gspot hooks', async () => {

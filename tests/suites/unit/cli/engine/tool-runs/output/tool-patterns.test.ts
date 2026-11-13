@@ -9,8 +9,10 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 test.each(TOOL_PATTERN_CASES)(
     '$check reports actionable output and ignores summary lines',
     async ({ check: id, code, output, expected }) => {
-        await using sandbox = await testdir(Object.fromEntries(expected.map(({ file }) => [file, ''])));
+        const located = expected.filter(({ file }) => file !== '');
+        await using sandbox = await testdir(Object.fromEntries(located.map(({ file }) => [file, ''])));
         const check = getShippedCheck(id);
+        const shippedMessage = check.output.format === 'regex' ? (check.output.message ?? '') : '';
         expect(
             parseCommandFindings(
                 { check },
@@ -21,6 +23,12 @@ test.each(TOOL_PATTERN_CASES)(
                 },
                 {},
             ),
-        ).toStrictEqual({ findings: expected.map((finding) => ({ ...finding, check: id })) });
+        ).toStrictEqual({
+            findings: expected.map((finding) => ({
+                message: shippedMessage,
+                ...finding,
+                check: id,
+            })),
+        });
     },
 );

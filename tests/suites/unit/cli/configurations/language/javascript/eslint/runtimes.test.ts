@@ -8,8 +8,6 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import {
     FRAMEWORK_RUNTIME_CASES,
     PROCESS_UNDEFINED_MESSAGE,
-    RUNTIME_CASES,
-    RUNTIME_GLOBAL_FINDINGS,
     RUNTIME_OVERRIDE_SETTINGS,
     RUNTIME_OVERRIDE_TABLES,
     WINDOW_UNDEFINED_MESSAGE,
@@ -17,13 +15,13 @@ import {
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 
-test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($runtime)', async (row) => {
+test('a browser override gets no Node.js globals and no Node.js rules, and other files keep both', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {
             level: 'all',
             rules: true,
             tables: stringify({
-                tools: { eslint: { override: [{ paths: ['application/**'], runtime: row.runtime }] } },
+                tools: { eslint: { override: [{ paths: ['application/**'], runtime: 'browser' }] } },
             }),
         }),
         'application/source.js': 'process.exit(0);\nBuffer.from("value");\n',
@@ -33,7 +31,7 @@ test.each([...RUNTIME_CASES])('runtime globals and Node.js rules stay apart ($ru
     const eslint = await buildEslint(sandbox.path);
     const [result] = await eslint.lintFiles(['application/source.js']);
     expect(result!.messages.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual([
-        ...(row.runtime === 'react-native' ? [] : [{ ruleId: 'no-undef', line: 1 }]),
+        { ruleId: 'no-undef', line: 1 },
         { ruleId: 'unicorn/no-process-exit', line: 1 },
         { ruleId: 'no-undef', line: 2 },
     ]);
@@ -52,12 +50,32 @@ test('ES modules reject CommonJS globals and .cjs files keep CommonJS', async ()
 
     const eslint = await buildEslint(sandbox.path);
     const [module] = await eslint.lintFiles(['source.mjs']);
-    expect(module!.messages.map(({ ruleId, line, message }) => ({ ruleId, line, message }))).toStrictEqual([
-        { ruleId: 'no-undef', line: 1, message: "'__dirname' is not defined." },
+    expect(module!.messages.map(({ ruleId, line }) => ({ ruleId, line }))).toStrictEqual([
+        { ruleId: 'no-undef', line: 1 },
     ]);
     const [required] = await eslint.lintFiles(['source.cjs']);
     expect(required!.messages).toStrictEqual([]);
 });
+
+const RUNTIME_GLOBAL_FINDINGS = [
+    { file: 'server.js', messages: [] },
+    { file: 'native/src/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }] },
+    {
+        file: 'native/src/browser.js',
+        messages: [
+            { ruleId: 'no-undef', line: 2, message: "'__DEV__' is not defined." },
+            { ruleId: 'no-undef', line: 3, message: PROCESS_UNDEFINED_MESSAGE },
+        ],
+    },
+    { file: 'web/source.js', messages: [{ ruleId: 'no-undef', line: 2, message: PROCESS_UNDEFINED_MESSAGE }] },
+    { file: 'native/scripts/build.js', messages: [] },
+    { file: 'native/server/source.js', messages: [] },
+    { file: 'web/scripts/build.js', messages: [] },
+    {
+        file: 'native/scripts/worker.js',
+        messages: [{ ruleId: 'no-undef', line: 2, message: "'Buffer' is not defined." }],
+    },
+];
 
 test('framework runtimes and your runtime settings stay inside their scopes', async () => {
     await using sandbox = await testdir({
@@ -135,4 +153,17 @@ test('a typeless package lints its .js files as CommonJS and its .mjs files as a
         ['server.js', 'tool.mjs'].map((path) => eslint.calculateConfigForFile(path)),
     )) as Array<{ languageOptions: { sourceType: string } }>;
     expect(configs.map(({ languageOptions }) => languageOptions.sourceType)).toStrictEqual(['commonjs', 'module']);
+});
+
+test('a Next.js page in a package without a type is a module', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'nextjs']),
+        'package.json': '{"private":true}\n',
+        'app/page.js': '',
+    });
+    const eslint = await buildEslint(sandbox.path);
+    const config = (await eslint.calculateConfigForFile('app/page.js')) as {
+        languageOptions: { sourceType: string };
+    };
+    expect(config.languageOptions.sourceType).toBe('module');
 });

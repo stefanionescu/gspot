@@ -1,25 +1,12 @@
 import type { RunReport } from '#cli/types/engine/run.ts';
 
-export const FAILED_NPM_VERSION = {
-    code: 7,
-    missing: false,
-    duration: 0,
-    stdout: '',
-    stderr: 'version lookup failed',
-} as const;
+export const HOOKS_PATH_CASES = [
+    { hooksPath: '', named: ['none'], unnamed: ['use-thing.ts'] },
+    { hooksPath: 'hooks', named: ['hooks/', 'pre-commit', 'use-thing.ts', '(your own)'], unnamed: [] },
+    { hooksPath: '.husky', named: ['.husky/', 'pre-commit', '(husky)'], unnamed: ['use-thing.ts'] },
+] as const;
 
-export const FORMAT_SETTINGS = `configurations = ["format"]
-[rule_files]
-enabled = false
-`;
-
-export const PRETTIER_PATH_IGNORE = `
-[[ignore]]
-check = "format/prettier"
-paths = ["**/*.json"]
-reason = "These files retain generated formatting."
-`;
-
+export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
 export const SCAN_RUN_REPORT: RunReport = {
     comparison: null,
     fixes: null,

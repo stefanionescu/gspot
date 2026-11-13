@@ -9,13 +9,11 @@ buildRuleTester().run('no-code-after-done', noCodeAfterDone, {
         'it("saves", (done) => { done(); const value = 1; });',
         'other("saves", (done) => { done(); check(); });',
         'it("saves", () => { done(); check(); });',
+        'it("saves", (done) => { load(() => { done(); }); check(); });',
+        'it.each([1])("saves", (row) => { row(); check(); });',
         'it("saves", (done) => { switch (mode) { case 1: done(); break; case 2: other(); } });',
     ],
     invalid: [
-        {
-            code: 'it("saves", (done) => { save(); done(); check(); });',
-            errors: [{ messageId: 'afterDone', column: 41 }],
-        },
         {
             code: 'specify.only("saves", function (finish) { if (ready) finish(); check(); });',
             errors: [{ messageId: 'afterDone', column: 64 }],

@@ -15,7 +15,7 @@ import {
     SHA1,
     SHA256,
     TRAILING_BLOB_CHUNKS,
-} from '#tests/config/repository/files.ts';
+} from '#tests/config/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

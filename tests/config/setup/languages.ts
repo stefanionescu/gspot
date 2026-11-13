@@ -19,7 +19,7 @@ main "$@"
 
 export const BROKEN_IF_SCRIPT = 'if then\n';
 
-const STRICT_TYPE_FLAGS = {
+export const STRICT_TYPE_FLAGS = {
     strict: true,
     noFallthroughCasesInSwitch: true,
     noUncheckedIndexedAccess: true,
@@ -82,10 +82,6 @@ configurations = ["typescript"]
 export const APP_PYPROJECT = '[project]\nname = "app"\nversion = "1.0.0"\n';
 
 export const BUN_SCANNER_SETTINGS = 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n';
-
-export const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYPE_FLAGS });
-
-export const COMPILER_SOURCE = 'export const value = missing;\n';
 
 export const TERMS_SOURCE = 'export default function Terms() { return null; }\n';
 

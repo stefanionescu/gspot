@@ -16,7 +16,10 @@ buildRuleTester().run('no-equal-loop-condition', noEqualLoopCondition, {
         { code: 'for (let index = 0; index !== limit; index += 2) {}', errors: [{ messageId: 'equality' }] },
         { code: 'for (let index = 0; index != 10; index++) { read(index); }', errors: [{ messageId: 'equality' }] },
         { code: 'for (let index = 10; index != 0; index++) {}', errors: [{ messageId: 'equality' }] },
-        { code: 'for (let index = 0; index == 10; index++) {}', errors: [{ messageId: 'equality' }] },
+        {
+            code: 'for (let index = 0; index == 10; index++) {}',
+            errors: [{ messageId: 'equality', data: { operator: '==' } }],
+        },
         { code: 'for (let row = 0, column = 0; row !== 10; row++, column++) {}', errors: [{ messageId: 'equality' }] },
         { code: 'for (; index != 10; index++) {}', errors: [{ messageId: 'equality' }] },
         { code: 'for (let index = start; index != 10; index++) {}', errors: [{ messageId: 'equality' }] },

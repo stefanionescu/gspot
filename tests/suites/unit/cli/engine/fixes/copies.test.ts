@@ -42,3 +42,13 @@ test('a fix in a copy writes only the selected file back and removes the copy', 
     const [call] = await readCallRecords(trace);
     expect(existsSync(call?.cwd ?? '')).toBe(false);
 });
+
+test('a fixer in a copy that deletes a file deletes it from the working tree', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
+    planned.check = { ...planned.check, run_in_copy: true };
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
+    expect(fixed.changed).toStrictEqual(['source.txt']);
+    expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
+});

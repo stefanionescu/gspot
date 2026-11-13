@@ -1,29 +1,3 @@
-export const FRAMEWORK_NAME = {
-    configuration: 'nextjs',
-    name: 'getServerSideProps',
-    bannedWords: ['get server side props'],
-} as const;
-
-export const TEST_PATH_SETTINGS = `level = "all"
-configurations = ["javascript", "swift", "naming"]
-test_files = ["qa/**"]
-[[scope]]
-path = "apps/web"
-test_files = ["verification/**"]
-[[scope]]
-path = "apps/api"
-`;
-
-export const TEST_PATH_FILES = {
-    'qa/entry.js': 'export const testcaseCount = 1;\n',
-    '__tests__/default.js': 'export const testcaseCount = 1;\n',
-    'Tests/Service.swift': 'let testcaseCount = 1\n',
-    'Sources/ServiceTests.swift': 'let testcaseCount = 1\n',
-    'apps/web/verification/entry.js': 'export const testcaseCount = 1;\n',
-    'apps/web/qa/entry.js': 'export const testcaseCount = 1;\n',
-    'apps/api/verification/entry.js': 'export const testcaseCount = 1;\n',
-} as const;
-
 export const REACT_COMPONENT_SOURCE = [
     "import { createContext, memo } from 'react';",
     "import styled from 'styled-components';",
@@ -154,38 +128,6 @@ const EXPECTED_SWIFT_NAMES = {
     constants: ['globalConstant'],
     enum_cases: ['happy', 'sad', 'veryAngry'],
 } as const;
-
-export const DECLARATION_ORDER_CASES = [
-    {
-        language: 'python',
-        file: 'source.py',
-        source: `first_value = 1
-def load_value(input_value):
-    inner_value = input_value
-class Book:
-    pass
-`,
-        expected: ['first_value', 'load_value', 'input_value', 'inner_value', 'Book'],
-    },
-    {
-        language: 'swift',
-        file: 'source.swift',
-        source: `let firstValue = 1
-func loadValue(inputValue: Int) { let innerValue = inputValue }
-class Book {}
-`,
-        expected: ['firstValue', 'loadValue', 'inputValue', 'innerValue', 'Book'],
-    },
-    {
-        language: 'javascript',
-        file: 'source.js',
-        source: `const firstValue = 1;
-function loadValue(inputValue) { const innerValue = inputValue; }
-class Book {}
-`,
-        expected: ['firstValue', 'loadValue', 'inputValue', 'innerValue', 'Book'],
-    },
-] as const;
 
 export const NAME_POSITION_CASES = [
     {

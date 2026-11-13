@@ -1,9 +1,9 @@
-import { describe, test } from 'bun:test';
+import { describe, expect, test } from 'bun:test';
 
-import { SEMGREP_CHECK_ID, SEMGREP_SANDBOX } from '#tests/config/integration/semgrep.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
+import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
@@ -235,27 +235,25 @@ const CASES = [
 describe.skipIf(!hasToolBuild('semgrep'))('semgrep', () => {
     const installedSandbox = shareInstalledSandbox(SEMGREP_SANDBOX);
     test.each([...CASES])(
-        'the $configuration rules at level $level report each unsafe call and accept a module without one',
+        'the $configuration rules at level $level report each unsafe call and leave its safe variant',
         async ({ configuration, level, dependency, files, findings }) => {
+            const sandbox = installedSandbox();
             const sourceFiles = {
                 'gspot.toml': buildSandboxSettings([configuration, 'security'], { level }),
                 'pyproject.toml': `[project]\nname = "example"\nversion = "1.0.0"\ndependencies = ["${dependency}"]\n`,
                 ...files,
             };
-            const expected = findings.map(([file, line, rule]) => ({ file, line, rule }));
-            await assertCheckSample(installedSandbox(), {
-                ...buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
-                check: SEMGREP_CHECK_ID,
-                apply: true,
-                expected: expected[0]!,
-                findings: expected,
-                corrected: {
-                    files: {
-                        ...sourceFiles,
-                        ...Object.fromEntries(Object.keys(files).map((path) => [path, 'VALUE = 1\n'])),
-                    },
-                },
-            });
+            await using _change = await writeSandboxChanges(
+                sandbox,
+                buildSandboxChanges(SEMGREP_SANDBOX.files, sourceFiles),
+            );
+            const checked = parseCheckReport(
+                await spawnGspot(sandbox.root, ['check', '--only', 'security/semgrep', '--json']),
+            );
+            expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+            expect(listFindingRows(checked.report)).toStrictEqual(
+                findings.map(([file, line, rule]) => ({ file, line, rule })),
+            );
         },
     );
 });

@@ -12,8 +12,10 @@ buildRuleTester().run('no-unchecked-request-data', noUncheckedRequestData, {
         "import { readFileSync } from 'node:fs';\nfunction read(name) {\n    return readFileSync(name);\n}",
     ],
     invalid: [
-        { code: 'const target = req.query.next;\nres.redirect(target);', errors: [{ messageId: 'redirect', line: 2 }] },
         { code: 'res.redirect(302, req.query.next);', errors: [{ messageId: 'redirect', line: 1 }] },
+        { code: "res.redirect(req.query.next || '/');", errors: [{ messageId: 'redirect' }] },
+        { code: "res.redirect(req.get('referer'));", errors: [{ messageId: 'redirect' }] },
+        { code: 'res.redirect(await resolve(req.query.next));', errors: [{ messageId: 'redirect' }] },
         {
             code: 'const { name } = req.query;\nconst page = `<p>${name}</p>`;\nres.send(page);',
             errors: [{ messageId: 'html', line: 3 }],
@@ -24,10 +26,6 @@ buildRuleTester().run('no-unchecked-request-data', noUncheckedRequestData, {
             errors: [{ messageId: 'path', line: 4 }],
         },
         {
-            code: "import axios from 'axios';\nconst url = req.body.url;\nawait axios.get(url);",
-            errors: [{ messageId: 'outbound', line: 3 }],
-        },
-        {
             code: "const target = request.headers.get('x-target');\nawait fetch(target);",
             errors: [{ messageId: 'outbound', line: 2 }],
         },
@@ -36,6 +34,7 @@ buildRuleTester().run('no-unchecked-request-data', noUncheckedRequestData, {
             errors: [{ messageId: 'sql', line: 2 }],
         },
         { code: 'const pattern = new RegExp(req.query.search);', errors: [{ messageId: 'regexp', line: 1 }] },
+        { code: 'const pattern = RegExp(req.query.search);', errors: [{ messageId: 'regexp' }] },
         {
             code: "import { spawn } from 'node:child_process';\nspawn('sh', ['-c', `convert ${req.body.file}`]);",
             errors: [{ messageId: 'shell', line: 2 }],

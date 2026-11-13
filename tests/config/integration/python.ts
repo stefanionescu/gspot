@@ -1,15 +1,4 @@
-import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
-
-export const RUFF_FORMAT_CASES = [
-    {
-        file: 'sample.py',
-        formatted: "VALUE = 'example'\n",
-    },
-    {
-        file: 'app/sample.py',
-        formatted: 'VALUE = "example"\n',
-    },
-] as const;
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/general.ts';
 
 export const UNUSED_IMPORT_SOURCE = `"""An example module."""
 
@@ -77,7 +66,7 @@ def _eight(
 ) -> int:
     return value0 + value1 + value2 + value3 + value4 + value5 + value6 + value7
 `,
-    finding: { code: 'PLR0913', location: { row: 8 } },
+    finding: { line: 8, rule: 'PLR0913' },
 } as const;
 
 export const ARITHMETIC_MODULE = `"""Arithmetic examples used by these tests."""
@@ -112,3 +101,20 @@ export const RUFF_SANDBOX = {
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
+
+export const RUFF_SUPPRESSIONS = [
+    { source: 'import os # noqa: F401\n', suppressed: true, directive: true },
+    { source: 'import os # NOQA: F401\n', suppressed: true, directive: true },
+    { source: 'import os # Example noqa: F401\n', suppressed: false, directive: false },
+    { source: 'import os # Example # noqa: F401\n', suppressed: true, directive: true },
+    { source: 'import os # noqa-unknown: F401\n', suppressed: false, directive: false },
+    { source: 'import os # noqa: F401 # reason: External import.\n', suppressed: true, directive: true },
+    { source: '# ruff: noqa: F401\nimport os\n', suppressed: true, directive: true },
+    { source: '# ruff: NoQa: F401\nimport os\n', suppressed: true, directive: true },
+    { source: '# flake8: noqa: F401\nimport os\n', suppressed: true, directive: true },
+    { source: '# Example # ruff: noqa: F401\nimport os\n', suppressed: true, directive: true },
+    { source: 'import os # ruff: noqa: F401\n', suppressed: false, directive: false },
+    { source: '# RUFF: NOQA: F401\nimport os\n', suppressed: false, directive: false },
+    { source: '# noqa: F401\nimport os\n', suppressed: false, directive: true },
+    { source: 'import os # noqa: F821\n', suppressed: false, directive: true },
+] as const;

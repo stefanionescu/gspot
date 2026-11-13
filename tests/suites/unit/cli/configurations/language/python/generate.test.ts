@@ -16,6 +16,20 @@ test('python.import_folders reach the basedpyright search paths', async () => {
     expect(config.extraPaths).toStrictEqual(['../../..', '../../../vendor/host']);
 });
 
+test('basedpyright names the project environment only beside a uv lockfile', async () => {
+    const target = getManifestTarget('python', 'basedpyright.json');
+    const files = { 'main.py': 'VALUE = 1\n' };
+    const locked = JSON.parse(
+        await buildGeneratedFile(buildSandboxSettings(['python']), target, { ...files, 'uv.lock': 'version = 1\n' }),
+    ) as Record<string, unknown>;
+    const unlocked = JSON.parse(await buildGeneratedFile(buildSandboxSettings(['python']), target, files)) as Record<
+        string,
+        unknown
+    >;
+    expect(locked).toMatchObject({ venvPath: '../../..', venv: expect.any(String) as string });
+    expect(Object.keys(unlocked).filter((key) => key.startsWith('venv'))).toStrictEqual([]);
+});
+
 test('basedpyright takes the lowest Python of requires-python, and leaves a nested scope out', async () => {
     const config = JSON.parse(
         await buildGeneratedFile(
@@ -77,14 +91,20 @@ test('Ruff accepts print in a module that pyproject.toml names as a console scri
 });
 
 test.each([
-    { configurations: ['python', 'fastapi'], files: { 'example.py': 'value = 1\n' } },
+    {
+        configurations: ['python', 'fastapi'],
+        files: { 'example.py': 'value = 1\n' },
+        expected: expect.arrayContaining(['pydantic.BaseModel']) as string[],
+    },
     {
         configurations: ['python'],
         files: { 'pyproject.toml': '[project]\nname = "shop"\ndependencies = ["pydantic>=2"]\n' },
+        expected: expect.arrayContaining(['pydantic.BaseModel']) as string[],
     },
+    { configurations: ['python'], files: { 'example.py': 'value = 1\n' }, expected: undefined },
 ])(
-    'Ruff keeps the runtime imports that Pydantic and FastAPI read: $configurations',
-    async ({ configurations, files }) => {
+    'Ruff keeps the runtime imports that Pydantic and FastAPI read, and none without them: $configurations',
+    async ({ configurations, files, expected }) => {
         const ruff = parse(
             await buildGeneratedFile(
                 buildSandboxSettings(configurations),
@@ -92,18 +112,9 @@ test.each([
                 files,
             ),
         ) as { lint: Record<string, Record<string, string[]>> };
-        expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-base-classes']).toContain('pydantic.BaseModel');
+        expect(ruff.lint['flake8-type-checking']?.['runtime-evaluated-base-classes']).toEqual(expected);
     },
 );
-
-test('Ruff keeps no runtime imports without Pydantic or FastAPI', async () => {
-    const ruff = parse(
-        await buildGeneratedFile(buildSandboxSettings(['python']), getManifestTarget('python', 'ruff.toml'), {
-            'example.py': 'value = 1\n',
-        }),
-    ) as RuffConfig;
-    expect(ruff.lint).not.toHaveProperty('flake8-type-checking');
-});
 
 test('Ruff takes its style from a format override that names every Python file', async () => {
     const tables =

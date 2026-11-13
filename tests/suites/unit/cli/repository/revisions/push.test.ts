@@ -31,12 +31,21 @@ test('push comparison tells a missing upstream from an upstream whose commit is 
     expect(error.message).toContain('refs/heads/upstream');
 });
 
-test('push comparison of an unborn HEAD has no commits, and a broken HEAD is a Git error instead of a base', async () => {
+test('push comparison of an unborn HEAD has no commits', async () => {
     await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
 
     expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
-    await writeFile(join(sandbox.path, '.git/HEAD'), 'broken\n');
-    expect(await captureRejection(readPushedCommits(sandbox.path))).toMatchObject({ name: 'GspotError', code: 'git' });
+});
+
+test('a branch without an upstream pushes the commits that the remote default branch lacks', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
+    runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
+    runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
+    expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
 });
 
 test.each(['origin', undefined, 'file:///unused'] as const)(

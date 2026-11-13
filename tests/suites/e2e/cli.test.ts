@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { STARTING_FILES, SWIFT_CHECK } from '#tests/config/e2e.ts';
+import { SWIFT_CHECK } from '#tests/config/e2e.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -14,30 +14,43 @@ import { commitAll } from '#tests/setup/system/git.ts';
 test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings until each fix', async () => {
     await using sandbox = await createGspotProject();
     const { root } = sandbox;
-    await createFileTree(root, STARTING_FILES);
+    const files = {
+        '.editorconfig': `root = true
+[*]
+indent_size = 2
+[*.json]
+indent_size = 4
+`,
+        'prettier.config.mjs':
+            'console.log("formatter stdout"); console.error("formatter stderr"); export default { semi: false };\n',
+        'source.js': 'const greeting="hello";',
+        'broken.sh': 'if then\n',
+        'authored.txt': 'Preserve this authored file.\n',
+        'AGENTS.md': '# Team notes\n',
+        'CLAUDE.md': `# Claude notes
+
+Run the tests.
+`,
+    } as const;
+    await createFileTree(root, files);
     commitAll(root);
     const initialized = await initSandbox(sandbox.online, {
-        configurations: ['bash', 'python', 'swift'],
+        configurations: ['bash', 'swift'],
     });
     expect(initialized.stdout + initialized.stderr).not.toContain('formatter std');
-    expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).not.toBe(STARTING_FILES['prettier.config.mjs']);
-    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toStartWith(STARTING_FILES['AGENTS.md']);
+    expect(await readFile(join(root, 'prettier.config.mjs'), 'utf8')).not.toBe(files['prettier.config.mjs']);
+    expect(await readFile(join(root, 'AGENTS.md'), 'utf8')).toStartWith(files['AGENTS.md']);
     expect({
         claude: await readFile(join(root, 'CLAUDE.md'), 'utf8'),
         authored: await readFile(join(root, 'authored.txt'), 'utf8'),
-    }).toStrictEqual({ claude: STARTING_FILES['CLAUDE.md'], authored: STARTING_FILES['authored.txt'] });
+    }).toStrictEqual({ claude: files['CLAUDE.md'], authored: files['authored.txt'] });
     const checked = parseCheckReport(
-        await sandbox.offline.run(root, [
-            'check',
-            '--only',
-            'bash/shellcheck,dependencies/lockfiles,format/prettier',
-            '--json',
-        ]),
+        await sandbox.offline.run(root, ['check', '--only', 'bash/shellcheck,format/prettier', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const { checks } = checked.report;
     expect(checks.map(({ check, status }) => ({ check, status }))).toStrictEqual(
-        ['bash/shellcheck', 'dependencies/lockfiles', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
+        ['bash/shellcheck', 'format/prettier'].map((check) => ({ check, status: 'failed' })),
     );
     expect(new Set(checks[0]!.findings.map(({ file }) => file))).toStrictEqual(new Set(['broken.sh']));
     await writeFile(join(root, 'broken.sh'), 'echo example\n');

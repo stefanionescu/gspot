@@ -26,7 +26,7 @@ export const TRANSLATION_SAMPLE = {
 export const MESSAGE_LAYOUTS: Array<{
     layout: string;
     files: Record<string, string>;
-    expected: Array<{ file: string; message: string }>;
+    expected: Array<{ file: string; key: string }>;
 }> = [
     {
         layout: 'nested catalogs',
@@ -36,7 +36,7 @@ export const MESSAGE_LAYOUTS: Array<{
             'messages/admin/en.json': '{"users":"Users"}',
             'messages/admin/fr.json': '{}',
         },
-        expected: [{ file: 'messages/admin/fr.json', message: 'The key users of en has no message here.' }],
+        expected: [{ file: 'messages/admin/fr.json', key: 'users' }],
     },
     {
         layout: 'locale folders',
@@ -46,7 +46,7 @@ export const MESSAGE_LAYOUTS: Array<{
             'messages/en/admin.json': '{"users":"Users"}',
             'messages/fr/admin.json': '{"users":"Utilisateurs"}',
         },
-        expected: [{ file: 'messages/fr/common.json', message: 'The key hello of en has no message here.' }],
+        expected: [{ file: 'messages/fr/common.json', key: 'hello' }],
     },
 ];
 

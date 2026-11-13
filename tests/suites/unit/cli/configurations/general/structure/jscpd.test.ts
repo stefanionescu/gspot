@@ -7,6 +7,7 @@ import { createFileTree } from 'testdirs';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -76,17 +77,15 @@ test.each(['relative', 'absolute', 'namespaced'])(
             ],
         };
         await createFileTree(root, { 'scripts/café.sh': 'echo clone\n', 'vendor/copy.sh': 'echo vendor\n' });
-        const session = await openSession(root);
         using _spawn = fakeCommands('jscpd', async (command) => {
             const work = command[command.indexOf('--output') + 1]!;
             await writeFile(join(work, 'jscpd-report.json'), JSON.stringify(report));
             return buildProcessResult();
         });
-        const result = await runChecks(session, buildRunOptions({ only: ['structure/jscpd'] }));
-        expect(
-            result.report.checks[0]!.findings.map(({ file, line, rule, message }) => ({ file, line, rule, message })),
-            JSON.stringify(result.report),
-        ).toStrictEqual([...JSCPD_SCOPE_FINDINGS]);
+        const findings = await runSandboxCheck(root, 'structure/jscpd');
+        expect(findings.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
+            ...JSCPD_SCOPE_FINDINGS,
+        ]);
     },
 );
 
@@ -99,7 +98,6 @@ async function listImportCloneFindings(body: string, lines: number): Promise<Arr
         'first.py': ['"""Read one order."""', ...imports('first'), body].join('\n'),
         'second.py': ['"""Read one order."""', ...imports('second'), body].join('\n'),
     });
-    const session = await openSession(root);
     using _spawn = fakeCommands('jscpd', async (command) => {
         const report = {
             duplicates: [
@@ -113,8 +111,8 @@ async function listImportCloneFindings(body: string, lines: number): Promise<Arr
         await writeFile(join(command[command.indexOf('--output') + 1]!, 'jscpd-report.json'), JSON.stringify(report));
         return buildProcessResult();
     });
-    const result = await runChecks(session, buildRunOptions({ only: ['structure/jscpd'] }));
-    return result.report.checks[0]!.findings.map(({ file, message }) => ({ file, message }));
+    const findings = await runSandboxCheck(root, 'structure/jscpd');
+    return findings.map(({ file, message }) => ({ file, message }));
 }
 
 test('a clone whose lines outside the ignored imports stay under min_duplicate_lines is not reported', async () => {

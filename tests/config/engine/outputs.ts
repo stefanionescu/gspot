@@ -1,13 +1,11 @@
-import { win32 } from 'node:path';
-
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
 export const CHECK_OUTPUTS = [
-    { format: 'knip', inputs: ['empty', 'foreign'] },
-    { format: 'semgrep', inputs: ['empty', 'foreign'] },
+    { format: 'knip', inputs: ['shape', 'foreign'] },
+    { format: 'semgrep', inputs: ['shape', 'foreign'] },
     { format: 'typos', inputs: ['foreign'] },
-    { format: 'vale', inputs: ['empty', 'foreign'] },
-    { format: 'osv-scanner', inputs: ['empty', 'foreign'] },
+    { format: 'vale', inputs: ['shape', 'foreign'] },
+    { format: 'osv-scanner', inputs: ['shape', 'foreign'] },
 ] as const;
 
 export const EDITORCONFIG_REPORT = `source.js:
@@ -29,23 +27,9 @@ export const WINDOWS_ROOT_CASES = [
     { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
 ] as const;
 
-export const ESLINT_PATH_CASES: Array<[root: string, path: string, expected: string]> = [
-    ['/repo', '/repository/a.js', '../repository/a.js'],
-    [
-        win32.normalize('C:/repo'),
-        win32.normalize('C:/repo/café file.js'),
-        process.platform === 'win32' ? 'café file.js' : win32.normalize('C:/repo/café file.js'),
-    ],
-];
-
 export const LINE_ENDING_CASES = [
     ['LF', '\n'],
     ['CRLF', '\r\n'],
-] as const;
-
-export const EMPTY_JSON_CASES = [
-    ['a'.repeat(100), `: ${'a'.repeat(80)}`],
-    ['{"items":null}', 'items'],
 ] as const;
 
 export const TWO_LEVEL_FORMAT = {
@@ -165,6 +149,18 @@ export const TYPOS_FINDING_CASES = [
             line: 1,
             column: 1,
             message: `\`${TYPO.the}\` should be \`the\`, \`tea\``,
+            fixable: false,
+        },
+    },
+    {
+        name: 'a word with no correction',
+        source: `${TYPO.the}\n`,
+        report: { ...TYPO_REPORT, corrections: [] },
+        expected: {
+            file: 'sample.txt',
+            line: 1,
+            column: 1,
+            message: `\`${TYPO.the}\` is not allowed`,
             fixable: false,
         },
     },

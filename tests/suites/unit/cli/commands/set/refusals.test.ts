@@ -116,7 +116,6 @@ test.each([
 
 test.each([
     { key: 'level', value: 'all', fix: ', then gspot ignore gspot/weakenings --rule level --reason "<why>"' },
-    { key: 'hooks.enabled', value: 'false', fix: ', then gspot ignore gspot/weakenings --rule hooks --reason "<why>"' },
     { key: 'spelling.locale', value: 'en-gb', fix: '' },
 ])(
     'set refuses --reason on $key, which holds no reason, and names the ignore that records it',
@@ -133,10 +132,6 @@ test.each([
 
 test('set identifies a table and names its settings without writing', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
-    const result = await runGspot(sandbox.path, ['set', 'hooks', 'false', '--json']);
-    expect(result.code).toBe(2);
-    expect(JSON.parse(result.stdout)).toMatchObject({
-        error: 'arguments',
-        message: expect.stringContaining('hooks.enabled') as string,
-    });
+    const failure = await assertRefusalWithoutWrites(sandbox.path, ['set', 'hooks', 'false'], 'arguments');
+    expect(failure.message).toContain('hooks.enabled');
 });

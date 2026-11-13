@@ -16,9 +16,14 @@ buildRuleTester({ root }).run('prefer-test-table', preferTestTable, {
             filename: join(root, 'mocha/a.test.ts'),
         },
         {
-            code: 'test("adds", () => { const total = double(1); expect(total).toBeGreaterThan(0); });\ntest("adds more", () => { const total = double(2); expect(total).toBeGreaterThan(0); });',
+            code: 'test("adds", () => { const total = double(1); expect(total).toBe(2); });\ntest("adds more", () => { const total = double(1); expect(total).toBe(2); });\ntest("adds again", () => { const total = double(1); expect(total).toBe(2); });',
             filename,
-            name: 'two copies',
+            name: 'three copies with no value that differs',
+        },
+        {
+            code: 'test("adds", () => { const total = add(1, 2); expect(total).toBe(3); });\ntest("adds more", () => { const total = add(2, 3); expect(total).toBe(5); });\ntest("adds again", () => { const total = add(3, 4); expect(total).toBe(7); });',
+            filename,
+            name: 'as many differing values as statements',
         },
         {
             code:

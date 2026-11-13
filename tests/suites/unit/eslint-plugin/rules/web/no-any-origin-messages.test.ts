@@ -25,6 +25,7 @@ buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
             code: "window.addEventListener('message', (event) => console.log(event.data));",
             errors: [{ messageId: 'unverifiedOrigin' }],
         },
+        { code: "postMessage({ ready: true }, '*');", errors: [{ messageId: 'anyTarget' }] },
         {
             code: "declare const frame: HTMLIFrameElement;\nframe.contentWindow?.postMessage({ ready: true }, '*');",
             errors: [{ messageId: 'anyTarget', line: 2 }],

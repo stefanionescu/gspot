@@ -1,3 +1,4 @@
+import { MARKERS } from '#cli/config/parsers/formats.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 
 export const MALFORMED_BLOCKS = [
@@ -18,15 +19,19 @@ body
 <!-- <<< gspot managed <<< -->
 `,
     },
+    {
+        path: 'AGENTS.md',
+        source: `<!-- >>> gspot managed >>> -->
+body
+<!-- <<< gspot managed <<< -->
+<!-- <<< gspot managed <<< -->
+`,
+    },
 ] as const;
 
 export const BLOCK_FORMATS = [
-    {
-        path: 'AGENTS.md',
-        start: '<!-- >>> gspot managed >>> -->',
-        end: '<!-- <<< gspot managed <<< -->',
-    },
-    { path: '.gitignore', start: '# >>> gspot managed >>>', end: '# <<< gspot managed <<<' },
+    { path: 'AGENTS.md', ...MARKERS.markdown },
+    { path: '.gitignore', ...MARKERS.hash },
 ] as const;
 
 export const SWIFT_DEPENDENCY_CALLS = `import PackageDescription

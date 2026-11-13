@@ -3,12 +3,13 @@ import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { JSON_ARGUMENT_ERRORS, MALFORMED_SETTINGS, VERSION_ARGUMENTS } from '#tests/config/main.ts';
 import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+
+const MALFORMED_SETTINGS = 'malformed = [';
 
 test('gspot without a command prints the help to stderr and exits 2', async () => {
     await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -16,7 +17,10 @@ test('gspot without a command prints the help to stderr and exits 2', async () =
     expect(await runGspot(sandbox.path, [])).toStrictEqual({ code: 2, stdout: '', stderr: help.stdout });
 });
 
-test.each([...JSON_ARGUMENT_ERRORS])(
+test.each([
+    { name: 'no command', arguments: ['--json'] },
+    { name: 'an unknown option', arguments: ['check', '--unknown', '--json'] },
+])(
     'an argument error for $name with --json prints one arguments error object before gspot reads a malformed gspot.toml',
     async ({ arguments: commandArguments }) => {
         await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -52,6 +56,8 @@ test('init requires a Git worktree before reading settings or writing, while its
     expect(result.code).toBe(2);
     expect(JSON.parse(result.stdout)).toMatchObject({ error: 'git' });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
+    const help = await runGspot(sandbox.path, ['init', '--help']);
+    expect(help.code).toBe(0);
 });
 
 test('a sparse checkout is refused before reading settings and help remains available', async () => {
@@ -63,9 +69,17 @@ test('a sparse checkout is refused before reading settings and help remains avai
         error: 'git',
         message: expect.stringContaining('git sparse-checkout disable') as string,
     });
+    const help = await runGspot(sandbox.path, ['doctor', '--help']);
+    expect(help.code).toBe(0);
 });
 
-test.each(VERSION_ARGUMENTS.map((commandArguments) => ({ commandArguments })))(
+test.each(
+    [['--version'], ['--json', '--version'], ['--version', 'list'], ['--version', '--help']].map(
+        (commandArguments) => ({
+            commandArguments,
+        }),
+    ),
+)(
     'the version arguments $commandArguments print the version without reading settings',
     async ({ commandArguments }) => {
         await using sandbox = await testdir({ 'gspot.toml': MALFORMED_SETTINGS });
@@ -143,15 +157,6 @@ test('--verbose before the command reaches check, which then prints its passed c
     expect(checked.stdout).toMatch(/^passed +repository\/encoding +\d+ files? /mu);
 });
 
-test('a command refuses a removed configuration that gspot does not ship', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': `removed_configurations = { python3 = "The sample needs no Python checks." }\n`,
-    });
-    const refused = await runGspot(sandbox.path, ['list']);
-    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
-    expect(refused.stderr).toContain('There is no configuration called python3.');
-});
-
 test('an option error after a global flag names the help of its command', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
     const refused = await runGspot(sandbox.path, ['--verbose', 'list', '--foo']);
@@ -165,4 +170,14 @@ test('an option value that reads --json leaves the output as text', async () => 
     expect(result.code).toBe(2);
     expect(result.stdout).toBe('');
     expect(result.stderr).not.toBe('');
+});
+
+test('check refuses a gspot pin that differs from the running version', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': JSON.stringify({ private: true, devDependencies: { [cliPackage.name]: '0.0.1' } }),
+    });
+    const refused = await runGspot(sandbox.path, ['check', '--json']);
+    expect(refused.code, refused.stdout + refused.stderr).toBe(2);
+    expect(JSON.parse(refused.stdout)).toMatchObject({ error: 'arguments' });
 });

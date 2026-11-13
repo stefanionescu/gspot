@@ -5,8 +5,9 @@ buildRuleTester().run('test-hooks-first', testHooksFirst, {
     valid: [
         'describe("cart", () => { beforeEach(reset); afterEach(clean); it("adds", run); });',
         'describe("cart", () => { beforeEach(reset); it("adds", run); afterEach(clean); afterAll(close); });',
-        'describe("cart", () => { beforeEach(reset); });',
-        'describe.each([1])("cart", () => { it("adds", run); beforeEach(reset); });',
+        'describe("cart", () => { beforeEach(reset); afterEach(clean); });',
+        'describe("cart", () => { const user = build(); setup(user); beforeEach(reset); it("adds", run); });',
+        'describe("cart", () => { expect(total).toBe(1); it.only("adds", run); });',
     ],
     invalid: [
         {
@@ -23,7 +24,7 @@ buildRuleTester().run('test-hooks-first', testHooksFirst, {
         },
         {
             code: 'describe("cart", () => { it("a", run); beforeEach.skip(reset); });',
-            errors: [{ messageId: 'before' }],
+            errors: [{ messageId: 'before', column: 40, endColumn: 50 }],
         },
     ],
 });

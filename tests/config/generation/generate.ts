@@ -1,15 +1,6 @@
+import { GITHUB_WORKFLOW } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { NPM_CHECK_IGNORES, STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
-
-const STYLELINT_FILES = {
-    'package.json': STYLELINT_PACKAGE_JSON,
-    'source.css': 'a { opacity: 1; }\n',
-    'app/package.json': STYLELINT_PACKAGE_JSON,
-    'app/source.css': 'a { opacity: 1; }\n',
-    'app/child/package.json': STYLELINT_PACKAGE_JSON,
-    'other/package.json': STYLELINT_PACKAGE_JSON,
-    'plain/package.json': '{"private":true}\n',
-} as const;
+import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
 
 export const MARKDOWNLINT_SCOPE_TABLES = `[[scope]]
 path = "same"
@@ -132,37 +123,6 @@ export const IGNORED_CHECK_FILES = [
     },
 ] as const;
 
-export const STYLELINT_PACKAGE_FIELDS = {
-    project: {
-        ...STYLELINT_FILES,
-        'app/child/source.css': 'a { opacity: 1; }\n',
-        'other/source.css': 'a { opacity: 1; }\n',
-    },
-    configurations: ['css'],
-    tables: '[[scope]]\npath = "app"\n[[scope]]\npath = "app/child"\n[[scope]]\npath = "other"\n',
-    unchanged: ['plain/package.json'],
-    changes: [
-        { path: 'package.json', keys: [{ key: ['stylelint'], value: { extends: './.stylelintrc.yml' } }] },
-        {
-            path: 'app/child/package.json',
-            keys: [
-                {
-                    key: ['stylelint'],
-                    value: { extends: '../../.gspot/configurations/css/stylelint.json' },
-                },
-            ],
-        },
-        {
-            path: 'app/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
-        },
-        {
-            path: 'other/package.json',
-            keys: [{ key: ['stylelint'], value: { extends: '../.gspot/configurations/css/stylelint.json' } }],
-        },
-    ],
-};
-
 export const EDITED_STYLELINT_PACKAGE = `{
   "name": "edited-project",
   "private": true,
@@ -177,9 +137,9 @@ export const RUNTIME_RULE_CASES = [
 ] as const;
 
 export const SWITCH_CASES = [
-    { name: 'hooks', path: '.gspot/hooks/pre-commit' },
-    { name: 'rule_files', path: '.gspot/rules/WORKING.md' },
-    { name: 'ci', path: '.github/workflows/gspot.yml' },
+    { name: 'hooks', path: `${GSPOT_PATHS.hooks}/pre-commit` },
+    { name: 'rule_files', path: `${GSPOT_PATHS.rules}/WORKING.md` },
+    { name: 'ci', path: GITHUB_WORKFLOW },
 ] as const;
 
 export const PROJECT_FILES = {

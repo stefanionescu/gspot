@@ -15,7 +15,7 @@ import {
     POSTGRES_SCOPE_SETTINGS,
     PROJECT_CHOICES,
     PROJECT_SCOPE_CASES,
-} from '#tests/config/settings/read.ts';
+} from '#tests/config/settings/parse.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

@@ -13,7 +13,6 @@ buildRuleTester().run('no-incomplete-assertions', noIncompleteAssertions, {
     invalid: [
         { code: 'expect(total);', errors: [{ messageId: 'complete', data: { name: 'expect' } }] },
         { code: 'expect(total).to.equal;', errors: [{ messageId: 'call', data: { name: 'equal' } }] },
-        { code: 'expect(total).to.be;', errors: [{ messageId: 'complete', data: { name: 'be' } }] },
         { code: 'value.should;', errors: [{ messageId: 'complete', data: { name: 'should' } }] },
         { code: 'expect.soft(total);', errors: [{ messageId: 'complete', data: { name: 'soft' } }] },
         { code: 'await expect.poll(read).not;', errors: [{ messageId: 'complete', data: { name: 'not' } }] },

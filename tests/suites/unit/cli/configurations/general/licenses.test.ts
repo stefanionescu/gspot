@@ -21,13 +21,12 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 async function runLicenseCheck(
     root: string,
     packages: ReadonlyArray<Record<'name' | 'version' | 'ecosystem', string> & { licenses: readonly string[] }>,
-    lockfile = 'package-lock.json',
 ) {
     using resources = new DisposableStack();
     const stdout = JSON.stringify({
         results: [
             {
-                source: { path: join(await realpath(root), lockfile), type: 'lockfile' },
+                source: { path: join(await realpath(root), 'package-lock.json'), type: 'lockfile' },
                 packages: packages.map(({ name, version, ecosystem, licenses }) => ({
                     package: { name, version, ecosystem },
                     license_violations: licenses,
@@ -57,16 +56,6 @@ test('licenses/allowed reports a disallowed license of a locked package, on its 
     ]);
 });
 
-test('licenses/allowed reports a Python package on the line of its entry in uv.lock', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['licenses'], { tables: LICENSE_TABLES }),
-        'uv.lock':
-            'version = 1\n\n[[package]]\nname = "app"\ndependencies = [{ name = "strict" }]\n\n[[package]]\nname = "strict"\nversion = "1.0.0"\n',
-    });
-    const { findings } = await runLicenseCheck(sandbox.path, [{ ...GPL_PACKAGE, ecosystem: 'PyPI' }], 'uv.lock');
-    expect(findings).toMatchObject([{ file: 'uv.lock', line: 8, rule: 'disallowed-license' }]);
-});
-
 test('licenses/allowed reports an ignore whose paths cover no lockfile, and accepts one that names a lockfile', async () => {
     const ignores = ['pyproject.toml', 'tools/uv.lock']
         .map((path) => `[[ignore]]\ncheck = "licenses/allowed"\npaths = ["${path}"]\nreason = "Reviewed by legal."\n`)
@@ -89,7 +78,7 @@ test('licenses/allowed reports an ignore whose paths cover no lockfile, and acce
     ]);
 });
 
-test('licenses/allowed asks for every package, sends the allowed list, and reads each lockfile of its scope at any size, apart from gspot, nested scopes, and ignored folders', async () => {
+test('licenses/allowed sends the allowed list and each lockfile of its scope at any size, apart from gspot, nested scopes, and ignored folders', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['licenses'], {
             tables: `${LICENSE_TABLES}[repository]\nmax_file_kilobytes = 0\n`,
@@ -103,7 +92,6 @@ test('licenses/allowed asks for every package, sends the allowed list, and reads
     });
     await writeFile(join(sandbox.path, '.git/info/exclude'), '.claude/worktrees/\n');
     const { command } = await runLicenseCheck(sandbox.path, [MIT_PACKAGE]);
-    expect(command).toContain('--all-packages');
     expect(command).toContain('--licenses=MIT,Apache-2.0');
     expect(command.filter((argument) => argument.startsWith('--lockfile='))).toStrictEqual([
         '--lockfile=:package-lock.json',

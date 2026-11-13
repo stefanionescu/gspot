@@ -10,7 +10,11 @@ buildRuleTester({ root }).run('no-async-suite-callbacks', noAsyncSuiteCallbacks,
     valid: [
         { code: 'describe("cart", async () => { it("adds", run); });', filename: join(root, 'plain/a.test.ts') },
         { code: 'describe("cart", () => { beforeAll(async () => { await login(); }); it("adds", run); });', filename },
-        { code: 'it("adds", async () => { await run(); });', filename },
+        { code: 'describe.skip("cart", async () => { it("adds", run); });', filename },
+        {
+            code: 'import { describe } from "vitest";\ndescribe("cart", async () => { it("adds", run); });',
+            filename,
+        },
         {
             code: 'async function setup() { await login(); }\ndescribe("cart", () => { setup(); it("adds", run); });',
             filename,
@@ -23,19 +27,6 @@ buildRuleTester({ root }).run('no-async-suite-callbacks', noAsyncSuiteCallbacks,
         },
     ],
     invalid: [
-        {
-            code: 'describe("cart", async () => { it("adds", run); });',
-            filename,
-            errors: [
-                {
-                    messageId: 'removeAsync',
-                    column: 18,
-                    suggestions: [
-                        { messageId: 'removeAsyncKeyword', output: 'describe("cart", () => { it("adds", run); });' },
-                    ],
-                },
-            ],
-        },
         {
             code: 'describe.only("cart", async function () { const user = await login(); it("adds", run); });',
             filename,

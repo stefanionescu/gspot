@@ -9,8 +9,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...COMPOSITE_INDEX_CASES])(
-    'a composite foreign key with index ($columns) produces $count findings',
-    async ({ columns, count }) => {
+    'a composite foreign key with index ($columns) reports $expected',
+    async ({ columns, expected }) => {
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['postgres'], { level: 'all' }),
             'migrations/1_orders.sql':
@@ -18,13 +18,12 @@ test.each([...COMPOSITE_INDEX_CASES])(
                 `CREATE INDEX orders_lookup ON orders (${columns});\n`,
         });
         const findings = await runSandboxCheck(sandbox.path, 'postgres/foreign-key-indexes');
-        expect(findings).toHaveLength(count);
-        if (count > 0)
-            expect(findings[0]).toMatchObject({
-                file: 'migrations/1_orders.sql',
-                rule: 'foreign-key-index',
-                message: expect.stringContaining('public.orders (tenant_id, user_id)') as string,
-            });
+        expect(findings.map(({ file, rule }) => ({ file, rule }))).toStrictEqual(
+            expected.map((rule) => ({ file: 'migrations/1_orders.sql', rule })),
+        );
+        expect(findings.map(({ message }) => message)).toStrictEqual(
+            expected.map(() => expect.stringContaining('public.orders (tenant_id, user_id)') as string),
+        );
     },
 );
 

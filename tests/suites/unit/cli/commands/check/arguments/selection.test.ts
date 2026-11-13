@@ -240,7 +240,7 @@ test('a manual check runs only when --only names it', async () => {
     ]);
 });
 
-test('a scope path narrows to its checks and its rerun command finds the same findings', async () => {
+test('a scope folder argument runs only the checks of that scope', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], NAMING_SCOPE_SETTINGS),
         'api/port.js': 'export const helperCommand = 1;\n',

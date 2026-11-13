@@ -1,22 +1,3 @@
-export const STARTING_FILES = {
-    '.editorconfig': `root = true
-[*]
-indent_size = 2
-[*.json]
-indent_size = 4
-`,
-    'prettier.config.mjs':
-        'console.log("formatter stdout"); console.error("formatter stderr"); export default { semi: false };\n',
-    'source.js': 'const greeting="hello";',
-    'broken.sh': 'if then\n',
-    'authored.txt': 'Preserve this authored file.\n',
-    'AGENTS.md': '# Team notes\n',
-    'CLAUDE.md': `# Claude notes
-
-Run the tests.
-`,
-} as const;
-
 export const PLUGIN_TYPES_SOURCE = `
 import plugin from '@gspothq/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';

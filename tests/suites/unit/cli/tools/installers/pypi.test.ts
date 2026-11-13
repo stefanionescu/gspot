@@ -3,7 +3,7 @@ import { readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
@@ -17,6 +17,7 @@ import {
     planPythonLockfile,
     readPythonSettings,
 } from '#cli/tools/installers/pypi.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
 import type { PythonToolProject } from '#cli/types/tools.ts';
 import {
     INVALID_UV_SETTINGS,
@@ -27,7 +28,7 @@ import {
     UV_LOCKFILE_MISMATCHES,
     UV_LOCKFILE_ORIGINS,
     UV_TOML,
-} from '#tests/config/tools/installers.ts';
+} from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
@@ -94,8 +95,8 @@ test.each([...UV_LOCKFILE_MISMATCHES])('a changed %s makes the uv lockfile stale
 });
 
 test.each([...UV_LOCKFILE_ORIGINS])(
-    'uv lockfile index %s and artifact %s with the settings %j have allowed origins: %p',
-    (registry, url, expected, indexes) => {
+    'a uv lockfile with $name is fresh: $expected',
+    ({ registry, url, expected, indexes }) => {
         const lockfile = `${PYTHON_TOOL_LOCKFILE}\n[[package]]\nname = "example-package"\nversion = "1.2.3"\nsource = { registry = "${registry}" }\nsdist = { url = "${url}" }\nwheels = [{ url = "${url}" }]\n`;
         expect(isPythonLockfileFresh(pythonProject, lockfile, indexes)).toBe(expected);
     },
@@ -181,8 +182,10 @@ test('Python resolution excludes releases newer than the minimum release age', a
 test('install syncs each project that has a uv lockfile, and only those', async () => {
     await using sandbox = await createGitSandbox({
         ...PYTHON_INSTALL_FILES,
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'api' }] }),
         'pyproject.toml': '[project]\nname = "root"\nversion = "1.0.0"\n',
         'uv.lock': 'version = 1\n',
+        'api/pyproject.toml': '[project]\nname = "api"\nversion = "1.0.0"\n',
     });
     using _boundary = fakeCommands('project-uv', () => Promise.resolve(buildProcessResult()));
     const install = await buildSandboxToolInstall(await openSession(sandbox.path));
@@ -238,4 +241,24 @@ test.each([
     const install = await buildSandboxToolInstall(session);
     await installPythonProjects({ ...install, misePath: 'project-mise' }, 'project-uv');
     expect(install.steps).toStrictEqual([['project-uv', 'sync', '--locked', '--inexact', ...flags]]);
+});
+
+test('a uv sync held by the release age names the PyPI release and its age', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['python']) });
+    const session = await openSession(sandbox.path);
+    const install = await buildSandboxToolInstall(session);
+    const [pin] = listPackagePins(session.toolConfigurations).python as [string];
+    const [name, version] = pin.split('==') as [string, string];
+    using _boundary = fakeCommands('age-uv', () =>
+        Promise.resolve(buildProcessResult({ code: 1, stderr: `No solution found for ${pin}` })),
+    );
+    using registry = spyOn(globalThis, 'fetch').mockImplementation(
+        Object.assign(() => Promise.resolve(Response.json({ urls: [{ upload_time_iso_8601: new Date() }] })), {
+            preconnect: fetch.preconnect,
+        }),
+    );
+    const error = await captureRejection(installPythonTools(install, 'age-uv'));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
+    expect(error.message).toStartWith(`${pin} came out less than ${String(install.releaseAgeDays)} days ago`);
+    expect(registry.mock.calls.map(([url]) => url)).toStrictEqual([`https://pypi.org/pypi/${name}/${version}/json`]);
 });

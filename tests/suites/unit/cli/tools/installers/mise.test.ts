@@ -11,7 +11,7 @@ import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE, NETWORK_ADVICE } from '#cli
 import { openSession } from '#cli/engine/session.ts';
 import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
 import { listMisePins } from '#cli/tools/pins.ts';
-import type { MiseToolPin } from '#cli/types/tools.ts';
+import type { MiseToolPin, Session, ToolInstall } from '#cli/types/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
@@ -20,6 +20,13 @@ import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import type { MiseProject } from '#tests/types/setup.ts';
+
+async function openMiseInstall(root: string): Promise<{ session: Session; install: ToolInstall }> {
+    const session = await openSession(root);
+    const install = await buildSandboxToolInstall(session);
+    install.misePath = 'mise';
+    return { session, install };
+}
 
 test('mise lock freshness needs the tool, its version, a URL and a sha256 checksum', () => {
     const checksum = `sha256:${'a'.repeat(64)}`;
@@ -146,11 +153,12 @@ test('mise fills missing release checksums from the audited pins without fetchin
     expect(lockfile).toContain(`[tools.taplo."platforms.linux-x64"]\nurl = "${url}"\nchecksum = `);
 });
 
-test('mise lock that leaves a platform without a download URL is refused and writes no lockfile', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['spelling']) });
-    const session = await openSession(sandbox.path);
-    const install = await buildSandboxToolInstall(session);
-    install.misePath = 'mise';
+test('mise lock that leaves a platform without a download URL is refused and keeps the previous lock', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['spelling']),
+        [GSPOT_PATHS.miseLockfile]: '[tools]\n',
+    });
+    const { session, install } = await openMiseInstall(sandbox.path);
     using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') {
             const project = parse(await readFile(join(options.cwd, 'mise.toml'), 'utf8')) as MiseProject;
@@ -160,55 +168,46 @@ test('mise lock that leaves a platform without a download URL is refused and wri
             });
             await writeFile(join(options.cwd, 'mise.lock'), sections.join('\n'));
         }
-        return buildProcessResult({ stdout: 'locked\n' });
+        return buildProcessResult({ stdout: 'locked\n', stderr: 'WARN skipped tool after rate limit' });
     });
     const error = await captureRejection(installMiseTools(install));
     const pins = listMisePins(session.toolConfigurations)
         .map((pin) => `${pin.name} ${pin.version}`)
         .join(', ');
     expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
-    expect(error.message).toContain(pins);
-    expect(error.message).toContain('locked');
+    for (const value of [pins, 'locked', 'WARN skipped tool after rate limit', 'GITHUB_TOKEN'])
+        expect(error.message).toContain(value);
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
-    expect(existsSync(join(sandbox.path, GSPOT_PATHS.miseLockfile))).toBe(false);
+    expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
 });
 
-test.each(['pin', 'checksum'])('mise refuses a lock that omits a %s and keeps the previous lock', async (omitted) => {
+test('mise refuses a platform with no audited checksum and keeps the previous lock', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['spelling']),
         [GSPOT_PATHS.miseLockfile]: '[tools]\n',
     });
-    const session = await openSession(sandbox.path);
-    const install = await buildSandboxToolInstall(session);
-    install.misePath = 'mise';
+    const { session, install } = await openMiseInstall(sandbox.path);
     const [pin] = listMisePins(session.toolConfigurations) as [MiseToolPin];
-    const lockfile =
-        omitted === 'pin'
-            ? '[tools]\n'
-            : stringify({
-                  tools: {
-                      [pin.name]: [
-                          {
-                              version: pin.version,
-                              'platforms.linux-riscv64': {
-                                  url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
-                              },
-                          },
-                      ],
-                  },
-              });
+    const lockfile = stringify({
+        tools: {
+            [pin.name]: [
+                {
+                    version: pin.version,
+                    'platforms.linux-riscv64': {
+                        url: 'https://github.com/example/tool/releases/download/v1.0.0/tool.zip',
+                    },
+                },
+            ],
+        },
+    });
     using _commands = fakeCommands('mise', async (command, options) => {
         if (command[1] === 'lock') await writeFile(join(options.cwd, 'mise.lock'), lockfile);
-        return buildProcessResult({ stderr: 'WARN skipped tool after rate limit' });
+        return buildProcessResult();
     });
     const error = await captureRejection(installMiseTools(install));
-    const names = listMisePins(session.toolConfigurations)
-        .map((pin) => `${pin.name} ${pin.version}`)
-        .join(', ');
     expect(error).toMatchObject({ name: 'GspotError', code: 'install' });
-    const named =
-        omitted === 'pin' ? [names, 'WARN skipped tool after rate limit', 'GITHUB_TOKEN'] : [pin.name, 'linux-riscv64'];
-    for (const value of named) expect(error.message).toContain(value);
+    expect(error.message).toContain(pin.name);
+    expect(error.message).toContain('linux-riscv64');
     expect(install.steps.filter((command) => command[1] === 'install')).toStrictEqual([]);
     expect(await readFile(join(sandbox.path, GSPOT_PATHS.miseLockfile), 'utf8')).toBe('[tools]\n');
 });

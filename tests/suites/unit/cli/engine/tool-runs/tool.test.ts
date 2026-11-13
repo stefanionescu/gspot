@@ -12,14 +12,15 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
-test('a timed-out tool carries the configured time limit in its failure', async () => {
+test('a timed-out tool reports the configured time limit and the last output of the tool', async () => {
     await using sandbox = await testdir();
-    const { failure } = await runToolProcess(buildProgramCommand('fakes/tool', '--wait'), {
+    const { failure } = await runToolProcess(buildProgramCommand('fakes/tool', '--line', 'running test 3', '--wait'), {
         cwd: sandbox.path,
         name: 'waiting-tool',
-        timeoutSeconds: 0.2,
+        timeoutSeconds: 0.5,
     });
-    expect(failure).toStrictEqual({ status: 'error', note: expect.stringContaining('0.2s') as string });
+    expect(failure).toStrictEqual({ status: 'error', note: expect.stringContaining('0.5s') as string });
+    expect(failure?.note).toEndWith('\nrunning test 3');
 });
 
 test('a missing executable is reported as missing rather than a check finding', async () => {
@@ -43,14 +44,4 @@ test('companion tool folders precede the existing PATH in declared order', async
     expect(environment['PATH']).toBe(
         [join(sandbox.path, 'zsh'), join(sandbox.path, 'openssl'), 'original-search-path'].join(delimiter),
     );
-});
-
-test('a timeout note holds the last output of the tool', async () => {
-    await using sandbox = await testdir();
-    const { failure } = await runToolProcess(buildProgramCommand('fakes/tool', '--line', 'running test 3', '--wait'), {
-        cwd: sandbox.path,
-        name: 'waiting-tool',
-        timeoutSeconds: 0.5,
-    });
-    expect(failure?.note).toEndWith('\nrunning test 3');
 });

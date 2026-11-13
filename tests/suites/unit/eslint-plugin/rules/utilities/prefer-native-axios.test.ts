@@ -5,7 +5,7 @@ buildRuleTester().run('prefer-native-axios', preferNativeAxios, {
     valid: [
         'import axios from "axios";\nawait Promise.all([axios.get(first), axios.get(second)]);',
         'import axios from "axios";\nawait axios.get(url, { signal: controller.signal });',
-        'import axios from "./http";\naxios.all([first]);',
+        'import axios from "./http";\naxios.all([first]);\naxios.CancelToken.source();',
     ],
     invalid: [
         {

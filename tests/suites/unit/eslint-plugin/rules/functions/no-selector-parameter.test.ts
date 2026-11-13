@@ -1,9 +1,7 @@
 import { noSelectorParameter } from '#eslint-plugin/rules/functions/no-selector-parameter.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
-const rule = noSelectorParameter;
-
-buildTypedRuleTester().run('no-selector-parameter', rule, {
+buildTypedRuleTester().run('no-selector-parameter', noSelectorParameter, {
     valid: [
         'declare function store(): void; function save(draft: boolean) { if (draft) store(); }',
         'declare function store(): void; function save(draft: boolean) { store(); if (draft) store(); else store(); }',

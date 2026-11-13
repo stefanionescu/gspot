@@ -1,5 +1,6 @@
 import { expect, test } from 'bun:test';
 
+import { SCAN_FIRST_MESSAGE } from '#cli/config/generation/setup.ts';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
@@ -171,6 +172,31 @@ const CARRYOVER_ROW_CASES = [
         path: '.prettierrc.json5',
         row: { carried: ['printWidth'], dropped: [] },
     },
+    {
+        name: 'an EditorConfig line width of off, which gspot.toml cannot hold',
+        files: {
+            '.editorconfig': '[*]\nmax_line_length = 100\n[*.md]\nmax_line_length = off\n',
+            'README.md': '# Example\n',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: '.editorconfig',
+        row: { dropped: ['max_line_length'] },
+    },
+    {
+        name: 'an EditorConfig line setting that differs from what gspot writes',
+        files: { '.editorconfig': '[*]\nend_of_line = lf\n[*.bat]\nend_of_line = crlf\n', 'run.bat': 'echo done\n' },
+        path: '.editorconfig',
+        row: { dropped: ['end_of_line'] },
+    },
+    {
+        name: 'the excludeFiles of a Prettier override',
+        files: {
+            '.prettierrc': '{"overrides":[{"files":"*.js","excludeFiles":"vendor/**","options":{"semi":false}}]}\n',
+            'source.js': 'export const value = 1;\n',
+        },
+        path: '.prettierrc',
+        row: { dropped: ['excludeFiles'] },
+    },
 ] as const;
 
 test('init turns the ignore files into ignore records, and keeps what matches a tracked file', async () => {
@@ -210,12 +236,11 @@ test('a broken first Prettier config leaves the table and format.print_width in 
     expect(settings['format']).toMatchObject({ print_width: 100 });
 });
 
-test('init goes on past a nested package.json that does not parse, and it marks no scope', async () => {
+test('a nested package.json that does not parse marks no scope, and one that parses with a script of the wrong type does', async () => {
     await using sandbox = await createGitSandbox({
         'package.json': '{"private":true}\n',
         'source.js': 'export const value = 1;\n',
         'tests/fixtures/broken/package.json': '{ nope',
-        'tests/fixtures/local/pyproject.toml': '[project]\ndependencies = ["./vendor/lib"]\n',
         'tests/fixtures/numbers/package.json': '{"scripts":{"build":1}}',
     });
     const { settings } = await planSandboxInit(sandbox.path);
@@ -231,7 +256,7 @@ test('init sends the rules of an ESLint config to gspot scan, which can compare 
     const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.carryover.find(({ path }) => path === 'eslint.config.mjs')).toMatchObject({
         tool: 'eslint',
-        dropped: ['its rules; gspot scan compares them before init'],
+        dropped: [SCAN_FIRST_MESSAGE],
     });
 });
 

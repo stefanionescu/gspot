@@ -2,53 +2,43 @@ import { existsSync } from 'node:fs';
 import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import * as processes from '#cli/system/processes.ts';
-import {
-    ACTIONLINT_EXITS,
-    OUTSIDE_GITHUB_ACTIONS,
-    WORKFLOW_TEXT_CASES,
-} from '#tests/config/configurations/infrastructure.ts';
+import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/configurations/infrastructure.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { readCallRecords } from '#tests/setup/system/programs.ts';
 
+const ACTIONLINT_TOOLS = ['actionlint', 'shellcheck'];
+
 test('actionlint copies root actions and unchanged actions outside .github with workflow replacements', async () => {
+    const setupAction = 'name: Setup\nruns:\n  using: composite\n  steps:\n    - shell: bash\n      run: echo safe\n';
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['github-actions']),
-        ...OUTSIDE_GITHUB_ACTIONS,
+        '.github/workflows/caller.yml':
+            'on: workflow_dispatch\njobs:\n  build:\n    runs-on: ubuntu-latest\n    steps:\n      - uses: $/actions/setup\n',
+        'action.yml': 'name: Root\nruns:\n  using: composite\n  steps:\n    - uses: $/actions/setup\n',
+        'actions/setup/action.yml': setupAction,
     });
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(sandbox.path, ['actionlint', 'shellcheck'], resources);
-    using boundary = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
+    using _pins = fakeToolExecutables(ACTIONLINT_TOOLS.map((name) => getTool(readConfigurations().values(), name)));
+    using boundary = fakeCommands().mockImplementation(async (_command, options) => {
         expect(await readFile(join(options.cwd, 'action.yml'), 'utf8')).toContain('uses: ./actions/setup');
-        expect(await readFile(join(options.cwd, 'actions/setup/action.yml'), 'utf8')).toBe(
-            OUTSIDE_GITHUB_ACTIONS['actions/setup/action.yml'],
-        );
+        expect(await readFile(join(options.cwd, 'actions/setup/action.yml'), 'utf8')).toBe(setupAction);
         return buildProcessResult();
     });
-    const planned = planChecks(session, buildRunOptions({ only: ['github-actions/actionlint'] }))[0]!;
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        CHECK_CODE['github-actions/actionlint'],
-        {},
-    );
-    expect(result.findings).toStrictEqual([]);
+    expect(await runSandboxCheck(sandbox.path, 'github-actions/actionlint')).toStrictEqual([]);
     expect(boundary).toHaveBeenCalledTimes(1);
 });
 
@@ -61,21 +51,13 @@ test.each([...WORKFLOW_TEXT_CASES])(
                 'on: workflow_dispatch\njobs:\n  caller:\n    uses: ./.github/actions/setup\n',
             [path]: before,
         });
-        using resources = new DisposableStack();
-        const session = await openFakeToolSession(sandbox.path, ['actionlint', 'shellcheck'], resources);
-        using run = spyOn(processes, 'runProcess').mockImplementation(async (_command, options) => {
+        using _pins = fakeToolExecutables(ACTIONLINT_TOOLS.map((name) => getTool(readConfigurations().values(), name)));
+        using run = fakeCommands().mockImplementation(async (_command, options) => {
             const written = await readFile(join(options.cwd, path), 'utf8');
             expect(written).toBe(expected);
             return buildProcessResult();
         });
-        const [planned] = planChecks(session, { stage: 'commit', only: ['github-actions/actionlint'] });
-        const result = await runCheckCode(
-            buildCheckSession(session, CHECK_GENERATION),
-            planned!,
-            selectCheckCode(planned!.check),
-            {},
-        );
-        expect(result.status, JSON.stringify(result)).toBe('passed');
+        expect(await runSandboxCheck(sandbox.path, 'github-actions/actionlint')).toStrictEqual([]);
         expect(run).toHaveBeenCalledTimes(1);
         expect(await readFile(join(sandbox.path, path), 'utf8')).toBe(before);
     },
@@ -83,7 +65,7 @@ test.each([...WORKFLOW_TEXT_CASES])(
 
 test.each([...ACTIONLINT_EXITS])(
     'actionlint runs in a temporary copy that gspot removes after exit $code, and the workflow is unchanged',
-    async ({ code, status, findings, note }) => {
+    async ({ code, status, findings }) => {
         await using sandbox = await createGitSandbox({});
         const record = join(sandbox.path, 'workspace.txt');
         const executable = join(sandbox.path, 'actionlint');
@@ -114,7 +96,7 @@ test.each([...ACTIONLINT_EXITS])(
         const result = await runCheckCode(
             buildCheckSession(session, CHECK_GENERATION),
             planned,
-            CHECK_CODE['github-actions/actionlint'],
+            selectCheckCode(planned.check),
             {},
         );
         expect(result.status, JSON.stringify(result)).toBe(status);
@@ -124,7 +106,6 @@ test.each([...ACTIONLINT_EXITS])(
         expect(await readFile(join(sandbox.path, '.github/workflows/caller.yml'), 'utf8')).toBe(workflow);
         const attributes = await stat(join(sandbox.path, '.github/workflows/caller.yml'));
         expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o444 }));
-        expect(result.note?.replace(executable, '<actionlint>')).toBe(note);
         expect(result.findings).toMatchObject(findings);
     },
 );
@@ -183,5 +164,14 @@ jobs:
                   TOKEN: \${{ secrets.TOKEN }}
 `,
     );
+    expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
+});
+
+test('a job that calls a reusable workflow needs no timeout', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['github-actions']),
+        '.github/workflows/check.yml':
+            'on: workflow_dispatch\njobs:\n    call:\n        uses: ./.github/workflows/build.yml\n',
+    });
     expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
 });

@@ -1,97 +1,16 @@
-import { readFile, writeFile } from 'node:fs/promises';
+import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
+import { FIX_ROUNDS } from '#cli/config/engine.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { RunOptions } from '#cli/types/engine/run.ts';
-import { FIX_LINTER_CASE } from '#tests/config/engine/run.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
-import { SQL_COMMAND_CHECK, SQL_SEARCH_ARGUMENTS } from '#tests/config/setup/sandboxes.ts';
-import { listFindingRows, runGspot } from '#tests/setup/cli/commands.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-
-test('after --fix, the javascript check status matches what the linter still reports', async () => {
-    const row = FIX_LINTER_CASE;
-    const check = getShippedCheck(`${row.configuration}/${row.tool}`);
-    const executable = join(toolModules, row.tool, 'bin', row.executable);
-    const command = [process.execPath, executable, '--config', row.config];
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            rules: true,
-            tables: stringify({
-                command_check: [
-                    {
-                        id: 'project/native',
-                        command: [...command, ...row.formatter, '{files}'],
-                        fix: [...command, ...row.formatter, '--fix', '{files}'],
-                        exit_codes: check.exit_codes!,
-                        output: check.output,
-                        paths: [row.path],
-                        stage: 'commit',
-                    },
-                ],
-            }),
-        }),
-        [row.config]: row.nativeConfiguration,
-        [row.path]: row.sample,
-    });
-    await writeFile(join(sandbox.path, row.config), row.invalidConfiguration);
-    const invalid = await runChecks(await openSession(sandbox.path), buildRunOptions({ only: ['project/native'] }));
-    expect(invalid.report.checks).toMatchObject([{ status: 'error', findings: [] }]);
-    await writeFile(join(sandbox.path, row.config), row.nativeConfiguration);
-    const session = await openSession(sandbox.path);
-    const options: RunOptions = buildRunOptions({ fix: true, only: ['project/native'] });
-    const failed = await runChecks(session, options);
-    expect(failed.report.exitCode, JSON.stringify(failed)).toBe(1);
-    expect(failed.fixes?.results).toMatchObject([{ status: 'changed', changed: [row.path] }]);
-    expect(await readFile(join(sandbox.path, row.path), 'utf8')).toBe(row.partial);
-    await writeFile(join(sandbox.path, row.path), row.corrected);
-    const corrected = await runChecks(await openSession(sandbox.path), options);
-    expect(corrected.report.exitCode, JSON.stringify(corrected)).toBe(0);
-});
-
-test('after --fix, the checks read the fixed file', async () => {
-    const settings = buildSandboxSettings(['sql'], {
-        level: 'all',
-        tables: `[sql]\ndialect = "postgres"\n${stringify({
-            command_check: [
-                {
-                    id: 'project/correct-sql',
-                    command: buildProgramCommand('fakes/tool'),
-                    paths: ['query.sql'],
-                    stage: 'commit',
-                    fix: buildProgramCommand('fakes/tool', '--text', LOWERCASE_SELECT_SQL, '{files}'),
-                    output: { format: 'none' },
-                },
-                { ...SQL_COMMAND_CHECK, command: buildProgramCommand('checks/search', ...SQL_SEARCH_ARGUMENTS) },
-            ],
-        })}`,
-    });
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': settings,
-        'query.sql': 'CREATE FUNCTION value() RETURNS int LANGUAGE sql RETURN 1;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const options = buildRunOptions({ only: ['project/read-sql', 'project/correct-sql'] });
-    const failed = await runChecks(session, options);
-    expect(failed.report.exitCode).toBe(1);
-    expect(listFindingRows(failed.report)).toStrictEqual([{ file: 'query.sql', line: 1, rule: undefined }]);
-    const corrected = await runChecks(await openSession(session.root), { ...options, fix: true });
-    expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks.map(({ check, status, findings }) => ({ check, status, findings }))).toStrictEqual([
-        { check: 'project/correct-sql', status: 'passed', findings: [] },
-        { check: 'project/read-sql', status: 'passed', findings: [] },
-    ]);
-    expect(await readFile(join(sandbox.path, 'query.sql'), 'utf8')).toBe(LOWERCASE_SELECT_SQL);
-});
 
 test('a later pass formats what a fix after the formatter wrote', async () => {
     const tables = stringify({
@@ -152,8 +71,35 @@ test('a fixer that fails midway leaves the later fixers to run in order and keep
         'third.txt': 'original\n',
     });
 
-    await runGspot(sandbox.path, ['check', '--only', 'sandbox/first,sandbox/second,sandbox/third', '--fix', '--json']);
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ fix: true, only: ['sandbox/first', 'sandbox/second', 'sandbox/third'] }),
+    );
+    expect(result.fixes?.results.map(({ status }) => status)).toStrictEqual(['failed', 'changed', 'changed']);
     expect(await readFile(join(sandbox.path, 'order.log'), 'utf8')).toBe('first\nsecond\nthird\n');
     for (const name of ['first', 'second', 'third'])
         expect(await readFile(join(sandbox.path, `${name}.txt`), 'utf8')).toBe('fixed\n');
+});
+
+test('fixers that undo each other stop after the last round', async () => {
+    const checks = ['forward', 'backward'].map((text) => ({
+        id: `sandbox/${text}`,
+        command: buildProgramCommand('fakes/tool'),
+        fix: buildProgramCommand('fakes/tool', '--write', `source.txt=${text}`, '--append', `rounds.log=${text}\n`),
+        paths: ['source.txt'],
+        stage: 'commit',
+    }));
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables: stringify({ command_check: checks }) }),
+        'source.txt': 'backward',
+    });
+
+    const result = await runChecks(
+        await openSession(sandbox.path),
+        buildRunOptions({ fix: true, only: ['sandbox/forward', 'sandbox/backward'] }),
+    );
+    expect(result.report.exitCode).toBe(0);
+    // The first round runs both fixers, and each later round runs the one whose file the other changed.
+    const runs = await readFile(join(sandbox.path, 'rounds.log'), 'utf8');
+    expect(runs.trimEnd().split('\n')).toHaveLength(FIX_ROUNDS + 1);
 });

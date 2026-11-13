@@ -5,7 +5,7 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import type { TomlTable } from '#cli/types/settings.ts';
-import { REFUSAL_FILES, UNKNOWN_IGNORE_ARGUMENTS } from '#tests/config/commands/edits.ts';
+import { REFUSAL_FILES } from '#tests/config/commands/edits.ts';
 import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -16,7 +16,11 @@ test('ignore of an unknown check exits 2, names the close check, and leaves gspo
         'gspot.toml': buildSandboxSettings(['bash']),
         'entry.sh': 'echo example\n',
     });
-    const failure = await assertRefusalWithoutWrites(sandbox.path, UNKNOWN_IGNORE_ARGUMENTS, 'arguments');
+    const failure = await assertRefusalWithoutWrites(
+        sandbox.path,
+        ['ignore', 'bash/shelcheck', '--reason', 'The sample check name is misspelled.'],
+        'arguments',
+    );
     expect(failure.message).toBe('There is no check called bash/shelcheck. Did you mean bash/shellcheck?');
 });
 
@@ -115,15 +119,4 @@ test('ignore accepts a rule of a plugin that exports only an import entry', asyn
 test('ignore refuses a one-letter reason without writing', async () => {
     await using sandbox = await createGitSandbox(REFUSAL_FILES);
     await assertRefusalWithoutWrites(sandbox.path, ['ignore', '--paths', 'vendor/**', '--reason', 'x'], 'arguments');
-});
-
-test('a bare unignore exits 2, names --paths, and keeps every ignore', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            tables: '[[ignore]]\npaths = ["data/**"]\nreason = "Product facts copy the packaging."\n',
-        }),
-        'data/facts.txt': 'facts\n',
-    });
-    const refusal = await assertRefusalWithoutWrites(sandbox.path, ['unignore'], 'arguments');
-    expect(refusal.message).toContain('gspot unignore --paths <path>');
 });

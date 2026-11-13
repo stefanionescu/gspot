@@ -1,4 +1,4 @@
-import { readFile } from 'node:fs/promises';
+import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
@@ -30,6 +30,8 @@ def test_multiplication() -> None:
     assert triple(2) == 6
 `;
 
+const PRICING_TESTS = 'from pricing import gross, net\n\n\ndef test_net():\n    assert net(2) == 2\n';
+
 const PYTEST_SANDBOX = {
     configurations: ['python', 'pytest', 'naming'],
     files: {
@@ -46,18 +48,14 @@ const COVERAGE_LIMIT_CASES = [
         limit: 80,
         coverage: '[coverage]\nmin_line_percent = 80\n',
         code: 2,
-        result: {
-            status: 'missing',
-            note: 'pytest-cov is not installed. Install pytest-cov in the Python environment used by pytest.',
-            coverage: undefined,
-        },
+        result: { status: 'missing', coverage: undefined },
     },
     {
         limit: 0,
         coverage:
             '[coverage]\nmin_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }\n',
         code: 0,
-        result: { status: 'passed', note: undefined, coverage: false },
+        result: { status: 'passed', coverage: false },
     },
 ] as const;
 
@@ -89,10 +87,9 @@ test.each([...COVERAGE_LIMIT_CASES])(
             );
             expect(checked.code, checked.stdout + checked.stderr).toBe(code);
             expect(
-                checked.report.checks.map(({ scope, status, note, command }) => ({
+                checked.report.checks.map(({ scope, status, command }) => ({
                     scope,
                     status,
-                    note,
                     coverage: command?.some((argument) => argument.startsWith('--cov')),
                 })),
             ).toStrictEqual(['', 'app'].map((scope) => ({ scope, ...result })));
@@ -104,3 +101,45 @@ test.each([...COVERAGE_LIMIT_CASES])(
         }
     },
 );
+
+test('pytest/tests with pytest-cov and a limit of 100 reports an untested function in each scope, and passes once a test covers it', async () => {
+    const { root } = installedSandbox();
+    await using _change = await writeSandboxChanges(installedSandbox(), {
+        files: {
+            'tests/test_math.py': ARITHMETIC_TESTS.replace('    assert triple(2) == 6\n', ''),
+            'app/pricing.py': 'def net(price):\n    return price\n\n\ndef gross(price):\n    return price * 2\n',
+            'app/test_pricing.py': PRICING_TESTS,
+            'gspot.toml': buildSandboxSettings(['python', 'pytest'], {
+                level: 'all',
+                scopes: [{ path: 'app', configurations: ['python', 'pytest'] }],
+                tables: '[coverage]\nmin_line_percent = 100\n',
+            }),
+        },
+    });
+    const command = ['check', '--only', 'pytest/tests', '--json'];
+    const failed = parseCheckReport(await spawnGspot(root, command));
+    expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+    expect(
+        failed.report.checks.map(({ scope, status, findings }) => ({
+            scope,
+            status,
+            findings: findings.map(({ message }) => message),
+        })),
+    ).toStrictEqual(
+        ['', 'app'].map((scope) => ({
+            scope,
+            status: 'failed',
+            findings: [expect.stringContaining('Required test coverage of 100%') as string],
+        })),
+    );
+    await writeFile(join(root, 'tests/test_math.py'), ARITHMETIC_TESTS);
+    await writeFile(
+        join(root, 'app/test_pricing.py'),
+        `${PRICING_TESTS}\n\ndef test_gross():\n    assert gross(2) == 4\n`,
+    );
+    const covered = parseCheckReport(await spawnGspot(root, command));
+    expect(covered.code, covered.stdout + covered.stderr).toBe(0);
+    expect(covered.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual(
+        ['', 'app'].map((scope) => ({ scope, status: 'passed' })),
+    );
+});

@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { LOCKED_SCOPE_SETTINGS, REQUIREMENTS_FILE_FINDING } from '#tests/config/configurations/python.ts';
+import { REQUIREMENTS_FILE_FINDINGS } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
@@ -11,21 +11,30 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a requirements file is reported only in a scope with a lockfile', async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['python'], LOCKED_SCOPE_SETTINGS),
+        'gspot.toml': buildSandboxSettings(['python'], {
+            level: 'all',
+            scopes: [
+                { path: 'locked', configurations: ['python'] },
+                { path: 'other', configurations: ['python'] },
+            ],
+        }),
         'requirements.txt': 'root-dependency\n',
         'locked/uv.lock': 'version = 1\n',
         'locked/requirements.txt': 'duplicated-dependency\n',
+        'locked/requirements/dev.txt': 'development-dependency\n',
         'locked/main.py': 'value = 1\n',
         'other/requirements.txt': 'unlocked-dependency\n',
         'other/main.py': 'value = 2\n',
     });
 
-    const checked = await runChecks(
+    const { report } = await runChecks(
         await openSession(sandbox.path),
         buildRunOptions({ only: ['python/pip-installs'] }),
     );
-
-    expect(listFindingRows(checked.report)).toStrictEqual([REQUIREMENTS_FILE_FINDING]);
+    expect(report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: 'locked', status: 'failed' },
+    ]);
+    expect(listFindingRows(report)).toStrictEqual([...REQUIREMENTS_FILE_FINDINGS]);
 });
 
 test('an unmanaged pip install reports its file and rule, and a commented one does not', async () => {

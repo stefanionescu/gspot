@@ -9,16 +9,6 @@ const NEXT_PAGE_SOURCE = 'export default function Page() { return null; }\n';
 
 export const FILE_NAME_CASES = [
     {
-        name: '__init__.ts is reported; Python __init__.py and __main__.py are allowed',
-        configurations: ['python', 'typescript', 'naming'],
-        files: {
-            'python/__init__.py': '"""Package entry."""\n',
-            'javascript/__init__.ts': 'export const entry = 1;\n',
-        },
-        invalid: 'javascript/__init__.ts',
-        renamed: 'javascript/entry.ts',
-    },
-    {
         name: 'a SQL migration file name keeps its timestamp and must be snake case',
         configurations: ['sql', 'naming'],
         files: {
@@ -100,22 +90,169 @@ ignored_prefix = "^handle(?=[A-Z])"
 reason = "Event handlers start with handle."
 `;
 
-export const OVERLONG_NAME_FINDINGS = [
-    { rule: 'digits', message: `typescript function "helperValue2UserUserWithMoreWordsHere": a digit is not a word.` },
+const ALLOWED_NAME_LAYOUT = {
+    configurations: ['naming', 'bash'],
+    naming: {
+        exception: [
+            { allowed_names: ['remoteRecord'], reason: 'The external JavaScript interface fixes this name.' },
+            {
+                paths: ['web/**'],
+                allowed_names: ['remoteRecord'],
+                reason: 'The external JavaScript interface fixes this name.',
+            },
+            {
+                paths: ['worker/**'],
+                allowed_names: ['remote_record'],
+                reason: 'The external Python interface fixes this name.',
+            },
+        ],
+    },
+    scope: [
+        { path: 'web', configurations: ['javascript'] },
+        { path: 'worker', configurations: ['python'] },
+    ],
+} as const;
+
+const ALLOWED_NAME_FILES = {
+    'entry.sh': 'echo ready\n',
+    'web/source.js': 'export const remoteRecord = 1;\n',
+    'worker/source.py': 'remote_record = 1\n',
+} as const;
+
+export const UNUSED_NAME_CASES = [
     {
-        rule: 'length',
-        message: `typescript function "helperValue2UserUserWithMoreWordsHere": 37 characters is over the limit of 35.`,
+        name: 'a properties record whose name only a function uses is unused',
+        files: { 'source.js': 'export function requestName() {}\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                exception: [
+                    {
+                        categories: ['properties'],
+                        allowed_names: ['requestName'],
+                        reason: 'The external API fixes this property name.',
+                    },
+                ],
+            },
+        },
+        unused: [[1, 'requestName']],
     },
     {
-        rule: 'words',
-        message: `typescript function "helperValue2UserUserWithMoreWordsHere": 8 words is over the limit of 4.`,
+        name: 'an allowed stem of an unparsable file counts as used',
+        files: { 'brokenName.js': 'export const = ;\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                exception: [
+                    {
+                        categories: ['files'],
+                        allowed_names: ['brokenName'],
+                        reason: 'The external tool fixes this file name.',
+                    },
+                ],
+            },
+        },
+        unused: [],
     },
     {
-        rule: 'duplicate-words',
-        message: `typescript function "helperValue2UserUserWithMoreWordsHere": "user" repeats.`,
+        name: 'a folders allowance matches a folder above the files it holds',
+        files: { 'src/legacyName/inner/source.js': 'export const one = 1;\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                exception: [
+                    {
+                        paths: ['src/*'],
+                        categories: ['folders'],
+                        allowed_names: ['legacyName', 'missingName'],
+                        reason: 'The external tool fixes this folder name.',
+                    },
+                ],
+            },
+        },
+        unused: [[1, 'missingName']],
     },
     {
-        rule: 'banned-word',
-        message: `typescript function "helperValue2UserUserWithMoreWordsHere": "helper" is banned (roles list).`,
+        name: 'allowances name code or files',
+        files: { 'phantomName.js': '// commentName\nexport const keptName = true;\n' },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                exception: [
+                    {
+                        paths: ['*.js'],
+                        allowed_names: ['keptName', 'phantomName', 'commentName'],
+                        reason: 'The external API declares these exact names.',
+                    },
+                    {
+                        paths: ['*.js'],
+                        categories: ['files', 'variables'],
+                        allowed_names: ['phantomName', 'keptName'],
+                        reason: 'Exact API names.',
+                    },
+                    {
+                        paths: ['*.js'],
+                        categories: ['files'],
+                        allowed_names: ['missingFile'],
+                        reason: 'The external interface fixes this filename.',
+                    },
+                ],
+            },
+        },
+        unused: [
+            [1, 'commentName'],
+            [3, 'missingFile'],
+        ],
+    },
+    {
+        name: 'a sibling declaration cannot satisfy an authored source pattern',
+        files: {
+            'app/source.js': 'export const keptName = true;\n',
+            'worker/source.js': 'export const siblingName = true;\n',
+        },
+        settings: {
+            configurations: ['javascript'],
+            naming: {
+                exception: [
+                    {
+                        paths: ['app/**'],
+                        allowed_names: ['keptName', 'siblingName'],
+                        reason: 'The app interface fixes these exact names.',
+                    },
+                ],
+            },
+            scope: [{ path: 'app' }, { path: 'worker' }],
+        },
+        unused: [[1, 'siblingName']],
+    },
+    {
+        name: 'each scope keeps the allowance that its own source uses',
+        files: ALLOWED_NAME_FILES,
+        settings: ALLOWED_NAME_LAYOUT,
+        unused: [],
+    },
+    {
+        name: 'an allowance for the name of another language is unused',
+        files: ALLOWED_NAME_FILES,
+        settings: {
+            ...ALLOWED_NAME_LAYOUT,
+            naming: {
+                exception: [
+                    ALLOWED_NAME_LAYOUT.naming.exception[0],
+                    ALLOWED_NAME_LAYOUT.naming.exception[1],
+                    { ...ALLOWED_NAME_LAYOUT.naming.exception[2], allowed_names: ['remoteRecord'] },
+                ],
+            },
+        },
+        unused: [[3, 'remoteRecord']],
+    },
+    {
+        name: 'a renamed source leaves both of its allowances unused',
+        files: { ...ALLOWED_NAME_FILES, 'web/source.js': 'export const localRecord = 1;\n' },
+        settings: ALLOWED_NAME_LAYOUT,
+        unused: [
+            [1, 'remoteRecord'],
+            [2, 'remoteRecord'],
+        ],
     },
 ] as const;

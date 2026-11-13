@@ -2,7 +2,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import { compareText } from '#cli/system/text.ts';
-import { BASE_INSTALLED_FILES } from '#tests/config/integration/commands.ts';
+import { BASE_INSTALLED_FILES } from '#tests/config/integration/general.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

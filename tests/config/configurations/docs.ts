@@ -11,12 +11,6 @@ An Accept: application/vnd.github.raw header does not hide src/absent.ts.
 See \`../src/missing.ts\` beside \`../src/here.ts\`.
 `;
 
-export const EXTERNAL_COMMAND_FINDINGS = [
-    { line: 7, message: './src/missing.ts names no tracked file or folder.' },
-    { line: 10, message: 'src/absent.ts names no tracked file or folder.' },
-    { line: 11, message: '../src/missing.ts names no tracked file or folder.' },
-] as const;
-
 export const DOC_TASK_FILES = {
     'root.md': `Run \`mise run root-mise\`, \`npm run root-js\`, and \`bun run root-js\`.
 Run \`mise run root-js\`, \`bun run root-mise\`, and \`npm run child-js\`.
@@ -35,25 +29,15 @@ Run \`npm run root-js\` and \`bun run sibling-js\`.
     'sibling/package.json': '{"private":true,"scripts":{"sibling-js":"true"}}\n',
 } as const;
 
-export const DOC_TASK_SCOPES = ['app', 'app/nested', 'app/empty', 'sibling'].map((path) => ({
-    path,
-    configurations: [],
-}));
-
 export const DOC_TASK_FINDINGS = [
-    { file: 'app/empty/guide.md', line: 1, rule: 'missing-task', message: 'npm run child-js names no task or script.' },
-    { file: 'app/guide.md', line: 2, rule: 'missing-task', message: 'npm run root-js names no task or script.' },
-    { file: 'app/guide.md', line: 2, rule: 'missing-task', message: 'bun run sibling-js names no task or script.' },
-    { file: 'root.md', line: 2, rule: 'missing-task', message: 'mise run root-js names no task or script.' },
-    { file: 'root.md', line: 2, rule: 'missing-task', message: 'bun run root-mise names no task or script.' },
-    { file: 'root.md', line: 2, rule: 'missing-task', message: 'npm run child-js names no task or script.' },
-    { file: 'sibling/guide.md', line: 2, rule: 'missing-task', message: 'pnpm run child-js names no task or script.' },
-    {
-        file: 'sibling/guide.md',
-        line: 2,
-        rule: 'missing-task',
-        message: 'mise run child-mise names no task or script.',
-    },
+    { file: 'app/empty/guide.md', line: 1, command: 'npm run child-js' },
+    { file: 'app/guide.md', line: 2, command: 'npm run root-js' },
+    { file: 'app/guide.md', line: 2, command: 'bun run sibling-js' },
+    { file: 'root.md', line: 2, command: 'mise run root-js' },
+    { file: 'root.md', line: 2, command: 'bun run root-mise' },
+    { file: 'root.md', line: 2, command: 'npm run child-js' },
+    { file: 'sibling/guide.md', line: 2, command: 'pnpm run child-js' },
+    { file: 'sibling/guide.md', line: 2, command: 'mise run child-mise' },
 ] as const;
 
 export const DOC_FENCE_PATH_CASES = [
@@ -99,15 +83,11 @@ export const MALFORMED_TASK_FILES = [
     {
         path: 'package.json',
         text: '{broken',
-        document: 'a.md',
-        scopes: [],
         files: { 'a.md': 'Run `bun run build`.\n', 'package.json': '{}' },
     },
     {
         path: 'mise.toml',
         text: '[tasks',
-        document: 'a.md',
-        scopes: [],
         files: { 'a.md': 'Run `bun run build`.\n', 'mise.toml': '' },
     },
 ] as const;
@@ -115,10 +95,7 @@ export const MALFORMED_TASK_FILES = [
 export const LICENSE_FILE_CASES = [
     { name: 'COPYING', findings: [] },
     { name: 'LICENSE-MIT', findings: [] },
-    {
-        name: 'NOTICE',
-        findings: [{ file: 'LICENSE', rule: 'missing-license', message: 'The root has no LICENSE file.' }],
-    },
+    { name: 'NOTICE', findings: [{ file: 'LICENSE', rule: 'missing-license' }] },
 ] as const;
 
 export const MDX_GUIDE = `import Example from './example.ts';
@@ -130,35 +107,12 @@ Read \`./missing.ts\`.
 <Example />
 `;
 
-export const RELATIVE_PATH_FINDINGS: Array<Array<string | number>> = [
-    [2, './examples/gone.ts names no tracked file or folder.'],
-    [2, '../src/gone.ts names no tracked file or folder.'],
-    [3, './src/here.ts names no tracked file or folder.'],
-    [3, './missing/ names no tracked file or folder.'],
-];
-
 export const RELATIVE_PATH_FILES = {
     'docs/guide.md':
         'See `./examples/good.ts`, `../src/here.ts`, and `src/here.ts`.\nSee `./examples/gone.ts` and `../src/gone.ts`.\nSee `./src/here.ts` and `./missing/`.\n',
     'docs/examples/good.ts': '',
     'src/here.ts': '',
 } as const;
-
-export const IGNORED_PATH_FILES = {
-    'a.md': 'Build `output/report.json` and `app/cache`.\nSee `app/absent.ts`, `app/private.ts`, `.next/types/routes.d.ts`, and `src/gone.ts`.\n',
-    '.gitignore': '/output/report.json\n.next/\n',
-    'app/.gitignore': 'cache/\n*.ts\n!private.ts\n',
-    'src/here.ts': '',
-} as const;
-
-export const MDX_MISSING_PATH_FINDINGS = [
-    {
-        file: 'docs/guide.mdx',
-        line: 5,
-        rule: 'missing-path',
-        message: './missing.ts names no tracked file or folder.',
-    },
-] as const;
 
 export const COVERAGE_CHECK_TABLES = `[[command_check]]
 id = "tests/coverage"

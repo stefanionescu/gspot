@@ -4,10 +4,10 @@ import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 buildRuleTester().run('no-unused-collection', noUnusedCollection, {
     valid: [
         'function list() { const names = []; names.push("a"); return names; }',
-        'function list(run) { const names = []; run(() => names.push("a")); }',
         'function list(make) { const names = make(); names.push("a"); }',
         'export const names = []; names.push("a");',
         'function list() { const names = []; names.items.push("a"); }',
+        'function list() { const names = []; names.push("a"); names.length > 0 && notify(); }',
     ],
     invalid: [
         {

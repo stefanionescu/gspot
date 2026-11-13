@@ -10,14 +10,13 @@ buildRuleTester({ root }).run('no-vue-mixins', noVueMixins, {
     valid: [
         { code: 'export default { mixins: [tracking] };', filename: join(root, 'two/cart.ts') },
         { code: 'export default { mixins: tracking };', filename },
-        { code: 'export default { setup() { useTracking(); } };', filename },
+        { code: 'export default { emits: ["save"] };', filename },
     ],
     invalid: [
-        { code: 'export default { mixins: [tracking] };', filename, errors: [{ messageId: 'mixin', column: 18 }] },
         {
             code: 'const shared = [tracking];\nexport default defineComponent({ "mixins": shared });',
             filename,
-            errors: [{ messageId: 'mixin', line: 2 }],
+            errors: [{ messageId: 'mixin', line: 2, column: 34 }],
         },
     ],
 });

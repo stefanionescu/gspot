@@ -5,6 +5,7 @@ buildTypedRuleTester().run('no-positive-index-check', noPositiveIndexCheck, {
     valid: [
         'declare const roles: string[], role: string; if (roles.indexOf(role) >= 0) run();',
         'declare const title: string; if (title.indexOf("x") > 0) run();',
+        'declare const roles: string[], role: string; if (roles.push(role) > 0) run();',
     ],
     invalid: [
         {

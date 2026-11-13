@@ -1,43 +1,56 @@
 import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { expect, spyOn, test } from 'bun:test';
+import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
-import { CHECK_CODE } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import * as processes from '#cli/system/processes.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Level } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
 import {
-    FAILED_STYLE_BATCH,
     GOOGLE_DOCSTRING_MODULE,
     NUMPY_DOCSTRING_MODULE,
     PYDOCLINT_PROJECT_CASES,
 } from '#tests/config/configurations/python.ts';
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
-import { createRunResources } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { buildPythonToolFiles, fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
+async function writePydoclintProject(
+    root: string,
+    files: Record<string, string>,
+    settings: { tables?: string; level?: Level } = {},
+): Promise<void> {
+    const executable = buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'pydoclint');
+    await createFileTree(root, {
+        ...files,
+        'gspot.toml': buildSandboxSettings(['python'], settings),
+        [executable]: '',
+        ...buildPythonToolFiles('pydoclint'),
+    });
+    await chmod(join(root, executable), EXECUTABLE_FILE);
+}
+
+async function readPydoclintCommands(root: string): Promise<string[][]> {
+    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'pydoclint')]);
+    using run = fakeCommands().mockResolvedValue(buildProcessResult());
+    await runSandboxCheck(root, 'python/pydoclint');
+    return run.mock.calls.map(([command]) => [...command]);
+}
+
 test.each([...PYDOCLINT_PROJECT_CASES])('pydoclint $name', async ({ project, setting, expected }) => {
     await using sandbox = await createGitSandbox({});
-    using prepared = await preparePydoclintCheck(
+    await writePydoclintProject(
         sandbox.path,
         { 'pyproject.toml': project, 'source.py': 'value = 1\n' },
         { tables: `[python]\ndocstring_convention = "${setting}"\n` },
     );
-    const commandArguments = await readPydoclintArguments(prepared);
+    const [commandArguments = []] = await readPydoclintCommands(sandbox.path);
     expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe(expected);
 });
 
@@ -47,155 +60,79 @@ test.each([
     { level: 'all', project: '[tool.pydoclint]\nskip-checking-short-docstrings = true\n', checked: [] },
 ] as const)('pydoclint at level $level checks one-line docstrings: $checked', async ({ level, project, checked }) => {
     await using sandbox = await createGitSandbox({});
-    using prepared = await preparePydoclintCheck(
+    await writePydoclintProject(
         sandbox.path,
         { 'pyproject.toml': `${PYPROJECT}${project}`, 'source.py': 'value = 1\n' },
         { level },
     );
-    const commandArguments = await readPydoclintArguments(prepared);
+    const [commandArguments = []] = await readPydoclintCommands(sandbox.path);
     const index = commandArguments.indexOf('--skip-checking-short-docstrings');
     expect(index === -1 ? [] : commandArguments.slice(index, index + 2)).toStrictEqual([...checked]);
 });
 
-async function readPydoclintArguments(check: { session: Session; planned: PlannedCheck }): Promise<string[]> {
-    using run = spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult());
-    await runCheckCode(
-        buildCheckSession(check.session, CHECK_GENERATION),
-        check.planned,
-        CHECK_CODE['python/pydoclint'],
-        {},
-    );
-    return [...run.mock.calls[0]![0]];
-}
-
-async function preparePydoclintCheck(
-    root: string,
-    files: Record<string, string>,
-    settings: { tables?: string; level?: Level } = {},
-): Promise<DisposableStack & { session: Session; planned: PlannedCheck }> {
-    using cleanup = new DisposableStack();
-    const resources = cleanup.use(new DisposableStack());
-    const executable = buildVenvExecutablePath(GSPOT_PATHS.pythonEnvironment, 'pydoclint');
-    await createFileTree(root, {
-        ...files,
-        'gspot.toml': buildSandboxSettings(['python'], settings),
-        [executable]: '',
-        ...buildPythonToolFiles('pydoclint'),
-    });
-    await chmod(join(root, executable), EXECUTABLE_FILE);
-    const session = await openSession(root, { resources: resources.use(createRunResources()) });
-    const [planned] = planChecks(session, { stage: 'all', only: ['python/pydoclint'] });
-    if (planned === undefined) throw new Error('The Python sandbox does not plan pydoclint.');
-    const fakes = fakeToolExecutables([getTool(readConfigurations().values(), 'pydoclint')]);
-    resources.use(fakes);
-    return Object.assign(cleanup.move(), { session, planned });
-}
+const GOOGLE_RETURNS_SOURCE =
+    'def read_value() -> int:\n    """Read the value.\n\n    Returns:\n        The value.\n    """\n    return 1\n';
 
 test.each([
-    { name: 'a Google Returns section', section: 'Returns:', setting: undefined, expected: 'google' },
-    { name: 'a Google section under the numpy setting', section: 'Returns:', setting: 'numpy', expected: 'numpy' },
+    { name: 'only a Google Returns section', source: GOOGLE_RETURNS_SOURCE, setting: undefined, expected: 'google' },
+    {
+        name: 'only a Google section under the numpy setting',
+        source: GOOGLE_RETURNS_SOURCE,
+        setting: 'numpy',
+        expected: 'numpy',
+    },
+    {
+        name: 'a NumPy section in its first docstring, before a later Google section',
+        source: `def read_value(value: int) -> int:\n    """Read the value.\n\n    Parameters\n    ----------\n    value\n        The value.\n    """\n    return value\n\n\n${GOOGLE_RETURNS_SOURCE.replace('read_value', 'write_value')}`,
+        setting: undefined,
+        expected: 'numpy',
+    },
 ] as const)(
-    'pydoclint runs a file that holds only $name with the style $expected',
-    async ({ section, setting, expected }) => {
+    'pydoclint runs a file that holds $name with the style $expected',
+    async ({ source, setting, expected }) => {
         await using sandbox = await createGitSandbox({});
-        using prepared = await preparePydoclintCheck(
+        await writePydoclintProject(
             sandbox.path,
-            {
-                'pyproject.toml': PYPROJECT,
-                'source.py': `def read_value() -> int:\n    """Read the value.\n\n    ${section}\n        The value.\n    """\n    return 1\n`,
-            },
+            { 'pyproject.toml': PYPROJECT, 'source.py': source },
             setting === undefined ? {} : { tables: `[python]\ndocstring_convention = "${setting}"\n` },
         );
-        const commandArguments = await readPydoclintArguments(prepared);
+        const [commandArguments = []] = await readPydoclintCommands(sandbox.path);
         expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe(expected);
     },
 );
 
-test('pydoclint runs a file whose first docstring has a NumPy section with the numpy style, before a later Google section', async () => {
-    await using sandbox = await createGitSandbox({});
-    using prepared = await preparePydoclintCheck(sandbox.path, {
-        'pyproject.toml': PYPROJECT,
-        'source.py': [
-            'def read_value(value: int) -> int:',
-            '    """Read the value.',
-            '',
-            '    Parameters',
-            '    ----------',
-            '    value',
-            '        The value.',
-            '    """',
-            '    return value',
-            '',
-            '',
-            'def write_value() -> int:',
-            '    """Write the value.',
-            '',
-            '    Returns:',
-            '        The value.',
-            '    """',
-            '    return 1',
-            '',
-        ].join('\n'),
-    });
-    const commandArguments = await readPydoclintArguments(prepared);
-    expect(commandArguments[commandArguments.indexOf('--style') + 1]).toBe('numpy');
-});
-
 test('pydoclint says what to write under Raises for DOC503 and leaves other rules to the help of the check', async () => {
     await using sandbox = await createGitSandbox({});
-    using prepared = await preparePydoclintCheck(sandbox.path, {
-        'pyproject.toml': PYPROJECT,
-        'source.py': 'value = 1\n',
-    });
-    using _command = spyOn(processes, 'runProcess').mockResolvedValue(
+    await writePydoclintProject(sandbox.path, { 'pyproject.toml': PYPROJECT, 'source.py': 'value = 1\n' });
+    using _pins = fakeToolExecutables([getTool(readConfigurations().values(), 'pydoclint')]);
+    using _command = fakeCommands().mockResolvedValue(
         buildProcessResult({
             code: 1,
             stdout: "source.py\n    1: DOC103: The documented argument is wrong.\n    4: DOC503: Raised exceptions in the docstring: ['OrderError']. Raised exceptions in the body: ['build_error'].\n",
         }),
     );
-    const result = await runCheckCode(
-        buildCheckSession(prepared.session, CHECK_GENERATION),
-        prepared.planned,
-        CHECK_CODE['python/pydoclint'],
-        {},
-    );
-    const helps = new Map(result.findings.map(({ rule, help }) => [rule, help]));
-    expect(helps.get('DOC103')).toBeUndefined();
-    expect(helps.get('DOC503')).toContain('Under `Raises:`, list each name');
+    const findings = await runSandboxCheck(sandbox.path, 'python/pydoclint');
+    expect(findings.map(({ rule, help }) => [rule, help])).toStrictEqual([
+        ['DOC103', undefined],
+        ['DOC503', expect.any(String) as string],
+    ]);
 });
 
-test('pydoclint keeps earlier style findings when a later style batch fails', async () => {
+test('pydoclint runs the files of each docstring style in their own command', async () => {
     await using sandbox = await createGitSandbox({});
-    using prepared = await preparePydoclintCheck(sandbox.path, {
+    await writePydoclintProject(sandbox.path, {
         'pyproject.toml': PYPROJECT,
         'google.py': GOOGLE_DOCSTRING_MODULE,
         'numpy.py': NUMPY_DOCSTRING_MODULE,
     });
-    const { session, planned } = prepared;
-    using _command = spyOn(processes, 'runProcess')
-        .mockResolvedValueOnce(
-            buildProcessResult({
-                code: 1,
-                stdout: 'google.py\n    1: DOC103: The documented argument is wrong.\n',
-                duration: 2,
-            }),
-        )
-        .mockResolvedValueOnce(buildProcessResult(FAILED_STYLE_BATCH));
-    const result = await runCheckCode(
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        CHECK_CODE['python/pydoclint'],
-        {},
-    );
-    expect(result.status).toBe('error');
-    expect(result.fileCount).toBe(2);
-    expect(result.findings).toStrictEqual([
-        expect.objectContaining({
-            file: 'google.py',
-            line: 1,
-            rule: 'DOC103',
-            message: 'The documented argument is wrong.',
-        }),
+    const commands = await readPydoclintCommands(sandbox.path);
+    expect(
+        commands.map((command) => ({
+            style: command[command.indexOf('--style') + 1],
+            files: command.filter((argument) => argument.endsWith('.py')),
+        })),
+    ).toStrictEqual([
+        { style: 'google', files: ['google.py'] },
+        { style: 'numpy', files: ['numpy.py'] },
     ]);
-    expect(result.note).toContain('The native command could not read its configuration.');
 });
