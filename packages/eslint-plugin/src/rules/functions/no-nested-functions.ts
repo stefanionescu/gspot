@@ -1,7 +1,10 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
 
-import { DEFAULT_FUNCTION_NESTING, FUNCTION_NESTING_OPTIONS_SCHEMA } from '../../config/functions.ts';
-import { TEST_STRUCTURE_CALLS } from '../../config/testing.ts';
+import {
+    DEFAULT_FUNCTION_NESTING,
+    FUNCTION_NESTING_OPTIONS_SCHEMA,
+    TEST_STRUCTURE_CALLS,
+} from '../../config/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 

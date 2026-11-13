@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { TERMINATING_STATEMENTS } from '../../config/control-flow.ts';
+import { TERMINATING_STATEMENTS } from '../../config/plugin.ts';
 import {
     GUARD_TESTS,
     VOLATILE_CALLS,

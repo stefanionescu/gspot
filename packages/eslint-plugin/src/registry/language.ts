@@ -5,8 +5,10 @@ import { noPositiveIndexCheck } from '../rules/collections/no-positive-index-che
 import { noUnusedCollection } from '../rules/collections/no-unused-collection.ts';
 import { noVoidArrayCallback } from '../rules/collections/no-void-array-callback.ts';
 import { requireReduceInitialValue } from '../rules/collections/require-reduce-initial-value.ts';
+import { noCommentedCode } from '../rules/comments/no-commented-code.ts';
+import { noCommentsInImports } from '../rules/comments/no-comments-in-imports.ts';
+import { noDetachedDocComments } from '../rules/comments/no-detached-doc-comments.ts';
 import { maxSwitchCases } from '../rules/control-flow/max-switch-cases.ts';
-import { noAdjacentMultilineIf } from '../rules/control-flow/no-adjacent-multiline-if.ts';
 import { noCompoundCase } from '../rules/control-flow/no-compound-case.ts';
 import { noDuplicatedBranches } from '../rules/control-flow/no-duplicated-branches.ts';
 import { noEqualLoopCondition } from '../rules/control-flow/no-equal-loop-condition.ts';
@@ -15,11 +17,9 @@ import { noMisplacedLoopCounter } from '../rules/control-flow/no-misplaced-loop-
 import { noNestedSwitch } from '../rules/control-flow/no-nested-switch.ts';
 import { noSmallSwitch } from '../rules/control-flow/no-small-switch.ts';
 import { noSwitchCaseLabels } from '../rules/control-flow/no-switch-case-labels.ts';
-import { noUnenclosedMultilineBlock } from '../rules/control-flow/no-unenclosed-multiline-block.ts';
 import { noUnthrownError } from '../rules/control-flow/no-unthrown-error.ts';
 import { noUpdatedLoopCounter } from '../rules/control-flow/no-updated-loop-counter.ts';
 import { noBooleanParameters } from '../rules/functions/no-boolean-parameters.ts';
-import { noDetachedCall } from '../rules/functions/no-detached-call.ts';
 import { noEmptyReturnValue } from '../rules/functions/no-empty-return-value.ts';
 import { noExcessCallArguments } from '../rules/functions/no-excess-call-arguments.ts';
 import { noIdenticalFunctions } from '../rules/functions/no-identical-functions.ts';
@@ -32,6 +32,11 @@ import { noSelectorParameter } from '../rules/functions/no-selector-parameter.ts
 import { noSwappedArguments } from '../rules/functions/no-swapped-arguments.ts';
 import { noTrivialFunctions } from '../rules/functions/no-trivial-functions.ts';
 import { noUndefinedArgument } from '../rules/functions/no-undefined-argument.ts';
+import { noAdjacentMultilineIf } from '../rules/layout/no-adjacent-multiline-if.ts';
+import { noDetachedCall } from '../rules/layout/no-detached-call.ts';
+import { noNestedTemplateLiterals } from '../rules/layout/no-nested-template-literals.ts';
+import { noTransposedAssignment } from '../rules/layout/no-transposed-assignment.ts';
+import { noUnenclosedMultilineBlock } from '../rules/layout/no-unenclosed-multiline-block.ts';
 import { noBitwiseInCondition } from '../rules/logic/no-bitwise-in-condition.ts';
 import { noFloatingPointEquality } from '../rules/logic/no-floating-point-equality.ts';
 import { noGratuitousExpressions } from '../rules/logic/no-gratuitous-expressions.ts';
@@ -49,11 +54,7 @@ import { noStatefulRegex } from '../rules/regex/no-stateful-regex.ts';
 import { noStringRegexPattern } from '../rules/regex/no-string-regex-pattern.ts';
 import { noUnknownRegexGroup } from '../rules/regex/no-unknown-regex-group.ts';
 import { importBoundaries } from '../rules/structure/import-boundaries.ts';
-import { noCommentedCode } from '../rules/structure/no-commented-code.ts';
-import { noCommentsInImports } from '../rules/structure/no-comments-in-imports.ts';
-import { noDetachedDocComments } from '../rules/structure/no-detached-doc-comments.ts';
 import { noIndexImports } from '../rules/structure/no-index-imports.ts';
-import { noNestedTemplateLiterals } from '../rules/structure/no-nested-template-literals.ts';
 import { noRenamedExports } from '../rules/structure/no-renamed-exports.ts';
 import { noRenamedImports } from '../rules/structure/no-renamed-imports.ts';
 import { noTrivialFiles } from '../rules/structure/no-trivial-files.ts';
@@ -69,7 +70,6 @@ import { noGlobalsShadowing } from '../rules/variables/no-globals-shadowing.ts';
 import { noKeywordDeclarations } from '../rules/variables/no-keyword-declarations.ts';
 import { noMagicNumbers } from '../rules/variables/no-magic-numbers.ts';
 import { noRedundantAssignment } from '../rules/variables/no-redundant-assignment.ts';
-import { noTransposedAssignment } from '../rules/variables/no-transposed-assignment.ts';
 import { preferImmediateReturn } from '../rules/variables/prefer-immediate-return.ts';
 
 /**
@@ -85,9 +85,9 @@ export const LANGUAGE_TOPICS = {
         noVoidArrayCallback,
         requireReduceInitialValue,
     ],
+    comments: [noCommentedCode, noCommentsInImports, noDetachedDocComments],
     'control-flow': [
         maxSwitchCases,
-        noAdjacentMultilineIf,
         noCompoundCase,
         noDuplicatedBranches,
         noEqualLoopCondition,
@@ -96,13 +96,11 @@ export const LANGUAGE_TOPICS = {
         noNestedSwitch,
         noSmallSwitch,
         noSwitchCaseLabels,
-        noUnenclosedMultilineBlock,
         noUnthrownError,
         noUpdatedLoopCounter,
     ],
     functions: [
         noBooleanParameters,
-        noDetachedCall,
         noEmptyReturnValue,
         noExcessCallArguments,
         noIdenticalFunctions,
@@ -115,6 +113,13 @@ export const LANGUAGE_TOPICS = {
         noSwappedArguments,
         noTrivialFunctions,
         noUndefinedArgument,
+    ],
+    layout: [
+        noAdjacentMultilineIf,
+        noDetachedCall,
+        noNestedTemplateLiterals,
+        noTransposedAssignment,
+        noUnenclosedMultilineBlock,
     ],
     logic: [
         noBitwiseInCondition,
@@ -134,18 +139,7 @@ export const LANGUAGE_TOPICS = {
         noStringRegexPattern,
         noUnknownRegexGroup,
     ],
-    structure: [
-        importBoundaries,
-        noCommentedCode,
-        noCommentsInImports,
-        noDetachedDocComments,
-        noIndexImports,
-        noNestedTemplateLiterals,
-        noRenamedExports,
-        noRenamedImports,
-        noTrivialFiles,
-        restrictedSyntax,
-    ],
+    structure: [importBoundaries, noIndexImports, noRenamedExports, noRenamedImports, noTrivialFiles, restrictedSyntax],
     types: [
         noRedundantOptional,
         noUselessIntersection,
@@ -160,7 +154,6 @@ export const LANGUAGE_TOPICS = {
         noKeywordDeclarations,
         noMagicNumbers,
         noRedundantAssignment,
-        noTransposedAssignment,
         preferImmediateReturn,
     ],
 };

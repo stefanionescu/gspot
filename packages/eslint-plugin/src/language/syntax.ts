@@ -1,14 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import {
-    FUNCTION_NODES,
-    IMPORT_EQUALS_SELECTOR,
-    IMPORT_SELECTOR,
-    MODULE_DECLARATION_NODES,
-    REQUIRE_SELECTOR,
-    UNWRAPPABLE_NODES,
-} from '../config/plugin.ts';
-import type { ImportSource } from '../types/plugin.ts';
+import { FUNCTION_NODES, MODULE_DECLARATION_NODES, UNWRAPPABLE_NODES } from '../config/plugin.ts';
 
 const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 
@@ -35,21 +27,6 @@ export function unwrapExpression(node: TSESTree.Node): TSESTree.Node {
     let value = node;
     while (isUnwrappable(value)) value = value.expression;
     return value;
-}
-
-export function buildSourceVisitors(checkSource: (source: TSESTree.Node) => void): TSESLint.RuleListener {
-    return {
-        [IMPORT_SELECTOR]: ({ source }: ImportSource) => {
-            if (source !== null) checkSource(source);
-        },
-        [IMPORT_EQUALS_SELECTOR]: ({ expression }: TSESTree.TSExternalModuleReference) => {
-            checkSource(expression);
-        },
-        [REQUIRE_SELECTOR]: (call: TSESTree.CallExpression) => {
-            const [argument] = call.arguments;
-            if (argument !== undefined) checkSource(argument);
-        },
-    };
 }
 
 export function haveSameTokens(

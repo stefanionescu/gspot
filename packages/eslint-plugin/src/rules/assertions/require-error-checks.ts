@@ -1,7 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { MOCHA_CONSTRUCTS } from '../../config/testing.ts';
-import { listBodyNodes } from '../../language/syntax.ts';
+import { isCallOf, listBodyNodes } from '../../language/syntax.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
@@ -16,11 +16,7 @@ function isPositiveThrowAssertion(node: TSESTree.CallExpression & { callee: TSES
         if (name === 'not' || name === 'should') return name === 'should';
         value = value.object;
     }
-    return (
-        value.type === AST_NODE_TYPES.CallExpression &&
-        ASTUtils.isIdentifier(value.callee) &&
-        value.callee.name === 'expect'
-    );
+    return isCallOf(value, 'expect');
 }
 
 export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({

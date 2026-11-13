@@ -1,5 +1,6 @@
 import { VUE_PACKAGE, VUE_THREE } from '../config/vue.ts';
-import { allowsVersion, readPackageFacts } from '../language/packages.ts';
+import { readPackageFacts } from '../language/packages.ts';
+import { allowsVersion } from '../language/versions.ts';
 import type { FileContext } from '../types/plugin.ts';
 
 /**

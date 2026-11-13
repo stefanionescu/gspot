@@ -1,6 +1,7 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 import { FUNCTION_NODES, TYPE_ASSERTION_NODES } from './plugin.ts';
+import { TEST_KINDS } from './testing.ts';
 
 // no-async-constructor rule
 export const CONSTRUCTOR_BODY_DEPTH = 2;
@@ -219,6 +220,10 @@ export const FUNCTION_NESTING_OPTIONS_SCHEMA = {
     },
     additionalProperties: false,
 } satisfies JSONSchema4;
+export const TEST_STRUCTURE_CALLS = new Set([
+    ...TEST_KINDS.keys(),
+    ...['describe', 'context', 'it', 'test'].flatMap((name) => [`x${name}`, `f${name}`]),
+]);
 
 // no-selector-parameter rule
 export const EFFECT_CHILD_KEYS: Readonly<Record<string, readonly string[]>> = {

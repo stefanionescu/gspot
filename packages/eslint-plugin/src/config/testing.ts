@@ -202,12 +202,6 @@ export const TEST_FILE_PATTERN = new RegExp(
 );
 export const TITLED_TEST_DECLARATIONS = new Set(['test.skip', 'test.fail', 'test.fail.only', 'test.fixme']);
 
-// no-nested-functions rule
-export const TEST_STRUCTURE_CALLS = new Set([
-    ...TEST_KINDS.keys(),
-    ...['describe', 'context', 'it', 'test'].flatMap((name) => [`x${name}`, `f${name}`]),
-]);
-
 // no-unexplained-test-skips rule
 export const EXPLANATION_LETTER = /\p{L}/u;
 export const NODE_TEST_MODULES = new Set([undefined, 'node:test']);

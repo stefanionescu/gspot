@@ -11,8 +11,8 @@ import {
     PUBLISHED_PATH_FIELDS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
-import { findPathInRoot } from '../../language/modules.ts';
 import { listManifestPaths, readManifest } from '../../language/packages.ts';
+import { findPathInRoot } from '../../language/paths.ts';
 import { isTypeAlias } from '../../language/syntax.ts';
 import { isAlias } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';

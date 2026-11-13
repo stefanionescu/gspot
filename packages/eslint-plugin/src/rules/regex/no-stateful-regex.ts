@@ -1,6 +1,6 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { LOOP_STATEMENTS } from '../../config/control-flow.ts';
+import { LOOP_STATEMENTS } from '../../config/plugin.ts';
 import { DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, EXEC_METHOD, STATEFUL_REGEX_METHODS } from '../../config/regex.ts';
 import { buildRegexVisitors, getRegex } from '../../language/regex.ts';
 import { getAssignedValue } from '../../language/variables.ts';

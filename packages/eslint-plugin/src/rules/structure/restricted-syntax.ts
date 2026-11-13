@@ -2,7 +2,7 @@ import type { TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
 
 import { RESTRICTED_SYNTAX_OPTIONS_SCHEMA } from '../../config/structure.ts';
-import { findPathInRoot } from '../../language/modules.ts';
+import { findPathInRoot } from '../../language/paths.ts';
 import { createRule } from '../../rule.ts';
 import type { RestrictedSyntaxOptions } from '../../types/structure.ts';
 

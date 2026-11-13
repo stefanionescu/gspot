@@ -3,6 +3,7 @@ import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-e
 import { TEMPLATE_FUNCTIONS } from '../../config/security.ts';
 import { isDynamicString } from '../../language/expressions.ts';
 import { getQualifiedName } from '../../language/modules.ts';
+import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 
 function isCompiledTemplateCall(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
@@ -10,8 +11,7 @@ function isCompiledTemplateCall(source: Readonly<TSESLint.SourceCode>, node: TSE
     const variable = ASTUtils.findVariable(source.getScope(node.callee), node.callee);
     if (variable === null || variable.defs.some(({ type }) => type === TSESLint.Scope.DefinitionType.ImportBinding))
         return false;
-    const writes = variable.references.filter((reference) => reference.isWrite());
-    return writes.length === 1 && writes[0]?.writeExpr?.type === AST_NODE_TYPES.CallExpression;
+    return getAssignedValue(variable)?.type === AST_NODE_TYPES.CallExpression;
 }
 
 function isBuiltTemplate(template: TSESTree.CallExpressionArgument): boolean {

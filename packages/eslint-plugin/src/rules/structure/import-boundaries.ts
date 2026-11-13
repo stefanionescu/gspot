@@ -9,8 +9,8 @@ import {
     RELATIVE_SPECIFIER,
     RESOURCE_QUERY,
 } from '../../config/structure.ts';
-import { findPathInFolder, findPathInRoot } from '../../language/modules.ts';
-import { buildSourceVisitors } from '../../language/syntax.ts';
+import { buildSourceVisitors } from '../../language/modules.ts';
+import { findPathInFolder, findPathInRoot } from '../../language/paths.ts';
 import { createRule } from '../../rule.ts';
 import type { ImportBoundariesOptions, RelativeImport } from '../../types/structure.ts';
 

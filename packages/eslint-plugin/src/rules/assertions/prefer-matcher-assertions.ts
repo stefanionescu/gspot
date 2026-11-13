@@ -22,7 +22,8 @@ import {
 } from '../../config/assertions/matchers.ts';
 import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
 import { PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
-import { readPackageFacts, requiresVersion } from '../../language/packages.ts';
+import { readPackageFacts } from '../../language/packages.ts';
+import { requiresVersion } from '../../language/versions.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
 import { createRule } from '../../rule.ts';
 import type { ComparisonAssertion, MatcherSuggestion } from '../../types/assertions.ts';

@@ -21,18 +21,3 @@ export const ERROR_CONSTRUCTOR_SUFFIX = /(?:Error|Exception)$/u;
 
 // no-updated-loop-counter rule
 export const SPLICE_METHOD = 'splice';
-
-// statement kinds
-export const LOOP_STATEMENTS: ReadonlySet<string> = new Set(['WhileStatement', 'DoWhileStatement']);
-export const LOOP_BODY_PARENTS: ReadonlySet<string> = new Set([
-    ...LOOP_STATEMENTS,
-    'ForStatement',
-    'ForInStatement',
-    'ForOfStatement',
-]);
-export const TERMINATING_STATEMENTS: ReadonlySet<string | undefined> = new Set([
-    'ReturnStatement',
-    'ThrowStatement',
-    'BreakStatement',
-    'ContinueStatement',
-]);

@@ -31,6 +31,14 @@ import { awsSqsUnencryptedQueue } from '../rules/aws/aws-sqs-unencrypted-queue.t
 import { awsUnblockedPublicBuckets } from '../rules/aws/aws-unblocked-public-buckets.ts';
 import { awsUnencryptedNotebooks } from '../rules/aws/aws-unencrypted-notebooks.ts';
 import { awsUnencryptedVolumes } from '../rules/aws/aws-unencrypted-volumes.ts';
+import { encryptionSecureMode } from '../rules/cryptography/encryption-secure-mode.ts';
+import { hardcodedSecretSignatures } from '../rules/cryptography/hardcoded-secret-signatures.ts';
+import { insecureJwtToken } from '../rules/cryptography/insecure-jwt-token.ts';
+import { noInsecureRandom } from '../rules/cryptography/no-insecure-random.ts';
+import { noWeakCipher } from '../rules/cryptography/no-weak-cipher.ts';
+import { noWeakHashing } from '../rules/cryptography/no-weak-hashing.ts';
+import { noWeakKeys } from '../rules/cryptography/no-weak-keys.ts';
+import { reviewBlockchainMnemonic } from '../rules/cryptography/review-blockchain-mnemonic.ts';
 import { noClearTextProtocols } from '../rules/networks/no-clear-text-protocols.ts';
 import { noHardcodedIp } from '../rules/networks/no-hardcoded-ip.ts';
 import { unverifiedCertificate } from '../rules/networks/unverified-certificate.ts';
@@ -44,19 +52,11 @@ import { noSetterInComponent } from '../rules/react/no-setter-in-component.ts';
 import { preferReadonlyProps } from '../rules/react/prefer-readonly-props.ts';
 import { disabledAutoEscaping } from '../rules/security/disabled-auto-escaping.ts';
 import { dynamicTemplates } from '../rules/security/dynamic-templates.ts';
-import { encryptionSecureMode } from '../rules/security/encryption-secure-mode.ts';
-import { hardcodedSecretSignatures } from '../rules/security/hardcoded-secret-signatures.ts';
-import { insecureJwtToken } from '../rules/security/insecure-jwt-token.ts';
 import { noCodeEval } from '../rules/security/no-code-eval.ts';
 import { noDynamicSqlQueries } from '../rules/security/no-dynamic-sql-queries.ts';
-import { noInsecureRandom } from '../rules/security/no-insecure-random.ts';
 import { noPathCommand } from '../rules/security/no-path-command.ts';
 import { noPublicFilePermissions } from '../rules/security/no-public-file-permissions.ts';
 import { noPublicTemporaryPath } from '../rules/security/no-public-temporary-path.ts';
-import { noWeakCipher } from '../rules/security/no-weak-cipher.ts';
-import { noWeakHashing } from '../rules/security/no-weak-hashing.ts';
-import { noWeakKeys } from '../rules/security/no-weak-keys.ts';
-import { reviewBlockchainMnemonic } from '../rules/security/review-blockchain-mnemonic.ts';
 import { xmlParserXxe } from '../rules/security/xml-parser-xxe.ts';
 import { maxRequestSize } from '../rules/servers/max-request-size.ts';
 import { noAnyOriginPolicy } from '../rules/servers/no-any-origin-policy.ts';
@@ -147,6 +147,16 @@ export const TOPICS = {
         awsUnencryptedNotebooks,
         awsUnencryptedVolumes,
     ],
+    cryptography: [
+        encryptionSecureMode,
+        hardcodedSecretSignatures,
+        insecureJwtToken,
+        noInsecureRandom,
+        noWeakCipher,
+        noWeakHashing,
+        noWeakKeys,
+        reviewBlockchainMnemonic,
+    ],
     networks: [noClearTextProtocols, noHardcodedIp, unverifiedCertificate, unverifiedHostname, weakSsl],
     react: [
         noComponentDebounce,
@@ -159,19 +169,11 @@ export const TOPICS = {
     security: [
         disabledAutoEscaping,
         dynamicTemplates,
-        encryptionSecureMode,
-        hardcodedSecretSignatures,
-        insecureJwtToken,
         noCodeEval,
         noDynamicSqlQueries,
-        noInsecureRandom,
         noPathCommand,
         noPublicFilePermissions,
         noPublicTemporaryPath,
-        noWeakCipher,
-        noWeakHashing,
-        noWeakKeys,
-        reviewBlockchainMnemonic,
         xmlParserXxe,
     ],
     servers: [

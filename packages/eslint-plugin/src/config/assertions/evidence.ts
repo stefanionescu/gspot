@@ -19,7 +19,7 @@ export const EVIDENCE_IMPORTS = [
     '@angular/common/http/testing',
 ];
 
-// assertion libraries
+// assertion kinds
 export const EXPECT_SETUP =
     /^(?:vitest|bun:test)\.expect\.(?:extend|addEqualityTesters|addSnapshotSerializer|getState|setState|assertions|hasAssertions)$/u;
 export const GLOBAL_EXPECTS = new Set([

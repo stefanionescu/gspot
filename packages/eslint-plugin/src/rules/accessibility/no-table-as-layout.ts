@@ -1,4 +1,4 @@
-import { isLayoutTable } from '../../language/jsx.ts';
+import { isLayoutTable } from '../../language/html-tables.ts';
 import { createRule } from '../../rule.ts';
 
 export const noTableAsLayout = createRule<[], 'layoutTable'>({

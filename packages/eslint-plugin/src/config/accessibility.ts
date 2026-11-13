@@ -1,4 +1,4 @@
-export const BOOLEAN_TEXTS: ReadonlySet<string> = new Set(['true', 'false']);
+// html tables
 export const HEADER_SEPARATOR = /\s+/u;
 export const HTML_ELEMENTS: ReadonlySet<string> = new Set([
     'a',
@@ -156,3 +156,6 @@ export const MAXIMUM_COLUMN_SPAN = 1000;
 export const MAXIMUM_ROW_SPAN = 65_534;
 export const TABLE_CELLS: ReadonlySet<string> = new Set(['td', 'th']);
 export const TABLE_SECTIONS: ReadonlySet<string> = new Set(['thead', 'tbody', 'tfoot']);
+
+// jsx attributes
+export const BOOLEAN_TEXTS: ReadonlySet<string> = new Set(['true', 'false']);

@@ -15,7 +15,7 @@ import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { Isolation } from '../../types/utilities.ts';
 
-function getMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
+function getNestedMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
     let value = unwrapExpression(node);
     let depth = 0;
     while (value.type === AST_NODE_TYPES.MemberExpression) {
@@ -28,7 +28,7 @@ function getMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
 }
 
 function getCloneCall(target: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.CallExpression | undefined {
-    const root = getMemberRoot(target);
+    const root = getNestedMemberRoot(target);
     const variable = root === undefined ? null : ASTUtils.findVariable(source.getScope(root), root.name);
     const value = variable === null ? undefined : getAssignedValue(variable);
     return value?.type === AST_NODE_TYPES.CallExpression && value.arguments.length === 1 ? value : undefined;
