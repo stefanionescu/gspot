@@ -97,9 +97,7 @@ test('pydoclint finds the docstring style of each file and does not ask for type
 
 test('pydoclint keeps the authored settings that ask for types in docstrings', async () => {
     const { root } = installedSandbox();
-    const project =
-        GOOGLE_PYPROJECT +
-        `arg-type-hints-in-docstring = true
+    const project = `${GOOGLE_PYPROJECT}arg-type-hints-in-docstring = true
 check_return_types = true
 check-yield-types = true
 `;

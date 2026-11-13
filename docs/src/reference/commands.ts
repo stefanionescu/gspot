@@ -12,13 +12,11 @@ import {
     PURPOSE_HEADING,
 } from '#docs/config/reference.ts';
 import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
-import { type ReferencePage } from '#docs/types/pages.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
 
 function formatChoices(value: Pick<CommandReference['arguments'][number], 'choices' | 'default'>): string {
-    const choices =
-        value.choices === undefined
-            ? ''
-            : ' Choices: ' + value.choices.map((choice) => `\`${choice}\``).join(', ') + '.';
+    const listed = value.choices?.map((choice) => `\`${choice}\``).join(', ');
+    const choices = listed === undefined ? '' : ` Choices: ${listed}.`;
     const shown = typeof value.default === 'string' ? value.default : JSON.stringify(value.default);
     const defaultValue = value.default === undefined ? '' : ` Default: \`${shown}\`.`;
     return choices + defaultValue;
@@ -27,12 +25,12 @@ function formatChoices(value: Pick<CommandReference['arguments'][number], 'choic
 function formatCommand(command: CommandReference): string {
     const argumentRows = command.arguments.map((argument) => [
         `\`${argument.name}\``,
-        `${argument.description}.` + formatChoices(argument),
+        `${argument.description}.${formatChoices(argument)}`,
     ]);
     const globalOptions: Readonly<Record<string, string>> = CLI_REFERENCE.globalOptions;
     const optionRows = command.options
         .filter((option) => globalOptions[option.flags] !== option.description)
-        .map((option) => [`\`${option.flags}\``, `${option.description}.` + formatChoices(option)]);
+        .map((option) => [`\`${option.flags}\``, `${option.description}.${formatChoices(option)}`]);
     const blocks = [
         formatText(command.description),
         `\`\`\`shell\n${command.usage}\n\`\`\``,
@@ -57,21 +55,20 @@ export function buildCommandPage(): ReferencePage {
     ]);
     const globalOptions = Object.entries(CLI_REFERENCE.globalOptions).map(([flags, description]) => [
         `\`${flags}\``,
-        description + '.',
+        `${description}.`,
     ]);
     const exitCodes = CLI_REFERENCE.exitCodes.map(([codes, meaning]) => [`\`${codes}\``, meaning]);
     return buildReferencePage(
         'Commands',
         undefined,
-        COMMANDS_OPENING +
-            formatTable(['Command', PURPOSE_HEADING], commandRows) +
-            '\n' +
-            commands.map((command) => formatCommand(command)).join('') +
-            formatSection(GLOBAL_OPTIONS_HEADING, formatTable(['Option', PURPOSE_HEADING], globalOptions)) +
-            formatSection(EXIT_CODES_HEADING, formatTable([EXIT_CODE_HEADING, 'Meaning'], exitCodes)) +
-            formatSection(
-                ENVIRONMENT_VARIABLES_HEADING,
-                formatTable(['Variable', PURPOSE_HEADING], ENVIRONMENT_VARIABLES),
-            ),
+        `${COMMANDS_OPENING + formatTable(['Command', PURPOSE_HEADING], commandRows)}\n${commands
+            .map((command) => formatCommand(command))
+            .join('')}${formatSection(
+            GLOBAL_OPTIONS_HEADING,
+            formatTable(['Option', PURPOSE_HEADING], globalOptions),
+        )}${formatSection(EXIT_CODES_HEADING, formatTable([EXIT_CODE_HEADING, 'Meaning'], exitCodes))}${formatSection(
+            ENVIRONMENT_VARIABLES_HEADING,
+            formatTable(['Variable', PURPOSE_HEADING], ENVIRONMENT_VARIABLES),
+        )}`,
     );
 }

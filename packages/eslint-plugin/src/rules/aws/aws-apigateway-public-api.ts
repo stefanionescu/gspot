@@ -108,7 +108,7 @@ export const awsApigatewayPublicApi = createRule<[], 'omitted' | 'invalid'>({
                 for (const { node: target, kind } of listCdkTableIssues(source, node, METHOD_CHECKS))
                     context.report({ node: target, messageId: kind });
             },
-            'CallExpression:exit'(node: TSESTree.CallExpression) {
+            'CallExpression:exit': function (node: TSESTree.CallExpression) {
                 const method = getResourceMethod(getCdkName(source, node.callee));
                 const authorization = method === ADD_RESOURCE ? findDefaultAuthorization(source, node, 1) : undefined;
                 if (authorization) defaults.set(node, authorization);

@@ -8,10 +8,11 @@ import { globSync } from 'tinyglobby';
 import {
     DRIVE_LETTER,
     GLOB_EXCLUDE,
+    MILLISECONDS_PER_DAY,
     PARENT_SEGMENT,
     TEMPORARY_FILE_PREFIX,
     TEMPORARY_REMOVAL_OPTIONS,
-    TEMPORARY_STALE_MILLISECONDS,
+    TEMPORARY_STALE_DAYS,
 } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isProcessRunning } from '#cli/system/processes.ts';
@@ -21,7 +22,7 @@ import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     if (pid !== undefined) return !isProcessRunning(Number(pid));
     const stat = lstatSync(path, { throwIfNoEntry: false });
-    return stat !== undefined && Date.now() - stat.mtimeMs > TEMPORARY_STALE_MILLISECONDS;
+    return stat !== undefined && Date.now() - stat.mtimeMs > TEMPORARY_STALE_DAYS * MILLISECONDS_PER_DAY;
 }
 
 function hasSymlinkPrefix(folder: string, pattern: string): boolean {

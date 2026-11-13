@@ -17,7 +17,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { buildDashSafePath, convertToPosixPath } from '#cli/system/paths.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
-import { type PlannedCheck, type RunSelection } from '#cli/types/engine/plan.ts';
+import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type {
     BuiltInCheck,
     CheckCode,

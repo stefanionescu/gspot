@@ -131,7 +131,7 @@ export const maxRequestSize = createRule<[], 'unlimited'>({
         const source = context.sourceCode;
         const forms = new Map<TSESLint.Scope.Variable, SizedForm>();
         return {
-            'CallExpression, NewExpression'(node: CallNode) {
+            'CallExpression, NewExpression': function (node: CallNode) {
                 for (const oversized of listOversizedNodes(source, node))
                     context.report({ node: oversized, messageId: 'unlimited' });
                 const isForm = node.arguments.length === 0 && getUploadModule(source, node) === FORMIDABLE_MODULE;
@@ -141,7 +141,7 @@ export const maxRequestSize = createRule<[], 'unlimited'>({
             AssignmentExpression: (node) => {
                 setFormSize(forms, node, source);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const { node, size } of forms.values())
                     if (size > SIZE_LIMITS.upload) context.report({ node, messageId: 'unlimited' });
             },

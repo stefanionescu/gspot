@@ -2,7 +2,7 @@ import { GENERATED_FILE_FINDINGS, TOOL_LOCKFILES } from '#cli/config/configurati
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { GENERATED_FILE_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 
 function checkGeneratedFiles(
     session: CheckSession,

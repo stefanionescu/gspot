@@ -24,6 +24,24 @@ async function scanImages(root: string, stdout: string, resources: DisposableSta
     return { scan, findings: await runSandboxCheck(session.root, 'docker/trivy-image') };
 }
 
+function buildAllowlistCases(): Array<{ text: string; missing: string[] }> {
+    const ignored = readConfigurations()
+        .values()
+        .filter(({ name, always_selected: isAlwaysSelected }) => isAlwaysSelected || name === 'docker')
+        .flatMap((configuration) => configuration.ignored_paths)
+        .toArray();
+    const required = [...DOCKERIGNORE_PATTERNS, ...ignored].map((pattern) => `${pattern}\n`).join('');
+    const [, environmentFile] = DOCKERIGNORE_PATTERNS;
+    return [
+        { text: `${required}!.env\n`, missing: [environmentFile] },
+        { text: `${required}!**/.env\n`, missing: [environmentFile, '**/.env'] },
+        { text: '*\n!src\n', missing: ignored },
+        { text: `*\n!src\n${ignored.join('\n')}\n`, missing: [] },
+        { text: '!src\n*\n', missing: [] },
+        { text: '*\n!.env\n', missing: [environmentFile, ...ignored] },
+    ];
+}
+
 test('Compose docker-compose.production.yml runs after docker-compose.yml in one docker compose call', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docker']),
@@ -61,24 +79,6 @@ test.each(buildAllowlistCases())('docker/dockerignore respects ordered allowlist
               ],
     );
 });
-
-function buildAllowlistCases(): Array<{ text: string; missing: string[] }> {
-    const ignored = readConfigurations()
-        .values()
-        .filter(({ name, always_selected: isAlwaysSelected }) => isAlwaysSelected || name === 'docker')
-        .flatMap((configuration) => configuration.ignored_paths)
-        .toArray();
-    const required = [...DOCKERIGNORE_PATTERNS, ...ignored].map((pattern) => `${pattern}\n`).join('');
-    const [, environmentFile] = DOCKERIGNORE_PATTERNS;
-    return [
-        { text: `${required}!.env\n`, missing: [environmentFile] },
-        { text: `${required}!**/.env\n`, missing: [environmentFile, '**/.env'] },
-        { text: '*\n!src\n', missing: ignored },
-        { text: `*\n!src\n${ignored.join('\n')}\n`, missing: [] },
-        { text: '!src\n*\n', missing: [] },
-        { text: '*\n!.env\n', missing: [environmentFile, ...ignored] },
-    ];
-}
 
 test.each([...DOCKERIGNORE_CASES])(
     "docker/dockerignore requires an ignore file with the patterns of each scope's configurations: $name",

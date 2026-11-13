@@ -30,6 +30,13 @@ import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts'
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+async function createLockedFolder(): Promise<string> {
+    const folder = join(readCacheFolder(), 'scope');
+    await mkdir(folder, { recursive: true });
+    await writeFile(join(folder, 'build.lock'), '1');
+    return folder;
+}
+
 test.each([...SWIFT_PROJECT_SELECTION_CASES])(
     'the swift/build plan $name',
     async ({ scope, tables, files, project, argument }) => {
@@ -144,13 +151,6 @@ test('two copies of one repository that share a tools root share one build folde
     expect(firstFolder).toBe(secondFolder);
     expect(firstFolder).toBe(planSwiftBuild(session, installedInput).folder);
 });
-
-async function createLockedFolder(): Promise<string> {
-    const folder = join(readCacheFolder(), 'scope');
-    await mkdir(folder, { recursive: true });
-    await writeFile(join(folder, 'build.lock'), '1');
-    return folder;
-}
 
 test('a build lock holds this process ID until disposal', async () => {
     await using _cache = await redirectCacheFolder();

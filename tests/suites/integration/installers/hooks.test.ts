@@ -65,6 +65,16 @@ async function assertCloneHooks(source: string, environment: Record<string, stri
     expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
 }
 
+async function writeRuntimePins(root: string): Promise<void> {
+    if (!existsSync(join(root, MISE_CONFIG_FILE))) {
+        const pins = await readFile(join(REPOSITORY_ROOT, MISE_CONFIG_FILE), 'utf8');
+        const { tools } = runtimePinsSchema.parse(parse(pins));
+        await writeFile(join(root, MISE_CONFIG_FILE), stringify({ tools }));
+    }
+    const trusted = await runCommand([...MISE_TRUST, MISE_CONFIG_FILE], { cwd: root });
+    if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
+}
+
 test('a fresh clone checks before its install, keeps its tracked files through two installs, and its hook fails a ShellCheck finding and passes after the fix', async () => {
     await using sandbox = await testdir({
         '.editorconfig': '[*]\nindent_style = space\nindent_size = 4\n',
@@ -176,13 +186,3 @@ test('a hook ignores a nested gspot.toml and checks the index at the Git root', 
     const corrected = await runCommand(['git', 'hook', 'run', 'pre-commit'], { cwd: sandbox.path, env: {} });
     expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
 });
-
-async function writeRuntimePins(root: string): Promise<void> {
-    if (!existsSync(join(root, MISE_CONFIG_FILE))) {
-        const pins = await readFile(join(REPOSITORY_ROOT, MISE_CONFIG_FILE), 'utf8');
-        const { tools } = runtimePinsSchema.parse(parse(pins));
-        await writeFile(join(root, MISE_CONFIG_FILE), stringify({ tools }));
-    }
-    const trusted = await runCommand([...MISE_TRUST, MISE_CONFIG_FILE], { cwd: root });
-    if (trusted.code !== 0) throw new Error(`Sandbox runtime trust failed: ${trusted.stdout}${trusted.stderr}`);
-}

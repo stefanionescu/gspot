@@ -12,6 +12,7 @@ import type {
     ruffOptionsSchema,
 } from '#cli/schemas/generation.ts';
 import type { ConfigOwner, IgnoreSection, SourcedConfig } from '#cli/types/configurations/shared.ts';
+import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { Config, Configuration, Tool } from '#cli/types/manifests.ts';
 import type {
@@ -24,6 +25,7 @@ import type {
     Repository,
     RepositorySetup,
     ScopeFolder,
+    StartRunner,
     TrackedFile,
     WritePlan,
 } from '#cli/types/repository.ts';
@@ -255,6 +257,9 @@ export type RuffOptions = z.infer<typeof ruffOptionsSchema>;
 
 export type WrittenTable = { scopePath: string; table: TomlTable; availableSettings: AvailableSettings };
 
+// `writtenTable` is the table that a value sits in, among the `tables` of the settings file.
+export type WrittenTables = { writtenTable: WrittenTable; tables: WrittenTable[]; settings: Settings };
+
 export type EditorconfigSection = { files: string; fields: Record<string, string> };
 
 export type Template = {
@@ -267,3 +272,12 @@ export type Template = {
 };
 
 export type LeftOutSetting = z.infer<typeof leftOutSettingSchema>;
+
+export type SettingsPlan = {
+    root: string;
+    draft: SettingsDraft;
+    repository: Repository;
+    conflictingConfigs: ConflictingConfig[];
+    sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
+    startRunner: StartRunner | undefined;
+};

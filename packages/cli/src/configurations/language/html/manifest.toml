@@ -26,6 +26,7 @@ command = ["html-validate", "--config", "{config_file:html-validate}", "--format
 example = "An `<img src=\"logo.png\">` without alternative text reports a finding. Add `alt` text, or leave it empty for a decorative image."
 help = "Change the markup the way the rule page says."
 name = "html-validate"
+rules = ["HTML.md"]
 stage = "commit"
 summary = "Validates HTML files for nesting, required attributes, and text alternatives."
 why = "Each browser repairs broken markup differently, and a screen reader announces only what remains."
@@ -34,6 +35,7 @@ why = "Each browser repairs broken markup differently, and a screen reader annou
 example = "A button with an inline `onclick` attribute reports a finding. Remove it, and attach the listener from a script file."
 help = "Move the script into its own file, and attach the handler there. Structured data of type `application/ld+json` stays inline."
 name = "inline-scripts"
+rules = ["HTML.md", "SECURITY.md"]
 stage = "commit"
 summary = "Reports inline scripts, event handler attributes, and executable URLs in HTML files."
 why = "A content security policy blocks injected code only when it leaves out `unsafe-inline`, and each inline script then needs a nonce or a hash."

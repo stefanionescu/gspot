@@ -54,7 +54,7 @@ export const noVueClassComponents = createRule<[], 'classComponent'>({
     create(context) {
         if (!isVueThreeUsed(context)) return {};
         return {
-            'ClassDeclaration, ClassExpression'(node: TSESTree.ClassDeclaration | TSESTree.ClassExpression) {
+            'ClassDeclaration, ClassExpression': function (node: TSESTree.ClassDeclaration | TSESTree.ClassExpression) {
                 const source = context.sourceCode;
                 const isComponent = isClassComponent(node, source);
                 if (isComponent) context.report({ node: node.id ?? node, messageId: 'classComponent' });

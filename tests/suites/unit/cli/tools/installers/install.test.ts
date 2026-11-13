@@ -100,7 +100,7 @@ test('a second install with every tool in place runs no package manager', async 
         if (command.includes('install')) installs.push([...command]);
         return Promise.resolve(buildProcessResult({ stdout: '1.4.2\n' }));
     });
-    using _executables = fakeToolExecutables(tools.filter((tool) => tool.installers['mise'] !== undefined));
+    using _executables = fakeToolExecutables(tools.filter((tool) => tool.installers.mise !== undefined));
     const input = { checkTools: listHostCheckTools(session) };
     await installTools(session, input);
     expect(installs).toHaveLength(1);

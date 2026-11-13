@@ -7,13 +7,14 @@ import {
     ESLINT_FIX_MESSAGE,
     HELP_HEADING,
     NO_CONFIG_MESSAGE,
+    PLUGIN_PATH,
     PURPOSE_HEADING,
     REFERENCE_FOLDERS,
-    REFERENCE_PATH,
     SCHEMA_TYPE_LABELS,
     SENTENCE_END,
     SUBSECTION_HEADING_LEVEL,
     TABLE_HEADING_LEVEL,
+    TOPIC_LABELS,
     TYPE_INFORMATION_MESSAGE,
 } from '#docs/config/reference.ts';
 import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
@@ -22,30 +23,6 @@ import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import plugin from '#eslint-plugin/plugin.ts';
 import { TOPICS } from '#eslint-plugin/registry/topics.ts';
-
-const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
-const TOPIC_LABELS: Readonly<Record<keyof typeof TOPICS, string>> = {
-    accessibility: 'Accessibility',
-    assertions: 'Assertions',
-    aws: 'AWS CDK',
-    collections: 'Collections',
-    'control-flow': 'Control flow',
-    functions: 'Functions',
-    logic: 'Logic',
-    networks: 'Networks',
-    promises: 'Promises',
-    react: 'React',
-    regex: 'Regular expressions',
-    security: 'Security',
-    servers: 'Servers',
-    structure: 'Code structure',
-    testing: 'Tests',
-    types: 'Types',
-    utilities: 'Utility libraries',
-    variables: 'Variables',
-    vue: 'Vue',
-    web: 'Web',
-};
 
 function formatPluginPresets(): string {
     const presets = Object.entries(plugin.configs).map(([name, config]) => {

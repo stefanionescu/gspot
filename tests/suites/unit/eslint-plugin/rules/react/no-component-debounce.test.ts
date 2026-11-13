@@ -28,11 +28,11 @@ buildRuleTester().run('no-component-debounce', noComponentDebounce, {
         },
         {
             code: 'import debounce from "lodash/debounce";\nimport { useRef } from "react";\nfunction Search() {\n    const ref = useRef(null);\n    ref.current = debounce(search, 300);\n}',
-            errors: [{ messageId: 'function' }],
+            errors: [{ messageId: 'function', data: { kind: 'debounced', purpose: 'debouncing' } }],
         },
         {
             code: 'const _ = require("underscore");\nexport default function Search() { return _.debounce(search, 300); }',
-            errors: [{ messageId: 'function' }],
+            errors: [{ messageId: 'function', data: { kind: 'debounced', purpose: 'debouncing' } }],
         },
         {
             code: 'import { debounce } from "lodash";\nimport React from "react";\nclass Search extends React.Component { render() { const onChange = debounce(this.search, 300); return null; } }',
@@ -40,11 +40,11 @@ buildRuleTester().run('no-component-debounce', noComponentDebounce, {
         },
         {
             code: 'import { debounce } from "lodash";\nfunction Card(ref) { if (ref.current === null) ref.current = debounce(save, 100); return ref; }',
-            errors: [{ messageId: 'function' }],
+            errors: [{ messageId: 'function', data: { kind: 'debounced', purpose: 'debouncing' } }],
         },
         {
             code: 'import { debounce } from "lodash";\nimport { Component } from "react";\nconst Card = class extends Component { render() { const run = debounce(save, 100); return run; } };',
-            errors: [{ messageId: 'class' }],
+            errors: [{ messageId: 'class', data: { kind: 'debounced', purpose: 'debouncing' } }],
         },
     ],
 });

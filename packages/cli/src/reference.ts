@@ -66,7 +66,7 @@ function buildConfigurationsReference(shipped: Configuration[]): ConfigurationRe
             version: tool.version,
             source:
                 findPackagePin(tool)?.kind ??
-                (tool.system === true || tool.installers['mise'] === undefined ? 'system' : 'mise'),
+                (tool.system === true || tool.installers.mise === undefined ? 'system' : 'mise'),
         })),
     }));
 }

@@ -56,7 +56,7 @@ export const noIgnoredReturn = createRule<[], 'ignored' | 'map'>({
         const types = getTypes(context);
         if (types === undefined) return {};
         return {
-            'ExpressionStatement > CallExpression'(node: TSESTree.CallExpression) {
+            'ExpressionStatement > CallExpression': function (node: TSESTree.CallExpression) {
                 const { callee } = node;
                 if (callee.type !== AST_NODE_TYPES.MemberExpression) return;
                 const method = getPureMethod(callee, types, context.sourceCode);

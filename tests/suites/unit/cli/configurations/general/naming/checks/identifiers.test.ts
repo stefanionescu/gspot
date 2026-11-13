@@ -189,6 +189,24 @@ test('domain names customer, news and supported pass, and names that hold a bann
     ]);
 });
 
+test('a function named run and a function that starts with handle are reported, and a method named run, runMigrations, and runPackageManager pass', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript', 'naming'], { level: 'all' }),
+        'entry.ts': `export function run(): void {}
+export function handleRequest(): void {}
+export function runMigrations(): void {}
+export function runPackageManager(): void {}
+export class Command {
+    run(): void {}
+}
+`,
+    });
+    expect(await listIdentifierFindings(sandbox.path)).toStrictEqual([
+        { file: 'entry.ts', line: 1, rule: 'banned-word' },
+        { file: 'entry.ts', line: 2, rule: 'banned-word' },
+    ]);
+});
+
 test('Next.js JavaScript routes accept PascalCase components', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'nextjs', 'naming'], { level: 'all' }),

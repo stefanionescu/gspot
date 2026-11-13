@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { DRIVE_LETTER, MODULE_SEPARATOR, NODE_PREFIX, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 import type { CallText, RuleContext } from '../types/plugin.ts';
-import { getMemberRoot, isCallOf, unwrapExpression } from './syntax.ts';
+import { getMemberRoot, isCalleeNamed, isCallOf, unwrapExpression } from './syntax.ts';
 import { getAssignedValue } from './variables.ts';
 
 const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
@@ -31,7 +31,7 @@ function getCalledModule(
     seen: Set<TSESTree.Node>,
 ): string | undefined {
     const { callee } = node;
-    if (!isCallOf(node, 'require')) return getModuleName(callee, source, seen);
+    if (!isCalleeNamed(node, 'require')) return getModuleName(callee, source, seen);
     const [argument] = node.arguments;
     return argument?.type === AST_NODE_TYPES.Literal && typeof argument.value === 'string' ? argument.value : undefined;
 }

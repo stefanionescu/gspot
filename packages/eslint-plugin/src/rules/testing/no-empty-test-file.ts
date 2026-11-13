@@ -38,14 +38,14 @@ export const noEmptyTestFile = createRule<[], 'empty'>({
         if (!TEST_FILE_PATTERN.test(context.filename)) return {};
         let hasTest = false;
         return {
-            'CallExpression, TaggedTemplateExpression'(
+            'CallExpression, TaggedTemplateExpression': function (
                 node: TSESTree.CallExpression | TSESTree.TaggedTemplateExpression,
             ) {
                 const isCall = node.type === AST_NODE_TYPES.CallExpression;
                 const name = getChainName(isCall ? node.callee : node.tag);
                 hasTest ||= TEST_DECLARATIONS.has(name) || (isCall && isTitledDeclaration(name, node));
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 if (!hasTest) context.report({ loc: { line: 1, column: 0 }, messageId: 'empty' });
             },
         };

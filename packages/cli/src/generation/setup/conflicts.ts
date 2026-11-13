@@ -15,11 +15,11 @@ function addConflictingConfig(
     conflicts: ConflictingConfigs,
     prettierScripts: PrettierScripts,
 ): void {
-    const { tool, path, shared } = file;
+    const { tool, path, shared, table, key } = file;
     if (shared) {
         conflicts.kept.push({
             path,
-            note: `${file.table ?? file.key ?? file.tool} settings stay here, and the generated file for ${tool} takes over. Delete the section; the generated file replaces it.`,
+            note: `${table ?? key ?? tool} settings stay here, and the generated file for ${tool} takes over. Delete the section; the generated file replaces it.`,
         });
         return;
     }

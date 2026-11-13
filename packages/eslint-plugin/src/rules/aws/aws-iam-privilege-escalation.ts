@@ -46,7 +46,7 @@ export const awsIamPrivilegeEscalation = createRule<[], 'escalation'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'NewExpression, CallExpression'(node: TSESTree.NewExpression | TSESTree.CallExpression) {
+            'NewExpression, CallExpression': function (node: TSESTree.NewExpression | TSESTree.CallExpression) {
                 const escalations = listAllowStatements(source, node).map((policy) => findEscalation(source, policy));
                 for (const escalation of escalations) if (escalation) context.report(escalation);
             },

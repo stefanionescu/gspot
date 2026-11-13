@@ -34,7 +34,7 @@ import { convertToPosixPath, executableLayout, isInside, listExecutableNames } f
 import { runProcess } from '#cli/system/processes.ts';
 import { filterOutsidePaths, findProgram } from '#cli/system/programs.ts';
 import { buildMiseInstall, listMisePins } from '#cli/tools/pins.ts';
-import { type Files, type SpawnResult } from '#cli/types/system.ts';
+import type { Files, SpawnResult } from '#cli/types/system.ts';
 import type { ExecutableList, ExecutableSearch, MiseBinPaths, MiseTrust, ToolLookupSession } from '#cli/types/tools.ts';
 
 const MISE_FOLDERS = Symbol('mise folders');
@@ -75,7 +75,7 @@ async function listSystemExecutablePaths(cwd: string, name: string, timeoutSecon
         paths.map(async (path): Promise<ExecutableList> => {
             if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return { paths: [path] };
             const command = [mise, MISE_WHICH, name];
-            const result = await runProcess(command, { cwd: cwd, env: TOOL_ENVIRONMENT, timeoutSeconds });
+            const result = await runProcess(command, { cwd, env: TOOL_ENVIRONMENT, timeoutSeconds });
             const program = result.stdout.trim();
             if (result.code !== 0) return { paths: [], failure: formatMiseFailure(MISE_WHICH, result) };
             return { paths: program === '' ? [] : [program] };

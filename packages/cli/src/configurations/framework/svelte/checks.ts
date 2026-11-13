@@ -17,7 +17,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

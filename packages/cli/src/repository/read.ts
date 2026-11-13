@@ -45,24 +45,19 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes, readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type {
-    GeneratedPaths,
     Repository,
     RepositoryListing,
+    RepositoryReadOptions,
     ScopeFolder,
     TrackedFile,
     UntrackedFiles,
 } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
-type RepositoryReadOptions = {
-    generatedPaths: GeneratedPaths[];
-    scopes: Array<Pick<ScopeFolder, 'path' | 'configurations'>>;
-};
-
 async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();
     const result = await runGit(root, GIT_CHECK_ATTRIBUTES_ARGUMENTS, {
-        stdin: paths.join('\0') + '\0',
+        stdin: `${paths.join('\0')}\0`,
     });
     if (result.code !== 0) throw new GspotError('git', `Git could not read the attributes: ${result.stderr.trim()}`);
     return parsePathAttributes(result.stdout);

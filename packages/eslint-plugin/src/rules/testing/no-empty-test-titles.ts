@@ -23,7 +23,7 @@ export const noEmptyTestTitles = createRule<[], 'empty'>({
     create(context) {
         if (!isModuleUsed(context, [...TEST_FRAMEWORK_MODULES])) return {};
         return {
-            'CallExpression[arguments.0.type=/^(Literal|TemplateLiteral)$/]'(node: TSESTree.CallExpression) {
+            'CallExpression[arguments.0.type=/^(Literal|TemplateLiteral)$/]': function (node: TSESTree.CallExpression) {
                 const call = getTestCall(node, context.sourceCode);
                 if (
                     call === undefined ||

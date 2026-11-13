@@ -45,7 +45,7 @@ bring back an ignored file that the change deleted.
 export async function changeSandbox(sandbox: Sandbox, changes: SandboxChanges): Promise<AsyncDisposable> {
     const cwd = sandbox.root;
     const index = runGitStep(cwd, ['write-tree']);
-    const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd: cwd, env: {} });
+    const head = runBlockingCommand(['git', 'rev-parse', '--verify', 'HEAD'], { cwd, env: {} });
     const ignored = new Set(
         runGitStep(cwd, ['ls-files', '--others', '--ignored', '--exclude-standard', '-z']).split('\0'),
     );

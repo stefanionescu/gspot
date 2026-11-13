@@ -46,6 +46,100 @@ beforeAll(async () => {
 
 afterAll(() => resources.disposeAsync());
 
+async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
+    await using _source = await createPythonProject(workFolder, { indexFile: UV_CONFIGURATION });
+    await runGspotStep({ root: workFolder, run: spawnGspot }, ['install']);
+    const binary = buildVenvExecutablePath(join(workFolder, GSPOT_PATHS.pythonEnvironment), 'ruff');
+    const inspected = await runCommand([binary, '--version'], { cwd: workFolder });
+    if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
+    const version = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u.exec(inspected.stdout.trim())?.groups?.['version'];
+    if (version === undefined) throw new Error('Ruff version output is invalid.');
+    const wheel = `ruff-${version}-py3-none-any.whl`;
+    const wheelFiles = await buildWheelFiles(binary, version);
+    const archive = zipSync(
+        Object.fromEntries(
+            wheelFiles.map(([name, bytes]) => [
+                name,
+                [bytes, name.endsWith(`/${basename(binary)}`) ? ZIP_FILE_OPTIONS.executable : ZIP_FILE_OPTIONS.regular],
+            ]),
+        ),
+    );
+    const digest = createHash('sha256').update(archive).digest('hex');
+    const { user, password } = PYTHON_INDEX_CREDENTIALS;
+    const credentials = `${user}:${password}`;
+    const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
+    const server = Bun.serve({
+        hostname: REGISTRY_HOST,
+        port: 0,
+        fetch(request) {
+            if (request.headers.get('authorization') !== authentication)
+                return new Response(AUTHENTICATION_REQUIRED_MESSAGE, { status: 401 });
+            if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
+            const file = {
+                filename: wheel,
+                url: `/${wheel}`,
+                hashes: { sha256: digest },
+                'upload-time': '2020-01-01T00:00:00Z',
+            };
+            return Response.json(
+                { meta: { 'api-version': '1.1' }, name: 'ruff', files: [file] },
+                { headers: { 'content-type': 'application/vnd.pypi.simple.v1+json' } },
+            );
+        },
+    });
+    return {
+        url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
+        [Symbol.dispose]: server[Symbol.dispose].bind(server),
+    };
+}
+
+async function buildWheelFiles(binary: string, version: string): Promise<Array<[string, Buffer]>> {
+    const metadata = `ruff-${version}.dist-info`;
+    const files: Array<[string, Buffer]> = [
+        [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await readFile(binary))],
+        [
+            `${metadata}/METADATA`,
+            Buffer.from(`Metadata-Version: 2.1
+Name: ruff
+Version: ${version}
+`),
+        ],
+        [
+            `${metadata}/WHEEL`,
+            Buffer.from(`Wheel-Version: 1.0
+Generator: gspot
+Root-Is-Purelib: false
+Tag: py3-none-any
+`),
+        ],
+    ];
+    const record = files
+        .map(
+            ([name, bytes]) =>
+                `${name},sha256=${createHash('sha256').update(bytes).digest('base64url')},${String(bytes.length)}\r\n`,
+        )
+        .join('');
+    files.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
+    return files;
+}
+
+async function createIndexedPythonProject(root: string): Promise<IndexedPythonProject> {
+    await using resources = new AsyncDisposableStack();
+    const index = await pythonIndex.promise;
+    const project = resources.use(
+        await createPythonProject(root, { indexFile: UV_CONFIGURATION, indexUrl: index.url }),
+    );
+    await runGspotStep({ root, run: spawnGspot }, ['install']);
+    const projectFiles = await readToolProjectFiles(root, 'uv');
+    const owned = resources.move();
+    return {
+        rootProject: project.rootProject,
+        rootConfiguration: project.rootConfiguration,
+        files: projectFiles,
+        [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
+    };
+}
+
 test('install from an authenticated uv.toml index keeps the authored project files', async () => {
     await using sandbox = await createGitSandbox({});
     await using project = await createIndexedPythonProject(sandbox.path);
@@ -171,97 +265,3 @@ test('a repeated install reports No change while a uv-locked project matches its
     expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
     expect(JSON.parse(repeated.stdout)).toMatchObject({ installed: [], written: [], deleted: [], updated: [] });
 });
-
-async function createPythonIndex(workFolder: string): Promise<Disposable & { url: string }> {
-    await using _source = await createPythonProject(workFolder, { indexFile: UV_CONFIGURATION });
-    await runGspotStep({ root: workFolder, run: spawnGspot }, ['install']);
-    const binary = buildVenvExecutablePath(join(workFolder, GSPOT_PATHS.pythonEnvironment), 'ruff');
-    const inspected = await runCommand([binary, '--version'], { cwd: workFolder });
-    if (inspected.code !== 0) throw new Error(`Ruff version failed: ${inspected.stderr}`);
-    const version = /^ruff (?<version>\d+\.\d+\.\d[-+\w.]*)$/u.exec(inspected.stdout.trim())?.groups?.['version'];
-    if (version === undefined) throw new Error('Ruff version output is invalid.');
-    const wheel = `ruff-${version}-py3-none-any.whl`;
-    const wheelFiles = await buildWheelFiles(binary, version);
-    const archive = zipSync(
-        Object.fromEntries(
-            wheelFiles.map(([name, bytes]) => [
-                name,
-                [bytes, name.endsWith(`/${basename(binary)}`) ? ZIP_FILE_OPTIONS.executable : ZIP_FILE_OPTIONS.regular],
-            ]),
-        ),
-    );
-    const digest = createHash('sha256').update(archive).digest('hex');
-    const { user, password } = PYTHON_INDEX_CREDENTIALS;
-    const credentials = `${user}:${password}`;
-    const authentication = `Basic ${Buffer.from(credentials).toString('base64')}`;
-    const server = Bun.serve({
-        hostname: REGISTRY_HOST,
-        port: 0,
-        fetch(request) {
-            if (request.headers.get('authorization') !== authentication)
-                return new Response(AUTHENTICATION_REQUIRED_MESSAGE, { status: 401 });
-            if (new URL(request.url).pathname.endsWith('.whl')) return new Response(archive);
-            const file = {
-                filename: wheel,
-                url: `/${wheel}`,
-                hashes: { sha256: digest },
-                'upload-time': '2020-01-01T00:00:00Z',
-            };
-            return Response.json(
-                { meta: { 'api-version': '1.1' }, name: 'ruff', files: [file] },
-                { headers: { 'content-type': 'application/vnd.pypi.simple.v1+json' } },
-            );
-        },
-    });
-    return {
-        url: `http://${user}:${password}@${REGISTRY_HOST}:${String(server.port)}/simple`,
-        [Symbol.dispose]: server[Symbol.dispose].bind(server),
-    };
-}
-
-async function buildWheelFiles(binary: string, version: string): Promise<Array<[string, Buffer]>> {
-    const metadata = `ruff-${version}.dist-info`;
-    const files: Array<[string, Buffer]> = [
-        [`ruff-${version}.data/scripts/${basename(binary)}`, Buffer.from(await readFile(binary))],
-        [
-            `${metadata}/METADATA`,
-            Buffer.from(`Metadata-Version: 2.1
-Name: ruff
-Version: ${version}
-`),
-        ],
-        [
-            `${metadata}/WHEEL`,
-            Buffer.from(`Wheel-Version: 1.0
-Generator: gspot
-Root-Is-Purelib: false
-Tag: py3-none-any
-`),
-        ],
-    ];
-    const record = files
-        .map(
-            ([name, bytes]) =>
-                `${name},sha256=${createHash('sha256').update(bytes).digest('base64url')},${String(bytes.length)}\r\n`,
-        )
-        .join('');
-    files.push([`${metadata}/RECORD`, Buffer.from(`${record}${metadata}/RECORD,,\r\n`)]);
-    return files;
-}
-
-async function createIndexedPythonProject(root: string): Promise<IndexedPythonProject> {
-    await using resources = new AsyncDisposableStack();
-    const index = await pythonIndex.promise;
-    const project = resources.use(
-        await createPythonProject(root, { indexFile: UV_CONFIGURATION, indexUrl: index.url }),
-    );
-    await runGspotStep({ root, run: spawnGspot }, ['install']);
-    const projectFiles = await readToolProjectFiles(root, 'uv');
-    const owned = resources.move();
-    return {
-        rootProject: project.rootProject,
-        rootConfiguration: project.rootConfiguration,
-        files: projectFiles,
-        [Symbol.asyncDispose]: owned[Symbol.asyncDispose].bind(owned),
-    };
-}

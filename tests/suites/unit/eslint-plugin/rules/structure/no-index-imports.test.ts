@@ -18,19 +18,28 @@ buildRuleTester().run('no-index-imports', noIndexImports, {
             code: "import { a } from './index.js';",
             errors: [{ messageId: 'index', data: { source: './index.js' } }],
         },
-        { code: "export * from './lib/index.js';", errors: [{ messageId: 'index' }] },
-        { code: "const m = await import('./index.js');", errors: [{ messageId: 'index' }] },
-        { code: "vi.mock('@/turn/index.js');", errors: [{ messageId: 'index' }] },
-        { code: "const a = require('./lib/index.js');", errors: [{ messageId: 'index' }] },
+        {
+            code: "export * from './lib/index.js';",
+            errors: [{ messageId: 'index', data: { source: './lib/index.js' } }],
+        },
+        {
+            code: "const m = await import('./index.js');",
+            errors: [{ messageId: 'index', data: { source: './index.js' } }],
+        },
+        { code: "vi.mock('@/turn/index.js');", errors: [{ messageId: 'index', data: { source: '@/turn/index.js' } }] },
+        {
+            code: "const a = require('./lib/index.js');",
+            errors: [{ messageId: 'index', data: { source: './lib/index.js' } }],
+        },
         {
             code: "import a = require('./lib/index');",
             name: 'an import-equals require of an index file reports',
-            errors: [{ messageId: 'index' }],
+            errors: [{ messageId: 'index', data: { source: './lib/index' } }],
         },
         {
             code: "type A = import('./lib/index.js').A;",
             name: 'a type import() of an index file reports',
-            errors: [{ messageId: 'index' }],
+            errors: [{ messageId: 'index', data: { source: './lib/index.js' } }],
         },
     ],
 });

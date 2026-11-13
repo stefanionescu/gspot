@@ -22,7 +22,7 @@ function getHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCod
     const owner = [getExpressionValue(node, source), variable?.defs.at(0)?.node].find(
         (value) => value !== undefined && ASTUtils.isFunction(value),
     );
-    return owner !== undefined && ASTUtils.isFunction(owner) ? owner.body : undefined;
+    return owner?.body;
 }
 
 function isUpdatedOption(node: TSESTree.Property, source: TSESLint.SourceCode): boolean {

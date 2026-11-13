@@ -46,7 +46,7 @@ export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[callee.type="MemberExpression"][callee.property.name="throw"]'(
+            'CallExpression[callee.type="MemberExpression"][callee.property.name="throw"]': function (
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
                 const [first, ...rest] = node.arguments;
@@ -56,7 +56,9 @@ export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({
                 if (isVague && isPositiveThrowAssertion(node) && isInsideTest(node, source))
                     context.report({ node: node.callee.property, messageId: 'errorType' });
             },
-            'CatchClause[param.type="Identifier"]'(node: TSESTree.CatchClause & { param: TSESTree.Identifier }) {
+            'CatchClause[param.type="Identifier"]': function (
+                node: TSESTree.CatchClause & { param: TSESTree.Identifier },
+            ) {
                 const isDoneCalled = listBodyNodes(node.body, source).some(
                     (each) =>
                         each.type === AST_NODE_TYPES.CallExpression &&

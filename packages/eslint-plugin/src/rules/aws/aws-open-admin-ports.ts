@@ -22,6 +22,7 @@ import {
     TCP_PROTOCOL_NAMES,
     TCP_PROTOCOLS,
 } from '../../config/aws.ts';
+import { DECIMAL_RADIX } from '../../config/plugin.ts';
 import {
     getExpressionValue,
     getLiteralValue,
@@ -56,8 +57,8 @@ function isAdminRange(start: number, end: number): boolean {
 function isAdminPortOptions(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): boolean {
     const protocol = getOptionProperties(node, source).get('protocol');
     const isTcp = protocol !== undefined && TCP_PROTOCOL_NAMES.has(getCdkName(source, protocol.value));
-    const start = Number.parseInt(String(getField(source, node, 'fromPort')));
-    const end = Number.parseInt(String(getField(source, node, 'toPort')));
+    const start = Number.parseInt(String(getField(source, node, 'fromPort')), DECIMAL_RADIX);
+    const end = Number.parseInt(String(getField(source, node, 'toPort')), DECIMAL_RADIX);
     return isTcp && isAdminRange(start, end);
 }
 
@@ -121,8 +122,8 @@ function listAdminAccess(source: Readonly<TSESLint.SourceCode>, node: TSESTree.C
 
 function listOpenIngress(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node | undefined): AdminAccess[] {
     const protocol = getField(source, node, 'ipProtocol');
-    const start = Number.parseInt(String(getField(source, node, 'fromPort')));
-    const end = Number.parseInt(String(getField(source, node, 'toPort')));
+    const start = Number.parseInt(String(getField(source, node, 'fromPort')), DECIMAL_RADIX);
+    const end = Number.parseInt(String(getField(source, node, 'toPort')), DECIMAL_RADIX);
     const isAdmin = protocol === ALL_PROTOCOLS || (TCP_PROTOCOLS.has(protocol) && isAdminRange(start, end));
     return Object.entries(OPEN_ADDRESSES).flatMap(([key, address]) => {
         const property = getOptionProperties(node, source).get(key);
@@ -161,7 +162,7 @@ export const awsOpenAdminPorts = createRule<[], 'openRange' | 'anyAddress'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression, NewExpression'(node: TSESTree.CallExpression | TSESTree.NewExpression) {
+            'CallExpression, NewExpression': function (node: TSESTree.CallExpression | TSESTree.NewExpression) {
                 const name = getCdkName(source, node.callee);
                 let found: AdminAccess[] = [];
                 if (node.type === AST_NODE_TYPES.CallExpression) found = listAdminAccess(source, node);

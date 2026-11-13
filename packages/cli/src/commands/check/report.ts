@@ -115,7 +115,9 @@ function formatReportLine(result: CheckResult, tail: string): string {
 
 function formatVerboseLines({ command, stack }: CheckResult): string[] {
     const lines = stack?.split('\n').map((line) => `  ${line}`) ?? [];
-    return command ? [`  ${styleText('dim', '$ ' + command.join(' '), { stream: process.stdout })}`, ...lines] : lines;
+    if (!command) return lines;
+    const shown = styleText('dim', `$ ${command.join(' ')}`, { stream: process.stdout });
+    return [`  ${shown}`, ...lines];
 }
 
 function formatCheck(result: CheckResult, { verbose }: { verbose: boolean }): string[] {
@@ -218,11 +220,10 @@ export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: bool
             '';
         const failure = detail.endsWith('.') ? detail.slice(0, -1) : detail;
         const toolOutput = verbose
-            ? '\n' +
-              note
+            ? `\n${note
                   .split('\n')
-                  .map((line) => '  ' + line)
-                  .join('\n')
+                  .map((line) => `  ${line}`)
+                  .join('\n')}`
             : '';
         printWarning(`The ${result.check} fixer failed: ${failure}.${toolOutput}`);
     }

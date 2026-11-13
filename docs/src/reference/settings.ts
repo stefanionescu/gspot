@@ -59,7 +59,7 @@ function formatDefaults(variants: SettingVariant[]): string {
             const display = isDeepStrictEqual(defaultLevel, all)
                 ? shown
                 : `basic: ${shown}; all: \`${JSON.stringify(all)}\``;
-            return display + (variants.length > 1 ? ' (' + owners.join(', ') + ')' : '');
+            return display + (variants.length > 1 ? ` (${owners.join(', ')})` : '');
         })
         .join('; ');
 }
@@ -124,19 +124,18 @@ function formatVariantSection(node: SettingReference, headingLevel: number): str
     return formatSection(
         `\`${pattern}\``,
         `The keys of \`[${node.key}]\` for one language: ${names}. ` +
-            `A key you leave out takes the value of \`[${node.key}]\`.\n` +
-            (categories.length === 0
-                ? ''
-                : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
-                  `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n` +
-                  formatTable(
-                      ['Language', 'Categories'],
-                      categories.map(([name, tables]) => [
-                          `\`${name}\``,
-                          tables.map((table) => `\`${table.name}\``).join(', '),
-                      ]),
-                  ) +
-                  '\n'),
+            `A key you leave out takes the value of \`[${node.key}]\`.\n${
+                categories.length === 0
+                    ? ''
+                    : `\n\`${pattern}.${CATEGORY_PLACEHOLDER}\` sets the same keys for one category of names, and a key you ` +
+                      `leave out takes the value of \`${pattern}\`. The categories of each language:\n\n${formatTable(
+                          ['Language', 'Categories'],
+                          categories.map(([name, tables]) => [
+                              `\`${name}\``,
+                              tables.map((table) => `\`${table.name}\``).join(', '),
+                          ]),
+                      )}\n`
+            }`,
         headingLevel,
         buildSettingAnchor(pattern, 'table'),
     );
@@ -171,13 +170,14 @@ function formatScopeSection(node: SettingReference): string {
         .join(', ');
     return formatSection(
         '`[[scope]]`',
-        (node.description === undefined ? '' : `${formatText(node.description)}\n\n`) +
+        `${
+            (node.description === undefined ? '' : `${formatText(node.description)}\n\n`) +
             MONOREPOS_SCOPE_MESSAGE +
             formatSettingKeys(
                 node.children.filter((child) => child.kind === 'value'),
                 TABLE_HEADING_LEVEL + 1,
-            ) +
-            `\n\nOnly the root takes these settings: ${rootOnlyNames}.\n`,
+            )
+        }\n\nOnly the root takes these settings: ${rootOnlyNames}.\n`,
         TABLE_HEADING_LEVEL,
         buildSettingAnchor(node.key, node.kind),
     );
@@ -215,14 +215,12 @@ export function buildSettingsPage(): ReferencePage {
     const page = buildReferencePage(
         'gspot.toml settings',
         undefined,
-        `[gspot.toml](/configure/gspot-toml/) says how to change these settings, and the [JSON Schema](${DOCS_PATHS.schema}) gives your editor the same keys.\n` +
-            formatSection(
-                TOP_LEVEL_HEADING,
-                formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),
-                TABLE_HEADING_LEVEL,
-                TOP_LEVEL_ANCHOR,
-            ) +
-            sections.join(''),
+        `[gspot.toml](/configure/gspot-toml/) says how to change these settings, and the [JSON Schema](${DOCS_PATHS.schema}) gives your editor the same keys.\n${formatSection(
+            TOP_LEVEL_HEADING,
+            formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),
+            TABLE_HEADING_LEVEL,
+            TOP_LEVEL_ANCHOR,
+        )}${sections.join('')}`,
     );
     page.headings = [
         { depth: TABLE_HEADING_LEVEL, slug: TOP_LEVEL_ANCHOR, text: TOP_LEVEL_HEADING },

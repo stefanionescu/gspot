@@ -15,12 +15,12 @@ buildRuleTester().run('no-clear-text-protocols', noClearTextProtocols, {
             code: "const a = 'http://api.acme.io';\nconst f = 'http://' + host;\nconst g = 'http://';\nconst k = 'http://jabber.org/protocol/x';\nconst l = 'http://jabber.org/http-bind';\nimport Telnet from 'telnet-client';\nconst nodemailer = require('nodemailer');\nnodemailer.createTransport({ host: 'h' });\nnodemailer.createTransport({ port: 465 });\nconst Client = require('ftp');\nconst ftp = new Client();\nftp.connect({ secure: false });\nrequire('telnet-client');\nconst o = 'http://localhost:${port}/x';",
             errors: [
                 { messageId: 'clearText', data: { protocol: 'http', alternative: 'https' }, line: 1 },
-                { messageId: 'clearText', line: 2 },
-                { messageId: 'clearText', line: 5 },
+                { messageId: 'clearText', data: { protocol: 'http', alternative: 'https' }, line: 2 },
+                { messageId: 'clearText', data: { protocol: 'http', alternative: 'https' }, line: 5 },
                 { messageId: 'clearText', data: { protocol: 'telnet', alternative: 'ssh' }, line: 6 },
                 { messageId: 'clearText', data: { protocol: 'http', alternative: 'https' }, line: 8 },
                 { messageId: 'clearText', data: { protocol: 'ftp', alternative: 'sftp, scp, or ftps' }, line: 12 },
-                { messageId: 'clearText', line: 13 },
+                { messageId: 'clearText', data: { protocol: 'telnet', alternative: 'ssh' }, line: 13 },
             ],
         },
         {

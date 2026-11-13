@@ -5,7 +5,7 @@ import { testdir } from 'testdirs';
 
 import { executableLayout } from '#cli/system/paths.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
-import { type Tool } from '#cli/types/manifests.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools.ts';
 import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';

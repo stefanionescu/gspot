@@ -42,7 +42,7 @@ export const dynamicTemplates = createRule<[], 'builtTemplate'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[arguments.length>0]'(
+            'CallExpression[arguments.length>0]': function (
                 node: TSESTree.CallExpression & { arguments: [TSESTree.CallExpressionArgument] },
             ) {
                 const [template] = node.arguments;

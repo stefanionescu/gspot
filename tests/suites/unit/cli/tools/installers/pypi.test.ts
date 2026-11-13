@@ -38,6 +38,22 @@ import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 
+async function readInstalledSettings(root: string, releaseAgeDays: number): Promise<unknown> {
+    const settings: unknown[] = [];
+    using _boundary = fakeCommands('settings-uv', (command) => {
+        const file = command[command.indexOf('--config-file') + 1];
+        if (file === undefined) throw new Error('The uv command received no settings file.');
+        settings.push(parse(readFileSync(file, 'utf8')));
+        return Promise.resolve(buildProcessResult());
+    });
+    await installPythonTools(
+        { ...(await buildSandboxToolInstall(await openSession(root))), releaseAgeDays },
+        'settings-uv',
+    );
+    expect(settings).toHaveLength(1);
+    return settings[0];
+}
+
 test('a failed uv sync hides index passwords', async () => {
     await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);
 
@@ -115,22 +131,6 @@ test.each(INVALID_UV_SETTINGS)(
         );
     },
 );
-
-async function readInstalledSettings(root: string, releaseAgeDays: number): Promise<unknown> {
-    const settings: unknown[] = [];
-    using _boundary = fakeCommands('settings-uv', (command) => {
-        const file = command[command.indexOf('--config-file') + 1];
-        if (file === undefined) throw new Error('The uv command received no settings file.');
-        settings.push(parse(readFileSync(file, 'utf8')));
-        return Promise.resolve(buildProcessResult());
-    });
-    await installPythonTools(
-        { ...(await buildSandboxToolInstall(await openSession(root))), releaseAgeDays },
-        'settings-uv',
-    );
-    expect(settings).toHaveLength(1);
-    return settings[0];
-}
 
 test('uv.toml wins and local index paths are read relative to the repository', async () => {
     await using sandbox = await createGitSandbox({

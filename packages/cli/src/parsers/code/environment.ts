@@ -168,22 +168,13 @@ function findEnvironmentKeyNode(node: Node): Node | null | undefined {
 function decodePythonKey(literal: Node): string | undefined {
     const value = literal.namedChildren.find((child) => child.type === 'string_content')?.text;
     if (value === undefined || PYTHON_RAW_STRING_PREFIX.test(literal.text)) return value;
-    return value.replaceAll(
-        PYTHON_STRING_ESCAPE,
-        (
-            escape,
-            hexadecimal: string | undefined,
-            unicode: string | undefined,
-            longUnicode: string | undefined,
-            octal: string | undefined,
-            character: string = '',
-        ) => {
-            const digits = [hexadecimal, unicode, longUnicode, octal].find((value) => value !== undefined);
-            if (digits === undefined) return PYTHON_STRING_ESCAPES[character] ?? escape;
-            const point = Number.parseInt(digits, octal === undefined ? HEXADECIMAL_RADIX : OCTAL_RADIX);
-            return point <= MAXIMUM_CODE_POINT ? String.fromCodePoint(point) : escape;
-        },
-    );
+    return value.replaceAll(PYTHON_STRING_ESCAPE, (escape, ...captures: Array<string | undefined>) => {
+        const [hexadecimal, unicode, longUnicode, octal, character = ''] = captures;
+        const digits = [hexadecimal, unicode, longUnicode, octal].find((value) => value !== undefined);
+        if (digits === undefined) return PYTHON_STRING_ESCAPES[character] ?? escape;
+        const point = Number.parseInt(digits, octal === undefined ? HEXADECIMAL_RADIX : OCTAL_RADIX);
+        return point <= MAXIMUM_CODE_POINT ? String.fromCodePoint(point) : escape;
+    });
 }
 
 function findBoundProperty(element: Node): Node | null {

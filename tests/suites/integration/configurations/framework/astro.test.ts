@@ -34,9 +34,7 @@ test('ESLint, astro check, and Prettier each report a finding in one Astro proje
         await runCheckOnChanges(installedSandbox(), {
             check: 'javascript/eslint',
             files: {
-                [ASTRO_PAGE_PATH]:
-                    ASTRO_PAGE +
-                    `{[title].map((text) => <b>{text}</b>)}
+                [ASTRO_PAGE_PATH]: `${ASTRO_PAGE}{[title].map((text) => <b>{text}</b>)}
 <div set:html={title} />
 <script>
     import './answer';

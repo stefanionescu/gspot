@@ -10,6 +10,7 @@ import {
     TABLE_CELLS,
     TABLE_SECTIONS,
 } from '../config/accessibility.ts';
+import { DECIMAL_RADIX } from '../config/plugin.ts';
 import type { JsxAttributeValue, PlacedRow, TableCell } from '../types/accessibility.ts';
 
 function normalizeLiteral(value: unknown): unknown {
@@ -29,7 +30,7 @@ function getAttributeValue(value: TSESTree.JSXAttribute['value']): unknown {
 
 function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {
     const attribute = getAttribute(cell.openingElement, name);
-    const span = attribute ? Number.parseInt(String(attribute.value)) : 1;
+    const span = attribute ? Number.parseInt(String(attribute.value), DECIMAL_RADIX) : 1;
     return name === 'rowspan' && span === 0 ? 0 : Math.min(Math.max(span, 1), maximum);
 }
 

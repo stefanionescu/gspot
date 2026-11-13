@@ -46,7 +46,9 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { '@lib': 'src/lib' } }],
                 output: null,
-                errors: [{ messageId: 'escape' }],
+                errors: [
+                    { messageId: 'escape', data: { source: '../lib/a.js', folder: 'src/app', target: 'src/lib' } },
+                ],
             },
             {
                 name: 'suffix wildcard alias represents a child module',
@@ -54,14 +56,14 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { '#lib/*.js': 'src/lib/*.js' } }],
                 output: "import { a } from '#lib/a.js';",
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: '#lib/a.js', source: '../lib/a.js' } }],
             },
             {
                 code: "import metadata from '../../package.json';",
                 filename: '/repo/packages/cli/src/main.ts',
                 options: [{ aliases: { '#cli-package': 'packages/package.json' } }],
                 output: "import metadata from '#cli-package';",
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: '#cli-package', source: '../../package.json' } }],
             },
             {
                 code: "import { b } from '../../tests/b';",
@@ -89,7 +91,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/other/b.ts',
                 options: [{ aliases: { '@/*': 'src/*', '@config/*': 'config/*' } }],
                 output: 'import { a } from "@config/a.js";',
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: '@config/a.js', source: '../../config/a.js' } }],
             },
             {
                 code: "import { a } from '../../other/a.js';",
@@ -110,7 +112,12 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 code: "export { a } from '../../supabase/src/a.js';",
                 filename: '/repo/api/src/b.ts',
                 options: [{ folders: ['api', 'supabase'] }],
-                errors: [{ messageId: 'escape' }],
+                errors: [
+                    {
+                        messageId: 'escape',
+                        data: { source: '../../supabase/src/a.js', folder: 'api', target: 'supabase' },
+                    },
+                ],
             },
             {
                 code: "import { a } from '../outside/a.js';",
@@ -141,7 +148,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { '@/*': 'src/*' } }],
                 output: "import text from '@/lib/a.txt?raw';",
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: '@/lib/a.txt?raw', source: '../lib/a.txt?raw' } }],
             },
             {
                 name: 'the alias fix escapes a quote that the alias holds',
@@ -149,7 +156,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { "@owner's/*": 'src/*' } }],
                 output: String.raw`import a from '@owner\'s/lib/a.js';`,
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: "@owner's/lib/a.js", source: '../lib/a.js' } }],
             },
             {
                 name: 'an alias target written as in tsconfig paths, with ./, gives the alias fix',
@@ -157,7 +164,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/other/b.ts',
                 options: [{ aliases: { '@/*': './src/*' } }],
                 output: "import { a } from '@/turn/a.js';",
-                errors: [{ messageId: 'alias' }],
+                errors: [{ messageId: 'alias', data: { alias: '@/turn/a.js', source: '../turn/a.js' } }],
             },
             {
                 name: 'a wildcard alias with an exact target never writes the pattern itself as the import',
@@ -165,7 +172,7 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { '@/*': 'src/lib' } }],
                 output: null,
-                errors: [{ messageId: 'escape' }],
+                errors: [{ messageId: 'escape', data: { source: '../lib', folder: 'src/app', target: 'src/lib' } }],
             },
             {
                 name: 'an alias target whose prefix and suffix overlap does not match a shorter path',
@@ -173,13 +180,13 @@ buildRuleTester().run<keyof (typeof importBoundaries)['meta']['messages'], [Part
                 filename: '/repo/src/app/main.ts',
                 options: [{ aliases: { '@/*': 's*s' } }],
                 output: null,
-                errors: [{ messageId: 'escape' }],
+                errors: [{ messageId: 'escape', data: { source: '../../s', folder: 'src/app', target: 's' } }],
             },
             {
                 code: "import { a } from '..';",
                 filename: '/repo/src/cart/a.ts',
                 output: null,
-                errors: [{ messageId: 'escape' }],
+                errors: [{ messageId: 'escape', data: { source: '..', folder: 'src/cart', target: 'src' } }],
             },
         ],
     },

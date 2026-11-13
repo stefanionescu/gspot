@@ -33,10 +33,8 @@ async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });
     const path = join(root, 'package.json');
     const packageJson = JSON.parse(await readFile(path, 'utf8')) as Record<string, unknown>;
-    await writeFile(
-        path,
-        JSON.stringify({ ...packageJson, packageManager: `npm@${npm.stdout.trim()}` }, null, JSON_INDENT) + '\n',
-    );
+    const manifest = { ...packageJson, packageManager: `npm@${npm.stdout.trim()}` };
+    await writeFile(path, `${JSON.stringify(manifest, null, JSON_INDENT)}\n`);
 }
 
 async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
@@ -51,8 +49,7 @@ async function writeSandbox(root: string, plan: SandboxPlan): Promise<void> {
     await createFileTree(root, {
         '.gitignore': SANDBOX_GITIGNORE,
         ...(plan.dependencies !== undefined && {
-            'package.json':
-                JSON.stringify({ ...SANDBOX_PACKAGE_JSON, dependencies: plan.dependencies }, null, JSON_INDENT) + '\n',
+            'package.json': `${JSON.stringify({ ...SANDBOX_PACKAGE_JSON, dependencies: plan.dependencies }, null, JSON_INDENT)}\n`,
         }),
         ...json,
         ...plan.files,

@@ -26,6 +26,12 @@ import { commitAll } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
+async function assertFileKept(root: string, path: string, previous: string): Promise<void> {
+    expect(await readFile(join(root, path), 'utf8')).toBe(previous);
+    const attributes = await stat(join(root, path));
+    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
+}
+
 test('init deletes the config files that the selected configurations replace', async () => {
     await using sandbox = await testdir({
         'typos.toml': `[default.extend-words]
@@ -96,12 +102,6 @@ test.each([...REPLACED_PYPROJECT_TABLES])(
         expect(existsSync(join(sandbox.path, generated))).toBe(true);
     },
 );
-
-async function assertFileKept(root: string, path: string, previous: string): Promise<void> {
-    expect(await readFile(join(root, path), 'utf8')).toBe(previous);
-    const attributes = await stat(join(root, path));
-    expect(attributes.mode & 0o777).toBe(normalizeFileMode({ mode: 0o640 }));
-}
 
 test('at level basic, init keeps the config files of checks that are off', async () => {
     await using sandbox = await testdir({

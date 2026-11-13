@@ -10,9 +10,9 @@ async function listMarkedLines(path: string, source: string, tags: readonly stri
         .map((comment) => comment.line);
 }
 
-test.each(COMMENT_BOUNDARIES)(
-    '%s: only the comment after the string counts as a comment',
-    async (_label, path, source, line, tags) => {
+test.each(COMMENT_BOUNDARIES.map(([label, path, source, line, tags]) => ({ label, path, source, line, tags })))(
+    '$label: only the comment after the string counts as a comment',
+    async ({ path, source, line, tags }) => {
         expect(await listMarkedLines(path, source, tags)).toStrictEqual([line]);
     },
 );

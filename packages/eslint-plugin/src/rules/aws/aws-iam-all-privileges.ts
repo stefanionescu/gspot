@@ -24,7 +24,7 @@ export const awsIamAllPrivileges = createRule<[], 'allActions'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'NewExpression, CallExpression'(node: TSESTree.NewExpression | TSESTree.CallExpression) {
+            'NewExpression, CallExpression': function (node: TSESTree.NewExpression | TSESTree.CallExpression) {
                 for (const { statement, keys } of listAllowStatements(source, node)) {
                     const actions = getCdkProperty(source, statement, keys.actions);
                     const action = listCdkStrings(source, actions).find(({ value }) => value === ANY_PRINCIPAL);

@@ -14,7 +14,7 @@ import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/post
 import { listNodeFields } from '#cli/parsers/code/sql.ts';
 import { getPosition } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { SqlStatement } from '#cli/types/parsers.ts';
 
 function hasDriftGuard(statement: SqlStatement): boolean {

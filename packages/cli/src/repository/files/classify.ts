@@ -212,7 +212,7 @@ export function classifyFile(
     rules: FileKindRules,
 ): TrackedFile {
     const tagged = tagFile(file, file.prefix);
-    const kind = classifyKind({ root: root, listed: file, prefix: file.prefix, isBinary: tagged.isBinary }, rules);
+    const kind = classifyKind({ root, listed: file, prefix: file.prefix, isBinary: tagged.isBinary }, rules);
     return {
         path: file.path,
         kind: kind.kind,

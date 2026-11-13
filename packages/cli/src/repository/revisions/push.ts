@@ -44,7 +44,14 @@ import {
 import { isShallowClone, readHead } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text.ts';
-import type { Comparison, PushedRevisions, PushLine, PushRevision, PushSearch } from '#cli/types/repository.ts';
+import type {
+    Comparison,
+    PushBaseSearch,
+    PushedRevisions,
+    PushLine,
+    PushRevision,
+    PushSearch,
+} from '#cli/types/repository.ts';
 
 function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);
@@ -83,7 +90,7 @@ async function readPeeledCommits(
     if (hashes.length === 0) return new Map();
     const responses = await readGitLines(root, GIT_PEEL_ARGUMENTS, {
         cancelSignal,
-        stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}`).join('\n') + '\n',
+        stdin: hashes.map((hash) => `${hash}${PEEL_SUFFIX}\n`).join(''),
     });
     if (responses.length !== hashes.length) throw new GspotError('git', PEEL_FAILURE_MESSAGE);
     return new Map(
@@ -107,7 +114,7 @@ async function readComparison(search: PushSearch, line: PushLine, hash: string):
         const previous = search.commits.get(remoteHash);
         if (previous === undefined)
             return {
-                base: await readPushBase(root, localRef, hash, cancelSignal, remoteRefs),
+                base: await readPushBase(root, { ref: localRef, hash, cancelSignal, remoteRefs }),
                 changed: undefined,
                 range: [hash],
             };
@@ -116,7 +123,7 @@ async function readComparison(search: PushSearch, line: PushLine, hash: string):
     }
     const range = [hash, NOT_FLAG, search.remote === undefined ? REMOTES_FLAG : `${REMOTES_FLAG}=${search.remote}`];
     const changed = await readGitPaths(root, [...GIT_LOG_ARGUMENTS, ...range, '--'], { cancelSignal });
-    return { base: await readPushBase(root, localRef, hash, cancelSignal, remoteRefs), changed, range };
+    return { base: await readPushBase(root, { ref: localRef, hash, cancelSignal, remoteRefs }), changed, range };
 }
 
 async function buildRevision(search: PushSearch, line: PushLine, hash: string): Promise<PushRevision> {
@@ -183,13 +190,7 @@ async function addPushLine(search: PushSearch, pushed: PushedRevisions, line: Pu
     addRevision(pushed, await buildRevision(search, line, commit));
 }
 
-async function readPushBase(
-    root: string,
-    ref: string,
-    hash: string,
-    cancelSignal?: AbortSignal,
-    remoteRefs?: ReadonlyMap<string, string>,
-): Promise<string> {
+async function readPushBase(root: string, { ref, hash, cancelSignal, remoteRefs }: PushBaseSearch): Promise<string> {
     const compared = await readDefaultRef(root, ref, cancelSignal, remoteRefs);
     if (compared !== '') {
         const base = await readMergeBase(root, compared, hash, cancelSignal);
@@ -214,7 +215,7 @@ export async function readPushedRevisions(
     const remoteName = remotes.find((name) => name === remote);
     const remoteRefs = await listRemoteRefs(root, cancelSignal);
     const context: PushSearch = {
-        root: root,
+        root,
         cancelSignal,
         commits: await readPeeledCommits(root, lines, cancelSignal),
         remote: remoteName,
@@ -227,13 +228,8 @@ export async function readPushedRevisions(
     return result;
 }
 
-export async function readPushedCommits(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
-    const range = await readPushedRange(root, cancelSignal);
-    return range.length === 0 ? [] : readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
-}
-
 export async function readPushedRange(root: string, cancelSignal?: AbortSignal): Promise<string[]> {
     if ((await readHead(root, cancelSignal)) === undefined) return [];
-    const base = await readPushBase(root, 'HEAD', 'HEAD', cancelSignal);
+    const base = await readPushBase(root, { ref: 'HEAD', hash: 'HEAD', cancelSignal });
     return [`${base}..HEAD`];
 }

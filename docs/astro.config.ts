@@ -77,7 +77,7 @@ type HastText = Extract<HastNode, { type: 'text' }>;
 function readMermaidText(node: Readonly<HastElement>): HastText | undefined {
     const [code] = node.children;
     if (code?.type !== 'element') return undefined;
-    const classes = code.properties['className'];
+    const classes = code.properties.className;
     if (!Array.isArray(classes) || !classes.includes(MERMAID_CLASS)) return undefined;
     const [text] = code.children;
     if (text?.type !== 'text') throw new Error('A mermaid code block holds markup instead of plain text.');

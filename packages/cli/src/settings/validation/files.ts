@@ -47,7 +47,7 @@ export function validateRuleFilePaths(root: string, settings: Settings): Setting
         const ruleFiles = table.security?.semgrep_rules;
         const paths = [
             ...(['eslint', 'stylelint'] as const).flatMap((tool) =>
-                (table.tools?.[tool]?.['plugins'] ?? []).flatMap(({ path: value }, index) =>
+                (table.tools?.[tool]?.plugins ?? []).flatMap(({ path: value }, index) =>
                     value === undefined
                         ? []
                         : [{ value, key: 'path', path: [...path, 'tools', tool, 'plugins', index, 'path'] }],

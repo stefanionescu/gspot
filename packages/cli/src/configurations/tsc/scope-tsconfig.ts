@@ -23,55 +23,6 @@ import type { TypeScriptProject } from '#cli/types/parsers.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-/**
-Resolve each `types` entry from the folder of the authored project, because TypeScript looks from the generated
-config, and the packages that the project installed are out of reach from there.
-*/
-export function readAuthoredTypes(
-    authored: Pick<TypeScriptProject, 'path' | 'config'>,
-    folder: string,
-): { files: string[]; types?: string[] } {
-    const ts = requireTypescript();
-    const { options } = authored.config;
-    if (options.types === undefined) return { files: [] };
-    const found = options.types.map((entry) => {
-        const lookup = ts.resolveTypeReferenceDirective(entry, authored.path, options, ts.sys);
-        return { entry, path: lookup.resolvedTypeReferenceDirective?.resolvedFileName };
-    });
-    return {
-        files: found.flatMap(({ path }) => (path === undefined ? [] : [convertToPosixPath(relative(folder, path))])),
-        types: found.filter(({ path }) => path === undefined).map(({ entry }) => entry),
-    };
-}
-
-export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
-    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : DEFAULT_LEVEL_OPTIONS) };
-    if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
-        Object.assign(options, NESTJS_COMPILER_OPTIONS);
-    return options;
-}
-
-export function listEnforcedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
-    const ignored = listIgnoredRules(scope, TYPESCRIPT_TSCONFIG_CHECK);
-    return Object.fromEntries(
-        Object.entries(selectRequiredTsconfigOptions(level, scope.configurations)).filter(
-            ([name]) => !ignored.includes(name),
-        ),
-    );
-}
-
-/**
-Write the tsconfig of a scope below `folder`.
-
-@returns the path of the written file.
-*/
-export function writeScopeTsconfig(session: Session, scope: Scope, folder: string): string {
-    const path = join(folder, TSCONFIG_COPY_FOLDER, scope.path, TSCONFIG_FILE);
-    mkdirSync(dirname(path), { recursive: true });
-    writeFileSync(path, JSON.stringify(buildTsconfig(session, scope, path)));
-    return path;
-}
-
 function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();
     const { root, toolsRoot, cache } = session;
@@ -120,4 +71,53 @@ function buildTsconfig(session: Session, scope: Scope, file: string): Record<str
             include: components.map((component) => convertToPosixPath(relative(folder, join(root, component.path)))),
         }),
     };
+}
+
+/**
+Resolve each `types` entry from the folder of the authored project, because TypeScript looks from the generated
+config, and the packages that the project installed are out of reach from there.
+*/
+export function readAuthoredTypes(
+    authored: Pick<TypeScriptProject, 'path' | 'config'>,
+    folder: string,
+): { files: string[]; types?: string[] } {
+    const ts = requireTypescript();
+    const { options } = authored.config;
+    if (options.types === undefined) return { files: [] };
+    const found = options.types.map((entry) => {
+        const lookup = ts.resolveTypeReferenceDirective(entry, authored.path, options, ts.sys);
+        return { entry, path: lookup.resolvedTypeReferenceDirective?.resolvedFileName };
+    });
+    return {
+        files: found.flatMap(({ path }) => (path === undefined ? [] : [convertToPosixPath(relative(folder, path))])),
+        types: found.filter(({ path }) => path === undefined).map(({ entry }) => entry),
+    };
+}
+
+export function selectRequiredTsconfigOptions(level: Level, configurations: Configuration[]): Record<string, boolean> {
+    const options: Record<string, boolean> = { ...(level === 'all' ? COMPILER_OPTIONS : DEFAULT_LEVEL_OPTIONS) };
+    if (configurations.some((configuration) => configuration.name === NESTJS_CONFIGURATION))
+        Object.assign(options, NESTJS_COMPILER_OPTIONS);
+    return options;
+}
+
+export function listEnforcedTsconfigOptions(level: Level, scope: Scope): Record<string, boolean> {
+    const ignored = listIgnoredRules(scope, TYPESCRIPT_TSCONFIG_CHECK);
+    return Object.fromEntries(
+        Object.entries(selectRequiredTsconfigOptions(level, scope.configurations)).filter(
+            ([name]) => !ignored.includes(name),
+        ),
+    );
+}
+
+/**
+Write the tsconfig of a scope below `folder`.
+
+@returns the path of the written file.
+*/
+export function writeScopeTsconfig(session: Session, scope: Scope, folder: string): string {
+    const path = join(folder, TSCONFIG_COPY_FOLDER, scope.path, TSCONFIG_FILE);
+    mkdirSync(dirname(path), { recursive: true });
+    writeFileSync(path, JSON.stringify(buildTsconfig(session, scope, path)));
+    return path;
 }

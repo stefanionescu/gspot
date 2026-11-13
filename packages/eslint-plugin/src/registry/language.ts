@@ -18,6 +18,7 @@ import { noSwitchCaseLabels } from '../rules/control-flow/no-switch-case-labels.
 import { noUnenclosedMultilineBlock } from '../rules/control-flow/no-unenclosed-multiline-block.ts';
 import { noUnthrownError } from '../rules/control-flow/no-unthrown-error.ts';
 import { noUpdatedLoopCounter } from '../rules/control-flow/no-updated-loop-counter.ts';
+import { noBooleanParameters } from '../rules/functions/no-boolean-parameters.ts';
 import { noDetachedCall } from '../rules/functions/no-detached-call.ts';
 import { noEmptyReturnValue } from '../rules/functions/no-empty-return-value.ts';
 import { noExcessCallArguments } from '../rules/functions/no-excess-call-arguments.ts';
@@ -54,6 +55,7 @@ import { noDetachedDocComments } from '../rules/structure/no-detached-doc-commen
 import { noIndexImports } from '../rules/structure/no-index-imports.ts';
 import { noNestedTemplateLiterals } from '../rules/structure/no-nested-template-literals.ts';
 import { noRenamedExports } from '../rules/structure/no-renamed-exports.ts';
+import { noRenamedImports } from '../rules/structure/no-renamed-imports.ts';
 import { noTrivialFiles } from '../rules/structure/no-trivial-files.ts';
 import { restrictedSyntax } from '../rules/structure/restricted-syntax.ts';
 import { noRedundantOptional } from '../rules/types/no-redundant-optional.ts';
@@ -99,6 +101,7 @@ export const LANGUAGE_TOPICS = {
         noUpdatedLoopCounter,
     ],
     functions: [
+        noBooleanParameters,
         noDetachedCall,
         noEmptyReturnValue,
         noExcessCallArguments,
@@ -139,6 +142,7 @@ export const LANGUAGE_TOPICS = {
         noIndexImports,
         noNestedTemplateLiterals,
         noRenamedExports,
+        noRenamedImports,
         noTrivialFiles,
         restrictedSyntax,
     ],

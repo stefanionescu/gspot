@@ -16,7 +16,7 @@ buildRuleTester().run('no-unused-collection', noUnusedCollection, {
         },
         {
             code: 'function list() { const names = ["a"]; names[0] = "b"; }',
-            errors: [{ messageId: 'unused' }],
+            errors: [{ messageId: 'unused', data: { name: 'names' } }],
         },
         {
             code: 'function list(flag) { let seen = []; seen = new Set(); if (flag) seen.add(1); }',

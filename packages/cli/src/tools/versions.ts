@@ -100,7 +100,7 @@ function parseVersionOutput(tool: Tool, result: SpawnResult, metadataVersion: st
 }
 
 function readDistributionVersion(root: string, tool: Tool): string | undefined {
-    const name = tool.installers['pypi']?.name;
+    const name = tool.installers.pypi?.name;
     if (name === undefined) return undefined;
     const files = openFiles(root);
     const prefix = `${normalizePythonName(name)}-`;

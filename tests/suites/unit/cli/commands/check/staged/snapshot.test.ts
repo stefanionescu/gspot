@@ -56,6 +56,16 @@ async function createCaseClashingSandbox(): Promise<TestdirResult> {
     }
 }
 
+function isCaseFolding(): boolean {
+    const root = mkdtempSync(join(tmpdir(), 'gspot-case-'));
+    try {
+        writeFileSync(join(root, 'case-probe'), 'Probe.');
+        return existsSync(join(root, 'CASE-PROBE'));
+    } finally {
+        rmSync(root, { recursive: true });
+    }
+}
+
 test('a staged check reads index bytes and file modes, converts no line endings, and writes nothing into the working tree', async () => {
     await using sandbox = await createGitSandbox({});
     const command = buildProgramCommand(
@@ -169,7 +179,7 @@ test('a staged check keeps each Python scope config and reports the installed de
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     const contents = await readFile(join(sandbox.path, getManifestTarget('python', 'basedpyright.json')));
     expect(contents).toStrictEqual(previous);
-    await writeFile(join(sandbox.path, 'child/pyproject.toml'), project + '# Unstaged project change.\n');
+    await writeFile(join(sandbox.path, 'child/pyproject.toml'), `${project}# Unstaged project change.\n`);
     const rerun = parseCheckReport(await runGspot(sandbox.path, commandArguments));
     expect(rerun.code, rerun.stdout + rerun.stderr).toBe(1);
     expect(rerun.report.notes).toStrictEqual([DEPENDENCY_REVISION_NOTE]);
@@ -260,16 +270,6 @@ test('a staged check in a copy reads the pushed commits of the repository, not o
     expect(result.code, result.stdout + result.stderr).toBe(0);
     expect(result.report.checks[0]).toMatchObject({ status: 'passed', note: 'Checked 0 commit messages.' });
 });
-
-function isCaseFolding(): boolean {
-    const root = mkdtempSync(join(tmpdir(), 'gspot-case-'));
-    try {
-        writeFileSync(join(root, 'case-probe'), 'Probe.');
-        return existsSync(join(root, 'CASE-PROBE'));
-    } finally {
-        rmSync(root, { recursive: true });
-    }
-}
 
 test('a staged check with missing tools names the tool files of gspot that changed after they were staged', async () => {
     await using sandbox = await createGitSandbox({

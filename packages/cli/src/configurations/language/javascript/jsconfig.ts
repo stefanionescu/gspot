@@ -85,8 +85,8 @@ function buildJsconfigFile(planned: PlannedConfig): string {
     const ignoredGlobs = convertToGlobs(
         planned.ignoreSections.filter((section) => planned.level !== 'all' || section.key !== 'build'),
     );
-    const rootPrefix = convertToPosixPath(relative(dirname(target), '.')) + '/';
-    const scopePrefix = convertToPosixPath(relative(dirname(target), scopePath)) + '/';
+    const rootPrefix = `${convertToPosixPath(relative(dirname(target), '.'))}/`;
+    const scopePrefix = `${convertToPosixPath(relative(dirname(target), scopePath))}/`;
     const excluded = [...new Set([...ignoredGlobs, ...JAVASCRIPT_IGNORED_GLOBS])]
         .filter((path) => !path.startsWith('!'))
         .flatMap((path) => {

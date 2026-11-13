@@ -87,10 +87,12 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
     return nodes;
 }
 
-export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
-    if (node.type !== AST_NODE_TYPES.CallExpression) return false;
-    const { callee } = node;
+export function isCalleeNamed({ callee }: TSESTree.CallExpression, name: string): boolean {
     return ASTUtils.isIdentifier(callee) && callee.name === name;
+}
+
+export function isCallOf(node: TSESTree.Node, name: string): node is TSESTree.CallExpression {
+    return node.type === AST_NODE_TYPES.CallExpression && isCalleeNamed(node, name);
 }
 
 export function isTypeAlias(node: TSESTree.TSTypeAliasDeclaration): boolean {

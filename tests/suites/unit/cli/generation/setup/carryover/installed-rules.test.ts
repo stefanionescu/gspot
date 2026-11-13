@@ -32,7 +32,7 @@ test('scan sorts the ESLint rules of the repository by what gspot runs', async (
             'max-depth': [2, { max: 9 }],
             'no-alert': [0],
             'acme/no-legacy': [2],
-        }).map(([rule, value]) => [rule, convertRule(value, true)]),
+        }).map(([rule, value]) => [rule, convertRule(value, { hasSeverity: true })]),
     );
     const [definition] = PRINTED_RULE_TOOLS;
     const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
@@ -61,7 +61,10 @@ test('scan offers no plugin record for a rule of a plugin that gspot loads', asy
     await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
     await writePrinter(sandbox.path, { curly: [2], 'unicorn/no-null': [2] });
     const user = new Map(
-        ['unicorn/no-array-reduce', 'acme/no-legacy', 'curl/no-legacy'].map((rule) => [rule, convertRule([2], true)]),
+        ['unicorn/no-array-reduce', 'acme/no-legacy', 'curl/no-legacy'].map((rule) => [
+            rule,
+            convertRule([2], { hasSeverity: true }),
+        ]),
     );
     const [definition] = PRINTED_RULE_TOOLS;
     const text = `export default [{ rules: ${JSON.stringify(Object.fromEntries(user))} }];\n`;
@@ -75,7 +78,11 @@ test('scan offers no plugin record for a rule of a plugin that gspot loads', asy
 
 test.each([
     { name: 'the config of the repository', printed: { semi: [2] }, user: undefined },
-    { name: 'the tool of gspot', printed: undefined, user: new Map([['semi', convertRule([2], true)]]) },
+    {
+        name: 'the tool of gspot',
+        printed: undefined,
+        user: new Map([['semi', convertRule([2], { hasSeverity: true })]]),
+    },
 ])('scan says so when $name cannot print its rules', async ({ printed, user }) => {
     await using sandbox = await createGitSandbox({ 'a.js': 'export const a = 1;\n' });
     if (printed !== undefined) await writePrinter(sandbox.path, printed);
@@ -94,7 +101,7 @@ test('scan compares only the rules that the config file names, not the rules of 
             'no-const-assign': [0],
             'no-constant-binary-expression': [2],
             semi: [0],
-        }).map(([rule, value]) => [rule, convertRule(value, true)]),
+        }).map(([rule, value]) => [rule, convertRule(value, { hasSeverity: true })]),
     );
     const [definition] = PRINTED_RULE_TOOLS;
     const text = "import shared from 'shared-config';\nexport default [...shared, { rules: { semi: 'off' } }];\n";

@@ -1,4 +1,4 @@
-import { type TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
 import { MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
@@ -27,7 +27,7 @@ export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
     create(context) {
         if (!listImportedModules(context.sourceCode).has('chai')) return {};
         return {
-            'CallExpression[callee.object.type="ThisExpression"][callee.property.name="timeout"]'(
+            'CallExpression[callee.object.type="ThisExpression"][callee.property.name="timeout"]': function (
                 node: TSESTree.CallExpression,
             ) {
                 const value = getLiteralValue(node.arguments[0], context.sourceCode);

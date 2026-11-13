@@ -1,7 +1,10 @@
+import { isDeepStrictEqual } from 'node:util';
+
 import type { z } from 'zod';
 
 import {
     EVERY_CHECK,
+    SHIPPED_ESLINT_RULES,
     WEAKENING_FIXES,
     WEAKENING_IGNORE_HELP,
     WEAKENING_RULES,
@@ -20,8 +23,8 @@ import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
-import { type BuiltInCheckResult, type CheckCode, type CheckSession } from '#cli/types/engine/run.ts';
-import type { IgnoreRecord, Settings, TomlTable } from '#cli/types/settings.ts';
+import type { BuiltInCheckResult, CheckCode, CheckSession } from '#cli/types/engine/run.ts';
+import type { IgnoreRecord, Settings, SettingsTable, TomlTable } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
     return head.flatMap((record) => {
@@ -108,6 +111,91 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
     });
 }
 
+function listAllowedImports(rules: Settings['import_rule'], name: string): string[] {
+    const index = rules.findIndex((rule) => rule.name === name);
+    return rules[index]?.can_import ?? rules.slice(0, index).map((rule) => rule.name);
+}
+
+/**
+A rule that the head adds widens no rule of the base, so its name does not count as a new import of the rules below
+it.
+*/
+function listImportRuleWeakenings(base: Settings, head: Settings): Weakening[] {
+    const file = SETTINGS_FILE;
+    const rule = WEAKENING_RULES.importRule;
+    const names = new Set(base.import_rule.map(({ name }) => name));
+    const tables = new Map(listSettingsTables(head).map(({ table, scopePath }) => [scopePath, table]));
+    return [
+        ...base.import_rule.flatMap(({ name, paths }) => {
+            const kept = head.import_rule.find((each) => each.name === name);
+            if (kept === undefined) return [{ rule, file, change: `The import rule ${name} goes` }];
+            const allowed = listAllowedImports(base.import_rule, name);
+            const imports = listAllowedImports(head.import_rule, name).filter(
+                (each) => names.has(each) && !allowed.includes(each),
+            );
+            const added = kept.paths.filter((path) => !paths.includes(path));
+            return [
+                ...(imports.length > 0
+                    ? [{ rule, file, change: `The import rule ${name} may import ${imports.join(', ')}` }]
+                    : []),
+                ...(added.length > 0
+                    ? [{ rule, file, change: `The import rule ${name} covers ${added.join(', ')}` }]
+                    : []),
+            ];
+        }),
+        ...listSettingsTables(base).flatMap(({ table, scopePath }) => {
+            const kept = tables.get(scopePath)?.javascript?.import_boundaries ?? [];
+            const removed = (table.javascript?.import_boundaries ?? []).filter((folder) => !kept.includes(folder));
+            const place = scopePath === '' ? '' : ` in ${scopePath}`;
+            return removed.length === 0
+                ? []
+                : [{ rule, file, change: `javascript.import_boundaries loses ${removed.join(', ')}${place}` }];
+        }),
+    ];
+}
+
+function listMovedOptionKeys(shipped: unknown, options: readonly unknown[]): string[] {
+    const shippedOptions = Array.isArray(shipped) ? shipped.slice(1) : [];
+    return shippedOptions.flatMap((shippedOption: unknown, index) => {
+        if (!isTable(shippedOption)) return [];
+        const option = options[index];
+        return Object.keys(shippedOption).filter(
+            (key) => !isTable(option) || !isDeepStrictEqual(option[key], shippedOption[key]),
+        );
+    });
+}
+
+function listRuleEntries(table: SettingsTable | undefined): Array<[string, readonly unknown[]]> {
+    const rules = table?.tools?.eslint?.rules;
+    return rules === undefined ? [] : Object.entries(rules);
+}
+
+/**
+ESLint options of `gspot.toml` replace the shipped options of the rule. Options that the base holds unchanged are not
+reported again.
+*/
+function listRuleOptionWeakenings(base: Settings, head: Settings): Weakening[] {
+    const tables = new Map(listSettingsTables(base).map(({ table, scopePath }) => [scopePath, table]));
+    return listSettingsTables(head).flatMap(({ table, scopePath }) => {
+        const previous = new Map(listRuleEntries(tables.get(scopePath)));
+        const place = scopePath === '' ? '' : ` in ${scopePath}`;
+        return listRuleEntries(table)
+            .filter(([name, options]) => !isDeepStrictEqual(previous.get(name), options))
+            .flatMap(([name, options]) => {
+                const keys = listMovedOptionKeys(SHIPPED_ESLINT_RULES[name], options);
+                return keys.length === 0
+                    ? []
+                    : [
+                          {
+                              rule: WEAKENING_RULES.ruleOptions,
+                              file: SETTINGS_FILE,
+                              change: `The options of ${name} in tools.eslint.rules leave out or change the shipped ${keys.join(', ')}${place}`,
+                          },
+                      ];
+            });
+    });
+}
+
 /**
 Reads a base file that the schema refuses without the paths that the schema issues name, so one unknown or renamed
 key costs that key and the rest still compares. Issues of one list arrive in index order, so the removal runs from
@@ -141,6 +229,8 @@ function listSettingsWeakenings(text: string, head: Settings, tracked: string[])
         ...listConfigurationWeakenings(base, head, tracked),
         ...listSwitchWeakenings(base, head),
         ...listSettingMoves(base, head),
+        ...listImportRuleWeakenings(base, head),
+        ...listRuleOptionWeakenings(base, head),
     ];
 }
 

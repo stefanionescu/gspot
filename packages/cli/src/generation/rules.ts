@@ -61,7 +61,7 @@ function buildLevelRuleText(text: string, level: Level): string {
         through = cut.end;
     }
     output.push(text.slice(through));
-    return output.join('').trimEnd() + '\n';
+    return `${output.join('').trimEnd()}\n`;
 }
 
 function listIndexLines(files: RuleFile[]): string[] {

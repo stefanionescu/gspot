@@ -39,6 +39,7 @@ const wordListSchema = z.strictObject({
     words: z.string().array(),
     categories: z.string().array().optional(),
     first_word: z.boolean().optional(),
+    whole_name: z.boolean().optional(),
 });
 
 const categoryCasesSchema = z.strictObject({ cases: z.enum(CASE_NAMES).array() });
@@ -133,6 +134,9 @@ export const checkFieldsSchema = z.strictObject({
     limits: z.union([nonemptyStringSchema.array(), z.record(nonemptyStringSchema, nonemptyStringSchema)]).optional(),
     limit_languages: z.enum(SETTING_LANGUAGES).array().optional(),
     reads_deleted_paths: z.boolean().optional(),
+    rules: z.string().regex(RULE_FILE_PATTERN).array().min(1).optional().meta({
+        description: 'The rule files that state what the check enforces, which gspot explain names.',
+    }),
     run_in_copy: z.boolean().optional(),
     binary_files: z.boolean().optional(),
     large_files: z.boolean().optional().meta({

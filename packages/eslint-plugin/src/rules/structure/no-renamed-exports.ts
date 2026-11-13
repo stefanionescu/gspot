@@ -2,7 +2,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { isAlias } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
-import { type RenamedValue } from '../../types/structure.ts';
+import type { RenamedValue } from '../../types/structure.ts';
 
 function listPropertyRenames(property: TSESTree.Property | TSESTree.RestElement): RenamedValue[] {
     if (property.type !== AST_NODE_TYPES.Property || property.computed) return [];

@@ -27,7 +27,6 @@ export const GSPOT_FIXED_NAMES: ReadonlySet<string> = new Set([SETTINGS_FILE]);
 // function-order check
 export const DEFAULT_EXPORT_NAME = 'default';
 export const FUNCTION_ORDER_RULE = 'private-below-public';
-export const REFERENCE_TYPES = ['identifier', 'simple_identifier'];
 export const SCRIPT_FUNCTION_DECLARATIONS: ReadonlySet<string> = new Set([
     'function_declaration',
     'generator_function_declaration',
@@ -37,6 +36,7 @@ export const SCRIPT_FUNCTION_VALUES: ReadonlySet<string> = new Set([
     'function_expression',
     'generator_function',
 ]);
+export const TEST_CALL_NAMES: ReadonlySet<string> = new Set(['describe', 'it', 'test']);
 
 // import-rules check
 export const CAPITALIZED_NAME = /^\p{Lu}/u;
@@ -157,6 +157,35 @@ export const LANGUAGE_NAME_NODES: Readonly<Record<ParsedLanguage, string>> = {
 };
 export const ONE_STATEMENT = '1 statement';
 export const PYTHON_EXPORT_LIST = '__all__';
+export const SCRIPT_COUNTED_DECLARATIONS: ReadonlySet<string> = new Set([
+    'abstract_class_declaration',
+    'class_declaration',
+    'enum_declaration',
+    'lexical_declaration',
+    'variable_declaration',
+]);
+export const SCRIPT_GRAMMARS: ReadonlySet<string> = new Set(['javascript', 'typescript', 'tsx']);
+export const SCRIPT_MODULE_NAME_PARENTS: ReadonlySet<string> = new Set([
+    'export_specifier',
+    'import_clause',
+    'import_specifier',
+    'namespace_import',
+]);
+// The declarations that name the code inside them: the caller of a call, or the definition of a name.
+export const SCRIPT_NAMED_NODES: ReadonlySet<string> = new Set([
+    'class_declaration',
+    'function_declaration',
+    'function_signature',
+    'generator_function_declaration',
+    'variable_declarator',
+]);
+export const SCRIPT_NAME_NODES = ['identifier', 'shorthand_property_identifier'];
+export const SCRIPT_TYPE_DECLARATIONS: ReadonlySet<string> = new Set([
+    'function_signature',
+    'interface_declaration',
+    'type_alias_declaration',
+]);
+export const SCRIPT_UNCOUNTED_STATEMENTS: ReadonlySet<string> = new Set(['empty_statement']);
 export const SWIFT_ACCESSOR_NODES = new Set([
     'computed_getter',
     'computed_setter',
@@ -175,6 +204,10 @@ export const SWIFT_FUNCTION_LABELS: Readonly<Record<string, string>> = {
     willset_clause: 'willSet observer',
     didset_clause: 'didSet observer',
 };
+// A component file calls script functions, and no grammar parses it, so its text is searched for names.
+export const TEMPLATE_EXTENSIONS: ReadonlySet<string> = new Set(['.astro', '.mdx']);
+export const TEMPLATE_IMPORT_CLAUSE = /\bimport\s[^;'"]*\bfrom\s/gu;
+export const TEMPLATE_NAME = /([\w$]+)(\s*\()?/gu;
 export const TRIVIAL_FILE_MESSAGE =
     'This file only imports, re-exports, or renames code. Import from the module that defines it, and delete this file.';
 export const TRIVIAL_FUNCTION_RULES = { trivialFunction: 'trivial-function', trivialFile: 'trivial-file' } as const;

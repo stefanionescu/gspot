@@ -20,7 +20,7 @@ import { includeFolderContents } from '#cli/system/matchers.ts';
 import { escapeGlob } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text.ts';
-import { type FormatOverride, type ScopeFormat, type WrittenFormat } from '#cli/types/configurations/general.ts';
+import type { FormatOverride, ScopeFormat, WrittenFormat } from '#cli/types/configurations/general.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Settings } from '#cli/types/settings.ts';
@@ -127,19 +127,17 @@ function buildEditorconfigFile(planned: PlannedConfig): string {
             }));
         }),
     ];
-    return (
+    return `${
         EDITORCONFIG_ROOT_LINE +
         sections
             .map(
                 ({ path, options }) =>
-                    `[${path}]\n` +
-                    Object.entries(options)
+                    `[${path}]\n${Object.entries(options)
                         .map(([key, value]) => `${key} = ${String(value)}`)
-                        .join('\n'),
+                        .join('\n')}`,
             )
-            .join('\n\n') +
-        '\n'
-    );
+            .join('\n\n')
+    }\n`;
 }
 
 function buildPrettierFile(planned: PlannedConfig): string {

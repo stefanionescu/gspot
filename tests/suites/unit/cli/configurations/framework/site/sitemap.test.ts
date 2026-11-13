@@ -40,8 +40,9 @@ test('a sitemap index supplies the base path for encoded and CDATA page URLs and
             remapped.push('https://example.com/docs/guide/'.replace(new RegExp(pattern!), () => target!));
         }
         remaps.push(remapped);
-        expect(mappings[1]).toBe(`^${escapeRegExp(buildUrl + 'docs/')} ${buildUrl}`);
-        expect(remaps.at(-1)?.[0]).toBe(buildUrl + 'guide/');
+        const docsUrl = escapeRegExp(`${buildUrl}docs/`);
+        expect(mappings[1]).toBe(`^${docsUrl} ${buildUrl}`);
+        expect(remaps.at(-1)?.[0]).toBe(`${buildUrl}guide/`);
         return Promise.resolve(buildProcessResult());
     });
     expect(await runSandboxCheck(sandbox.path, 'site/lychee')).toStrictEqual([]);

@@ -71,11 +71,9 @@ function findCategorySetting(
 }
 
 function mergeTable(
-    setting: Setting,
-    key: string,
     inherited: InheritedValue,
     table: WrittenScopeTable,
-    possibleKeys: string[],
+    { setting, key, possibleKeys }: { setting: Setting; key: string; possibleKeys: string[] },
 ): InheritedValue {
     let result = inherited;
     const written = possibleKeys
@@ -235,7 +233,7 @@ export function getSettingValue(
                     : { kind: 'configuration', name: shipped.configuration },
             reason: undefined,
         };
-    for (const table of tables) inherited = mergeTable(setting, key, inherited, table, keys);
+    for (const table of tables) inherited = mergeTable(inherited, table, { setting, key, possibleKeys: keys });
     return { key, setting, ...inherited };
 }
 

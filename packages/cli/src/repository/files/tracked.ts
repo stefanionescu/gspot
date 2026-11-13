@@ -9,7 +9,7 @@ import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system
 import { compareText } from '#cli/system/text.ts';
 import type { GitIndexFile, ListedFile, Repository } from '#cli/types/repository.ts';
 
-function readSymlinkFile(root: string, path: string, isTracked: boolean): ListedFile | undefined {
+function readSymlinkFile(root: string, path: string, { isTracked }: { isTracked: boolean }): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };
     let target: string | undefined;
     try {
@@ -34,7 +34,7 @@ function readListedFile(
         if (INSTALLED_DEPENDENCY_FOLDERS.has(posix.basename(path))) return undefined;
         return isInInstalledFolder(extractParentFolder(path))
             ? { path, size: stat.size, executable: false, isSymlink: true }
-            : readSymlinkFile(root, path, tracked.has(path));
+            : readSymlinkFile(root, path, { isTracked: tracked.has(path) });
     }
     if (!stat.isFile()) return undefined;
     const isExecutable = executables === undefined ? (stat.mode & EXECUTABLE_BITS) !== 0 : executables.has(path);

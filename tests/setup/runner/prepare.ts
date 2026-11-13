@@ -30,7 +30,7 @@ if (process.argv[2] !== 'e2e') {
         'node',
         join(REPOSITORY_ROOT, 'packages/cli', cliPackage.bin.gspot),
     ]);
-    await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), paths.join('\n') + '\n');
+    await writeFile(join(TEST_RUN_FOLDER, TOOL_PATHS_FILE), `${paths.join('\n')}\n`);
 }
 
 async function installTestTools(): Promise<string[]> {

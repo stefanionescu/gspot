@@ -40,7 +40,7 @@ export const noSetterInComponent = createRule<[], 'setter'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[callee.type="Identifier"][arguments.length=1]'(
+            'CallExpression[callee.type="Identifier"][arguments.length=1]': function (
                 node: TSESTree.CallExpression & { callee: TSESTree.Identifier },
             ) {
                 const hook = getStateHook(node.callee, source);

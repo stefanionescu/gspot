@@ -1,4 +1,4 @@
-import { type Node } from 'web-tree-sitter';
+import type { Node } from 'web-tree-sitter';
 
 import {
     END_OF_OPTIONS,

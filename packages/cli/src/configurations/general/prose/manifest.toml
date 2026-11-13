@@ -250,6 +250,7 @@ tool = "vale"
 example = "`Release on 03/04/2026.` reports `ambiguous-date`. Write `Release on March 4, 2026.` instead."
 help = "Write the date in ISO form, such as 2026-09-17, or with the month name."
 name = "dates"
+rules = ["WRITING.md"]
 stage = "commit"
 summary = "Reports a date such as 03/04/2026 in Markdown text and in code comments."
 why = "03/04/2026 means March or April, depending on where the reader lives."
@@ -260,6 +261,7 @@ help = "Rewrite the sentence the alert names, or add a real name and its reason 
 level = "all"
 name = "vale"
 output = { format = "vale" }
+rules = ["WRITING.md"]
 stage = "commit"
 summary = "Checks prose against the complete gspot style and the upstream packages in Markdown, and the comment rules in code comments."
 tool = "vale"
@@ -271,6 +273,7 @@ help = "Rewrite the sentence that the alert names."
 level = "all"
 name = "commit-message"
 output = { format = "vale" }
+rules = ["WRITING.md"]
 stage = "message"
 summary = "Runs the word rules of WRITING.md on a new commit message, except the rule on history."
 tool = "vale"

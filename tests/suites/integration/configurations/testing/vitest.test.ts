@@ -64,14 +64,13 @@ const VITEST_PROJECT_FILES = {
 
 const vitestProjectFiles = {
     ...VITEST_PROJECT_FILES,
-    'package.json':
-        JSON.stringify({
-            name: 'example',
-            version: '1.0.0',
-            private: true,
-            type: 'module',
-            devDependencies: { vitest: SANDBOX_PACKAGES.vitest },
-        }) + '\n',
+    'package.json': `${JSON.stringify({
+        name: 'example',
+        version: '1.0.0',
+        private: true,
+        type: 'module',
+        devDependencies: { vitest: SANDBOX_PACKAGES.vitest },
+    })}\n`,
 };
 
 async function createVitestProject(tables: string): Promise<TestdirResult> {

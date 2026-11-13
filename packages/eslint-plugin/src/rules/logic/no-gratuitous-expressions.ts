@@ -100,7 +100,7 @@ export const noGratuitousExpressions = createRule<[], 'decided'>({
                         data: { value: test.value ? 'truthy' : 'falsy' },
                     });
             },
-            ':statement'(node: TSESTree.Node) {
+            ':statement': function (node: TSESTree.Node) {
                 const { parent } = node;
                 if (parent?.type === AST_NODE_TYPES.IfStatement)
                     decided.set(

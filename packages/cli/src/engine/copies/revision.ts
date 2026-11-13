@@ -68,7 +68,7 @@ async function listUnchangedDependencies(
     );
     for (const indexFile of present) installed.readCanonicalPath(indexFile.path);
     const hashed = await runGit(root, GIT_HASH_ARGUMENTS, {
-        stdin: present.map((indexFile) => JSON.stringify(indexFile.path) + '\n').join(''),
+        stdin: present.map((indexFile) => `${JSON.stringify(indexFile.path)}\n`).join(''),
         cancelSignal,
     });
     if (hashed.code !== 0)

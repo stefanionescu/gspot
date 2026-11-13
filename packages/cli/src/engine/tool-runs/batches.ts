@@ -14,7 +14,7 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
 import type { CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts';
 
-function selectCommandLimit(platform: NodeJS.Platform, isBatchFile: boolean): number {
+function selectCommandLimit(platform: NodeJS.Platform, { isBatchFile }: { isBatchFile: boolean }): number {
     if (platform !== 'win32') return UNIX_COMMAND_LIMIT;
     return isBatchFile ? WINDOWS_COMMAND_LIMIT : WINDOWS_PROCESS_LIMIT;
 }
@@ -40,7 +40,7 @@ export function splitFileArguments(files: string[], fixed: string[], platform: N
         if (isBatchFile) return argument.length * WINDOWS_ESCAPE_EXPANSION + WINDOWS_ARGUMENT_OVERHEAD;
         return platform === 'win32' ? argument.length + WINDOWS_QUOTES_LENGTH : Buffer.byteLength(argument) + 1;
     };
-    const limit = selectCommandLimit(platform, isBatchFile);
+    const limit = selectCommandLimit(platform, { isBatchFile });
     const budget = limit - fixed.reduce((size, argument) => size + measure(argument), 0);
     if (budget < 0) throw new CheckStop('error', TOOL_ARGUMENTS_MESSAGE);
     const batches: string[][] = [[]];

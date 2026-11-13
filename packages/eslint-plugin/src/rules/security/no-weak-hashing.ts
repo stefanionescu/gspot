@@ -103,7 +103,7 @@ export const noWeakHashing = createRule<[], 'weak'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[arguments.length>0]'(node: TSESTree.CallExpression) {
+            'CallExpression[arguments.length>0]': function (node: TSESTree.CallExpression) {
                 const name = getQualifiedName(node, source) ?? '';
                 const weak = Object.hasOwn(HASH_FUNCTIONS, name) ? HASH_FUNCTIONS[name] : undefined;
                 if (weak?.has(getAlgorithm(source, node.arguments[0])) !== true) return;

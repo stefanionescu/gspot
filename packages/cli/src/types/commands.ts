@@ -25,7 +25,7 @@ import type { RunSelection, SessionOptions, StageFilter } from '#cli/types/engin
 import type { RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { Setting } from '#cli/types/manifests.ts';
-import type { PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
+import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
 import type { IgnoreRecord, InheritedSetting, Level, Settings, SettingsFile, TomlTable } from '#cli/types/settings.ts';
 import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -237,3 +237,15 @@ export type ScanInput = {
 };
 
 export type ScanSection = { title: string; rows: string[] };
+
+export type DoctorStates = {
+    hooks: string;
+    ci: string;
+    broken: DoctorTool[];
+    commandPrograms: ReadonlySet<string>;
+    systemTools: ReadonlySet<string>;
+    toolsWithoutMise: ReadonlySet<string>;
+    pinNotes: string[];
+};
+
+export type CleanHead = { hash: string; untracked: UntrackedFiles };

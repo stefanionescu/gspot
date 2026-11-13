@@ -5,9 +5,6 @@
 set -euo pipefail
 : "${usage_tag:?mise must provide the tag}"
 
-# shellcheck source=.mise/release/workflows.sh
-source .mise/release/workflows.sh
-
 # publish_package: Publishes a package version that npm does not serve yet.
 # Arguments:
 #   Package folder.
@@ -36,7 +33,7 @@ main() {
         exit 1
     fi
     commit=$(git rev-parse HEAD) || exit 1
-    assert_workflows_passed "${commit}"
+    mise run release:check-ci "${commit}"
     publish_package packages/eslint-plugin "${plugin_spec}"
     publish_package packages/cli "${cli_spec}"
 }

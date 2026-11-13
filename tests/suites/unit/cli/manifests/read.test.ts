@@ -12,11 +12,11 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
     expect(inherited.detect.filenames).toStrictEqual(['native.project']);
     expect(inherited.detect.paths).toStrictEqual(['source/**']);
     const explicit = buildConfiguration('native', {
-        tables: '[detect]\nfilenames = ["explicit.project"]\n' + tables,
+        tables: `[detect]\nfilenames = ["explicit.project"]\n${tables}`,
     });
     expect(explicit.detect.filenames).toStrictEqual(['explicit.project']);
     expect(explicit.detect.paths).toStrictEqual([]);
-    const empty = buildConfiguration('native', { tables: '[detect]\n' + tables });
+    const empty = buildConfiguration('native', { tables: `[detect]\n${tables}` });
     expect(empty.detect.filenames).toStrictEqual([]);
     expect(empty.detect.paths).toStrictEqual([]);
 });
@@ -24,11 +24,11 @@ test('a manifest without [detect] takes the matchers of [files]', () => {
 test('a tool name links to the configuration that declares it, listed after the consumer', () => {
     const consumer = {
         folder: 'src/configurations/infrastructure/consumer',
-        text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\n',
+        text: `${CONFIGURATION_TABLE}[[tool]]\nname = "probe"\n`,
     };
     const owner = {
         folder: 'src/configurations/general/owner',
-        text: CONFIGURATION_TABLE + '[[tool]]\nname = "probe"\nsystem = true\n',
+        text: `${CONFIGURATION_TABLE}[[tool]]\nname = "probe"\nsystem = true\n`,
     };
     const configurationsByName = parseConfigurations([consumer, owner]);
     expect(configurationsByName.get('owner')!.tools).toStrictEqual([
@@ -43,7 +43,7 @@ test.each([...MANIFEST_INVARIANT_CASES])('the loader refuses $name and names the
 });
 
 test('a manifest with invalid TOML names its file and line', () => {
-    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + 'broken = \n' }];
+    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: `${CONFIGURATION_TABLE}broken = \n` }];
     const position = new RegExp(String.raw`^${EXAMPLE_MANIFEST_FOLDER}/manifest\.toml:\d+:\d+ `, 'u');
     expect(() => parseConfigurations(manifests)).toThrow(
         matchFields<GspotError>({
@@ -55,6 +55,6 @@ test('a manifest with invalid TOML names its file and line', () => {
 });
 
 test('a reference to an undeclared tool names the missing tool', () => {
-    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: CONFIGURATION_TABLE + '[[tool]]\nname = "absent"\n' }];
+    const manifests = [{ folder: EXAMPLE_MANIFEST_FOLDER, text: `${CONFIGURATION_TABLE}[[tool]]\nname = "absent"\n` }];
     expect(() => parseConfigurations(manifests)).toThrow(/\babsent\b/u);
 });

@@ -43,7 +43,10 @@ buildRuleTester().run('no-unsafe-security-headers', noUnsafeSecurityHeaders, {
         },
         {
             code: 'import express from "express"; import helmet from "helmet"; const app = express(); app.use(helmet.referrerPolicy({ policy: "" }), helmet.referrerPolicy({ policy: "no-referrer-when-downgrade" }));',
-            errors: [{ messageId: 'header' }, { messageId: 'header' }],
+            errors: [
+                { messageId: 'header', data: { option: 'policy' } },
+                { messageId: 'header', data: { option: 'policy' } },
+            ],
         },
     ],
 });

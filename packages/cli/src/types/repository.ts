@@ -235,6 +235,13 @@ export type PushSearch = {
     boundaries: Set<string>;
 };
 
+export type PushBaseSearch = {
+    ref: string;
+    hash: string;
+    cancelSignal?: AbortSignal | undefined;
+    remoteRefs?: ReadonlyMap<string, string>;
+};
+
 export type MergeBase = { hash?: string; note?: string };
 
 export type ChangedPaths = { reference: string; paths?: string[]; commits?: string[]; note?: string };
@@ -253,3 +260,16 @@ type JsonValue = null | boolean | number | string | JsonValue[] | { [key: string
 export type GitEnvironment = { variables: Record<string, string | undefined> } | { failure: SpawnResult };
 
 export type GitLookup = { root: string; environment: Record<string, string | undefined> } | { failure: SpawnResult };
+
+export type RepositoryReadOptions = {
+    generatedPaths: GeneratedPaths[];
+    scopes: Array<Pick<ScopeFolder, 'path' | 'configurations'>>;
+};
+
+export type ConfigurationRequest = {
+    repository: Repository;
+    options: {
+        configurations?: string[] | undefined;
+        template?: { configurations: string[]; removed: string[] } | undefined;
+    };
+};

@@ -148,6 +148,23 @@ export const XCTEST_LINK_FILE_CASES = [
 ] as const;
 
 // rule files
+export const PLAYWRIGHT_RULE_CASES = [
+    {
+        name: 'a scope that depends on playwright without the test runner gets no PLAYWRIGHT.md',
+        files: { 'package.json': '{"devDependencies":{"playwright":"1.0.0"}}' },
+        rules: [],
+    },
+    {
+        name: 'a scope that depends on @playwright/test gets PLAYWRIGHT.md',
+        files: { 'package.json': '{"devDependencies":{"@playwright/test":"1.0.0"}}' },
+        rules: ['PLAYWRIGHT.md'],
+    },
+    {
+        name: 'a scope with a Playwright config file gets PLAYWRIGHT.md',
+        files: { 'package.json': '{}', 'e2e/playwright.config.ts': 'export default {};\n' },
+        rules: ['PLAYWRIGHT.md'],
+    },
+] as const;
 export const RUNTIME_RULE_CASES = [
     { name: 'a Deno script', runtime: 'deno', rules: ['DENO.md'] },
     { name: 'a Node.js script', runtime: 'node', rules: [] },

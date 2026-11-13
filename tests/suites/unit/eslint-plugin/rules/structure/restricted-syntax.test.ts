@@ -59,7 +59,7 @@ buildRuleTester().run<keyof (typeof restrictedSyntax)['meta']['messages'], Restr
                 filename: 'c:/repo/src/file.ts',
                 options: [{ selector: 'CallExpression', message: 'x', files: ['src/**'] }],
                 settings: { gspot: { root: 'C:/repo' } },
-                errors: [{ messageId: 'restricted' }],
+                errors: [{ messageId: 'restricted', data: { message: 'x' } }],
             },
         ],
     },

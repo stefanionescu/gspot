@@ -12,8 +12,8 @@ import {
 } from '../../config/structure.ts';
 import { isCallOf } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-import { type RuleContext } from '../../types/plugin.ts';
-import { type ImportBlock } from '../../types/structure.ts';
+import type { RuleContext } from '../../types/plugin.ts';
+import type { ImportBlock } from '../../types/structure.ts';
 
 function isToolDirective(comment: TSESTree.Comment): boolean {
     const text = comment.value.replace(LEADING_STAR, '').trim();

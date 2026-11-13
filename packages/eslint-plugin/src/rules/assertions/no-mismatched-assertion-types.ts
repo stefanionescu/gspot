@@ -84,12 +84,11 @@ export const noMismatchedAssertionTypes = createRule<[], 'incompatible'>({
         const source = context.sourceCode;
         const patched = new Set<TSESLint.Scope.Variable>();
         return {
-            'AssignmentExpression[operator="="][left.type="MemberExpression"][right.type=/^(?:Arrow)?FunctionExpression$/]'(
-                node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression },
-            ) {
-                const variable = getRootVariable(node.left.object, source);
-                if (variable !== null) patched.add(variable);
-            },
+            'AssignmentExpression[operator="="][left.type="MemberExpression"][right.type=/^(?:Arrow)?FunctionExpression$/]':
+                function (node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression }) {
+                    const variable = getRootVariable(node.left.object, source);
+                    if (variable !== null) patched.add(variable);
+                },
             CallExpression(node) {
                 const assertion = readAssertion(node, context);
                 if (assertion?.kind !== 'comparison' || assertion.comparison === 'loose') return;

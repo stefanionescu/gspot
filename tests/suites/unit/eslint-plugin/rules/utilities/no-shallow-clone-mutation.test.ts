@@ -21,7 +21,10 @@ buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {
         },
         {
             code: 'import { clone } from "lodash-es"; function save(settings) { const copy = clone(settings); delete copy.theme.color; copy.theme.size++; }',
-            errors: [{ messageId: 'shared' }, { messageId: 'shared' }],
+            errors: [
+                { messageId: 'shared', data: { advice: 'structuredClone() or _.cloneDeep()' } },
+                { messageId: 'shared', data: { advice: 'structuredClone() or _.cloneDeep()' } },
+            ],
         },
         {
             code: 'const _ = require("underscore"); function save(settings) { const copy = _.clone(settings); copy.theme = {}; copy.theme.font.size = 1; }',
@@ -29,7 +32,7 @@ buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {
         },
         {
             code: 'import clone from "lodash/clone"; function save(settings) { const copy = clone(settings); copy.theme = settings.other; copy.theme.color = "red"; }',
-            errors: [{ messageId: 'shared' }],
+            errors: [{ messageId: 'shared', data: { advice: 'structuredClone() or _.cloneDeep()' } }],
         },
         ...[
             'const copy = _.clone(settings); (copy as Settings).theme.color = "red";',
@@ -39,7 +42,7 @@ buildRuleTester().run('no-shallow-clone-mutation', noShallowCloneMutation, {
         ].map((code) => ({ code: `import _ from "lodash"; ${code}`, errors: [{ messageId: 'shared' as const }] })),
         {
             code: 'import _ from "lodash"; const copy = _.clone(settings); copy.items.push(1);',
-            errors: [{ messageId: 'shared' }],
+            errors: [{ messageId: 'shared', data: { advice: 'structuredClone() or _.cloneDeep()' } }],
         },
     ],
 });

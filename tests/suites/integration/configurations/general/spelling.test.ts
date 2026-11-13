@@ -40,6 +40,19 @@ path = "british/child"
 
 const installedSandbox = shareInstalledSandbox(SPELLING_SANDBOX);
 
+async function runTyposCheck(files: Record<string, string>) {
+    const sandbox = installedSandbox();
+    await using _sourceChange = await writeSandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));
+    const checked = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', 'spelling/typos', '--json']));
+    return {
+        ...checked,
+        files: checked.report.checks
+            .flatMap(({ findings }) => findings)
+            .map(({ file }) => file)
+            .toSorted(compareText),
+    };
+}
+
 test('typos uses the spelling locale of each scope at level all', async () => {
     const sourceFiles = {
         'gspot.toml': buildSandboxSettings(['spelling'], SPELLING_LOCALE_SETTINGS),
@@ -135,19 +148,6 @@ test('typos skips the message files of other languages, and checks the English o
         'src/translations/en.json',
     ]);
 });
-
-async function runTyposCheck(files: Record<string, string>) {
-    const sandbox = installedSandbox();
-    await using _sourceChange = await writeSandboxChanges(sandbox, buildSandboxChanges(SPELLING_SANDBOX.files, files));
-    const checked = parseCheckReport(await spawnGspot(sandbox.root, ['check', '--only', 'spelling/typos', '--json']));
-    return {
-        ...checked,
-        files: checked.report.checks
-            .flatMap(({ findings }) => findings)
-            .map(({ file }) => file)
-            .toSorted(compareText),
-    };
-}
 
 test('typos keeps its excluded paths for a file named on the command line', async () => {
     const { root } = installedSandbox();

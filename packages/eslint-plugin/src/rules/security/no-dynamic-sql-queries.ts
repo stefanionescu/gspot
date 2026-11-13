@@ -24,7 +24,7 @@ export const noDynamicSqlQueries = createRule<[], 'builtQuery'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[arguments.length>0]'(node: TSESTree.CallExpression) {
+            'CallExpression[arguments.length>0]': function (node: TSESTree.CallExpression) {
                 const [query] = node.arguments;
                 const method =
                     query?.type === AST_NODE_TYPES.CallExpression &&

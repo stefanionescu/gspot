@@ -79,7 +79,7 @@ test('a hooks folder outside the repository that core.hooksPath names is listed'
     const root = join(sandbox.path, 'project');
     runGitStep(root, ['init', '-q']);
     runGitStep(root, ['config', 'core.hooksPath', '../hooks']);
-    const { hooks } = await readHooks({ root: root });
+    const { hooks } = await readHooks({ root });
     expect(hooks).toStrictEqual([{ kind: 'hooksPath', path: '../hooks', files: ['pre-commit'] }]);
 });
 
@@ -116,12 +116,12 @@ test('a linked .githooks that core.hooksPath points into counts as githooks with
     runGitStep(root, ['init', '-q']);
     runGitStep(root, ['config', 'core.hooksPath', `${path}/_`]);
     await symlink('../outside', join(root, path), 'dir');
-    const linked = await readHooks({ root: root });
+    const linked = await readHooks({ root });
     expect(linked.hooks.filter(({ kind }) => kind === 'githooks')).toStrictEqual([]);
     await unlink(join(root, path));
     await createFileTree(root, { 'authored-hooks/pre-commit': '#!/bin/sh\nexit 0\n' });
     await symlink('authored-hooks', join(root, path), 'dir');
-    const authored = await readHooks({ root: root });
+    const authored = await readHooks({ root });
     expect(authored.hooks.filter(({ kind }) => kind === 'githooks')).toStrictEqual([
         { kind: 'githooks', path, files: ['pre-commit'] },
     ]);
@@ -138,7 +138,7 @@ test('a linked .lefthook.yml counts as lefthook configuration', async () => {
     await symlink('../outside/configuration', join(root, '.lefthook.yml'));
     await writeFile(join(root, '.git/hooks/pre-commit'), '#!/bin/sh\nexit 0\n');
     await chmod(join(root, '.git/hooks/pre-commit'), 0o755);
-    const { hooks } = await readHooks({ root: root });
+    const { hooks } = await readHooks({ root });
     expect(hooks).toStrictEqual([
         { kind: 'lefthook', path: '.lefthook.yml', files: [] },
         { kind: 'hooksPath', path: '.git/hooks', files: ['pre-commit'] },

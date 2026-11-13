@@ -10,7 +10,9 @@ import {
     TRIVIAL_FUNCTION_CASES,
 } from '#tests/config/configurations/structure/code.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
@@ -151,4 +153,101 @@ test.each([...TRIVIAL_FILES])('$name gets the findings $expected', async ({ lang
     });
     const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
     expect(findings.map(({ rule }) => rule)).toStrictEqual([...expected]);
+});
+
+test('an exported TypeScript function of one statement with one caller is reported', async () => {
+    await using sandbox = await createSandbox({
+        configurations: ['typescript'],
+        files: { 'package.json': '{"private":true}\n' },
+    });
+    const caller = `import { isBlank } from './text.ts';
+
+export function listWords(lines: string[]): string[] {
+    return lines.filter((line) => !isBlank(line)).flatMap((line) => line.split(' '));
+}
+`;
+    await assertCheckSample(sandbox, {
+        check: 'structure/trivial-functions',
+        files: {
+            'src/text.ts': `export function isBlank(line: string): boolean {
+    return line.trim() === '';
+}
+`,
+            'src/words.ts': caller,
+        },
+        expected: {
+            file: 'src/text.ts',
+            rule: 'trivial-function',
+            line: 1,
+            message: 'Inline isBlank into listWords and delete it.',
+        },
+        corrected: {
+            files: {
+                'src/text.ts': `export function isBlank(line: string): boolean {
+    return line.trim() === '';
+}
+`,
+                'src/words.ts': caller,
+                'src/lines.ts': `import { isBlank } from './text.ts';
+
+export const countBlankLines = (lines: string[]): number => lines.filter((line) => isBlank(line)).length;
+`,
+            },
+        },
+    });
+});
+
+test('an exported function used as a table value passes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true}\n',
+        'src/text.ts': `export function isBlank(line: string): boolean {
+    return line.trim() === '';
+}
+
+export const trimLine = (line: string): string => line.trim();
+
+export function splitLine(line: string): string[] {
+    const words = line.split(' ');
+    const kept = words.filter((word) => word !== '');
+    return kept;
+}
+`,
+        'src/words.ts': `import { isBlank, splitLine } from './text.ts';
+
+export const LINE_TESTS = { blank: isBlank };
+
+export const WORDS = splitLine('a b');
+`,
+        'src/page.astro': `---
+import { trimLine } from './text.ts';
+---
+<p>{trimLine(' a ')}</p>
+<p>{trimLine(' b ')}</p>
+`,
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/trivial-functions')).toStrictEqual([]);
+});
+
+test('an exported function that one component file calls is reported', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
+        'package.json': '{"private":true}\n',
+        'src/text.ts': 'export const trimLine = (line: string): string => line.trim();\n',
+        'src/page.astro': "---\nimport { trimLine } from './text.ts';\n---\n<p>{trimLine(' a ')}</p>\n",
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'structure/trivial-functions');
+    expect(findings.map(({ file, message }) => ({ file, message }))).toStrictEqual([
+        { file: 'src/text.ts', message: 'Inline trimLine into src/page.astro and delete it.' },
+    ]);
+});
+
+test('an exported function of a file in javascript.entry_files passes', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `${buildSandboxSettings(['typescript'], { level: 'all' })}[javascript]\nentry_files = ["src/text.ts"]\n`,
+        'package.json': '{"private":true}\n',
+        'src/text.ts': 'export const trimLine = (line: string): string => line.trim();\n',
+        'src/words.ts': "import { trimLine } from './text.ts';\n\nexport const WORD = trimLine(' a ');\n",
+    });
+    expect(await runSandboxCheck(sandbox.path, 'structure/trivial-functions')).toStrictEqual([]);
 });

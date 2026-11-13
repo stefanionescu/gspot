@@ -282,7 +282,7 @@ test('an edit in one scope does not say it turns off a check that the other scop
 });
 
 test('an unchanged settings edit that writes generated files does not say No change', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': 'level = "basic"\n' + buildSandboxSettings([]) });
+    await using sandbox = await createGitSandbox({ 'gspot.toml': `level = "basic"\n${buildSandboxSettings([])}` });
     const result = await runGspot(sandbox.path, ['set', 'level', 'basic']);
     expect(result.stdout).toStartWith('gspot.toml already says this.\n');
     expect(result.stdout).toContain('wrote ');

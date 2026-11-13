@@ -30,13 +30,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import {
-    type CheckCode,
-    type CheckFinding,
-    type CheckResult,
-    type CheckRunOptions,
-    type CheckSession,
-} from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 

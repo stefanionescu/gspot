@@ -160,7 +160,7 @@ test('a Python tool uses the tool project environment, not the repository .venv'
         '1.2.3',
     );
     const tool = buildProgramPin('teller', '1.2.3');
-    tool.installers['pypi'] = { name: 'teller', version: '1.2.3' };
+    tool.installers.pypi = { name: 'teller', version: '1.2.3' };
     expect(await inspectTool(buildToolSearch(sandbox.path), tool)).toMatchObject({ state: 'missing' });
     await writeProgramCommand(
         sandbox.path,

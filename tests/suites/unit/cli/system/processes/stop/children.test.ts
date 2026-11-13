@@ -19,6 +19,42 @@ import {
 } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
+async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {
+    using children = spyOn(childProcess, 'spawn');
+    const controller = new AbortController();
+    const running = runProcess(['sh', '-c', script], {
+        cwd: root,
+        cancelSignal: controller.signal,
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
+    });
+    const launched = children.mock.results[0];
+    if (launched?.type !== 'return' || launched.value.pid === undefined) throw new Error('The stop started no child.');
+    const isReady = await waitForFile(join(root, 'ready'));
+    controller.abort();
+    const result = await running;
+    await waitForExit(-launched.value.pid);
+    expect(isReady).toBe(true);
+    expect(result.end).toBe('canceled');
+    return result;
+}
+
+async function captureProcess(
+    capture: 'text' | 'bytes',
+    command: string[],
+    options: CancelableSpawnOptions,
+): Promise<Omit<SpawnResult, 'stdout'> & { stdout: string | Buffer }> {
+    const bounded = {
+        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
+        ...options,
+    };
+    if (capture === 'text') return runProcess(command, limitCommand(command, bounded).options);
+    const chunks: Buffer[] = [];
+    const result = await streamProcess(command, limitCommand(command, bounded).options, async (output) => {
+        for await (const chunk of output) chunks.push(chunk);
+    });
+    return { ...result, stdout: Buffer.concat(chunks) };
+}
+
 test('a failed byte stream read stops the child and rejects with the stream error', async () => {
     await using sandbox = await testdir();
     using children = spyOn(childProcess, 'spawn');
@@ -123,25 +159,6 @@ test('the stop after a normal exit accepts the macOS refusal to signal an exited
     expect(result.end).toBe('exited');
 });
 
-async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {
-    using children = spyOn(childProcess, 'spawn');
-    const controller = new AbortController();
-    const running = runProcess(['sh', '-c', script], {
-        cwd: root,
-        cancelSignal: controller.signal,
-        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
-    });
-    const launched = children.mock.results[0];
-    if (launched?.type !== 'return' || launched.value.pid === undefined) throw new Error('The stop started no child.');
-    const isReady = await waitForFile(join(root, 'ready'));
-    controller.abort();
-    const result = await running;
-    await waitForExit(-launched.value.pid);
-    expect(isReady).toBe(true);
-    expect(result.end).toBe('canceled');
-    return result;
-}
-
 test.skipIf(isWindows)('a stopped tool gets SIGTERM, so it can clean up before it exits', async () => {
     await using sandbox = await testdir();
     await stopTool(
@@ -155,20 +172,3 @@ test.skipIf(isWindows)('a tool that ignores SIGTERM stops with SIGKILL', async (
     await using sandbox = await testdir();
     await stopTool(sandbox.path, `trap '' TERM; echo ready > ready; while :; do sleep 0.02; done`);
 });
-
-async function captureProcess(
-    capture: 'text' | 'bytes',
-    command: string[],
-    options: CancelableSpawnOptions,
-): Promise<Omit<SpawnResult, 'stdout'> & { stdout: string | Buffer }> {
-    const bounded = {
-        timeoutSeconds: CHILD_TIMEOUT_SECONDS,
-        ...options,
-    };
-    if (capture === 'text') return runProcess(command, limitCommand(command, bounded).options);
-    const chunks: Buffer[] = [];
-    const result = await streamProcess(command, limitCommand(command, bounded).options, async (output) => {
-        for await (const chunk of output) chunks.push(chunk);
-    });
-    return { ...result, stdout: Buffer.concat(chunks) };
-}

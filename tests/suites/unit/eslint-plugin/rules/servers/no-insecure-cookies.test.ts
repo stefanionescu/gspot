@@ -26,7 +26,7 @@ buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
         ].map((code) => ({ code, errors: [{ messageId: 'flag' as const }, { messageId: 'flag' as const }] })),
         {
             code: 'import session from "cookie-session"; const disabled = false; const options = { secure: disabled }; session({ secure: true, ...options });',
-            errors: [{ messageId: 'flag' }],
+            errors: [{ messageId: 'flag', data: { flag: 'secure' } }],
         },
     ],
 });

@@ -39,6 +39,21 @@ const NESTED_ESLINT_PATHS = [
     'app/source.js',
 ] as const;
 
+function buildExpectedFindings(cases: readonly ScriptFindingCase[]): LintFinding[] {
+    return cases
+        .flatMap((row) =>
+            [...row.everyLevel, ...(row.all ?? [])].map(({ ruleId, line }) => ({
+                file: row.file,
+                rule: ruleId,
+                line,
+            })),
+        )
+        .toSorted((left, right) => {
+            if (left.file !== right.file) return compareText(left.file, right.file);
+            return left.line === right.line ? compareText(left.rule ?? '', right.rule ?? '') : left.line - right.line;
+        });
+}
+
 test("a child scope's test_files and script_files get the test and script rule blocks", async () => {
     await using sandbox = await testdir({
         ...NESTED_ESLINT_FILES,
@@ -134,18 +149,3 @@ test('Node scripts without an extension get syntax, global, engine, import and s
         expect(findings).toStrictEqual(isCorrected ? [] : buildExpectedFindings(EXTENSIONLESS_SCRIPT_CASES));
     }
 });
-
-function buildExpectedFindings(cases: readonly ScriptFindingCase[]): LintFinding[] {
-    return cases
-        .flatMap((row) =>
-            [...row.everyLevel, ...(row.all ?? [])].map(({ ruleId, line }) => ({
-                file: row.file,
-                rule: ruleId,
-                line,
-            })),
-        )
-        .toSorted((left, right) => {
-            if (left.file !== right.file) return compareText(left.file, right.file);
-            return left.line === right.line ? compareText(left.rule ?? '', right.rule ?? '') : left.line - right.line;
-        });
-}

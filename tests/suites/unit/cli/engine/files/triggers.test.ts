@@ -107,9 +107,7 @@ test('a deleted file from another language does not trigger a TypeScript project
 
 test(`deleting a file of a child scope runs only the child project's check`, async () => {
     await using sandbox = await createGitSandbox({
-        'gspot.toml':
-            TWO_SCOPES_SETTINGS +
-            `
+        'gspot.toml': `${TWO_SCOPES_SETTINGS}
 [[scope]]
 path = "api/nested"
 configurations = []
@@ -199,7 +197,7 @@ test('dependencies/osv-scanner reads every lockfile, and runs only when a trigge
         expect(triggered!.files).toStrictEqual(scopeCheck!.files);
         const [unrelated] = planChecks(session, {
             ...options,
-            selection: { content: 'index', paths: [prefix + 'source.txt'] },
+            selection: { content: 'index', paths: [`${prefix}source.txt`] },
         });
         expect(isActive(unrelated!)).toBe(false);
     }

@@ -23,7 +23,7 @@ export const noSelfStateUpdate = createRule<[], 'useless'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression[callee.type="Identifier"][arguments.length=1][arguments.0.type="Identifier"]'(
+            'CallExpression[callee.type="Identifier"][arguments.length=1][arguments.0.type="Identifier"]': function (
                 node: TSESTree.CallExpression & { callee: TSESTree.Identifier; arguments: [TSESTree.Identifier] },
             ) {
                 const hook = getStateHook(node.callee, source);

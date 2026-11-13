@@ -48,7 +48,7 @@ export const preferTypeAlias = createRule<[], 'alias'>({
         return {
             TSUnionType: inspect,
             TSIntersectionType: inspect,
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const nodes of uses.values()) {
                     const repeated = findRepeatedType(nodes);
                     if (repeated !== undefined) context.report(repeated);

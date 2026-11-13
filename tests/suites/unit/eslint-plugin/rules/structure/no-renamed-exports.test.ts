@@ -35,10 +35,16 @@ buildRuleTester().run('no-renamed-exports', noRenamedExports, {
             code: 'import { b } from "./owner"; export const a = b.c.d;',
             errors: [{ messageId: 'renamed', data: { name: 'a', source: 'b.c.d' } }],
         },
-        { code: 'const b = 1; export const a = b as B;', errors: [{ messageId: 'renamed' }] },
+        {
+            code: 'const b = 1; export const a = b as B;',
+            errors: [{ messageId: 'renamed', data: { name: 'a', source: 'b as B' } }],
+        },
         {
             code: 'import { b, d } from "./owner"; export const a = b, c = d;',
-            errors: [{ messageId: 'renamed' }, { messageId: 'renamed' }],
+            errors: [
+                { messageId: 'renamed', data: { name: 'a', source: 'b' } },
+                { messageId: 'renamed', data: { name: 'c', source: 'd' } },
+            ],
         },
         {
             code: 'import settings from "./settings"; export const { owner: { name: OWNER } = {}, "home-page": homePage } = settings;',
@@ -61,7 +67,13 @@ buildRuleTester().run('no-renamed-exports', noRenamedExports, {
             name: 'a rename made in the import and exported reports the imported name',
             errors: [{ messageId: 'renamed', data: { name: 'alias', source: 'owner' } }],
         },
-        { code: 'import box from "x";\ntypeof box.a;\nexport const other = box;', errors: [{ messageId: 'renamed' }] },
-        { code: 'const value = 1;\nexport { value as "renamed" };', errors: [{ messageId: 'renamed' }] },
+        {
+            code: 'import box from "x";\ntypeof box.a;\nexport const other = box;',
+            errors: [{ messageId: 'renamed', data: { name: 'other', source: 'box' } }],
+        },
+        {
+            code: 'const value = 1;\nexport { value as "renamed" };',
+            errors: [{ messageId: 'renamed', data: { name: 'renamed', source: 'value' } }],
+        },
     ],
 });

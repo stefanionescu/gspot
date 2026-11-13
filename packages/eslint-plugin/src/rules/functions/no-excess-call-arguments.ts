@@ -56,7 +56,7 @@ export const noExcessCallArguments = createRule<[], 'arguments'>({
                     );
                 if (owner !== undefined) variadic.add(owner);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const [call, declaration] of calls) {
                     if (variadic.has(declaration) || isEmptyFunction(declaration)) continue;
                     context.report({

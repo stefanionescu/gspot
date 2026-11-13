@@ -17,17 +17,6 @@ import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
-test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
-    await runQuickstart(PYTHON_TUTORIAL);
-});
-
-test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
-    'a Swift project reports its finding through the installed hook and passes after the fix',
-    async () => {
-        await runQuickstart(SWIFT_TUTORIAL);
-    },
-);
-
 async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
     await using sandbox = await testdir();
     const root = join(sandbox.path, tutorial.folder);
@@ -93,3 +82,14 @@ function assertCommitRejected(root: string, rule: string, environment: Record<st
     expect(refused.code, refused.stdout + refused.stderr).toBe(1);
     expect(refused.stdout + refused.stderr).toContain(rule);
 }
+
+test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
+    await runQuickstart(PYTHON_TUTORIAL);
+});
+
+test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
+    'a Swift project reports its finding through the installed hook and passes after the fix',
+    async () => {
+        await runQuickstart(SWIFT_TUTORIAL);
+    },
+);

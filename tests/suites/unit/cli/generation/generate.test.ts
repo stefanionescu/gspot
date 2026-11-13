@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { parse as parseIni } from 'ini';
 import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
 import * as prettier from 'prettier';
-import { type Options } from 'prettier';
+import type { Options } from 'prettier';
 import { createFileTree } from 'testdirs';
 import ts from 'typescript';
 import { parse as parseYaml } from 'yaml';
@@ -26,6 +26,65 @@ import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+
+function parseJson(text: string, path: string): void {
+    const errors: ParseError[] = [];
+    parseJsonc(text, errors, { allowTrailingComma: true });
+    if (errors.length > 0) throw new Error(`${path}: JSON error at offset ${String((errors[0] as ParseError).offset)}`);
+}
+
+function parseModule(text: string, path: string): void {
+    const result = ts.transpileModule(text, { reportDiagnostics: true, fileName: path });
+    const errors = (result.diagnostics ?? []).map((message) =>
+        ts.flattenDiagnosticMessageText(message.messageText, '\n'),
+    );
+    if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
+}
+
+function parseConfig(text: string, path: string): void {
+    const parsers: Record<string, (text: string, path: string) => void> = {
+        coveragerc: (text) => {
+            parseIni(text);
+        },
+        '.cfg': (text) => {
+            parseIni(text);
+        },
+        '.ini': (text) => {
+            parseIni(text);
+        },
+        '.json': (text) => {
+            JSON.parse(text);
+        },
+        '.jsonc': parseJson,
+        'pyrightconfig.json': parseJson,
+        '.webmanifest': (text) => {
+            JSON.parse(text);
+        },
+        '.toml': (text) => {
+            parseToml(text);
+        },
+        '.yml': (text) => {
+            parseYaml(text);
+        },
+        '.yaml': (text) => {
+            parseYaml(text);
+        },
+        '.mjs': (text, path) => {
+            const result = runBlockingCommand(['node', '--input-type=module', '--check'], {
+                cwd: process.cwd(),
+                stdin: text,
+            });
+            if (result.code !== 0) throw new Error(`${path}: ${result.stderr}`);
+        },
+        '.cjs': parseModule,
+        '.js': parseModule,
+        '.ts': parseModule,
+    };
+
+    const parser = parsers[basename(path)] ?? parsers[extname(path)];
+    if (parser === undefined) throw new Error(`${path}: no generated-file parser is declared.`);
+    parser(text, path);
+}
 
 test.each(['ios app', 'web [old]'])(
     'generated attributes mark the generated files of the scope folder %p',
@@ -180,62 +239,3 @@ test('format.indent_width reaches EditorConfig, Prettier and each config file', 
     expect(generated.get(getManifestTarget('sql', 'sqlfluff.cfg'))).toContain(`tab_space_size = ${String(width)}`);
     expect(generated.get(getManifestTarget('swift', 'swiftformat'))).toContain(`--indent ${String(width)}\n`);
 });
-
-function parseJson(text: string, path: string): void {
-    const errors: ParseError[] = [];
-    parseJsonc(text, errors, { allowTrailingComma: true });
-    if (errors.length > 0) throw new Error(`${path}: JSON error at offset ${String((errors[0] as ParseError).offset)}`);
-}
-
-function parseModule(text: string, path: string): void {
-    const result = ts.transpileModule(text, { reportDiagnostics: true, fileName: path });
-    const errors = (result.diagnostics ?? []).map((message) =>
-        ts.flattenDiagnosticMessageText(message.messageText, '\n'),
-    );
-    if (errors.length > 0) throw new Error(`${path}: ${errors.join('; ')}`);
-}
-
-function parseConfig(text: string, path: string): void {
-    const parsers: Record<string, (text: string, path: string) => void> = {
-        coveragerc: (text) => {
-            parseIni(text);
-        },
-        '.cfg': (text) => {
-            parseIni(text);
-        },
-        '.ini': (text) => {
-            parseIni(text);
-        },
-        '.json': (text) => {
-            JSON.parse(text);
-        },
-        '.jsonc': parseJson,
-        'pyrightconfig.json': parseJson,
-        '.webmanifest': (text) => {
-            JSON.parse(text);
-        },
-        '.toml': (text) => {
-            parseToml(text);
-        },
-        '.yml': (text) => {
-            parseYaml(text);
-        },
-        '.yaml': (text) => {
-            parseYaml(text);
-        },
-        '.mjs': (text, path) => {
-            const result = runBlockingCommand(['node', '--input-type=module', '--check'], {
-                cwd: process.cwd(),
-                stdin: text,
-            });
-            if (result.code !== 0) throw new Error(`${path}: ${result.stderr}`);
-        },
-        '.cjs': parseModule,
-        '.js': parseModule,
-        '.ts': parseModule,
-    };
-
-    const parser = parsers[basename(path)] ?? parsers[extname(path)];
-    if (parser === undefined) throw new Error(`${path}: no generated-file parser is declared.`);
-    parser(text, path);
-}

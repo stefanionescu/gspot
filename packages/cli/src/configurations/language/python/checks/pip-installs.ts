@@ -14,7 +14,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { listMatchingLines } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {

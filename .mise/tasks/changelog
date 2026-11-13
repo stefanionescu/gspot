@@ -4,4 +4,4 @@
 set -euo pipefail
 : "${usage_version:?mise must provide the version}"
 
-bun .mise/release/changelog.ts "${usage_version}"
+bun packages/cli/scripts/changelog.ts "${usage_version}"

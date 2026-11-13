@@ -83,7 +83,7 @@ export const noElementOverwrite = createRule<[], 'overwrite'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'Program, BlockStatement'(node: TSESTree.Program | TSESTree.BlockStatement) {
+            'Program, BlockStatement': function (node: TSESTree.Program | TSESTree.BlockStatement) {
                 for (const overwrite of listOverwrites(node.body, source)) context.report(overwrite);
             },
             SwitchCase: (node) => {

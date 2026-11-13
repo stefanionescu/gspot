@@ -23,7 +23,7 @@ buildRuleTester().run('no-identical-functions', noIdenticalFunctions, {
         },
         {
             code: 'const a = () => run(\n  1,\n  2,\n);\nconst b = () => run(\n  1,\n  2,\n);',
-            errors: [{ messageId: 'identical' }],
+            errors: [{ messageId: 'identical', data: { line: 1 } }],
         },
     ],
 });

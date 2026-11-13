@@ -92,7 +92,7 @@ test('tools.commitlint.rules refuses type-enum and names commits.types', () => {
 });
 
 test.each([...SETTING_RULE_OPTIONS])('options for $rule are refused with $setting', ({ tables, setting, start }) => {
-    const errors = validateSettingsText('configurations = ["javascript", "markdown"]\n' + tables);
+    const errors = validateSettingsText(`configurations = ["javascript", "markdown"]\n${tables}`);
     expect(errors).toHaveLength(1);
     expect(errors[0]).toStartWith(start);
     expect(errors[0]).toContain(setting);

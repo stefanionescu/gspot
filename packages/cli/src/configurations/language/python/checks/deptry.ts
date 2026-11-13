@@ -23,9 +23,9 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
-import { type DeptryProject } from '#cli/types/configurations/language.ts';
+import type { DeptryProject } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { VersionedInstaller } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -56,7 +56,7 @@ Build the command that runs a pinned Python check with the installed project dep
 */
 function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ...string[]]): string[] {
     const tool = getTool(scope.configurations, command[0]);
-    const packagePin = tool.installers['pypi'] as VersionedInstaller;
+    const packagePin = tool.installers.pypi as VersionedInstaller;
     return [
         UV_TOOL,
         ...UV_RUN_ARGUMENTS,

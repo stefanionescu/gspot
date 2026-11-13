@@ -44,7 +44,7 @@ import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
 import { getUvPin } from '#cli/tools/pins.ts';
 import type { ActionPin, FrozenLockfile, Pipeline } from '#cli/types/generation.ts';
 import type { PackageManagerPin } from '#cli/types/repository.ts';
-import { type GeneratedFile, type Session } from '#cli/types/tools.ts';
+import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);

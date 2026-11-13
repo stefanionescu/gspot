@@ -177,7 +177,7 @@ export function buildSetupReference(): SetupReference[] {
                       name,
                       ...buildFrozenInstallArguments(
                           lockfile as keyof typeof FROZEN_INSTALLS,
-                          String(YARN_BERRY_MAJOR) + '.0.0',
+                          `${String(YARN_BERRY_MAJOR)}.0.0`,
                       ),
                   ];
         return {

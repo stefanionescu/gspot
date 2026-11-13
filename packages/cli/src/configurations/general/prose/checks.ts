@@ -26,7 +26,7 @@ import { extractExtension } from '#cli/system/paths.ts';
 import { hasValePackages } from '#cli/tools/installers/vale.ts';
 import type { ProseRoute, ProseRouteBatch } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 
@@ -51,9 +51,7 @@ async function runVale(
 async function runValeOnPaths(
     session: CheckSession,
     planned: PlannedCheck,
-    routes: ProseRoute[],
-    command: string[],
-    folder: string,
+    { routes, command, folder }: { routes: ProseRoute[]; command: string[]; folder: string },
 ): Promise<CheckFinding[]> {
     const batches = splitFileArguments(
         routes.map((route) => join(session.root, route.path)),
@@ -69,9 +67,7 @@ async function runValeOnPaths(
 async function runValeOnStdin(
     session: CheckSession,
     planned: PlannedCheck,
-    route: ProseRoute,
-    command: string[],
-    folder: string,
+    { route, command, folder }: { route: ProseRoute; command: string[]; folder: string },
 ): Promise<CheckFinding[]> {
     const findings = await runVale(
         session,
@@ -129,8 +125,8 @@ async function checkVale(session: CheckSession, planned: PlannedCheck): Promise<
     const results = await Promise.all(
         groups.map((group) =>
             group[0].mode === 'path'
-                ? runValeOnPaths(session, planned, group, command, folder)
-                : runValeOnStdin(session, planned, group[0], command, folder),
+                ? runValeOnPaths(session, planned, { routes: group, command, folder })
+                : runValeOnStdin(session, planned, { route: group[0], command, folder }),
         ),
     );
     return results.flat();

@@ -1,6 +1,6 @@
 import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { DEEP_MATCHERS, FRESH_PREDICATES, FRESH_VALUES, IDENTITY_STYLES } from '../../config/assertions/styles.ts';
+import { DEEP_MATCHERS, FRESH_PREDICATES, FRESH_VALUES, IDENTITY_STYLES } from '../../config/assertions/matchers.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertedValue, Assertion, ConstantFinding } from '../../types/assertions.ts';
@@ -92,7 +92,7 @@ export const noConstantAssertions = createRule<[], 'constant' | 'fresh' | 'ident
     create(context) {
         const source = context.sourceCode;
         return {
-            'CallExpression, MemberExpression'(node: TSESTree.CallExpression | TSESTree.MemberExpression) {
+            'CallExpression, MemberExpression': function (node: TSESTree.CallExpression | TSESTree.MemberExpression) {
                 const assertion = readAssertion(node, context);
                 if (assertion === undefined) return;
                 const finding =

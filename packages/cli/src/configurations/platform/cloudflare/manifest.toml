@@ -34,6 +34,7 @@ example = "An indented `X-Frame-Options: DENY` at the top of `_headers` reports 
 files = { filenames = ["_headers"] }
 help = "Write each block as a path, then indented lines of a name, a colon, and a value. Add each missing security header to the block for `/*`."
 name = "headers"
+rules = ["CLOUDFLARE.md"]
 runs = "scope"
 stage = "commit"
 summary = "Checks that `_headers` holds only blocks of a path followed by indented name-value lines, and that the `/*` block sets X-Content-Type-Options, Referrer-Policy, and X-Frame-Options or a CSP frame-ancestors."
@@ -54,6 +55,7 @@ example = "A Worker types file that differs from the output of `wrangler types` 
 generator_outputs = [{ pattern = "**/{setting:cloudflare.types_file}" }]
 help = "Run `wrangler types` and commit the file."
 name = "stale-types"
+rules = ["CLOUDFLARE.md"]
 runs = "scope"
 stage = "push"
 summary = "Checks that the environment types file, when the scope has one, is tracked and matches what wrangler writes."

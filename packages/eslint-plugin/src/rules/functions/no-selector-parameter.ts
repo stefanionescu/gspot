@@ -53,7 +53,7 @@ export const noSelectorParameter = createRule<[], 'selector'>({
         const bodies = new Set<TSESTree.Node>();
         const tests: TSESTree.Node[] = [];
         return {
-            ':function'(node: FunctionNode) {
+            ':function': function (node: FunctionNode) {
                 const isSkipped = node.type !== AST_NODE_TYPES.FunctionDeclaration && isCallbackArgument(node);
                 const statements = node.body.type === AST_NODE_TYPES.BlockStatement ? node.body.body : [];
                 const [statement] = statements;

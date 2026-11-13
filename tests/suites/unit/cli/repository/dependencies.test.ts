@@ -54,7 +54,7 @@ const ROOT_PACKAGE_WITHOUT_DEPENDENCIES = '{"name":"root-sandbox","private":true
 test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s gives no dependency file', async (path, content) => {
     await using sandbox = await createGitSandbox({ [path]: content, 'source.ts': 'export {};\n' });
 
-    const files = [{ path: path, ...TRACKED_SOURCE }];
+    const files = [{ path, ...TRACKED_SOURCE }];
     expect(await readDependencyFiles(createRunCache(sandbox.path), files)).toStrictEqual([]);
 });
 

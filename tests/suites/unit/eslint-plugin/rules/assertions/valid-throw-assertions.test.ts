@@ -49,7 +49,7 @@ buildTypedRuleTester().run('valid-throw-assertions', validThrowAssertions, {
         },
         {
             code: 'import { expect } from "bun:test";\ndeclare const total: number | string;\nexpect(total).toThrow();',
-            errors: [{ messageId: 'value', suggestions: [] }],
+            errors: [{ messageId: 'value', data: { matcher: 'toThrow' }, suggestions: [] }],
         },
         {
             code: 'import { expect, test } from "vitest";\ntest("load", async () => {\n    expect(async () => load()).toThrow();\n});',

@@ -16,6 +16,9 @@ buildRuleTester().run('no-misplaced-loop-counter', noMisplacedLoopCounter, {
             code: 'for (let row = 0; row < rows; column++) {}',
             errors: [{ messageId: 'misplaced', data: { tested: 'row, rows', updated: 'column' } }],
         },
-        { code: 'for (let node = head; node.next; iterator.next()) {}', errors: [{ messageId: 'misplaced' }] },
+        {
+            code: 'for (let node = head; node.next; iterator.next()) {}',
+            errors: [{ messageId: 'misplaced', data: { tested: 'node.next, node', updated: 'iterator' } }],
+        },
     ],
 });

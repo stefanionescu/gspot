@@ -175,11 +175,9 @@ export function planInitFiles(
     const blockRows = generated.blocks
         .filter(({ path }) => tracked.has(path) && path !== ATTRIBUTES_ROW.path)
         .map(({ path }) => ({ path, note: ADDS_BLOCK_NOTE }));
+    const settingsSource = scan.template === undefined ? '' : `, from ${scan.template.file}`;
     const write: InitPlan['write'] = [
-        {
-            path: SETTINGS_FILE,
-            note: 'your settings' + (scan.template === undefined ? '' : ', from ' + scan.template.file),
-        },
+        { path: SETTINGS_FILE, note: `your settings${settingsSource}` },
         { path: `${GSPOT_FOLDER}/`, note: GSPOT_FOLDER_NOTE },
         ...buildToolProjectRows(requirements),
         ...(hasAttributes ? [] : [attributesRow]),

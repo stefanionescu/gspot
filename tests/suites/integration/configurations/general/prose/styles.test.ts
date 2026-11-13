@@ -110,7 +110,7 @@ describe('with every style sample in one Vale run', () => {
 
 test('prose/vale at level all runs the gspot package rules without the Microsoft and Red Hat packages', async () => {
     const { root } = installedSandbox();
-    const sample = PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n') + '\n';
+    const sample = `${PACKAGE_STYLE_CASES.map(({ sample }) => sample).join('\n\n')}\n`;
     const path = 'sample.md';
     const settings = buildSandboxSettings(['prose'], { level: 'all' });
     await using _sourceChange = await writeSandboxChanges(installedSandbox(), {

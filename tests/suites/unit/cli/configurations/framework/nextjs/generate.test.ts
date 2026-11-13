@@ -14,7 +14,7 @@ test('Next.js keeps its project root and pages rule with a pages scope', async (
     const eslint = await buildEslint(sandbox.path);
     const config = (await eslint.calculateConfigForFile('pages/index.jsx')) as EslintConfiguration;
     expect(config.rules['@next/next/no-html-link-for-pages']?.[0]).toBe(2);
-    expect(config.settings['next']).toStrictEqual({ rootDir: sandbox.path });
+    expect(config.settings.next).toStrictEqual({ rootDir: sandbox.path });
 });
 
 test('Next.js reports require-server-only in .server files and server folders', async () => {

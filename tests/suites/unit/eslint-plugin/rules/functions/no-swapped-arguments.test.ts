@@ -52,7 +52,7 @@ buildTypedRuleTester().run('no-swapped-arguments', noSwappedArguments, {
         },
         {
             code: 'class Point { constructor(x: number, y: number) {} } declare const x: number; declare const y: number; new Point(y, x);',
-            errors: [{ messageId: 'swapped' }],
+            errors: [{ messageId: 'swapped', data: { first: 'y', second: 'x' } }],
         },
     ],
 });

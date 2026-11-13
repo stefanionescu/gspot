@@ -76,13 +76,13 @@ export const noUnexplainedTestSkips = createRule<[], 'skipped'>({
         const source = context.sourceCode;
         if (framework === 'node')
             return {
-                'CallExpression[arguments.length=2]'(node: TSESTree.CallExpression) {
+                'CallExpression[arguments.length=2]': function (node: TSESTree.CallExpression) {
                     const callback = getNodeTest(node, source)?.callback;
                     const isLast = callback !== undefined && callback === node.arguments[1];
                     const skip = isLast ? findSilentSkip(callback, source) : undefined;
                     if (skip !== undefined) context.report({ node: skip, messageId: 'skipped' });
                 },
-                'CallExpression[arguments.length=3]'(node: TSESTree.CallExpression) {
+                'CallExpression[arguments.length=3]': function (node: TSESTree.CallExpression) {
                     const options = getNodeTest(node, source) && node.arguments[1];
                     const skip = getOptionProperties(options, source).get('skip');
                     const value = getLiteralValue(skip?.value, source);

@@ -35,7 +35,7 @@ const maxLinesPerFunctionList = [
 ];
 const maxParamsList = [
     "error",
-    7
+    4
 ];
 const maxDepthList = [
     "error",
@@ -165,8 +165,7 @@ const noneOfList = [
     "rule \"tests-config",
     "rule \"tests-types",
     "rule \"tests-setup",
-    "rule \"tests",
-    "rule \"mise-scripts"
+    "rule \"tests"
 ];
 const runtimeDeclarations = [
     {
@@ -929,13 +928,6 @@ export default setRuleOptions(defineConfig([
                 "category": "rule \"tests",
                 "pattern": [
                     "tests/suites/**"
-                ],
-                "stopMatching": true
-            },
-            {
-                "category": "rule \"mise-scripts",
-                "pattern": [
-                    ".mise/release/**"
                 ],
                 "stopMatching": true
             },
@@ -1944,39 +1936,6 @@ export default setRuleOptions(defineConfig([
                                             "rule \"tests-config",
                                             "rule \"tests-types",
                                             "rule \"tests-setup"
-                                        ]
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    {
-                        "from": {
-                            "file": {
-                                "categories": "rule \"mise-scripts"
-                            }
-                        },
-                        "disallow": {
-                            "to": {
-                                "file": {
-                                    "path": "**/*"
-                                }
-                            }
-                        },
-                        "message": "Import rule \"mise-scripts\" may import only its own files, not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
-                    },
-                    {
-                        "from": {
-                            "file": {
-                                "categories": "rule \"mise-scripts"
-                            }
-                        },
-                        "allow": {
-                            "to": {
-                                "file": {
-                                    "categories": {
-                                        "anyOf": [
-                                            "rule \"mise-scripts"
                                         ]
                                     }
                                 }

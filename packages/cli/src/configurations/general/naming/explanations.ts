@@ -6,7 +6,8 @@ import type { RuleExplanations } from '#cli/types/tools.ts';
 // The page of banned-word prints the lists from the manifest that the check reads, so the two cannot differ.
 const SHIPPED_WORD_LISTS = Object.entries(readNamingDefaults().lists)
     .map(([group, list]) => {
-        const position = list.first_word === true ? ' as the first word' : '';
+        const firstWord = list.first_word === true ? ' as the first word' : '';
+        const position = list.whole_name === true ? ' as the whole name' : firstWord;
         const categories = list.categories === undefined ? '' : ` of ${list.categories.join(' and ')}`;
         return `${group.replaceAll('_', ' ')}${position}${categories} (${list.words.join(', ')})`;
     })

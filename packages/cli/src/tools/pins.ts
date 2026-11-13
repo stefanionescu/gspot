@@ -57,7 +57,7 @@ export function buildMiseInstall(configurations: Configuration[]): GeneratedFile
 
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
     if (tool.system === true || findPackagePin(tool) !== undefined) return undefined;
-    return tool.installers['mise'];
+    return tool.installers.mise;
 }
 
 export function listPackagePins(configurations: Configuration[]): PackagePins {
@@ -125,7 +125,7 @@ export function buildToolProjects(
 }
 
 export function findPackagePin(tool: Tool): PackagePin | undefined {
-    const python = tool.installers['pypi'];
+    const python = tool.installers.pypi;
     if (python !== undefined && tool.system !== true)
         return { kind: 'python', name: python.name, version: python.version };
     const npm = tool.installers['npm'];

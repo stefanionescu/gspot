@@ -235,7 +235,7 @@ export const TYPED_RULE_PROJECTS = [
         files: {
             'package.json': '{"name":"example","private":true,"type":"module","workspaces":["api"]}\n',
             'api/package.json': '{"name":"api","private":true,"type":"module"}\n',
-            'api/tsconfig.json': JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] }) + '\n',
+            'api/tsconfig.json': `${JSON.stringify({ compilerOptions: STRICT_COMPILER_OPTIONS, include: ['src'] })}\n`,
             'api/src/port.ts': PORT_SOURCE,
         },
         file: 'api/src/port.ts',

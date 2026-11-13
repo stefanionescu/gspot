@@ -61,7 +61,7 @@ export const disabledAutoEscaping = createRule<[], 'unescaped'>({
                 const isOff = isEscapingOff(source, node, ESCAPING_CONSTRUCTIONS);
                 if (isOff) context.report({ node: node.callee, messageId: 'unescaped' });
             },
-            'AssignmentExpression[left.type="MemberExpression"]'(
+            'AssignmentExpression[left.type="MemberExpression"]': function (
                 node: TSESTree.AssignmentExpression & { left: TSESTree.MemberExpression },
             ) {
                 const target = node.left;

@@ -24,6 +24,49 @@ import { runCommand } from '#tests/setup/system/processes.ts';
 import { readCallRecords } from '#tests/setup/system/programs.ts';
 import type { CallRecord, GithubWorkflow, GitlabPipeline, ProcessOutput } from '#tests/types/setup.ts';
 
+async function runPipelineScript(
+    provider: 'github' | 'gitlab',
+    options: { mise: string; env?: Record<string, string>; setupExit?: number },
+): Promise<ProcessOutput & { calls: CallRecord[] }> {
+    await using sandbox = await createGitSandbox({});
+    await using programs = await createGitSandbox({});
+    const commands = join(programs.path, 'commands.log');
+    const bin = join(programs.path, 'bin');
+    await mkdir(bin);
+    await writeFile(join(bin, 'mise'), `#!/bin/bash\n${options.mise}`, { mode: 0o755 });
+    const recording = ['--record', commands, '--environment', 'MISE_LOADED', '--'];
+    await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', ...recording);
+    let pipeline: Pipeline = LINUX_PIPELINE;
+    if (options.setupExit !== undefined) {
+        const output = ['--stdout', 'setup out\n', '--stderr', 'setup err\n', '--exit', String(options.setupExit)];
+        await writeProgramCommand(
+            programs.path,
+            'bin/project setup',
+            'fakes/tool',
+            '--record',
+            commands,
+            ...output,
+            '--',
+        );
+        pipeline = { ...LINUX_PIPELINE, setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS] };
+    }
+    const script =
+        provider === 'github'
+            ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
+                  (step) => step.run ?? [],
+              )
+            : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
+    const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
+        cwd: sandbox.path,
+        env: {
+            PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
+            GITHUB_PATH: join(programs.path, 'github-path'),
+            ...options.env,
+        },
+    });
+    return { ...result, calls: existsSync(commands) ? await readCallRecords(commands) : [] };
+}
+
 test.each<Partial<Pipeline>>([
     { setupCommand: ['echo', '${{ secrets.DEPLOY_KEY }}'] },
     { projectInstall: ['(cd ${{ github.token }} && npm ci)'] },
@@ -112,49 +155,6 @@ Run the script of the lint job with a fake mise and a fake gspot that records it
 pipeline also runs a fake setup command that prints to both streams and exits with that code.
 */
 const SETUP_ARGUMENTS = ['', 'two words', "a'b", 'line\nbreak'] as const;
-
-async function runPipelineScript(
-    provider: 'github' | 'gitlab',
-    options: { mise: string; env?: Record<string, string>; setupExit?: number },
-): Promise<ProcessOutput & { calls: CallRecord[] }> {
-    await using sandbox = await createGitSandbox({});
-    await using programs = await createGitSandbox({});
-    const commands = join(programs.path, 'commands.log');
-    const bin = join(programs.path, 'bin');
-    await mkdir(bin);
-    await writeFile(join(bin, 'mise'), `#!/bin/bash\n${options.mise}`, { mode: 0o755 });
-    const recording = ['--record', commands, '--environment', 'MISE_LOADED', '--'];
-    await writeProgramCommand(programs.path, 'bin/gspot', 'fakes/tool', ...recording);
-    let pipeline: Pipeline = LINUX_PIPELINE;
-    if (options.setupExit !== undefined) {
-        const output = ['--stdout', 'setup out\n', '--stderr', 'setup err\n', '--exit', String(options.setupExit)];
-        await writeProgramCommand(
-            programs.path,
-            'bin/project setup',
-            'fakes/tool',
-            '--record',
-            commands,
-            ...output,
-            '--',
-        );
-        pipeline = { ...LINUX_PIPELINE, setupCommand: [join(bin, 'project setup'), ...SETUP_ARGUMENTS] };
-    }
-    const script =
-        provider === 'github'
-            ? (parse(buildGithubWorkflow(pipeline).content) as GithubWorkflow).jobs['lint']!.steps.flatMap(
-                  (step) => step.run ?? [],
-              )
-            : (parse(buildGitlabWorkflow(pipeline).content) as GitlabPipeline).gspot.script;
-    const result = await runCommand(['bash', '-e', '-c', script.join('\n')], {
-        cwd: sandbox.path,
-        env: {
-            PATH: `${bin}${delimiter}${readEnvironmentVariable('PATH') ?? ''}`,
-            GITHUB_PATH: join(programs.path, 'github-path'),
-            ...options.env,
-        },
-    });
-    return { ...result, calls: existsSync(commands) ? await readCallRecords(commands) : [] };
-}
 
 test.each([...SETUP_CASES])(
     'the %s job keeps setup exit %i and literal arguments before gspot',

@@ -43,7 +43,7 @@ export const noLeakedJsxNumber = createRule<[], 'leaked' | 'convert'>({
             ? NATIVE_LEAKING_TYPES
             : LEAKING_TYPES;
         return {
-            'JSXExpressionContainer > LogicalExpression[operator="&&"]'(node: TSESTree.LogicalExpression) {
+            'JSXExpressionContainer > LogicalExpression[operator="&&"]': function (node: TSESTree.LogicalExpression) {
                 const operands = listOperands(node.left);
                 const leaked = operands.filter((operand) => {
                     const type = types.checker.getBaseTypeOfLiteralType(types.get(operand));

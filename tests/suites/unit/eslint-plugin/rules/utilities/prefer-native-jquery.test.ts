@@ -16,7 +16,13 @@ buildRuleTester().run('prefer-native-jquery', preferNativeJquery, {
                 { messageId: 'dependency', data: { alternative: 'Array.prototype.indexOf()', method: 'inArray' } },
             ],
         },
-        { code: 'import { jQuery } from "jquery/slim";\njQuery.now();', errors: [{ messageId: 'deprecated' }] },
-        { code: 'const $ = require("jquery");\n$.parseJSON(text);', errors: [{ messageId: 'deprecated' }] },
+        {
+            code: 'import { jQuery } from "jquery/slim";\njQuery.now();',
+            errors: [{ messageId: 'deprecated', data: { alternative: 'Date.now()', method: 'now' } }],
+        },
+        {
+            code: 'const $ = require("jquery");\n$.parseJSON(text);',
+            errors: [{ messageId: 'deprecated', data: { alternative: 'JSON.parse()', method: 'parseJSON' } }],
+        },
     ],
 });

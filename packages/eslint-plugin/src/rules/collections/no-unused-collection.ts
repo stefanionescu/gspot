@@ -59,7 +59,7 @@ export const noUnusedCollection = createRule<[], 'unused'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const variable of listLocalVariables(source)) {
                     const [identifier] = variable.identifiers;
                     if (identifier !== undefined && isWriteOnlyCollection(variable, source))

@@ -116,7 +116,7 @@ export function buildScopeSettings(
     fillTableValues(namespaces, [...listed, ...variants]);
     return {
         configurations: configurations.map((configuration) => configuration.name),
-        valuesByKey: valuesByKey,
+        valuesByKey,
         tables: tableValuesSchema.parse(namespaces),
         test_files: rootSettingSchemas.test_files.unwrap().parse(valuesByKey['test_files']),
         ignores: settings.ignore,

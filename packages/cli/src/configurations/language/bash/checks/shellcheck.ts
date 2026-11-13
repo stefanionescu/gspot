@@ -4,7 +4,7 @@ import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 /**
 Runs ShellCheck. It passes a dialect only for scripts without a shebang, and leaves out the warnings that do not fit

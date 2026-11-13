@@ -27,6 +27,17 @@ import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
+function listScopeRules(
+    report: RunReport,
+): Record<string, { status: string; rules: ReadonlyArray<string | undefined> }> {
+    return Object.fromEntries(
+        report.checks.map(({ scope, status, findings }) => [
+            scope,
+            { status, rules: findings.map(({ rule }) => rule) },
+        ]),
+    );
+}
+
 test.each(['basic', 'all'] as const)('Ruff reports a hardcoded secret only at level all: %s', async (level) => {
     const { root } = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(
@@ -222,17 +233,6 @@ test('Ruff from the installed environment reports a staged Python finding while 
     expect(working.code, working.stdout + working.stderr).toBe(0);
     expect(working.report.checks).toMatchObject([{ check: 'python/ruff', status: 'passed' }]);
 });
-
-function listScopeRules(
-    report: RunReport,
-): Record<string, { status: string; rules: ReadonlyArray<string | undefined> }> {
-    return Object.fromEntries(
-        report.checks.map(({ scope, status, findings }) => [
-            scope,
-            { status, rules: findings.map(({ rule }) => rule) },
-        ]),
-    );
-}
 
 test('Ruff reports a function past the default parameter limit', async () => {
     const { language, file, source, finding } = PARAMETER_LIMIT_CASE;

@@ -23,6 +23,7 @@ exit_codes = [1, 3]
 help = "Change the code the way the message says."
 name = "semgrep"
 output = { format = "semgrep" }
+rules = ["SECURITY.md"]
 stage = "push"
 summary = "Runs the Semgrep rules of the FastAPI configuration and the files in security.semgrep_rules over the files of the run."
 when = { config_file = "semgrep" }

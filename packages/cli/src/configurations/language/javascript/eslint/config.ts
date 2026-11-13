@@ -44,7 +44,7 @@ function serializeImports(
     }
     for (const [importName, module] of modules) lines.push(`import ${importName} from ${JSON.stringify(module)};`);
     for (const [name, text] of constants) lines.push(`const ${name} = ${text};`);
-    return lines.join('\n') + '\n';
+    return `${lines.join('\n')}\n`;
 }
 
 function buildFileWriter(writer: BlockWriter): EslintFileWriter {

@@ -21,11 +21,10 @@ function formatListCondition(kind: keyof typeof DETECTION_LABELS, patterns: read
     const except =
         excepted.length === 0
             ? ''
-            : ', except ' +
-              formatNameList(
+            : `, except ${formatNameList(
                   excepted.map((name) => `\`${name}\``),
                   'disjunction',
-              );
+              )}`;
     return `${names.length === 1 ? one : many} ${listed}${except}`;
 }
 

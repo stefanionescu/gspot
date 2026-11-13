@@ -11,7 +11,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { findCheck, listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { findCheck, readConfigurations } from '#cli/manifests/read.ts';
 import { isConfigurationSelected } from '#cli/manifests/select.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
@@ -168,12 +168,10 @@ function listToolSettings(configuration: Configuration | undefined, toolName: st
         .map((setting) => setting.name);
 }
 
-function listInstalledRuleFiles(configuration: Configuration | undefined, session: Session | undefined): string[] {
-    if (configuration === undefined || session === undefined) return [];
+function listInstalledRuleFiles(check: Check, session: Session | undefined): string[] {
+    if (check.rules === undefined || session === undefined) return [];
     const installedRules = new Set(selectRuleFiles(session).map((file) => file.path));
-    return listRuleFiles(configuration)
-        .filter((file) => installedRules.has(file.path))
-        .map((file) => file.path);
+    return check.rules.filter((path) => installedRules.has(path));
 }
 
 function buildCheckExplanation(
@@ -205,7 +203,7 @@ function buildCheckExplanation(
         minVersions,
         turnOff: { ...turnOff, rule: turnOff.rule ?? null },
         settingNames: listToolSettings(configuration, toolName),
-        ruleFiles: listInstalledRuleFiles(configuration, session),
+        ruleFiles: listInstalledRuleFiles(check, session),
         selected,
         ignores: listCheckIgnores(session, check.id, cwd),
     };

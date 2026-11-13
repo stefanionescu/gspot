@@ -51,7 +51,7 @@ import type {
 import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 import type { ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
 
-function convertQuotes(singleQuote: boolean | undefined): 'single' | 'double' | undefined {
+function convertQuotes({ singleQuote }: Pick<PrettierStyle, 'singleQuote'>): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;
     return singleQuote ? 'single' : 'double';
 }
@@ -73,7 +73,7 @@ function convertPrettierFormat(options: PrettierStyle): TomlTable {
         indent_style: indentStyle,
         indent_width: options.tabWidth,
         print_width: options.printWidth,
-        quotes: convertQuotes(options.singleQuote),
+        quotes: convertQuotes(options),
         semicolons: options.semi,
         trailing_commas: options.trailingComma,
         bracket_spacing: options.bracketSpacing,

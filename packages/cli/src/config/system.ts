@@ -110,7 +110,7 @@ export const PARENT_SEGMENT = /(?:^|[/{,])\.\.(?=[/},]|$)/u;
 export const TEMPORARY_FILE_PREFIX = '.gspot-';
 export const TEMPORARY_FILE_SUFFIX = '.tmp';
 export const TEMPORARY_REMOVAL_OPTIONS = { recursive: true, force: true, maxRetries: 5, retryDelay: 100 } as const;
-export const TEMPORARY_STALE_MILLISECONDS = 1 * MILLISECONDS_PER_DAY;
+export const TEMPORARY_STALE_DAYS = 1;
 
 // terminal and exit codes
 export const EXIT_ERROR = 2;

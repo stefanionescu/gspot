@@ -18,7 +18,8 @@ function formatValueAdvice(
     if (inner instanceof z.ZodNumber) return `a whole number of ${String(inner.minValue ?? 0)} or more`;
     if (inner instanceof z.ZodBoolean) return 'true or false';
     const description = setting.description.replace(TRAILING_PERIOD, '');
-    return `a valid ${setting.type} value${description === '' ? '' : ': ' + description}`;
+    const detail = description === '' ? '' : `: ${description}`;
+    return `a valid ${setting.type} value${detail}`;
 }
 
 export function formatSettingValueError(

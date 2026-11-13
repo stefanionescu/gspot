@@ -62,7 +62,7 @@ export const noEmptyReturnValue = createRule<[], 'return'>({
                 const declaration = getLocalFunction(node.callee, context.sourceCode);
                 if (declaration !== undefined) calls.set(node, declaration);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const [call, declaration] of calls) {
                     if (hasReturnValue(declaration, context.sourceCode)) continue;
                     context.report({ node: call.callee, messageId: 'return' });

@@ -22,6 +22,7 @@ files = { languages = true }
 help = "Move the shared block into one function both callers use."
 level = "all"
 name = "jscpd"
+rules = ["WORKING.md"]
 runs = "scope"
 stage = "push"
 summary = "Reports every block of code copied between files, naming both places."
@@ -33,6 +34,7 @@ example = "With `[[import_rule]]` records, a Python file under `app/` that impor
 files = { extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".py", ".pyi", ".swift"], kinds = ["source"] }
 help = "Move the code into a rule that may import it, move that rule above, list the rule in `can_import`, or add the file to the paths of a rule."
 name = "import-rules"
+rules = ["SUPPRESSIONS.md"]
 runs = "scope"
 stage = "commit"
 summary = "Applies `[[import_rule]]` to Python and Swift imports and to the types that Swift files name, and reports code files that no import rule covers. ESLint applies the rules to JavaScript and TypeScript imports."
@@ -44,6 +46,7 @@ example = "An empty `src/old/`, or a `src/old/` that holds only an empty `src/ol
 files = { paths = ["**"] }
 help = "Delete the folder."
 name = "empty-folders"
+rules = ["WORKING.md"]
 runs = "once"
 stage = "commit"
 summary = "Finds a folder that holds no files, directly or through its subfolders, and a folder that holds only `.gitkeep` or `.keep`."
@@ -54,6 +57,7 @@ example = "With TypeScript at level `all`, a `feature/only.ts` alone in its fold
 help = "Move the file up beside its neighbors."
 level = "all"
 name = "lone-files"
+rules = ["NAMING.md"]
 runs = "scope"
 stage = "commit"
 summary = "Finds a folder that holds one code file and nothing else."
@@ -64,6 +68,7 @@ example = "At level `all`, a `src/models/` whose only entry is `src/models/user/
 help = "Move the inner folder up one level."
 level = "all"
 name = "pass-through-folders"
+rules = ["NAMING.md"]
 runs = "scope"
 stage = "commit"
 summary = "Finds a folder whose only entry is one folder."
@@ -75,6 +80,7 @@ help = "Move the files into a folder named after the shared prefix, or raise `li
 level = "all"
 limits = ["min_shared_prefix_files"]
 name = "shared-prefixes"
+rules = ["NAMING.md"]
 runs = "scope"
 stage = "commit"
 summary = "Finds sibling files that share a name prefix, such as `asset-card`, `asset-list`, and `asset-row`."
@@ -85,6 +91,7 @@ example = "A `report.ts` beside a `report/` folder reports a clash. Rename one a
 help = "Rename the file or the folder so their names differ."
 level = "all"
 name = "file-folder-clashes"
+rules = ["NAMING.md"]
 runs = "scope"
 stage = "commit"
 summary = "Finds a file and a folder with the same name, apart from the extension, in the same place, such as `turn.ts` beside `turn/`."
@@ -104,14 +111,15 @@ why = "A long file hides independent responsibilities from the reader."
 
 [[check]]
 example = "A Bash function that only calls another, and that one place calls, reports a finding. Inline the call at that place, and delete the wrapper."
-files = { extensions = [".py", ".swift"], tags = ["shell"], kinds = ["source"] }
+files = { extensions = [".py", ".swift", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"], tags = ["shell"], kinds = ["source"] }
 help = "Inline the function at its call and delete it, or import from the module that defines the code and delete the forwarding file."
 level = "all"
 limits = ["trivial_function_statements"]
-limit_languages = ["python", "swift", "bash"]
+limit_languages = ["python", "swift", "bash", "javascript", "typescript"]
 name = "trivial-functions"
+rules = ["WORKING.md"]
 stage = "commit"
-summary = "Finds Python, Swift, and Bash functions at or under `limits.trivial_function_statements` that at most one place calls, and files that hold only imports, re-exports, and aliases."
+summary = "Finds Python, Swift, and Bash functions at or under `limits.trivial_function_statements` that at most one place calls, exported JavaScript and TypeScript functions of that size that one place calls, and files that hold only imports, re-exports, and aliases."
 why = "A function of one statement that one place calls makes the reader jump for nothing."
 
 [[check]]
@@ -120,6 +128,7 @@ files = { extensions = [".py", ".swift", ".js", ".jsx", ".mjs", ".cjs", ".ts", "
 help = "Move each private function above the public function that calls it."
 level = "all"
 name = "function-order"
+rules = ["WORKING.md"]
 stage = "commit"
 summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript."
 why = "When each private function sits above the public functions, a reader finds a helper next to the code that uses it."
@@ -130,6 +139,7 @@ files = { extensions = [".swift"], kinds = ["source"] }
 help = "Move the statements into a function named after their step, or remove the `do` and keep the statements."
 level = "all"
 name = "bare-blocks"
+rules = ["WORKING.md"]
 stage = "commit"
 summary = "Finds Swift `do` blocks without `catch`. ESLint reports the bare blocks of JavaScript and TypeScript."
 why = "A block that only groups statements hides a step that a named function would explain."
@@ -141,6 +151,7 @@ help = "Move the environment read into a file listed in structure.environment_re
 level = "all"
 name = "environment-readers"
 when = { setting = "structure.environment_readers" }
+rules = ["SETTINGS.md"]
 runs = "scope"
 stage = "commit"
 summary = "Finds environment reads outside the files listed in structure.environment_readers."

@@ -8,11 +8,9 @@ import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
 import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { CheckOptions, PushReport, RevisionCheckResult } from '#cli/types/commands.ts';
-import type { PushedRevisions, PushRevision, UntrackedFiles } from '#cli/types/repository.ts';
+import type { CheckOptions, CleanHead, PushReport, RevisionCheckResult } from '#cli/types/commands.ts';
+import type { PushedRevisions, PushRevision } from '#cli/types/repository.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-type CleanHead = { hash: string; untracked: UntrackedFiles };
 
 async function readCleanHead(
     root: string,
@@ -32,14 +30,14 @@ async function checkRevisionTree(
     cancelSignal: AbortSignal,
     { revision, cleanHead }: { revision: PushRevision; cleanHead: CleanHead | undefined },
 ): Promise<RevisionCheckResult> {
-    const { hash, base, paths, commits, range, shallow } = revision;
-    const selection = { content: 'commit', reference: hash, base, paths, commits, range, shallow } as const;
-    if (revision.hash === cleanHead?.hash)
+    const { hash: commit, base, paths, commits, range, shallow } = revision;
+    const selection = { content: 'commit', reference: commit, base, paths, commits, range, shallow } as const;
+    if (commit === cleanHead?.hash)
         return await runTreeCheck(root, options, cancelSignal, {
             session: { toolsRoot: root, untracked: cleanHead.untracked },
             selection,
         });
-    using copy = await copyRevision(root, { kind: 'commit', hash, paths }, cancelSignal);
+    using copy = await copyRevision(root, { kind: 'commit', hash: commit, paths }, cancelSignal);
     return await runTreeCheck(copy.root, options, cancelSignal, {
         session: { toolsRoot: root, unreadablePaths: copy.unreadablePaths },
         selection,

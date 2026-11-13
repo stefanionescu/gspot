@@ -4,12 +4,9 @@ import { DOCS_PATHS } from '@gspothq/cli/reference';
 export const CHANGELOG_TITLE = '# Changelog\n';
 
 // check pages
-export const CHECKS_OPENING =
-    'The [stage](' +
-    DOCS_PATHS.stage +
-    ') says when a check runs, and the [level](' +
-    DOCS_PATHS.levels +
-    ') says which setting of `level` turns it on. `gspot explain <check>` shows its state in your repository.\n';
+export const CHECKS_OPENING = `The [stage](${DOCS_PATHS.stage}) says when a check runs, and the [level](${
+    DOCS_PATHS.levels
+}) says which setting of \`level\` turns it on. \`gspot explain <check>\` shows its state in your repository.\n`;
 export const CHECK_FIX_MESSAGE = '`gspot check --fix` fixes what it can.';
 export const CHECK_NEEDS_LABELS = {
     build: 'a build',
@@ -82,6 +79,28 @@ export const REFERENCE_IDS_KEY = 'reference-ids';
 export const DEFAULT_OPTION_DESCRIPTION = 'See the example.';
 export const ESLINT_FIX_MESSAGE = ' `eslint --fix` fixes it.';
 export const NO_CONFIG_MESSAGE = 'No config turns it on; turn it on in your ESLint config.';
+export const TOPIC_LABELS = {
+    accessibility: 'Accessibility',
+    assertions: 'Assertions',
+    aws: 'AWS CDK',
+    collections: 'Collections',
+    'control-flow': 'Control flow',
+    functions: 'Functions',
+    logic: 'Logic',
+    networks: 'Networks',
+    promises: 'Promises',
+    react: 'React',
+    regex: 'Regular expressions',
+    security: 'Security',
+    servers: 'Servers',
+    structure: 'Code structure',
+    testing: 'Tests',
+    types: 'Types',
+    utilities: 'Utility libraries',
+    variables: 'Variables',
+    vue: 'Vue',
+    web: 'Web',
+} as const;
 export const TYPE_INFORMATION_MESSAGE = ' It reports nothing without the type information of a TypeScript project.';
 
 // heading levels
@@ -110,6 +129,7 @@ export const REFERENCE_FOLDERS = Object.fromEntries(
         new URL(DOCS_PATHS[name as keyof typeof DOCS_PATHS]).pathname.slice(REFERENCE_PATH.length, -1),
     ]),
 ) as Record<'commands' | 'settings' | 'configurations' | 'checks' | 'eslintPlugin', string>;
+export const PLUGIN_PATH = `${REFERENCE_PATH}${REFERENCE_FOLDERS.eslintPlugin}/`;
 
 // schema text
 export const SCHEMA_TYPE_LABELS: Readonly<Record<string, string>> = {

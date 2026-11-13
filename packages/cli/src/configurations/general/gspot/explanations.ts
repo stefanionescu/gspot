@@ -19,6 +19,13 @@ export const WEAKENING_EXPLANATIONS = {
         fix: 'Set `hooks.enabled` back to true.',
         example: '`enabled = false` under `[hooks]` reports `hooks`.',
     },
+    [WEAKENING_RULES.importRule]: {
+        description:
+            'No `[[import_rule]]` record goes away, gains a path, or may import more rules than at the base revision, and `javascript.import_boundaries` loses no entry.',
+        why: 'A wider import rule lets code import files that the base revision keeps apart.',
+        fix: WEAKENING_FIXES[WEAKENING_RULES.importRule],
+        example: 'Adding `"store"` to the `can_import` of an `[[import_rule]]` reports `import-rule`.',
+    },
     [WEAKENING_RULES.level]: {
         description: '`level` drops against the base revision.',
         why: 'A lower level turns off every check that runs only at the higher one.',
@@ -30,6 +37,14 @@ export const WEAKENING_EXPLANATIONS = {
         why: 'An agent follows only the rules it can read.',
         fix: 'Set `rule_files.enabled` back to true, or remove the entry from `rule_files.exclude`.',
         example: '`enabled = false` under `[rule_files]` reports `rule-files`.',
+    },
+    [WEAKENING_RULES.ruleOptions]: {
+        description:
+            'New or changed options in `tools.eslint.rules` repeat each key of the options that gspot ships for the rule, with its shipped value.',
+        why: 'The options of `gspot.toml` replace the shipped options, so a key that they leave out falls back to the default of the rule.',
+        fix: WEAKENING_FIXES[WEAKENING_RULES.ruleOptions],
+        example:
+            '`"unicorn/consistent-boolean-name" = [{ checkFunctions = "never" }]` leaves out `prefixes` and reports `rule-options`.',
     },
     [WEAKENING_RULES.setting]: {
         description: 'A setting moves to a weaker value against the base revision, such as a higher limit.',

@@ -43,6 +43,13 @@ async function assertDraftCheck(root: string, draft: string, rules: string[] = [
     expect(checked.report.checks[0]!.findings.map(({ rule }) => rule)).toStrictEqual(rules);
 }
 
+function prepareHookRepository(): void {
+    const { root } = installedSandbox();
+    runGitStep(root, ['add', '-A']);
+    runGitStep(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
+    runGitStep(root, ['tag', 'configured']);
+}
+
 test('commitlint accepts exact folder-name scopes or no scope and reports bad messages', async () => {
     const settings = buildSandboxSettings([], {
         level: 'all',
@@ -90,13 +97,6 @@ const installedSandbox = shareInstalledSandbox({
         LICENSE,
     },
 });
-
-function prepareHookRepository(): void {
-    const { root } = installedSandbox();
-    runGitStep(root, ['add', '-A']);
-    runGitStep(root, ['commit', '-qm', 'chore: configure checks', '--no-verify']);
-    runGitStep(root, ['tag', 'configured']);
-}
 
 describe('a repository with the commit hooks installed', () => {
     beforeAll(prepareHookRepository);

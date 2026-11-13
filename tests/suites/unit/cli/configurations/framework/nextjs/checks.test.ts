@@ -65,6 +65,27 @@ function fakeNextjsCommands(
     return Object.assign(resources.move(), { folders, commands });
 }
 
+async function fakeNextjsBuild(
+    command: readonly string[],
+    options: CancelableSpawnOptions,
+    routesSeen: string[],
+): Promise<SpawnResult> {
+    const cwd = options.cwd;
+    const page = await readFile(join(cwd, 'src/app/page.ts'), 'utf8');
+    const isBad = page.includes('bad');
+    if (['typegen', 'build'].includes(command[1] ?? '')) {
+        await writeFile(join(cwd, 'tsconfig.json'), '{}\n');
+        await writeFile(join(cwd, 'next-env.d.ts'), '// Generated\n');
+        await mkdir(join(cwd, '.next/types'), { recursive: true });
+        await writeFile(join(cwd, '.next/types/routes.d.ts'), GENERATED_ROUTES);
+    } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
+    const isFailed = isBad && command[1] !== 'typegen';
+    return buildProcessResult({
+        code: isFailed ? 1 : 0,
+        stdout: isFailed ? 'src/app/page.ts(1,1): error TS2322: Type mismatch\n' : '',
+    });
+}
+
 test('nextjs/tsc in a child scope reports its finding, passes after the fix, and leaves tsconfig.json and the generated types unchanged', async () => {
     const scope = 'app';
     await using sandbox = await createGitSandbox({});
@@ -119,27 +140,6 @@ test('nextjs/tsc removes its copy after a failed type generation and keeps a con
     expect(existsSync(scratch)).toBe(false);
     expect(await readFile(join(sandbox.path, 'tsconfig.json'), 'utf8')).toBe('Concurrent developer edit\n');
 });
-
-async function fakeNextjsBuild(
-    command: readonly string[],
-    options: CancelableSpawnOptions,
-    routesSeen: string[],
-): Promise<SpawnResult> {
-    const cwd = options.cwd;
-    const page = await readFile(join(cwd, 'src/app/page.ts'), 'utf8');
-    const isBad = page.includes('bad');
-    if (['typegen', 'build'].includes(command[1] ?? '')) {
-        await writeFile(join(cwd, 'tsconfig.json'), '{}\n');
-        await writeFile(join(cwd, 'next-env.d.ts'), '// Generated\n');
-        await mkdir(join(cwd, '.next/types'), { recursive: true });
-        await writeFile(join(cwd, '.next/types/routes.d.ts'), GENERATED_ROUTES);
-    } else routesSeen.push(await readFile(join(cwd, '.next/types/routes.d.ts'), 'utf8'));
-    const isFailed = isBad && command[1] !== 'typegen';
-    return buildProcessResult({
-        code: isFailed ? 1 : 0,
-        stdout: isFailed ? 'src/app/page.ts(1,1): error TS2322: Type mismatch\n' : '',
-    });
-}
 
 test('the Next.js metadata, middleware, and request files may export a default', async () => {
     const files = [

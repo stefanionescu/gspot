@@ -67,7 +67,7 @@ export const noMisplacedAssertions = createRule<[], 'misplaced'>({
                 state.hasTests ||= test !== undefined && test.kind !== 'hook';
                 trackAssertion(node, context, state);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const [statement, isScript] of state.topLevel)
                     if (!isScript || state.hasTests) state.reported.add(statement);
                 for (const statement of state.reported) context.report({ node: statement, messageId: 'misplaced' });

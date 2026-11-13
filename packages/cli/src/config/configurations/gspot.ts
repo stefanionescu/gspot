@@ -1,3 +1,10 @@
+import {
+    ENVIRONMENT_RULES,
+    IMPORT_LAYOUT_RULES,
+    NODE_RULES,
+    PACKAGE_JSON_RULES,
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { BASE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
@@ -45,16 +52,31 @@ export const NEGATED_PATTERN = /^!/u;
 export const UNESCAPED_BRACKET = /(?<!\\)[()[\]]/u;
 
 // weakenings check
+// Only these tables hold ESLint options that apply in every scope. gspot computes the others from the settings.
+export const SHIPPED_ESLINT_RULES: Readonly<Record<string, unknown>> = {
+    ...BASE_RULES,
+    ...JAVASCRIPT_RULES,
+    ...IMPORT_LAYOUT_RULES,
+    ...NODE_RULES,
+    ...PACKAGE_JSON_RULES,
+    ...ENVIRONMENT_RULES,
+};
 export const WEAKENING_RULES = {
     configuration: 'configuration',
     hooks: 'hooks',
     ignore: 'ignore',
+    importRule: 'import-rule',
     level: 'level',
     ruleFiles: 'rule-files',
+    ruleOptions: 'rule-options',
     setting: 'setting',
 } as const;
 export const WEAKENING_FIXES = {
     [WEAKENING_RULES.configuration]: 'Run `gspot remove <configuration> --reason "<why>"`, or select it again.',
+    [WEAKENING_RULES.importRule]:
+        'Restore the record of the base revision, or run `gspot ignore gspot/weakenings --rule import-rule --reason "<why>"`.',
+    [WEAKENING_RULES.ruleOptions]:
+        'Repeat each shipped key with its shipped value in the options, or run `gspot ignore gspot/weakenings --rule rule-options --reason "<why>"`.',
     [WEAKENING_RULES.setting]:
         'Run `gspot set <key> <value> --reason "<why>"`, or restore the value of the base revision.',
 } as const;

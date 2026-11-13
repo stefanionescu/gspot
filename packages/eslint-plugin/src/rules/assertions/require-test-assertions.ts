@@ -129,7 +129,7 @@ export const requireTestAssertions = createRule<[], 'missing'>({
         if (!hasTests || !isModuleUsed(context, EVIDENCE_IMPORTS, EVIDENCE_DEPENDENCIES)) return {};
         return {
             [DONE_CALLBACKS]: (node: TSESTree.Identifier) => doneUses.add(node),
-            'CallExpression:exit'(node: TSESTree.CallExpression) {
+            'CallExpression:exit': function (node: TSESTree.CallExpression) {
                 const callback = getTestCallback(node, source);
                 const isChecked =
                     callback === undefined || isDoneUsed(callback, source, doneUses) || hasAssertion(callback, search);

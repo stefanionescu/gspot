@@ -26,7 +26,7 @@ export const noExclusiveTests = createRule<[], 'exclusive' | 'removeOnly'>({
     },
     create(context) {
         return {
-            'CallExpression > MemberExpression.callee[computed=false][property.name="only"]'(
+            'CallExpression > MemberExpression.callee[computed=false][property.name="only"]': function (
                 node: TSESTree.MemberExpression,
             ) {
                 const { object } = node;

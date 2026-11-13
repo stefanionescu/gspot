@@ -1,10 +1,12 @@
+import { GIT_REV_LIST_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { listEnabledChecks } from '#cli/engine/plan.ts';
 import { pinProjectTypescript, selectToolConfigurations } from '#cli/engine/tools.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { readGitLines } from '#cli/repository/git/run.ts';
 import { detectPackageManager, selectToolPackageManager } from '#cli/repository/package-manager.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
-import { readPushedCommits } from '#cli/repository/revisions/push.ts';
+import { readPushedRange } from '#cli/repository/revisions/push.ts';
 import { selectStartRunner } from '#cli/repository/version-pin.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { readSettingsText } from '#cli/settings/file.ts';
@@ -136,6 +138,16 @@ export async function openSession(
     return { ...base, toolConfigurations, ...selectPackageManagers(base, toolConfigurations) };
 }
 
-export async function readSelectedCommits(session: CheckSession): Promise<string[]> {
-    return session.selection?.commits ?? (await readPushedCommits(session.toolsRoot, session.cancelSignal));
+/**
+List the commits that the run selects, or the commits that a push sends when the run selects none.
+*/
+export async function readSelectedCommits(
+    session: Pick<CheckSession, 'selection' | 'toolsRoot' | 'cancelSignal'>,
+): Promise<string[]> {
+    const { selection, toolsRoot, cancelSignal } = session;
+    if (selection?.commits !== undefined) return selection.commits;
+    const range = await readPushedRange(toolsRoot, cancelSignal);
+    return range.length === 0
+        ? []
+        : readGitLines(toolsRoot, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
 }

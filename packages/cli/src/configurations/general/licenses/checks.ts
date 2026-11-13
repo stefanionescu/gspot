@@ -32,7 +32,7 @@ import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts'
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { AllowedPackage, LockedPackage } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck, ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');

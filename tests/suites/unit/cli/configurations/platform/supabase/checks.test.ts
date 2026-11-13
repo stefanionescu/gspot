@@ -20,6 +20,16 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+async function prepareDenoSession(root: string) {
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(root, ['deno'], resources);
+    const run = resources.use(
+        fakeCommands().mockResolvedValue(buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' })),
+    );
+    const owned = resources.move();
+    return { session, run, [Symbol.dispose]: owned[Symbol.dispose].bind(owned) };
+}
+
 test('supabase/storage-policies reports a syntax finding for malformed TOML', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['supabase'], { scopes: [{ path: 'apps/api' }] }),
@@ -209,16 +219,6 @@ test('Deno checks skip a scope with no edge functions', async () => {
         note: expect.stringContaining('supabase/functions') as string,
     });
 });
-
-async function prepareDenoSession(root: string) {
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(root, ['deno'], resources);
-    const run = resources.use(
-        fakeCommands().mockResolvedValue(buildProcessResult({ stdout: '{"diagnostics":[],"errors":[]}' })),
-    );
-    const owned = resources.move();
-    return { session, run, [Symbol.dispose]: owned[Symbol.dispose].bind(owned) };
-}
 
 test('Deno type errors use their location or the entrypoint', async () => {
     await using sandbox = await createGitSandbox({

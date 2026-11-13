@@ -16,9 +16,9 @@ export type UncertainPair = { first: string; second: string; minimum: number; ne
 
 export type AssertionChain = { values: TSESTree.Node[]; hasAssertionProperty: boolean; root: TSESTree.Node };
 
-export type AssertionPredicate = 'truthy' | 'falsy' | 'true' | 'false' | 'defined' | 'undefined' | 'null' | 'exists';
+type AssertionPredicate = 'truthy' | 'falsy' | 'true' | 'false' | 'defined' | 'undefined' | 'null' | 'exists';
 
-export type AssertionComparison = 'strict' | 'deep' | 'loose';
+type AssertionComparison = 'strict' | 'deep' | 'loose';
 
 export type ExpectCall = { call: TSESTree.CallExpression; negated: boolean };
 

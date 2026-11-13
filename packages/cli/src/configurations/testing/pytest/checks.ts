@@ -7,7 +7,7 @@ import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckRunOptions, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function hasProjectCoverage(session: Session, scopePath: string): boolean {

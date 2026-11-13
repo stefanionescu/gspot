@@ -7,7 +7,7 @@ import {
 import { MIGRATION_ORDER_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import type { Migration } from '#cli/types/configurations/database.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function listVersionFindings(migrations: Migration[]): CheckFinding[] {
     const findings: CheckFinding[] = [];

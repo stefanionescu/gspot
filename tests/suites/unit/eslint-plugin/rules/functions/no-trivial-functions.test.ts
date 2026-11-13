@@ -30,7 +30,14 @@ buildRuleTester().run('no-trivial-functions', noTrivialFunctions, {
         ].map((code) => ({ code, errors: [{ messageId: 'trivial' as const }] })),
         {
             code: 'function count(n) { const count = value => value; return count(n); }',
-            errors: [{ messageId: 'trivial', line: 1, column: 35 }],
+            errors: [
+                {
+                    messageId: 'trivial',
+                    data: { name: "arrow function 'count'", statements: '1 statement' },
+                    line: 1,
+                    column: 35,
+                },
+            ],
         },
         {
             code: 'function empty() {}',
@@ -43,7 +50,7 @@ buildRuleTester().run('no-trivial-functions', noTrivialFunctions, {
         {
             code: 'function three() { first(); second(); third(); }',
             options: [{ trivialFunctionStatements: 3 }],
-            errors: [{ messageId: 'trivial' }],
+            errors: [{ messageId: 'trivial', data: { name: "function 'three'", statements: '3 statements' } }],
         },
         {
             code: 'declare function parse(value: string): number;\nfunction other(value: unknown) { return Number(value); }',

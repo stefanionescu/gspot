@@ -14,19 +14,12 @@ import type {
     ConfigurationChoices,
     ConfigurationEvidence,
     ConfigurationOrigin,
+    ConfigurationRequest,
     ConfigurationSelection,
     ProposedConfigurations,
     Repository,
     ScopeFolder,
 } from '#cli/types/repository.ts';
-
-type ConfigurationRequest = {
-    repository: Repository;
-    options: {
-        configurations?: string[] | undefined;
-        template?: { configurations: string[]; removed: string[] } | undefined;
-    };
-};
 
 function selectRootConfigurations(
     request: ConfigurationRequest,

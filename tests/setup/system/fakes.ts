@@ -14,7 +14,7 @@ import * as processes from '#cli/system/processes.ts';
 import type { runProcess } from '#cli/system/processes.ts';
 import { quoteArgument } from '#cli/system/text.ts';
 import * as locate from '#cli/tools/locate.ts';
-import { type Tool } from '#cli/types/manifests.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ProgramName } from '#tests/types/setup.ts';
@@ -24,7 +24,7 @@ const UNPINNED_NPM_MESSAGE = 'The npm package fake requires a pinned tool versio
 export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
     await mkdir(dirname(target), { recursive: true });
     await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
-    const windowsCommand = command.map((word) => '"' + word.replaceAll('"', '""').replaceAll('%', '%%') + '"');
+    const windowsCommand = command.map((word) => `"${word.replaceAll('"', '""').replaceAll('%', '%%')}"`);
     await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
     await chmod(target, EXECUTABLE_FILE);
 }
@@ -113,7 +113,7 @@ export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
 
 export function buildPythonToolFiles(tool: string): Record<string, string> {
     const declaration = getTool(readConfigurations().values(), tool);
-    const name = declaration.installers['pypi']?.name;
+    const name = declaration.installers.pypi?.name;
     if (name === undefined) throw new Error(`The tool ${tool} has no PyPI installer.`);
     const folder = `${name}-${String(declaration.version)}.dist-info`;
     return { [`${GSPOT_PATHS.pythonEnvironment}/lib/python3/site-packages/${folder}/METADATA`]: '' };

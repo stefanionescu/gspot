@@ -3,16 +3,17 @@ import type { Node } from 'web-tree-sitter';
 import {
     DEFAULT_EXPORT_NAME,
     FUNCTION_ORDER_RULE,
-    REFERENCE_TYPES,
     SCRIPT_FUNCTION_DECLARATIONS,
     SCRIPT_FUNCTION_VALUES,
+    TEST_CALL_NAMES,
 } from '#cli/config/configurations/structure.ts';
 import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
+import { buildPathMatcher } from '#cli/system/matchers.ts';
 import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
+import type { GrammarName, SourceTree } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function describePythonFunction(statement: Node): TopLevelFunction | undefined {
@@ -72,40 +73,59 @@ function describeTopLevelFunction(
     return grammar === 'swift' ? describeSwiftFunction(statement) : describeScriptFunction(statement, listed);
 }
 
-function listFunctionOrderFindings(rootNode: Node, path: string, grammar: GrammarName): CheckFinding[] {
+function findCallee(call: Node): Node | null {
+    let node: Node | null = call;
+    while (node?.type === 'call_expression' || node?.type === 'member_expression')
+        node = node.childForFieldName(node.type === 'call_expression' ? 'function' : 'object');
+    return node;
+}
+
+function isTestCall(statement: Node): boolean {
+    const call = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
+    if (call?.type !== 'call_expression') return false;
+    const callee = findCallee(call);
+    return callee?.type === 'identifier' && TEST_CALL_NAMES.has(callee.text);
+}
+
+function listFunctionOrderFindings(source: SourceTree, { isTest }: { isTest: boolean }): CheckFinding[] {
+    const { rootNode, path, grammar } = source;
     const listed = listExportedNames(rootNode);
-    const functions = rootNode.namedChildren.flatMap((statement) => {
-        const described = describeTopLevelFunction(statement, grammar, listed);
-        return described === undefined ? [] : [{ statement, ...described }];
-    });
-    const firstPublic = functions.find(({ isPrivate }) => !isPrivate);
-    if (firstPublic === undefined) return [];
-    const start = functions.indexOf(firstPublic);
-    const referenced = new Set<string>();
-    for (const { statement } of functions.slice(0, start))
-        for (const node of statement.descendantsOfType(REFERENCE_TYPES)) referenced.add(node.text);
-    return functions.slice(start).flatMap(({ statement, name, isPrivate }) => {
-        const isCalledAbove = referenced.has(name);
-        for (const node of statement.descendantsOfType(REFERENCE_TYPES)) referenced.add(node.text);
-        if (!isPrivate || isCalledAbove) return [];
+    const hasTestCalls = isTest && grammar !== 'python' && grammar !== 'swift';
+    const statements = rootNode.namedChildren.map((statement) => ({
+        statement,
+        described: describeTopLevelFunction(statement, grammar, listed),
+    }));
+    const start = statements.findIndex(({ statement, described }) =>
+        described === undefined ? hasTestCalls && isTestCall(statement) : !described.isPrivate,
+    );
+    if (start === -1) return [];
+    const firstPublic = statements[start]?.described?.name;
+    return statements.slice(start + 1).flatMap(({ statement, described }) => {
+        if (described?.isPrivate !== true) return [];
+        const { name } = described;
         return [
             {
                 file: path,
                 line: statement.startPosition.row + 1,
                 column: statement.startPosition.column + 1,
                 rule: FUNCTION_ORDER_RULE,
-                message: `The private function ${name} sits below the public function ${firstPublic.name}. Move ${name} above ${firstPublic.name}.`,
+                message:
+                    firstPublic === undefined
+                        ? `The helper ${name} sits below the first test. Move ${name} above the first test.`
+                        : `The private function ${name} sits below the public function ${firstPublic}. Move ${name} above ${firstPublic}.`,
             },
         ];
     });
 }
 
 /**
-Report each private top-level function below a public one, so that a file can read from the top: a public function, then
-its helpers. Python marks a private function with a leading `_`, and Swift with `private` or `fileprivate`. In
-JavaScript and TypeScript, a function or a constant set to a function stays private unless the module exports it.
+Report each private top-level function below the first public one, so that a reader finds a helper before the code that
+uses it. Python marks a private function with a leading `_`, and Swift with `private` or `fileprivate`. In JavaScript
+and TypeScript, a function or a constant set to a function stays private unless the module exports it, and in a test
+file the first top-level `test`, `it`, or `describe` call counts as the first public function.
 */
 async function checkFunctionOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
+    const isTestFile = buildPathMatcher(planned.scope.settings.test_files);
     const files = planned.files.flatMap((file) => {
         const grammars = planned.scope.settings.configurations.map((language) => selectGrammar(file.path, language));
         const grammar = grammars.find((found) => found !== undefined);
@@ -113,7 +133,7 @@ async function checkFunctionOrder(session: Session, planned: PlannedCheck): Prom
     });
     const findings: CheckFinding[] = [];
     await visitParsedSources({ cache: session.cache, resources: session.resources, files }, (source) => {
-        findings.push(...listFunctionOrderFindings(source.rootNode, source.path, source.grammar));
+        findings.push(...listFunctionOrderFindings(source, { isTest: isTestFile(source.path) }));
     });
     return findings;
 }

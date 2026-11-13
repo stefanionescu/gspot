@@ -206,15 +206,21 @@ function isCommandFence(language: string | null | undefined, written: string | n
 
 function extractProseLines(text: string): ProseLine[] {
     const lines: ProseLine[] = [];
-    const addLines = (value: string, position: { start: { line: number } } | undefined, isFenced: boolean): void => {
+    const addLines = (
+        value: string,
+        position: { start: { line: number } } | undefined,
+        { isFenced }: { isFenced: boolean },
+    ): void => {
         const first = (position?.start.line ?? 1) + (isFenced ? 1 : 0);
         for (const [index, line] of value.split('\n').entries())
             lines.push({ number: first + index, text: line, command: isFenced });
     };
     visit(fromMarkdown(text), (node) => {
-        if (node.type === 'code' && isCommandFence(node.lang, node.meta)) addLines(node.value, node.position, true);
-        else if (node.type === 'definition') addLines(node.url, node.position, false);
-        else if (node.type === 'text' || node.type === 'inlineCode') addLines(node.value, node.position, false);
+        if (node.type === 'code' && isCommandFence(node.lang, node.meta))
+            addLines(node.value, node.position, { isFenced: true });
+        else if (node.type === 'definition') addLines(node.url, node.position, { isFenced: false });
+        else if (node.type === 'text' || node.type === 'inlineCode')
+            addLines(node.value, node.position, { isFenced: false });
     });
     return lines;
 }

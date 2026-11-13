@@ -88,7 +88,7 @@ test.each(['', 'app'])('the default migration folders are read and a set folder 
     ).toStrictEqual(['1_first.sql', '2_second.sql', '3_third.sql', '4_rollback.down.sql']);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        settings + '[postgres]\nmigrations_folder = "custom"\n[scope.postgres]\nmigrations_folder = "custom"\n',
+        `${settings}[postgres]\nmigrations_folder = "custom"\n[scope.postgres]\nmigrations_folder = "custom"\n`,
     );
 
     const replacedSession = await openSession(sandbox.path);

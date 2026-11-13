@@ -17,6 +17,11 @@ import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 
+function readToolDependencies(session: Session): Record<string, string> | undefined {
+    const project = buildToolProjects(session).find(({ path }) => path === GSPOT_PATHS.npmProject)!;
+    return packageJsonSchema.parse(JSON.parse(project.content)).devDependencies;
+}
+
 test.each([...TOOL_PROJECT_PACKAGES])('$name: the installers give the expected tool project package', (row) => {
     const tool = { ...buildProgramPin(row.tool, row.version), system: row.system, installers: row.installers };
     const placement = findPackagePin(tool);
@@ -46,11 +51,6 @@ test('two plugin records that name one package at two versions are refused', asy
         }),
     );
 });
-
-function readToolDependencies(session: Session): Record<string, string> | undefined {
-    const project = buildToolProjects(session).find(({ path }) => path === GSPOT_PATHS.npmProject)!;
-    return packageJsonSchema.parse(JSON.parse(project.content)).devDependencies;
-}
 
 test('a plugin package joins the tool project at its pin, and a tracked plugin module does not', async () => {
     const files = {

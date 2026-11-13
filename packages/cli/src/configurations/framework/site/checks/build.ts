@@ -15,7 +15,7 @@ import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText, quoteCommand } from '#cli/system/text.ts';
 import type { SiteBuild } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 const SITE_BUILDS = Symbol('site builds');
 

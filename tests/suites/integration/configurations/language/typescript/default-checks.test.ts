@@ -189,9 +189,7 @@ export const lateLabel = \`Late: \${receipt}\`;
         corrected: {
             files: {
                 'src/orders/unused.ts': UNUSED_SOURCE,
-                'src/main.ts':
-                    RECEIPT_SOURCE +
-                    `
+                'src/main.ts': `${RECEIPT_SOURCE}
 import { unused } from './orders/unused.js';
 export const additional = unused;
 `,

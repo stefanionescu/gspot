@@ -1,3 +1,24 @@
+// no-constant-assertions rule
+export const DEEP_MATCHERS = {
+    'jest-like': ['toEqual', 'not.toEqual'],
+    jasmine: ['toEqual', 'not.toEqual'],
+    playwright: ['toEqual', 'not.toEqual'],
+    'chai-bdd': ['deep.equal', 'not.deep.equal'],
+    cypress: ['deep.equal', 'not.deep.equal'],
+    'chai-assert': ['deepEqual', 'notDeepEqual'],
+    'node-assert': ['deepStrictEqual', 'notDeepStrictEqual'],
+} as const;
+export const FRESH_PREDICATES = new Set<string>(['truthy', 'defined', 'exists']);
+export const FRESH_VALUES = new Set<string>([
+    'ArrayExpression',
+    'ObjectExpression',
+    'FunctionExpression',
+    'ArrowFunctionExpression',
+    'ClassExpression',
+    'NewExpression',
+]);
+export const IDENTITY_STYLES = new Set<string>(['jest-like', 'playwright', 'node-assert']);
+
 // no-mismatched-assertion-types rule
 export const OPEN_CATEGORIES = new Set(['object', 'null', 'undefined', 'unknown']);
 export const TYPE_CATEGORIES = new Map([

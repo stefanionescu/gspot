@@ -37,6 +37,7 @@ files = { filenames = ["bun.lock", "package-lock.json", "npm-shrinkwrap.json", "
 large_files = true
 name = "osv-scanner"
 needs = ["network"]
+rules = ["DEPENDENCIES.md"]
 runs = "once"
 stage = "push"
 command = ["osv-scanner", "scan", "source", "--config", "{config_file:osv-scanner}", "--format", "json", "--allow-no-lockfiles", "{files:prefix=--lockfile=:}"]
@@ -53,6 +54,7 @@ help = "Set every package.json to the same version of the dependency, then updat
 level = "all"
 name = "syncpack"
 output = { format = "regex", pattern = "^\\s*✘ (?<message>.+ in (?<file>\\S+) at \\S+) \\((?<rule>[A-Za-z]+)\\)$" }
+rules = ["DEPENDENCIES.md"]
 runs = "once"
 stage = "push"
 summary = "Checks that each dependency has ranges that agree across the workspace."
@@ -64,6 +66,7 @@ example = "A lockfile URL outside `dependencies.allowed_registries` reports its 
 files = { filenames = ["package-lock.json", "npm-shrinkwrap.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", "bun.lockb"], kinds = ["source", "generated"] }
 help = "Install the package again from an allowed registry, or add the host to `dependencies.allowed_registries`. Keep the lockfile of one package manager, and delete the others."
 name = "lockfiles"
+rules = ["DEPENDENCIES.md"]
 runs = "scope"
 stage = "commit"
 summary = "Checks that lockfile downloads use HTTPS and an allowed registry host, and that each scope holds the lockfiles of one package manager."
@@ -74,6 +77,7 @@ example = "A `package.json` that asks for `zod ^4.1.0` while `bun.lock` records 
 files = { filenames = ["package.json", "package-lock.json", "pnpm-lock.yaml", "bun.lock"], kinds = ["source", "generated"] }
 help = "Run the install of the package manager, and commit the lockfile it writes."
 name = "stale-lockfile"
+rules = ["DEPENDENCIES.md"]
 runs = "scope"
 stage = "commit"
 summary = "Checks that each `package.json` declares the dependencies that its npm, pnpm, or Bun lockfile records."
@@ -84,6 +88,7 @@ example = "A `packageManager` of `bun@1.4.2` while `mise.toml` pins `bun = \"1.4
 files = { filenames = ["package.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", ".mise.local.toml", "mise.local.toml", ".mise.toml", "mise.toml", "**/mise/config.toml", "**/.mise/config.toml", "**/.config/mise.toml", "**/.config/mise/config.toml"], kinds = ["source", "generated"] }
 help = "Write the same version of the package manager in packageManager and in mise.toml, and give pnpm, Yarn, and Bun a packageManager field."
 name = "package-manager-pin"
+rules = ["DEPENDENCIES.md"]
 runs = "scope"
 stage = "commit"
 summary = "Checks that the `packageManager` field of `package.json` and the mise pin of that package manager name one version, and that a pnpm, Yarn, or Bun project has the field."

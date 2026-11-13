@@ -13,7 +13,7 @@ export const ACTIONLINT_EXITS = [
 const CALLED_WORKFLOW = '.github/workflows/called.yml';
 const CALLED_WORKFLOW_REFERENCES = [
     [`$/${CALLED_WORKFLOW}`, `./${CALLED_WORKFLOW}`],
-    [String.raw`"\x24/` + `${CALLED_WORKFLOW}"`, String.raw`"\x2e/` + `${CALLED_WORKFLOW}"`],
+    [String.raw`"\x24/${CALLED_WORKFLOW}"`, String.raw`"\x2e/${CALLED_WORKFLOW}"`],
     [`|- # $comment\n          $/${CALLED_WORKFLOW}`, `|- # $comment\n          ./${CALLED_WORKFLOW}`],
     ['$/.github/workflows/$called.yml', './.github/workflows/$called.yml'],
 ] as const;

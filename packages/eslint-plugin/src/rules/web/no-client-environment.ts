@@ -126,7 +126,7 @@ export const noClientEnvironment = createRule<ClientEnvironmentOptions, 'private
                 )
                     reportPrivateRead(node, viteNames);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const access of listGlobalEnvironmentReads(context.sourceCode))
                     reportPrivateRead(access, allowedNames);
             },

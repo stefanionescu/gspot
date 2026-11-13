@@ -26,25 +26,24 @@ export const noDefaultUtilityImports = createRule<[], 'named' | 'method'>({
     create(context) {
         const versions = readPackageFacts(context).dependencies;
         return {
-            'ImportDeclaration[importKind!="type"]:has(ImportDefaultSpecifier):not(:has(ImportNamespaceSpecifier))'(
-                node: TSESTree.ImportDeclaration,
-            ) {
-                const library = node.source.value;
-                const recommendation = UTILITY_LIBRARIES.get(library);
-                const range = versions.get(library);
-                if (
-                    recommendation === undefined ||
-                    range === undefined ||
-                    allowsVersion(range, recommendation.minimum) !== true
-                )
-                    return;
-                const { example } = recommendation;
-                context.report({
-                    node,
-                    messageId: example === undefined ? 'named' : 'method',
-                    data: { library, example },
-                });
-            },
+            'ImportDeclaration[importKind!="type"]:has(ImportDefaultSpecifier):not(:has(ImportNamespaceSpecifier))':
+                function (node: TSESTree.ImportDeclaration) {
+                    const library = node.source.value;
+                    const recommendation = UTILITY_LIBRARIES.get(library);
+                    const range = versions.get(library);
+                    if (
+                        recommendation === undefined ||
+                        range === undefined ||
+                        allowsVersion(range, recommendation.minimum) !== true
+                    )
+                        return;
+                    const { example } = recommendation;
+                    context.report({
+                        node,
+                        messageId: example === undefined ? 'named' : 'method',
+                        data: { library, example },
+                    });
+                },
         };
     },
 });

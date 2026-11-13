@@ -21,7 +21,7 @@ import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, extractExtension, isInside } from '#cli/system/paths.ts';
 import { requireTypescript } from '#cli/system/typescript.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -115,7 +115,7 @@ async function checkJavascriptBiome(session: CheckSession, planned: PlannedCheck
     const writer = openFiles(copy.path);
     const names = new Map<string, string>();
     const scriptFiles = scripts.map((file) => {
-        const path = file.path + '.js';
+        const path = `${file.path}.js`;
         names.set(path, file.path);
         writer.write(path, { bytes: readBytes(session.cache, file.path), mode: PRIVATE_FILE });
         return { ...file, path };

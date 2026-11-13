@@ -23,6 +23,7 @@ command = ["lychee", "--config", "{config_file:lychee}", "--root-dir", "{root}/.
 example = "The link `[Setup](missing.md)` reports a broken link when no `missing.md` exists. Point it at the setup guide, or add that file."
 help = "Point the link at the file or heading that exists, or delete it. A link that starts with `/` starts at the repository root."
 name = "lychee"
+rules = ["DOCS.md", "WRITING.md"]
 stage = "commit"
 summary = "Checks that local documentation links reach existing files and valid anchor or text fragments."
 why = "A dead link inside the repository breaks silently, and readers hit it first."
@@ -43,6 +44,7 @@ files = { extensions = [".md", ".mdx"], filenames = ["package.json"], paths = ["
 help = "Fix the path or the task name. To keep an example out, write it in a fence with `title=`."
 name = "missing-paths"
 reads_deleted_paths = true
+rules = ["DOCS.md", "WRITING.md"]
 runs = "once"
 stage = "commit"
 summary = "Checks that documented paths point to tracked files, and that each documented `run` command of mise or a package manager names a task or script."
@@ -53,6 +55,7 @@ example = "A scope without `README.md` reports the missing file. Add one that ex
 help = "Add a README.md that says what the scope does and how to use it, and a LICENSE file at the root."
 level = "all"
 name = "required-files"
+rules = ["DOCS.md"]
 stage = "commit"
 summary = "Checks that every scope has a README.md and the root has a LICENSE."
 why = "A scope with no README leaves readers to guess what it does."
@@ -64,6 +67,7 @@ files = { paths = ["**"] }
 help = "Delete the version, or read it from the package manifest."
 level = "all"
 name = "version-strings"
+rules = ["DOCS.md", "WRITING.md"]
 runs = "scope"
 stage = "commit"
 summary = "Reports the version of a package manifest of the scope in Markdown and test files, except changelogs."

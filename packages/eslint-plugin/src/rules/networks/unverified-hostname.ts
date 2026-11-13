@@ -34,7 +34,7 @@ export const unverifiedHostname = createRule<[], 'unverified'>({
                     if (checker !== undefined) checks.push({ call: node, checker });
                 }
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const { call, checker } of checks) {
                     // Node treats a falsy result as a match and any other result as the error that ends the connection.
                     const isAccepting = listReturnedValues(checker, source).every((result) => {

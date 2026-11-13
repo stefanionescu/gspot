@@ -21,6 +21,7 @@ import type {
     Settings,
     SettingsError,
     SettingsTable,
+    WrittenKeyLookup,
     WrittenScopeTable,
     WrittenSetting,
 } from '#cli/types/settings.ts';
@@ -34,9 +35,7 @@ function formatWeakeningError(key: string, written: WrittenSetting, shipped: unk
 function validateWrittenReason(
     key: string,
     written: WrittenSetting,
-    setting: Setting,
-    scopePath: string,
-    shipped: unknown,
+    { setting, scopePath, shipped }: { setting: Setting; scopePath: string; shipped: unknown },
 ): SettingsError[] {
     const joined = joinSettingPaths(key, written.value, scopePath);
     if (written.reason !== undefined || !isWeakening(setting, joined, shipped)) return [];
@@ -53,13 +52,10 @@ function validateWrittenReason(
 }
 
 function validateWrittenKey(
-    availableSettings: AvailableSettings,
-    settings: Settings,
-    table: SettingsTable,
-    location: { scopePath: string; offered: ReadonlySet<string> },
     key: string,
+    table: SettingsTable,
+    { availableSettings, settings, scopePath, offered }: WrittenKeyLookup,
 ): SettingsError[] {
-    const { scopePath, offered } = location;
     const match = findSetting(availableSettings, key);
     if (!match)
         return [
@@ -71,7 +67,7 @@ function validateWrittenKey(
     const written = findWrittenSetting(table, key);
     if (!written) return [];
     const shipped = findSettingDefault(availableSettings, settings, match, scopePath)?.value;
-    return validateWrittenReason(key, written, match.setting, scopePath, shipped);
+    return validateWrittenReason(key, written, { setting: match.setting, scopePath, shipped });
 }
 
 function listUnsettledConflicts(
@@ -150,13 +146,13 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
 }
 
 function listRuleTables({ table, path }: WrittenScopeTable) {
-    const eslint = table.tools?.['eslint'];
+    const eslint = table.tools?.eslint;
     const overrides = eslint !== undefined && 'override' in eslint ? eslint.override : undefined;
     return [
-        { tool: 'eslint', rules: eslint?.['rules'], path: [...path, 'tools', 'eslint', 'rules'] },
+        { tool: 'eslint', rules: eslint?.rules, path: [...path, 'tools', 'eslint', 'rules'] },
         {
             tool: 'markdownlint',
-            rules: table.tools?.['markdownlint']?.['rules'],
+            rules: table.tools?.markdownlint?.rules,
             path: [...path, 'tools', 'markdownlint', 'rules'],
         },
         ...(overrides ?? []).map((override, index) => ({
@@ -212,7 +208,7 @@ export function validateKeys(
             errors: active.errors,
         };
         const found = listWrittenKeys(table, selectedAvailable).flatMap((key) =>
-            validateWrittenKey(selectedAvailable, settings, table, { scopePath, offered }, key),
+            validateWrittenKey(key, table, { availableSettings: selectedAvailable, settings, scopePath, offered }),
         );
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }

@@ -23,7 +23,7 @@ export const noVueMixins = createRule<[], 'mixin'>({
     create(context) {
         if (!isVueThreeUsed(context)) return {};
         return {
-            'ObjectExpression > Property'(node: TSESTree.Property) {
+            'ObjectExpression > Property': function (node: TSESTree.Property) {
                 const source = context.sourceCode;
                 const value =
                     ASTUtils.getPropertyName(node) === 'mixins' ? getExpressionValue(node.value, source) : undefined;

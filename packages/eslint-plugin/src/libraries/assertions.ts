@@ -33,9 +33,7 @@ import { getMemberRoot, isCallOf } from '../language/syntax.ts';
 import type {
     Assertion,
     AssertionChecks,
-    AssertionComparison,
     AssertionKind,
-    AssertionPredicate,
     AssertionStyles,
     ChaiChain,
     ExpectCall,
@@ -44,10 +42,6 @@ import type { FileContext } from '../types/plugin.ts';
 import { isCypressChain } from './testing.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
-const expectPredicates = new Map<string | null, AssertionPredicate>(EXPECT_PREDICATES);
-const expectComparisons = new Map<string | null, AssertionComparison>(EXPECT_COMPARISONS);
-const chaiPredicates = new Map<string | null, AssertionPredicate>(CHAI_PREDICATES);
-const chaiComparisons = new Map<string | null | undefined, AssertionComparison>(CHAI_COMPARISONS);
 const chaiAssertChecks = new Map<string, AssertionChecks>(
     CHAI_ASSERT_CHECKS.map(([name, checks]) => [name, { style: 'chai-assert', ...checks }]),
 );
@@ -81,11 +75,11 @@ function getExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyle
     const received = expect.call.arguments.find((argument) => argument.type !== AST_NODE_TYPES.SpreadElement);
     if (received === undefined) return undefined;
     const matcher = ASTUtils.getPropertyName(callee);
-    const predicate = node.arguments.length === 0 ? expectPredicates.get(matcher) : undefined;
+    const predicate = node.arguments.length === 0 ? EXPECT_PREDICATES.get(matcher) : undefined;
     const { negated } = expect;
     if (predicate !== undefined)
         return { received, negated, style, kind: 'predicate', predicate, node, report: received };
-    const checks = { style, comparison: expectComparisons.get(matcher), negated };
+    const checks = { style, comparison: EXPECT_COMPARISONS.get(matcher), negated };
     return getCheckedCall(node, checks, callee.property, [received, ...node.arguments]);
 }
 
@@ -104,7 +98,7 @@ function getChaiChain(node: TSESTree.Node): ChaiChain | undefined {
 
 function getChaiPredicate(node: TSESTree.MemberExpression): Assertion | undefined {
     const chain = getChaiChain(node.object);
-    const predicate = chaiPredicates.get(ASTUtils.getPropertyName(node));
+    const predicate = CHAI_PREDICATES.get(ASTUtils.getPropertyName(node));
     if (chain === undefined || predicate === undefined) return undefined;
     const isNegated = chain.names.includes('not');
     return {
@@ -122,7 +116,7 @@ function getChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): As
     const member = node.callee;
     if (!styles.chai || member.type !== AST_NODE_TYPES.MemberExpression) return undefined;
     const chain = getChaiChain(member.object);
-    const comparison = chaiComparisons.get(ASTUtils.getPropertyName(member));
+    const comparison = CHAI_COMPARISONS.get(ASTUtils.getPropertyName(member));
     if (chain === undefined || comparison === undefined) return undefined;
     const checks = {
         style: 'chai-bdd' as const,
@@ -135,7 +129,7 @@ function getChaiCall(node: TSESTree.CallExpression, styles: AssertionStyles): As
 function getCypressChecks(chainer: TSESTree.Node | undefined): AssertionChecks | undefined {
     const names =
         chainer?.type === AST_NODE_TYPES.Literal && typeof chainer.value === 'string' ? chainer.value.split('.') : [];
-    const comparison = chaiComparisons.get(names.at(-1));
+    const comparison = CHAI_COMPARISONS.get(names.at(-1));
     if (comparison === undefined) return undefined;
     return {
         style: 'cypress',

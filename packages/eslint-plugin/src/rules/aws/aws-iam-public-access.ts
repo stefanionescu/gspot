@@ -51,7 +51,7 @@ export const awsIamPublicAccess = createRule<[], 'publicPrincipal'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'NewExpression, CallExpression'(node: TSESTree.NewExpression | TSESTree.CallExpression) {
+            'NewExpression, CallExpression': function (node: TSESTree.NewExpression | TSESTree.CallExpression) {
                 const principals = listAllowStatements(source, node).map((policy) =>
                     findPublicPrincipal(source, policy),
                 );

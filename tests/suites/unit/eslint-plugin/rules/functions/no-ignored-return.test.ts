@@ -14,15 +14,18 @@ buildTypedRuleTester().run('no-ignored-return', noIgnoredReturn, {
             errors: [{ messageId: 'ignored', data: { method: 'trim' } }],
         },
         { code: 'declare const names: string[]; names.map((name) => name);', errors: [{ messageId: 'map' }] },
-        { code: 'Math.max(1, 2);', errors: [{ messageId: 'ignored' }] },
-        { code: 'declare const total: number; total.toFixed(2);', errors: [{ messageId: 'ignored' }] },
+        { code: 'Math.max(1, 2);', errors: [{ messageId: 'ignored', data: { method: 'max' } }] },
+        {
+            code: 'declare const total: number; total.toFixed(2);',
+            errors: [{ messageId: 'ignored', data: { method: 'toFixed' } }],
+        },
         {
             code: 'declare const title: string; title.replace("a", "b");',
             errors: [{ messageId: 'ignored', data: { method: 'replace' } }],
         },
         {
             code: 'const list = [1];\nlet total = 0;\nlist.find((item) => { const save = () => { total = item; }; return save(); });',
-            errors: [{ messageId: 'ignored' }],
+            errors: [{ messageId: 'ignored', data: { method: 'find' } }],
         },
     ],
 });

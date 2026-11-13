@@ -40,24 +40,6 @@ const REASON = 'The generated parser keeps its long lines.';
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 
-test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
-    'SwiftLint $name reports the source lint rules and passes after the fix',
-    async ({ scope }) => {
-        await using sandbox = await prepareSwiftScope(scope);
-        const { root, prefix } = sandbox;
-        await writeFile(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
-        const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']));
-        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
-        expect(listFindingRows(broken.report)).toStrictEqual([
-            { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'force_unwrapping' },
-            { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'no_magic_numbers' },
-        ]);
-        await writeFile(join(root, `${prefix}Sources/Value.swift`), CORRECTED_PARSER_SOURCE);
-        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
-        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-    },
-);
-
 async function prepareSwiftScope(scopePath: string) {
     await using resources = new AsyncDisposableStack();
     const sandbox = resources.use(await createGitSandbox({}));
@@ -76,6 +58,24 @@ async function prepareSwiftScope(scopePath: string) {
     const lifetime = resources.move();
     return { root, prefix, [Symbol.asyncDispose]: lifetime[Symbol.asyncDispose].bind(lifetime) };
 }
+
+test.skipIf(!hasToolBuild('swiftlint')).each([...XCTEST_SCOPES])(
+    'SwiftLint $name reports the source lint rules and passes after the fix',
+    async ({ scope }) => {
+        await using sandbox = await prepareSwiftScope(scope);
+        const { root, prefix } = sandbox;
+        await writeFile(join(root, `${prefix}Sources/Value.swift`), PARSER_SOURCE);
+        const broken = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']));
+        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+        expect(listFindingRows(broken.report)).toStrictEqual([
+            { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'force_unwrapping' },
+            { file: `${prefix}Sources/Value.swift`, line: 2, rule: 'no_magic_numbers' },
+        ]);
+        await writeFile(join(root, `${prefix}Sources/Value.swift`), CORRECTED_PARSER_SOURCE);
+        const corrected = await spawnGspot(root, ['check', '--only', 'swift/swiftlint', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+);
 
 test.skipIf(!hasToolBuild('swiftlint'))('SwiftLint at the root fixes a negated flag with --fix', async () => {
     await using sandbox = await prepareSwiftScope('');

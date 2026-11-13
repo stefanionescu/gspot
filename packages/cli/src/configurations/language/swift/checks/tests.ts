@@ -39,7 +39,7 @@ import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { CoverageOutput, CoverageRun, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { TableSettings } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
 
@@ -85,9 +85,7 @@ function parseFailedTests(
 async function measurePackageCoverage(
     session: CheckSession,
     planned: PlannedCheck,
-    plan: Extract<SwiftBuildPlan, { kind: 'package' }>,
-    files: Files,
-    cwd: string,
+    { plan, files, cwd }: { plan: Extract<SwiftBuildPlan, { kind: 'package' }>; files: Files; cwd: string },
 ): Promise<CoverageRun> {
     const tested = await runCheckTool(session, planned, plan.testArguments, { cwd });
     if (tested.code !== 0)
@@ -130,7 +128,7 @@ async function measureCoverage(session: CheckSession, planned: PlannedCheck): Pr
     const cwd = join(source, planned.scope.path);
     files.deleteTree(COVERAGE_BUNDLE);
     return plan.kind === 'package'
-        ? await measurePackageCoverage(session, planned, plan, files, cwd)
+        ? await measurePackageCoverage(session, planned, { plan, files, cwd })
         : await measureXcodeCoverage(session, planned, plan, cwd);
 }
 

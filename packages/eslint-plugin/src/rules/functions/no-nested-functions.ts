@@ -31,7 +31,7 @@ export const noNestedFunctions = createRule<[{ threshold: number }], 'nested'>({
     },
     create(context, [{ threshold }]) {
         return {
-            ':function'(node: FunctionNode) {
+            ':function': function (node: FunctionNode) {
                 if (isTestCallback(node)) return;
                 const chain = [...context.sourceCode.getAncestors(node), node];
                 const depth = chain.filter((each) => ASTUtils.isFunction(each) && !isTestCallback(each)).length;

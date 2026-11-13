@@ -12,6 +12,7 @@ export const INDEX_BASENAMES = new Set([
     'index.mts',
     'index.cts',
 ]);
+export const LOCAL_PREFIXES = ['./', '../', '@/', '~/', '#'] as const;
 export const RESOURCE_QUERY = /\?[\s\S]*/u;
 
 // import-boundaries rule
@@ -119,7 +120,6 @@ export const STANDALONE_DOC_TAG =
     /@(?:callback|copyright|file|fileoverview|import|license|module|namespace|overview|typedef)\b/u;
 
 // no-index-imports rule
-export const LOCAL_PREFIXES = ['./', '../', '@/', '~/', '#'] as const;
 export const MODULE_MOCK_METHODS: ReadonlyMap<string, ReadonlySet<string>> = new Map([
     ['vi', new Set(['mock', 'doMock', 'unmock', 'doUnmock', 'importActual', 'importMock'])],
     [
@@ -136,6 +136,10 @@ export const MODULE_MOCK_METHODS: ReadonlyMap<string, ReadonlySet<string>> = new
         ]),
     ],
 ]);
+
+// no-renamed-imports rule
+export const PACKAGE_NAME = /^(?:@[^/]+\/)?[^/]+/u;
+export const WORKSPACE_PROTOCOL = 'workspace:';
 
 // no-trivial-files rule
 export const BARREL_DECLARATIONS = new Set<string>([

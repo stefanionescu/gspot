@@ -23,7 +23,9 @@ export const noGeneratedKeys = createRule<[], 'generated'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'JSXAttribute[name.name="key"] > JSXExpressionContainer.value'(node: TSESTree.JSXExpressionContainer) {
+            'JSXAttribute[name.name="key"] > JSXExpressionContainer.value': function (
+                node: TSESTree.JSXExpressionContainer,
+            ) {
                 const { expression } = node;
                 const isGenerated = listBodyNodes(expression, source).some(
                     (each) =>

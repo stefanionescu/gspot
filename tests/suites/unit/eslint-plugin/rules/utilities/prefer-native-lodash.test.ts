@@ -57,15 +57,32 @@ buildRuleTester().run('prefer-native-lodash', preferNativeLodash, {
         },
         {
             code: 'import isArray from "lodash.isarray";\nisArray(value);',
-            errors: [{ messageId: 'direct' }],
+            errors: [
+                { messageId: 'direct', data: { alternative: 'Array.isArray()', method: 'isArray', library: 'lodash' } },
+            ],
         },
         {
             code: 'import keys from "lodash/keys";\nkeys(value);',
-            errors: [{ messageId: 'cautious' }],
+            errors: [
+                {
+                    messageId: 'cautious',
+                    data: {
+                        alternative: 'Object.keys()',
+                        method: 'keys',
+                        library: 'lodash',
+                        reason: 'the library treats nullish values differently',
+                    },
+                },
+            ],
         },
         {
             code: 'require("lodash").isInteger(value);',
-            errors: [{ messageId: 'direct' }],
+            errors: [
+                {
+                    messageId: 'direct',
+                    data: { alternative: 'Number.isInteger()', method: 'isInteger', library: 'lodash' },
+                },
+            ],
         },
         ...[
             [
@@ -80,6 +97,12 @@ buildRuleTester().run('prefer-native-lodash', preferNativeLodash, {
                 'String.prototype.includes()',
                 'the library also accepts arrays, objects, and nullish values',
             ],
+            [
+                '_.map([1, 2], double);',
+                'map',
+                'Array.prototype.map()',
+                'the library also accepts objects and nullish values',
+            ],
         ].map(([call = '', method = '', alternative = '', reason = '']) => ({
             code: `import _ from "lodash";\n${call}`,
             errors: [
@@ -89,20 +112,6 @@ buildRuleTester().run('prefer-native-lodash', preferNativeLodash, {
                 },
             ],
         })),
-        {
-            code: 'import _ from "lodash";\n_.map([1, 2], double);',
-            errors: [
-                {
-                    messageId: 'cautious',
-                    data: {
-                        alternative: 'Array.prototype.map()',
-                        method: 'map',
-                        library: 'lodash',
-                        reason: 'the library also accepts objects and nullish values',
-                    },
-                },
-            ],
-        },
     ],
 });
 
@@ -133,7 +142,17 @@ buildTypedRuleTester().run('prefer-native-lodash with types', preferNativeLodash
         },
         {
             code: 'import _ from "lodash";\ndeclare const pair: [number, number];\n_.map(pair, (value) => value * 2);',
-            errors: [{ messageId: 'cautious' }],
+            errors: [
+                {
+                    messageId: 'cautious',
+                    data: {
+                        alternative: 'Array.prototype.map()',
+                        method: 'map',
+                        library: 'lodash',
+                        reason: 'the library also accepts objects and nullish values',
+                    },
+                },
+            ],
         },
     ],
 });

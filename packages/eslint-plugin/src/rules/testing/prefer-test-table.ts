@@ -149,7 +149,7 @@ export const preferTestTable = createRule<[], 'table'>({
                 const test = getComparableTest(node, call, source);
                 if (test !== undefined) frames.set(frame, [...(frames.get(frame) ?? []), test]);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 const groups = frames.values().flatMap((tests) => listSimilarGroups(tests, source));
                 for (const { base, count } of groups)
                     context.report({ node: base.title, messageId: 'table', data: { count: String(count) } });

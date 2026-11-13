@@ -17,7 +17,7 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { escapeRegExp } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);

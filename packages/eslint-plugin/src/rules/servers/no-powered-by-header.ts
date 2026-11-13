@@ -73,7 +73,7 @@ export const noPoweredByHeader = createRule<[], 'header'>({
                 const name = getModuleName(node.init.callee, context.sourceCode);
                 if (name !== undefined && POWERED_BY_FACTORIES.has(name)) applications.push(node);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const declaration of applications) {
                     const variables = context.sourceCode.getDeclaredVariables(declaration);
                     if (

@@ -201,7 +201,7 @@ export async function planNpmLockfile(
     if (previous !== undefined && isNpmLockfileFresh(install))
         return { path, next: { bytes: previous.bytes, mode: OWNER_WRITABLE_FILE }, previous };
     const content = await createNpmLockfile(install, { toolProjectFile, lockfileName: lockfile });
-    return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous: previous };
+    return { path, next: { bytes: Buffer.from(content), mode: OWNER_WRITABLE_FILE }, previous };
 }
 
 export function isNpmLockfileFresh(install: NpmToolInstall): boolean {

@@ -3,7 +3,7 @@ title: Concepts
 ---
 
 import InlineText from '#docs/components/InlineText.astro';
-import { buildLevelRows } from '#docs/reference/levels.ts';
+import { LEVEL_ROWS } from '#docs/reference/levels.ts';
 
 ## Configurations
 
@@ -41,7 +41,7 @@ The level decides how strict the checks are.
         </tr>
     </thead>
     <tbody>
-        {buildLevelRows().map(({ level, description, tools }) => (
+        {LEVEL_ROWS.map(({ level, description, tools }) => (
             <tr>
                 <td>
                     <code>{level}</code>

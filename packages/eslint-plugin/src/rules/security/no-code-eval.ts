@@ -46,12 +46,12 @@ export const noCodeEval = createRule<[], 'dynamicCode' | 'scriptUrl'>({
         return {
             CallExpression: checkCall,
             NewExpression: checkCall,
-            'TemplateLiteral[expressions.length>0]'(node: TSESTree.TemplateLiteral) {
+            'TemplateLiteral[expressions.length>0]': function (node: TSESTree.TemplateLiteral) {
                 const [head] = node.quasis;
                 const text = head?.value.raw ?? '';
                 if (SCRIPT_URL.test(text)) context.report({ node, messageId: 'scriptUrl' });
             },
-            'BinaryExpression[operator="+"]'(node: TSESTree.BinaryExpression) {
+            'BinaryExpression[operator="+"]': function (node: TSESTree.BinaryExpression) {
                 const isOutermost =
                     node.parent.type !== AST_NODE_TYPES.BinaryExpression || node.parent.operator !== '+';
                 if (isOutermost && isDynamicString(node) && SCRIPT_URL.test(getLeftmostText(node)))

@@ -149,7 +149,7 @@ export const noInvariantReturns = createRule<[], 'invariant'>({
             SwitchCase: openBranch,
             'SwitchCase:exit': leaveBranch,
             'ExpressionStatement[expression.type=/^(?:Assignment|Await|Call|Update)Expression$/]': recordEffect,
-            ':function:exit'(node: TSESTree.Node) {
+            ':function:exit': function (node: TSESTree.Node) {
                 const scope = scopes.at(-1);
                 if (scope === undefined || !isInvariant(scope, context.sourceCode)) return;
                 context.report({ node, messageId: 'invariant' });

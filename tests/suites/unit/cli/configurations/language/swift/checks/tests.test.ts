@@ -24,6 +24,28 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+async function runXcodeCoverage(
+    sandbox: TestdirResult,
+    options: { tables: string; xcodebuild: string[]; xcrun: string[] },
+): Promise<RunResult> {
+    using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });
+    await writeXcodeProject(sandbox, options);
+    return await runChecks(await openSession(sandbox.path), buildRunOptions({ stage: 'push', only: ['swift/tests'] }));
+}
+
+async function writeXcodeProject(
+    sandbox: TestdirResult,
+    options: { tables: string; xcodebuild: string[]; xcrun: string[] },
+): Promise<void> {
+    await createFileTree(sandbox.path, {
+        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: options.tables }),
+        'ExampleTests.swift': XCTEST_SOURCE,
+        'Example.xcodeproj/project.pbxproj': '',
+    });
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcodebuild', 'fakes/xcodebuild', ...options.xcodebuild);
+    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcrun', 'fakes/tool', ...options.xcrun);
+}
+
 test.each([
     {
         name: 'an XCTest',
@@ -60,28 +82,6 @@ test('xccov output without targets stops swift/tests with an error', async () =>
         { check: 'swift/tests', status: 'error', note: expect.any(String) as string },
     ]);
 });
-
-async function runXcodeCoverage(
-    sandbox: TestdirResult,
-    options: { tables: string; xcodebuild: string[]; xcrun: string[] },
-): Promise<RunResult> {
-    using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });
-    await writeXcodeProject(sandbox, options);
-    return await runChecks(await openSession(sandbox.path), buildRunOptions({ stage: 'push', only: ['swift/tests'] }));
-}
-
-async function writeXcodeProject(
-    sandbox: TestdirResult,
-    options: { tables: string; xcodebuild: string[]; xcrun: string[] },
-): Promise<void> {
-    await createFileTree(sandbox.path, {
-        'gspot.toml': buildSandboxSettings(['swift', 'xcode'], { tables: options.tables }),
-        'ExampleTests.swift': XCTEST_SOURCE,
-        'Example.xcodeproj/project.pbxproj': '',
-    });
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcodebuild', 'fakes/xcodebuild', ...options.xcodebuild);
-    await writeProgramCommand(sandbox.path, 'node_modules/.bin/xcrun', 'fakes/tool', ...options.xcrun);
-}
 
 test('swift/tests: XCTest coverage refuses an external result link and removes a previous result bundle', async () => {
     using _system = spyOn(environment, 'readHost').mockReturnValue({ platform: 'macos', arch: process.arch });

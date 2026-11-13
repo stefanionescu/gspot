@@ -1,6 +1,5 @@
 // Prints the material for the CHANGELOG.md section of one CLI version. `mise run changelog <version>` runs it on Bun.
 import { execFile } from 'node:child_process';
-import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 type Commit = { hash: string; subject: string; body: string };
@@ -16,7 +15,8 @@ const COMPARE_URL = 'https://github.com/stefanionescu/gspot/compare';
 const NO_SCOPE = 'no scope';
 
 const run = promisify(execFile);
-const root = join(import.meta.dir, '../..');
+// The changelog task runs this script from the root of the repository.
+const root = process.cwd();
 
 async function runGit(gitArguments: string[]): Promise<string | undefined> {
     try {

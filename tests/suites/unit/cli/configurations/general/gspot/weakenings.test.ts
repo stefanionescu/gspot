@@ -5,6 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { IMPORT_RULE_TABLES } from '#tests/config/configurations/general.ts';
 import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
@@ -65,6 +66,95 @@ test.each([
     commitAll(sandbox.path);
     await writeFile(join(sandbox.path, 'gspot.toml'), head);
     expect(await listWeakeningRules(sandbox.path)).toStrictEqual([...rules]);
+});
+
+test.each([
+    {
+        name: 'an import rule that gains a can_import entry at the head is a weakening',
+        head: IMPORT_RULE_TABLES.replace('can_import = ["core"]', 'can_import = ["core", "store"]'),
+        rules: ['import-rule'],
+    },
+    {
+        name: 'an import rule that moves below another one may import it, which is a weakening',
+        head: `${IMPORT_RULE_TABLES.slice(IMPORT_RULE_TABLES.indexOf('[[import_rule]]\nname = "store"'))}\n${IMPORT_RULE_TABLES.slice(0, IMPORT_RULE_TABLES.indexOf('[[import_rule]]\nname = "store"'))}`,
+        rules: ['import-rule'],
+    },
+    {
+        name: 'an import rule that gains a path at the head is a weakening',
+        head: IMPORT_RULE_TABLES.replace('paths = ["src/app/**"]', 'paths = ["src/app/**", "scripts/**"]'),
+        rules: ['import-rule'],
+    },
+    {
+        name: 'an import rule removed at the head is a weakening',
+        head: IMPORT_RULE_TABLES.slice(0, IMPORT_RULE_TABLES.indexOf('[[import_rule]]\nname = "app"')),
+        rules: ['import-rule'],
+    },
+    {
+        name: 'an import rule added at the head and unchanged rules are no weakening',
+        head: `${IMPORT_RULE_TABLES}\n[[import_rule]]\nname = "main"\npaths = ["src/main.ts"]\n`,
+        rules: [],
+    },
+])('$name', async ({ head, rules }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { tables: IMPORT_RULE_TABLES }),
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'gspot.toml'), buildSandboxSettings([], { tables: head }));
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual([...rules]);
+});
+
+test('an entry removed from javascript.import_boundaries is a weakening, and an added one is not', async () => {
+    const base = '[javascript]\nimport_boundaries = ["src/features/*", "src/pages/*"]\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { tables: base }),
+    });
+    commitAll(sandbox.path);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], { tables: base.replace('"src/pages/*"', '"src/widgets/*"') }),
+    );
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/weakenings');
+    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
+        { rule: 'import-rule', message: expect.stringContaining('src/pages/*') as string },
+    ]);
+});
+
+test('rule options that leave out a shipped key are a weakening', async () => {
+    const options = '[tools.eslint.rules]\n"unicorn/consistent-boolean-name" = [{ checkFunctions = "never" }]\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+    });
+    commitAll(sandbox.path);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], { level: 'all', tables: options }),
+    );
+    const findings = await runSandboxCheck(sandbox.path, 'gspot/weakenings');
+    expect(findings.map(({ rule, message }) => ({ rule, message }))).toStrictEqual([
+        { rule: 'rule-options', message: expect.stringContaining('prefixes') as string },
+    ]);
+});
+
+test('rule options that change a shipped key are a weakening, and options that repeat every shipped key are not', async () => {
+    const repeated =
+        '[tools.eslint.rules]\n"n/no-unpublished-import" = [{ ignoreTypeImport = true, allowModules = ["bun"] }]\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { level: 'all' }),
+    });
+    commitAll(sandbox.path);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], { level: 'all', tables: repeated }),
+    );
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual([]);
+    await writeFile(
+        join(sandbox.path, 'gspot.toml'),
+        buildSandboxSettings(['javascript'], {
+            level: 'all',
+            tables: repeated.replace('ignoreTypeImport = true', 'ignoreTypeImport = false'),
+        }),
+    );
+    expect(await listWeakeningRules(sandbox.path)).toStrictEqual(['rule-options']);
 });
 
 test.each([

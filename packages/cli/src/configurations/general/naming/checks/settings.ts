@@ -69,7 +69,7 @@ function buildLimitLookup(scopeSettings: ScopeSettings): NamingSettings['limitLo
 
 function compileBannedWords(
     words: string[],
-    origin: Pick<BannedWord, 'setting' | 'list' | 'categories' | 'firstWord' | 'replacement'>,
+    origin: Pick<BannedWord, 'setting' | 'list' | 'categories' | 'firstWord' | 'wholeName' | 'replacement'>,
 ): BannedWord[] {
     return words
         .map((term) => ({ word: term.trim().toLowerCase(), words: splitWords(term), ...origin }))
@@ -88,6 +88,7 @@ export function readNamingSettings(settings: Settings, scope: Scope): NamingSett
                 setting: `${group.replaceAll('_', ' ')} list`,
                 list: group,
                 firstWord: list.first_word === true,
+                wholeName: list.whole_name === true,
                 ...(list.categories !== undefined && { categories: list.categories }),
             }),
         ),

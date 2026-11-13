@@ -51,7 +51,7 @@ export const noBitwiseInCondition = createRule<[], 'bitwise'>({
                 }
                 if (BITWISE_OPERATORS.has(node.operator)) hasBitwise = true;
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 if (hasBitwise || lone === undefined || !isConditionTest(lone.node, lone.ancestors)) return;
                 context.report({ node: lone.node, messageId: 'bitwise', data: { operator: lone.node.operator } });
             },

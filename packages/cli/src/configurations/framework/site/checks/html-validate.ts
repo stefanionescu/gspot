@@ -16,7 +16,7 @@ import { CheckStop } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);

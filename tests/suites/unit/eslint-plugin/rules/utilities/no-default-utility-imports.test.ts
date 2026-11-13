@@ -30,8 +30,20 @@ buildRuleTester({ root }).run('no-default-utility-imports', noDefaultUtilityImpo
             errors: [{ messageId: 'method', data: { library: 'lodash', example: 'lodash/map' } }],
         },
         { code: 'import rx from "rxjs";', filename, errors: [{ messageId: 'named', data: { library: 'rxjs' } }] },
-        { code: 'import validator from "validator";', filename, errors: [{ messageId: 'method' }] },
-        { code: 'import _ from "lodash";', filename: join(root, 'capped/cart.ts'), errors: [{ messageId: 'method' }] },
-        { code: 'import _ from "lodash";', filename: join(root, 'major/cart.ts'), errors: [{ messageId: 'method' }] },
+        {
+            code: 'import validator from "validator";',
+            filename,
+            errors: [{ messageId: 'method', data: { library: 'validator', example: 'validator/es/lib/isEmail' } }],
+        },
+        {
+            code: 'import _ from "lodash";',
+            filename: join(root, 'capped/cart.ts'),
+            errors: [{ messageId: 'method', data: { library: 'lodash', example: 'lodash/map' } }],
+        },
+        {
+            code: 'import _ from "lodash";',
+            filename: join(root, 'major/cart.ts'),
+            errors: [{ messageId: 'method', data: { library: 'lodash', example: 'lodash/map' } }],
+        },
     ],
 });

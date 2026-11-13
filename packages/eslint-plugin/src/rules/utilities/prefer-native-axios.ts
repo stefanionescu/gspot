@@ -45,7 +45,7 @@ export const preferNativeAxios = createRule<[], 'helper' | 'cancelToken'>({
                 for (const option of listCancelTokens(node, name))
                     context.report({ node: option, messageId: 'cancelToken' });
             },
-            'MemberExpression[property.name="CancelToken"]'(node: TSESTree.MemberExpression) {
+            'MemberExpression[property.name="CancelToken"]': function (node: TSESTree.MemberExpression) {
                 const name = getModuleName(node, source);
                 const isCancelToken = name === AXIOS_CANCEL_TOKEN;
                 if (isCancelToken) context.report({ node, messageId: 'cancelToken' });

@@ -1,11 +1,7 @@
 import { REACT_DOM_RULE_OPTIONS } from '#cli/config/configurations/framework.ts';
 import { REACT_FILES } from '#cli/config/configurations/shared.ts';
 import { REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import {
-    type ConfigurationBlocks,
-    type EslintBlockBuilder,
-    type EslintScope,
-} from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildReactDomBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [];

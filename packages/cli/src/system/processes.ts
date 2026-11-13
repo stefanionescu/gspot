@@ -123,7 +123,7 @@ async function readProcessOutput(
     readStdout: StdoutReader,
 ): Promise<SpawnCompletion> {
     await readStdout({
-        [Symbol.asyncIterator]: async function* () {
+        async *[Symbol.asyncIterator]() {
             yield* child.stdout;
             options.cancelSignal?.throwIfAborted();
         },

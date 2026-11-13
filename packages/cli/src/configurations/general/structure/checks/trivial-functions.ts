@@ -21,6 +21,7 @@ import {
     TYPE_ALIAS_NODES,
     TYPE_REFERENCE_NODES,
 } from '#cli/config/configurations/structure.ts';
+import { listSingleCallExports } from '#cli/configurations/general/structure/checks/exported-functions.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
@@ -228,7 +229,7 @@ async function checkTrivialFunctions(session: Session, planned: PlannedCheck): P
     const functions = trivialFunctions
         .filter(({ key }) => key === undefined || (uses.get(key) ?? 0) <= 1)
         .map(({ finding }) => finding);
-    return [...functions, ...files];
+    return [...functions, ...files, ...(await listSingleCallExports(session, planned))];
 }
 
 export const STRUCTURE_TRIVIAL_FUNCTIONS_CHECKS: Readonly<Record<string, CheckCode>> = {

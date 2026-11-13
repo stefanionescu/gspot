@@ -1,5 +1,9 @@
 #!/usr/bin/env bash
-# The CI checks that the release and publish tasks share.
+#MISE description="Refuse a commit that has not passed the tests on all three systems, or the gspot workflow. The release and publish tasks run it."
+#MISE hide=true
+#USAGE arg "<commit>" help="The commit hash to check"
+set -euo pipefail
+: "${usage_commit:?mise must provide the commit}"
 
 # assert_run_passed: Refuses a commit whose latest run of a workflow did not pass.
 # Arguments:
@@ -22,14 +26,9 @@ assert_run_passed() {
     fi
 }
 
-# assert_workflows_passed: Refuses a commit that has not passed on all three systems, or in the gspot workflow.
-# Arguments:
-#   Commit hash.
-# Returns:
-#   1 when a workflow has no passed run on the commit, or gh fails.
-assert_workflows_passed() {
-    local commit="$1"
-
-    assert_run_passed tests.yml "${commit}" ' A push tests Ubuntu only. Run gh workflow run tests.yml --ref main to test all three systems.' --event workflow_dispatch
-    assert_run_passed gspot.yml "${commit}" ''
+main() {
+    assert_run_passed tests.yml "${usage_commit}" ' A push tests Ubuntu only. Run gh workflow run tests.yml --ref main to test all three systems.' --event workflow_dispatch
+    assert_run_passed gspot.yml "${usage_commit}" ''
 }
+
+main "$@"

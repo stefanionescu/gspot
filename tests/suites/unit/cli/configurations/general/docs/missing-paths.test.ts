@@ -28,6 +28,17 @@ const DOC_TASK_SCOPES = ['app', 'app/nested', 'app/empty', 'sibling'].map((path)
     configurations: [],
 }));
 
+async function runMissingPathsCheck(
+    files: Record<string, string>,
+    options: { paths?: string[] } = {},
+): Promise<readonly Finding[]> {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
+        ...files,
+    });
+    return await runSandboxCheck(sandbox.path, 'docs/missing-paths', options);
+}
+
 test('Bun file commands validate tracked paths without treating them as package scripts', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
@@ -44,17 +55,6 @@ test('Bun file commands validate tracked paths without treating them as package 
         },
     ]);
 });
-
-async function runMissingPathsCheck(
-    files: Record<string, string>,
-    options: { paths?: string[] } = {},
-): Promise<readonly Finding[]> {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['docs'], { level: 'all' }),
-        ...files,
-    });
-    return await runSandboxCheck(sandbox.path, 'docs/missing-paths', options);
-}
 
 test('missing-paths: a path in an .mdx page that names no tracked file is reported', async () => {
     const found = await runMissingPathsCheck(
@@ -135,7 +135,7 @@ test('missing-paths: command check names count as present; unknown ones are repo
 test.each([...MISE_TASK_SOURCES])(
     'missing-paths: $name count, and an unknown task is reported',
     async ({ tasks, files }) => {
-        const named = [...tasks, 'absent'].map((task) => '`mise run ' + task + '`').join(', ');
+        const named = [...tasks, 'absent'].map((task) => `\`mise run ${task}\``).join(', ');
         const found = await runMissingPathsCheck({ 'a.md': `Run ${named}.\n`, ...files }, { paths: ['a.md'] });
         expect(found.map(({ file, line, rule, message }) => ({ file, line, rule, message }))).toStrictEqual([
             {

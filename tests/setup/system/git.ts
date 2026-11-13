@@ -10,7 +10,7 @@ export function runGitStep(
     commandArguments: readonly string[],
     environment: Record<string, string> = {},
 ): string {
-    const result = runBlockingCommand(['git', ...commandArguments], { cwd: cwd, env: environment });
+    const result = runBlockingCommand(['git', ...commandArguments], { cwd, env: environment });
     if (result.code !== 0)
         throw new Error(`Git ${commandArguments.join(' ')} failed: ${result.stderr}${result.stdout}`);
     return result.stdout.trim();

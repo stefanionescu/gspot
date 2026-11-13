@@ -8,6 +8,7 @@ export const NODE_PREFIX = /^node:/u;
 export const TRAILING_SLASH = /\/$/u;
 
 // numbers
+export const DECIMAL_RADIX = 10;
 export const NUMERIC_SIGNS = new Set(['+', '-']);
 export const NUMERIC_VALUE_TYPES: ReadonlySet<string> = new Set(['number', 'bigint']);
 export const OCTAL_RADIX = 8;

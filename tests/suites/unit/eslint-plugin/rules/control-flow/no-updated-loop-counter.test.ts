@@ -15,7 +15,7 @@ buildRuleTester().run('no-updated-loop-counter', noUpdatedLoopCounter, {
         },
         {
             code: 'for (let index = 0; index < 10; index++) { for (let inner = 0; inner < 3; index++) {} }',
-            errors: [{ messageId: 'counter' }],
+            errors: [{ messageId: 'counter', data: { name: 'index' } }],
         },
         ...[
             'for (let index = 0; index < 10; index += 2) { index = 5; }',

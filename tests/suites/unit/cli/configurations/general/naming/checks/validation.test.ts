@@ -13,6 +13,27 @@ import {
 import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
+async function readNaming(tables: string): Promise<FileNaming> {
+    return buildFileNaming(
+        await buildScopeNamingSettings(
+            buildSandboxSettings(['typescript', 'python', 'bash', 'naming'], { rules: true, tables }),
+        ),
+    );
+}
+
+function listRules(identifier: Identifier, naming: FileNaming): Array<string | undefined> {
+    return validateIdentifiers({ ...naming.settings, isTestFile: () => naming.isTestFile }, [identifier]).map(
+        ({ rule }) => rule,
+    );
+}
+function buildFileNaming(settings: NamingSettings): FileNaming {
+    return { settings, isTestFile: false };
+}
+function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
+    const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
+    return { file, language, category, line, column, ...fields };
+}
+
 test.each([...NAMING_LIMIT_CASES])(
     '$language accepts its exact limits and reports the next character or word',
     async ({ language, category, characters, words }) => {
@@ -182,24 +203,3 @@ test('an ignored_prefix override strips handle from function and method names in
     ]);
     expect(listRules(buildIdentifier({ name: 'HandleSubmit' }), naming)).toStrictEqual(['case', 'banned-word']);
 });
-
-async function readNaming(tables: string): Promise<FileNaming> {
-    return buildFileNaming(
-        await buildScopeNamingSettings(
-            buildSandboxSettings(['typescript', 'python', 'bash', 'naming'], { rules: true, tables }),
-        ),
-    );
-}
-
-function listRules(identifier: Identifier, naming: FileNaming): Array<string | undefined> {
-    return validateIdentifiers({ ...naming.settings, isTestFile: () => naming.isTestFile }, [identifier]).map(
-        ({ rule }) => rule,
-    );
-}
-function buildFileNaming(settings: NamingSettings): FileNaming {
-    return { settings, isTestFile: false };
-}
-function buildIdentifier(fields: Pick<Identifier, 'name'> & Partial<Identifier>): Identifier {
-    const { file = 'src/a.ts', language = 'typescript', category = 'functions', line = 1, column = 1 } = fields;
-    return { file, language, category, line, column, ...fields };
-}

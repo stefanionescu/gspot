@@ -45,8 +45,7 @@ function isNumeric(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
 function getEqualitySuggestion(
     left: TSESTree.Node,
     right: TSESTree.Node,
-    isNegated: boolean,
-    source: TSESLint.SourceCode,
+    { isNegated, source }: { isNegated: boolean; source: TSESLint.SourceCode },
 ): MatcherSuggestion {
     const sides = [
         { received: left, expected: right },
@@ -63,12 +62,11 @@ function getEqualitySuggestion(
 
 function getBinarySuggestion(
     node: TSESTree.BinaryExpression,
-    isPositive: boolean,
-    source: TSESLint.SourceCode,
+    { isPositive, source }: { isPositive: boolean; source: TSESLint.SourceCode },
 ): MatcherSuggestion | undefined {
     const isNegated = (node.operator === '===') !== isPositive;
     if (STRICT_EQUALITY_OPERATORS.has(node.operator))
-        return getEqualitySuggestion(node.left, node.right, isNegated, source);
+        return getEqualitySuggestion(node.left, node.right, { isNegated, source });
     if (node.operator === 'instanceof')
         return { kind: 'instance', received: node.left, expected: node.right, negated: !isPositive };
     const kind = NUMERIC_MATCHERS.get(isPositive ? node.operator : INVERTED_OPERATORS.get(node.operator));
@@ -80,8 +78,7 @@ function getBinarySuggestion(
 
 function getIncludesSuggestion(
     node: TSESTree.Node,
-    isPositive: boolean,
-    source: TSESLint.SourceCode,
+    { isPositive, source }: { isPositive: boolean; source: TSESLint.SourceCode },
 ): MatcherSuggestion | undefined {
     const [needle, ...others] = node.type === AST_NODE_TYPES.CallExpression ? node.arguments : [];
     const callee = node.type === AST_NODE_TYPES.CallExpression ? node.callee : node;
@@ -102,8 +99,8 @@ function getSuggestion(assertion: ComparisonAssertion, source: TSESLint.SourceCo
     if (!BOOLEAN_KINDS.has(kind)) return undefined;
     const isPositive = (kind === 'true') !== negated;
     return received.type === AST_NODE_TYPES.BinaryExpression
-        ? getBinarySuggestion(received, isPositive, source)
-        : getIncludesSuggestion(received, isPositive, source);
+        ? getBinarySuggestion(received, { isPositive, source })
+        : getIncludesSuggestion(received, { isPositive, source });
 }
 
 function getFamily(assertion: ComparisonAssertion): string | undefined {
@@ -115,7 +112,10 @@ function getFamily(assertion: ComparisonAssertion): string | undefined {
     return isSkipped ? undefined : MATCHER_FAMILIES.get(assertion.style);
 }
 
-function getTemplateKey(assertion: ComparisonAssertion, kind: string, family: string, canUseSize: boolean): string {
+function getTemplateKey(
+    assertion: ComparisonAssertion,
+    { kind, family, canUseSize }: { kind: string; family: string; canUseSize: boolean },
+): string {
     const isJasmine = assertion.style === 'jasmine';
     const isStrictNaN = kind === 'nan' && assertion.comparison === 'strict';
     const isSkippedKind = isJasmine && (isStrictNaN || (kind === 'length' && !canUseSize));
@@ -207,12 +207,11 @@ function canUseJasmineSize(context: FileContext): boolean {
 function getMatcherText(
     assertion: ComparisonAssertion,
     suggestion: MatcherSuggestion | undefined,
-    source: TSESLint.SourceCode,
-    canUseSize: boolean,
+    { source, canUseSize }: { source: TSESLint.SourceCode; canUseSize: boolean },
 ): string | undefined {
     const family = getFamily(assertion);
     if (family === undefined || suggestion === undefined) return undefined;
-    const key = getTemplateKey(assertion, suggestion.kind, family, canUseSize);
+    const key = getTemplateKey(assertion, { kind: suggestion.kind, family, canUseSize });
     const template = MATCHER_TEMPLATES.get(key)?.[Number(suggestion.negated)];
     const fields = getFields(assertion, suggestion, family, source);
     return template?.replaceAll(TEMPLATE_FIELD, (_field, name: string) => String(fields.get(name)));
@@ -248,7 +247,7 @@ export const preferMatcherAssertions = createRule<[], 'matcher' | 'length' | 're
                 if (assertion?.kind !== 'comparison') return;
                 const locator = getLocatorSuggestion(assertion, source);
                 const suggestion = getSuggestion(assertion, source);
-                const text = getMatcherText(assertion, suggestion, source, canUseSize);
+                const text = getMatcherText(assertion, suggestion, { source, canUseSize });
                 const report = { node: assertion.report, messageId: 'matcher' as const };
                 if (locator !== undefined) {
                     context.report({ ...report, data: { assertion: locator } });

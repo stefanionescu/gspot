@@ -20,7 +20,7 @@ import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
     const files = listOwnFiles(session.repository.files, session.scopes, planned.scope.path).filter(

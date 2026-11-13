@@ -25,6 +25,19 @@ async function listStaleAgentsRows(root: string, change: (text: string) => strin
     return listStaleFiles(session, buildGeneratedFiles(session)).filter((file) => file.path === 'AGENTS.md');
 }
 
+/**
+Expect that, after one write, only the tool lockfiles are stale and a second write changes nothing.
+*/
+async function expectSettled(root: string): Promise<void> {
+    const before = await readTree(root);
+    const session = await openSession(root);
+    const generated = buildGeneratedFiles(session);
+    expect(listStaleFiles(session, generated)).toStrictEqual(listStaleLockfiles(session, generated.files));
+    const repeated = await applyGeneratedFiles(root);
+    expect(repeated).toMatchObject({ written: [], updated: [], deleted: [] });
+    expect(await readTree(root)).toStrictEqual(before);
+}
+
 test('changed managed keys are reported without a whole-file replacement', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([]),
@@ -68,19 +81,6 @@ test('an authored file at a generated path without the header is stale', async (
         listStaleFiles(session, buildGeneratedFiles(session)).filter((file) => file.path === '.editorconfig'),
     ).toStrictEqual([{ path: '.editorconfig', kind: 'changed' }]);
 });
-
-/**
-Expect that, after one write, only the tool lockfiles are stale and a second write changes nothing.
-*/
-async function expectSettled(root: string): Promise<void> {
-    const before = await readTree(root);
-    const session = await openSession(root);
-    const generated = buildGeneratedFiles(session);
-    expect(listStaleFiles(session, generated)).toStrictEqual(listStaleLockfiles(session, generated.files));
-    const repeated = await applyGeneratedFiles(root);
-    expect(repeated).toMatchObject({ written: [], updated: [], deleted: [] });
-    expect(await readTree(root)).toStrictEqual(before);
-}
 
 test.each([...LEVELS])('every configuration at level %s settles in one write', async (level) => {
     const names = readConfigurations()

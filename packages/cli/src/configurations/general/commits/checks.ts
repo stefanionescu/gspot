@@ -20,7 +20,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { formatCount } from '#cli/system/text.ts';
 import type { CommitMessage } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 const COMMENT_CHARACTER = Symbol('comment character');
 

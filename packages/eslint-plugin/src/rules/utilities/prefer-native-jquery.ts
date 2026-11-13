@@ -33,24 +33,23 @@ export const preferNativeJquery = createRule<[], 'deprecated' | 'dependency'>({
     },
     create(context) {
         return {
-            'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.computed=false][callee.object.type="Identifier"]'(
-                node: MemberCall,
-            ) {
-                const method = ASTUtils.getPropertyName(node.callee);
-                const replacement = JQUERY_METHODS.get(method);
-                const receiver = node.callee.object;
-                if (
-                    replacement === undefined ||
-                    !ASTUtils.isIdentifier(receiver) ||
-                    !isJquery(receiver, context.sourceCode)
-                )
-                    return;
-                context.report({
-                    node: node.callee.property,
-                    messageId: replacement.isDeprecated ? 'deprecated' : 'dependency',
-                    data: { alternative: replacement.alternative, method },
-                });
-            },
+            'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.computed=false][callee.object.type="Identifier"]':
+                function (node: MemberCall) {
+                    const method = ASTUtils.getPropertyName(node.callee);
+                    const replacement = JQUERY_METHODS.get(method);
+                    const receiver = node.callee.object;
+                    if (
+                        replacement === undefined ||
+                        !ASTUtils.isIdentifier(receiver) ||
+                        !isJquery(receiver, context.sourceCode)
+                    )
+                        return;
+                    context.report({
+                        node: node.callee.property,
+                        messageId: replacement.isDeprecated ? 'deprecated' : 'dependency',
+                        data: { alternative: replacement.alternative, method },
+                    });
+                },
         };
     },
 });

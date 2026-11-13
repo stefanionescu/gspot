@@ -12,7 +12,10 @@ buildRuleTester().run('no-element-overwrite', noElementOverwrite, {
         'queue.push("a"); queue.push("a");',
     ],
     invalid: [
-        { code: 'function fill(map) { map.set("a", 1); map.set("a", 2); }', errors: [{ messageId: 'overwrite' }] },
+        {
+            code: 'function fill(map) { map.set("a", 1); map.set("a", 2); }',
+            errors: [{ messageId: 'overwrite', data: { key: 'a', line: 1 } }],
+        },
 
         {
             code: 'labels[0] = "first"; labels[1] = "other"; labels[0] = "second";',

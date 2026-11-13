@@ -84,14 +84,14 @@ export const staticBeforeSession = createRule<[], 'staticAfterSession'>({
             session: TSESTree.CallExpression | undefined;
         }> = [];
         return {
-            ':function'(node: FunctionNode) {
+            ':function': function (node: FunctionNode) {
                 saved.push({ application, session });
                 const injected = findInjectedApplication(node);
                 if (injected === undefined) return;
                 application = injected;
                 session = undefined;
             },
-            ':function:exit'() {
+            ':function:exit': function () {
                 const previous = saved.pop();
                 application = previous?.application;
                 session = previous?.session;

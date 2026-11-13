@@ -36,7 +36,7 @@ import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
 
 function formatRuleFiles(configuration: CliReference['configurations'][number]): string {
     const rows = configuration.ruleFiles.map(({ path, conditions, exclusions }) => {
-        const unless = exclusions.length === 0 ? '' : ', ' + exclusions.join(', ');
+        const unless = exclusions.length === 0 ? '' : `, ${exclusions.join(', ')}`;
         return [
             `\`${path}\``,
             conditions.length === 0 ? 'Always' : `The repository has ${conditions.join(CONDITION_SEPARATOR)}${unless}.`,
@@ -61,7 +61,7 @@ function formatLintRulesOff(configuration: CliReference['configurations'][number
 function formatSelection(configuration: CliReference['configurations'][number]): string {
     if (configuration.always_selected) return ALWAYS_SELECTED_MESSAGE;
     const { conditions, exclusions, requiredBy } = configuration.selection;
-    const unless = exclusions.length === 0 ? '' : ', ' + exclusions.join(', ');
+    const unless = exclusions.length === 0 ? '' : `, ${exclusions.join(', ')}`;
     const selected = conditions.length === 0 ? '' : `A scope has ${conditions.join(CONDITION_SEPARATOR)}${unless}.`;
     const owners = formatNameList(
         requiredBy.map((name) => formatConfigurationLink(name)),

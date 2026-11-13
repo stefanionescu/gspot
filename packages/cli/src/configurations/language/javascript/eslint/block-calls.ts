@@ -103,8 +103,8 @@ function serializeRuntimes({ runtimes, constants }: EslintFileWriter): string {
 
 function buildScopeFields(writer: EslintFileWriter, block: PlannedEslintBlock): EslintBlockFields {
     const { fields, scope } = block;
-    const { ignores: _ignores, ...blockFields } = fields;
-    const ignores = [...(fields.ignores ?? []), ...(scope?.excluded ?? [])];
+    const { ignores: fieldIgnores = [], ...blockFields } = fields;
+    const ignores = [...fieldIgnores, ...(scope?.excluded ?? [])];
     return {
         ...blockFields,
         ...(scope !== undefined && {

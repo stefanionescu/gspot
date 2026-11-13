@@ -86,7 +86,7 @@ async function findUnrunnableResult(
 function classifyCheckError(
     name: string,
     error: unknown,
-    isVerbose: boolean,
+    { isVerbose }: { isVerbose: boolean },
 ): Pick<CheckResult, 'status' | 'note' | 'cause' | 'stack'> {
     if (error instanceof CheckStop)
         return {
@@ -116,7 +116,7 @@ async function runPlannedCheck(run: Run, planned: PlannedCheck): Promise<CheckRe
             duration: Math.round(performance.now() - started),
             ...(session.cancelSignal?.aborted === true
                 ? { status: 'canceled', note: CANCELED_CHECK_NOTE }
-                : classifyCheckError(planned.check.id, error, run.options.verbose === true)),
+                : classifyCheckError(planned.check.id, error, { isVerbose: run.options.verbose === true })),
         };
     }
 }

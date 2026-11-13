@@ -143,6 +143,24 @@ function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'
     writeFileSync(join(folder, UV_SETTINGS_FILE), settings, { mode: PRIVATE_FILE });
 }
 
+/**
+Name the Python for a project environment that does not exist yet: the one that a mise config file of the repository
+sets for the project folder. uv picks the interpreter when mise is absent, or when no such file sets one. An
+environment that exists keeps its Python, because uv builds an environment again for another one and drops what the
+project added to it.
+*/
+async function listInterpreterArguments(install: ToolInstall, cwd: string): Promise<string[]> {
+    const { misePath, session } = install;
+    const hasEnvironment = statSync(join(cwd, PYTHON_ENVIRONMENT_FOLDER), { throwIfNoEntry: false }) !== undefined;
+    if (misePath === undefined || hasEnvironment) return [];
+    const python = await findRepositoryPython(session.root, cwd, {
+        misePath,
+        cancelSignal: session.cancelSignal,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
+    });
+    return python === undefined ? [] : [UV_FLAGS.python, python];
+}
+
 export async function planPythonLockfile(
     install: ToolInstall,
     toolProjectFile: GeneratedFile,
@@ -152,12 +170,12 @@ export async function planPythonLockfile(
     const previous = install.writer.read(GSPOT_PATHS.uvLockfile);
     const saved = previous?.bytes.toString('utf8');
     const { settings: indexes, credentials } = install.pythonSettings;
-    if (isPythonLockfileFresh(project, saved, indexes, install.releaseAgeDays)) {
+    if (saved !== undefined && isPythonLockfileFresh(project, saved, indexes, install.releaseAgeDays)) {
         assertCredentialFreeLockfile(saved, credentials, UV_LOCKFILE_CREDENTIAL_MESSAGE);
         return {
             path: GSPOT_PATHS.uvLockfile,
             next: { bytes: Buffer.from(saved), mode: OWNER_WRITABLE_FILE },
-            previous: previous,
+            previous,
         };
     }
     using scratch = createTemporaryFolder();
@@ -170,7 +188,7 @@ export async function planPythonLockfile(
     return {
         path: GSPOT_PATHS.uvLockfile,
         next: { bytes: Buffer.from(lockfile), mode: OWNER_WRITABLE_FILE },
-        previous: previous,
+        previous,
     };
 }
 
@@ -225,30 +243,12 @@ export async function installPythonProjects(install: ToolInstall, executable: st
     return lines.map(({ place }) => `installed the Python environment of ${place}`);
 }
 
-/**
-Name the Python for a project environment that does not exist yet: the one that a mise config file of the repository
-sets for the project folder. uv picks the interpreter when mise is absent, or when no such file sets one. An
-environment that exists keeps its Python, because uv builds an environment again for another one and drops what the
-project added to it.
-*/
-async function listInterpreterArguments(install: ToolInstall, cwd: string): Promise<string[]> {
-    const { misePath, session } = install;
-    const hasEnvironment = statSync(join(cwd, PYTHON_ENVIRONMENT_FOLDER), { throwIfNoEntry: false }) !== undefined;
-    if (misePath === undefined || hasEnvironment) return [];
-    const python = await findRepositoryPython(session.root, cwd, {
-        misePath,
-        cancelSignal: session.cancelSignal,
-        timeoutSeconds: session.settings.tool_timeout_seconds,
-    });
-    return python === undefined ? [] : [UV_FLAGS.python, python];
-}
-
 export function isPythonLockfileFresh(
     project: PythonToolProject,
     lockfile: string | undefined,
     indexes?: PythonIndexSettings['settings'],
     minimumReleaseAge?: number,
-): lockfile is string {
+): boolean {
     if (lockfile === undefined) return false;
     const saved = parsePythonToolLockfile(lockfile, minimumReleaseAge);
     if (saved === undefined) return false;

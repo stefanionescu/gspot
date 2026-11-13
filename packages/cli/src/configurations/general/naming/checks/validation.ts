@@ -71,6 +71,7 @@ function isWordForm(word: string, term: string): boolean {
 }
 
 function hasTerm(words: string[], term: BannedWord): boolean {
+    if (term.wholeName === true && words.length !== term.words.length) return false;
     const lastStart = term.firstWord === true ? 0 : words.length - term.words.length;
     for (let start = 0; start <= lastStart && start + term.words.length <= words.length; start += 1) {
         if (term.words.every((termWord, index) => isWordForm(words[start + index] as string, termWord))) return true;
@@ -187,7 +188,8 @@ function validateBannedWords(checked: CheckedIdentifier, nameWords: string[]): C
     const banned = terms.find(
         (term) =>
             (term.categories === undefined || term.categories.includes(checked.identifier.category)) &&
-            hasTerm(words, term),
+            // A whole-name term reads the name before its allowed phrases leave, so `runPackageManager` is not `run`.
+            hasTerm(term.wholeName === true ? nameWords : words, term),
     );
     if (banned === undefined) return undefined;
     const advice = banned.replacement === undefined ? '' : ` Use "${banned.replacement}".`;

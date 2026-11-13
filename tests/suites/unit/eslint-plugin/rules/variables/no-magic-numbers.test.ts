@@ -29,7 +29,7 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
                 code: 'setTimeout(retry, 3000);',
                 errors: [{ messageId: 'noMagic', data: { raw: '3000' } }],
             },
-            { code: 'const HANDLERS = [() => 500];', errors: [{ messageId: 'noMagic' }] },
+            { code: 'const HANDLERS = [() => 500];', errors: [{ messageId: 'noMagic', data: { raw: '500' } }] },
             {
                 name: 'method arguments on a module constant array',
                 code: 'export const page = [1, 2, 3, 4, 5, 6].slice(0, 50);',
@@ -50,9 +50,12 @@ buildRuleTester().run<keyof (typeof noMagicNumbers)['meta']['messages'], MagicNu
             },
             {
                 code: 'function build() { const SIZES = [16, 32]; return SIZES; }',
-                errors: [{ messageId: 'noMagic' }, { messageId: 'noMagic' }],
+                errors: [
+                    { messageId: 'noMagic', data: { raw: '16' } },
+                    { messageId: 'noMagic', data: { raw: '32' } },
+                ],
             },
-            { code: 'type Size = 12;', errors: [{ messageId: 'noMagic' }] },
+            { code: 'type Size = 12;', errors: [{ messageId: 'noMagic', data: { raw: '12' } }] },
             {
                 name: 'a number that differs from the pattern size, and a split separator position',
                 code: 'function read(values, line) { const [first, second] = values.slice(0, 3); return [first, second, line.split(2, 5)]; }',

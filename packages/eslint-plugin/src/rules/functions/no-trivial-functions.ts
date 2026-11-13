@@ -14,8 +14,8 @@ import {
 } from '../../config/functions.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-import { type TrivialFunctionsOptions } from '../../types/functions.ts';
-import { type FunctionNode } from '../../types/plugin.ts';
+import type { TrivialFunctionsOptions } from '../../types/functions.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 

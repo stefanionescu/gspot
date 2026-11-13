@@ -11,6 +11,7 @@ example = "`export const userHelper = 1;` reports the banned word `helper`. Rena
 help = "Rename the thing after what it holds or does. To keep a name, list it exactly under `allowed_names` in a `[[naming.exception]]` record with a reason, or change a limit with `gspot set naming.<language>.max_words`."
 level = "all"
 name = "identifiers"
+rules = ["NAMING.md"]
 stage = "commit"
 summary = "Checks every identifier against the naming settings: banned words, case, length, and word count."
 why = "Names such as `enhancedHandler`, `ensureConfigIfNeeded`, and `utils` hide what the value holds or the code does."
@@ -20,6 +21,7 @@ example = "`utils/format.js` reports `utils`. Move it into the folder of the fea
 help = "Rename the file or folder, or add a path rule under [[naming.exception]] with a reason."
 level = "all"
 name = "paths"
+rules = ["NAMING.md"]
 stage = "commit"
 summary = "Checks every file name, without its extension, and every folder name against the case rules of its language and the banned words."
 why = "A file such as `enhanced-utils.ts` collects code with no clear place. One case rule keeps imports predictable."
@@ -67,7 +69,7 @@ category = "folders"
 
 [naming.lists.folders]
 categories = ["folders"]
-words = ["shared", "support"]
+words = ["shared", "support", "mocks"]
 
 [naming.lists.containers]
 words = ["core", "common", "generic", "misc", "stuff", "thing", "things", "details", "info", "object", "taxonomy"]
@@ -93,7 +95,12 @@ words = ["dir", "tmp", "temp", "cfg", "conf", "ctx", "msg", "btn", "idx"]
 [naming.lists.generic_verbs]
 categories = ["functions", "methods"]
 first_word = true
-words = ["execute", "perform", "manage", "process", "load", "fetch", "resolve"]
+words = ["execute", "perform", "manage", "process", "load", "fetch", "resolve", "handle"]
+
+[naming.lists.bare_verbs]
+categories = ["functions"]
+whole_name = true
+words = ["run"]
 
 [naming.lists.prepositions]
 categories = ["functions", "methods"]
@@ -263,6 +270,12 @@ paths = ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"]
 categories = ["files"]
 allowed_names = ["pre-commit", "pre-push", "commit-msg", "post-checkout", "post-merge", "pre-rebase", "prepare-commit-msg"]
 reason = "git names its hooks."
+
+[[naming.exception]]
+allowed_names = ["mocks"]
+categories = ["folders"]
+paths = ["**/__mocks__/**"]
+reason = "Jest and Vitest read manual mocks from a folder named __mocks__."
 
 [[naming.exception]]
 allowed_names = ["debug", "info", "warn", "error", "fatal", "trace"]

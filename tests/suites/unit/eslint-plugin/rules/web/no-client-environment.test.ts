@@ -37,7 +37,7 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
         invalid: [
             {
                 code: "'use client';\nconst mode = process.env.MODE;",
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 name: 'client directive without declared environment globals',
@@ -48,47 +48,56 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
                 name: 'client directive with declared environment globals',
                 code: "'use client';\nconst key = process.env.SECRET;",
                 languageOptions: { globals: ENVIRONMENT_GLOBALS },
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 code: "'use client';\nconst { env: values } = Bun; const key = values.SECRET;",
                 languageOptions: { globals: ENVIRONMENT_GLOBALS },
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 code: 'const key = import.meta.env.SECRET;',
                 options: [{ client: true, publicPrefixes: ['VITE_'] }],
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'VITE_*, NODE_ENV' } }],
             },
             {
                 code: "'use client';\nconst { env } = process;\nconst key = env.SECRET;",
-                errors: [{ messageId: 'private', line: 3, column: 13 }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' }, line: 3, column: 13 }],
             },
             {
                 code: "'use client';\nconst { env } = process;\nconst key = env.SECRET;",
                 languageOptions: { globals: ENVIRONMENT_GLOBALS },
-                errors: [{ messageId: 'private', line: 3, column: 13 }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' }, line: 3, column: 13 }],
             },
-            { code: "'use client';\nconst { env } = process;\nsend(env);", errors: [{ messageId: 'private' }] },
-            { code: "'use client';\nconst key = Deno.env.get('SECRET');", errors: [{ messageId: 'private' }] },
+            {
+                code: "'use client';\nconst { env } = process;\nsend(env);",
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
+            },
+            {
+                code: "'use client';\nconst key = Deno.env.get('SECRET');",
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
+            },
             {
                 code: "'use client';\nconst key = Deno.env.get(name);",
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 code: "'use client';\nconst { env: { SECRET } } = process;",
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
-            { code: "'use client';\nconst all = process.env;", errors: [{ messageId: 'private' }] },
+            {
+                code: "'use client';\nconst all = process.env;",
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
+            },
             {
                 name: 'private environment value with client option',
                 code: 'const key = process.env.SECRET;',
                 options: [{ client: true }],
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 code: "'use client';\nfunction read(name) { return process.env[name]; }",
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
             {
                 name: 'Next public prefix replaced with Vite prefixes',
@@ -99,12 +108,15 @@ buildRuleTester().run<keyof (typeof noClientEnvironment)['meta']['messages'], [P
             {
                 code: "'use client';\nconst host = process;\nconst key = host.env.SECRET;",
                 name: 'a private read through an alias of an undeclared process reports',
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
-            { code: '"use client";\nDeno.env.get();', errors: [{ messageId: 'private' }] },
+            {
+                code: '"use client";\nDeno.env.get();',
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
+            },
             {
                 code: '"use client";\nconst { ...rest } = process.env;\nrun(rest);',
-                errors: [{ messageId: 'private' }],
+                errors: [{ messageId: 'private', data: { public: 'NEXT_PUBLIC_*, NODE_ENV' } }],
             },
         ],
     },

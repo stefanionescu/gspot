@@ -27,6 +27,7 @@ export const DEFAULT_PROJECT_LIMIT_OPTION = 'maximumDefaultProjectFileMatchCount
 export const TYPESCRIPT_RULES = {
     'no-const-assign': 'error',
     '@typescript-eslint/no-misused-spread': ['error', { allow: ['string'] }],
+    '@typescript-eslint/no-unnecessary-condition': ['error', { checkTypePredicates: true }],
     'jsdoc/require-param-type': 'off',
     'jsdoc/require-returns-type': 'off',
     'jsdoc/check-types': 'off',
@@ -37,6 +38,8 @@ export const TYPESCRIPT_RULES = {
 
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     '@typescript-eslint/consistent-type-imports': 'error',
+    '@typescript-eslint/no-import-type-side-effects': 'error',
+    '@typescript-eslint/dot-notation': 'error',
     'import-x/no-duplicates': ['error', { 'prefer-inline': true }],
     '@typescript-eslint/consistent-type-exports': 'error',
     '@typescript-eslint/switch-exhaustiveness-check': ['error', { considerDefaultExhaustiveForUnions: true }],

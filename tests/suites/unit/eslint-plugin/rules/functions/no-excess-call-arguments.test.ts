@@ -16,19 +16,25 @@ buildRuleTester().run('no-excess-call-arguments', noExcessCallArguments, {
             code: 'function read(value) { return value; } read(1, 2);',
             errors: [{ messageId: 'arguments', data: { parameters: 1, arguments: 2 } }],
         },
-        { code: 'const read = (value) => value; read(1, 2);', errors: [{ messageId: 'arguments' }] },
-        { code: '(function(value) { return value; })(1, 2);', errors: [{ messageId: 'arguments' }] },
+        {
+            code: 'const read = (value) => value; read(1, 2);',
+            errors: [{ messageId: 'arguments', data: { parameters: 1, arguments: 2 } }],
+        },
+        {
+            code: '(function(value) { return value; })(1, 2);',
+            errors: [{ messageId: 'arguments', data: { parameters: 1, arguments: 2 } }],
+        },
         {
             code: 'function read() { function nested() { return arguments[0]; } work(); } read(1);',
-            errors: [{ messageId: 'arguments' }],
+            errors: [{ messageId: 'arguments', data: { parameters: 0, arguments: 1 } }],
         },
         {
             code: 'function read() { const arguments = []; work(arguments); } read(1);',
-            errors: [{ messageId: 'arguments' }],
+            errors: [{ messageId: 'arguments', data: { parameters: 0, arguments: 1 } }],
         },
         {
             code: 'declare function read(value: string): void; read("one", "two");',
-            errors: [{ messageId: 'arguments' }],
+            errors: [{ messageId: 'arguments', data: { parameters: 1, arguments: 2 } }],
         },
     ],
 });

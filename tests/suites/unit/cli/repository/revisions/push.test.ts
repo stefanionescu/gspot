@@ -5,48 +5,10 @@ import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { readPushedCommits, readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import {
-    createGitSandbox,
-    prepareNestedRepository,
-    preparePushRepository,
-} from '#tests/setup/sandboxes/repositories.ts';
+import { prepareNestedRepository, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-
-test('push comparison tells a missing upstream from an upstream whose commit is gone', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
-
-    commitAll(sandbox.path);
-    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
-    await writeFile(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
-    runGitStep(sandbox.path, ['add', '.']);
-    runGitStep(sandbox.path, ['commit', '-qm', 'Second']);
-    runGitStep(sandbox.path, ['branch', 'upstream']);
-    runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
-    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
-    runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
-    const error = await captureRejection(readPushedCommits(sandbox.path));
-    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
-    expect(error.message).toContain('refs/heads/upstream');
-});
-
-test('push comparison of an unborn HEAD has no commits', async () => {
-    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
-
-    expect(await readPushedCommits(sandbox.path)).toStrictEqual([]);
-});
-
-test('a branch without an upstream pushes the commits that the remote default branch lacks', async () => {
-    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
-
-    commitAll(sandbox.path);
-    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
-    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
-    runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
-    runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
-    expect(await readPushedCommits(sandbox.path)).toStrictEqual([runGitStep(sandbox.path, ['rev-parse', 'HEAD'])]);
-});
 
 test.each(['origin', undefined, 'file:///unused'] as const)(
     'the pre-push remote %p picks the remote-tracking branch that a new branch compares with',

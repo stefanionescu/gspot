@@ -41,7 +41,7 @@ import type { Session } from '#cli/types/tools.ts';
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]
         .toSorted(compareText)
-        .map((word) => word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol));
+        .map((word) => word.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => `\\${symbol}`));
 }
 
 function listAllowedWords(session: Session): string[] {
@@ -113,10 +113,10 @@ function buildBannedHeadingsStyle(planned: PlannedConfig): string {
         ignorecase: true,
         scope: 'heading',
         nonword: true,
-        tokens: headings.map(
-            (heading) =>
-                String.raw`(?:\b|^)${heading.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => '\\' + symbol)}(?:\b|$)`,
-        ),
+        tokens: headings.map((heading) => {
+            const escaped = heading.replaceAll(VALE_REGEX_SYMBOLS, (symbol) => `\\${symbol}`);
+            return String.raw`(?:\b|^)${escaped}(?:\b|$)`;
+        }),
     });
 }
 

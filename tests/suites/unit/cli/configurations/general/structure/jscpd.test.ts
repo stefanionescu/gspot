@@ -35,6 +35,32 @@ async function prepareDuplicationSandbox(resources: AsyncDisposableStack): Promi
     return folder.path;
 }
 
+async function listImportCloneFindings(body: string, lines: number): Promise<Array<{ file: string; message: string }>> {
+    await using resources = new AsyncDisposableStack();
+    const root = await prepareDuplicationSandbox(resources);
+    const imports = (name: string) =>
+        Array.from({ length: 6 }, (_, index) => `import ${name}_${String(index)}\n\nfrom ${name} import (\n    b,\n)`);
+    await createFileTree(root, {
+        'first.py': ['"""Read one order."""', ...imports('first'), body].join('\n'),
+        'second.py': ['"""Read one order."""', ...imports('second'), body].join('\n'),
+    });
+    using _spawn = fakeCommands('jscpd', async (command) => {
+        const report = {
+            duplicates: [
+                {
+                    lines,
+                    firstFile: { name: join(root, 'first.py'), start: 1 },
+                    secondFile: { name: join(root, 'second.py'), start: 1 },
+                },
+            ],
+        };
+        await writeFile(join(command[command.indexOf('--output') + 1]!, 'jscpd-report.json'), JSON.stringify(report));
+        return buildProcessResult();
+    });
+    const findings = await runSandboxCheck(root, 'structure/jscpd');
+    return findings.map(({ file, message }) => ({ file, message }));
+}
+
 test.each([1, 0])(
     'jscpd exit %i without a report is a check error that keeps the jscpd output in its note and removes its temporary folder',
     async (code) => {
@@ -88,32 +114,6 @@ test.each(['relative', 'absolute', 'namespaced'])(
         ]);
     },
 );
-
-async function listImportCloneFindings(body: string, lines: number): Promise<Array<{ file: string; message: string }>> {
-    await using resources = new AsyncDisposableStack();
-    const root = await prepareDuplicationSandbox(resources);
-    const imports = (name: string) =>
-        Array.from({ length: 6 }, (_, index) => `import ${name}_${String(index)}\n\nfrom ${name} import (\n    b,\n)`);
-    await createFileTree(root, {
-        'first.py': ['"""Read one order."""', ...imports('first'), body].join('\n'),
-        'second.py': ['"""Read one order."""', ...imports('second'), body].join('\n'),
-    });
-    using _spawn = fakeCommands('jscpd', async (command) => {
-        const report = {
-            duplicates: [
-                {
-                    lines,
-                    firstFile: { name: join(root, 'first.py'), start: 1 },
-                    secondFile: { name: join(root, 'second.py'), start: 1 },
-                },
-            ],
-        };
-        await writeFile(join(command[command.indexOf('--output') + 1]!, 'jscpd-report.json'), JSON.stringify(report));
-        return buildProcessResult();
-    });
-    const findings = await runSandboxCheck(root, 'structure/jscpd');
-    return findings.map(({ file, message }) => ({ file, message }));
-}
 
 test('a clone whose lines outside the ignored imports stay under min_duplicate_lines is not reported', async () => {
     expect(await listImportCloneFindings('\nif TYPE_CHECKING:\n    import late\nprint("done")\n', 35)).toStrictEqual(

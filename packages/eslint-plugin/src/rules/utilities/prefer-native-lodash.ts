@@ -12,7 +12,7 @@ import {
 import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { getModuleName } from '../../language/modules.ts';
-import { isCallOf, unwrapExpression } from '../../language/syntax.ts';
+import { isCalleeNamed, unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/utilities.ts';
@@ -21,7 +21,7 @@ const methodNames = new Map(NATIVE_REPLACEMENTS.keys().map((method) => [method.t
 
 function isDirectMember(callee: TSESTree.Node): boolean {
     const member = callee.type === AST_NODE_TYPES.MemberExpression ? callee : undefined;
-    const isChained = member?.object.type === AST_NODE_TYPES.CallExpression && !isCallOf(member.object, 'require');
+    const isChained = member?.object.type === AST_NODE_TYPES.CallExpression && !isCalleeNamed(member.object, 'require');
     return member === undefined || (!member.computed && !isChained);
 }
 

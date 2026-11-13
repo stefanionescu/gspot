@@ -15,6 +15,29 @@ import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
+async function runFakeDeptry(root: string) {
+    using resources = new DisposableStack();
+    const session = await openFakeToolSession(root, ['uv', 'deptry'], resources);
+    const spawn = resources.use(spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })));
+    const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
+    expect(checked.report.failed).toStrictEqual([]);
+    return { checked, commands: spawn.mock.calls.map(([command]) => command) };
+}
+
+async function readFirstPartyPackages(settings: string, pyproject: string, sources: Record<string, string>) {
+    await using sandbox = await createGitSandbox({
+        ...sources,
+        'gspot.toml': settings,
+        'pyproject.toml': pyproject,
+        '.venv/pyvenv.cfg': '',
+        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
+        ...buildPythonToolFiles('deptry'),
+    });
+    const { commands } = await runFakeDeptry(sandbox.path);
+    const command = commands.find((each) => each.includes('deptry'))!;
+    return command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
+}
+
 test('deptry skips a scope without pyproject.toml', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['python']),
@@ -60,29 +83,6 @@ test('deptry excludes nested scopes and keeps your own exclude patterns', async 
         ).toStrictEqual([...excluded]);
     }
 });
-
-async function runFakeDeptry(root: string) {
-    using resources = new DisposableStack();
-    const session = await openFakeToolSession(root, ['uv', 'deptry'], resources);
-    const spawn = resources.use(spyOn(processes, 'runProcess').mockResolvedValue(buildProcessResult({ stdout: '[]' })));
-    const checked = await runChecks(session, buildRunOptions({ only: ['python/deptry'] }));
-    expect(checked.report.failed).toStrictEqual([]);
-    return { checked, commands: spawn.mock.calls.map(([command]) => command) };
-}
-
-async function readFirstPartyPackages(settings: string, pyproject: string, sources: Record<string, string>) {
-    await using sandbox = await createGitSandbox({
-        ...sources,
-        'gspot.toml': settings,
-        'pyproject.toml': pyproject,
-        '.venv/pyvenv.cfg': '',
-        [join(join(GSPOT_PATHS.pythonEnvironment, executableLayout.environmentFolder), 'deptry')]: 'stub',
-        ...buildPythonToolFiles('deptry'),
-    });
-    const { commands } = await runFakeDeptry(sandbox.path);
-    const command = commands.find((each) => each.includes('deptry'))!;
-    return command.flatMap((value, index) => (value === '--known-first-party' ? command[index + 1]! : []));
-}
 
 test('deptry counts python.externals as first party beside the known_first_party of the project', async () => {
     const firstParty = await readFirstPartyPackages(

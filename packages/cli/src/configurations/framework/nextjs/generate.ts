@@ -8,11 +8,7 @@ import {
 import { REACT_FILES } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { extractParentFolder, findEnclosingFolder } from '#cli/system/paths.ts';
-import {
-    type ConfigurationBlocks,
-    type EslintBlockBuilder,
-    type EslintScope,
-} from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildNextjsBlocks(
     scope: Pick<EslintScope, 'path' | 'eslintFiles' | 'dependencyFiles' | 'sourceFiles'>,

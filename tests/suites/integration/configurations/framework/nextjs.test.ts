@@ -136,7 +136,7 @@ const installedSandbox = shareInstalledSandbox({
     dependencies,
     files: {
         ...NEXTJS_SANDBOX.files,
-        'package.json': JSON.stringify({ ...NEXT_PACKAGE, dependencies }, null, JSON_INDENT) + '\n',
+        'package.json': `${JSON.stringify({ ...NEXT_PACKAGE, dependencies }, null, JSON_INDENT)}\n`,
     },
 });
 

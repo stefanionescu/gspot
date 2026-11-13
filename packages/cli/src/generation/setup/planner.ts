@@ -36,18 +36,10 @@ import type {
     InitScan,
     PlannedSettings,
     SettingsDraft,
+    SettingsPlan,
 } from '#cli/types/generation.ts';
-import type { ConflictingConfig, Repository, StartRunner } from '#cli/types/repository.ts';
+import type { Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-
-type SettingsPlan = {
-    root: string;
-    draft: SettingsDraft;
-    repository: Repository;
-    conflictingConfigs: ConflictingConfig[];
-    sessionOptions: Pick<SessionOptions, 'cache' | 'listing'>;
-    startRunner: StartRunner | undefined;
-};
 
 /**
 Choose where init pins gspot, and the runner that starts it from that pin. A repository that already pins gspot gets

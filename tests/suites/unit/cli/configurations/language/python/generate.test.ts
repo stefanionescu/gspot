@@ -5,6 +5,17 @@ import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generate
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { RuffConfig } from '#tests/types/configurations.ts';
 
+async function buildRuffIgnore(tables: string): Promise<string[]> {
+    const ruff = parse(
+        await buildGeneratedFile(
+            buildSandboxSettings(['python'], { tables }),
+            getManifestTarget('python', 'ruff.toml'),
+            { 'example.py': 'value = 1\n' },
+        ),
+    ) as { lint: { ignore: string[] } };
+    return ruff.lint.ignore;
+}
+
 test('python.import_folders reach the basedpyright search paths', async () => {
     const config = JSON.parse(
         await buildGeneratedFile(
@@ -58,17 +69,6 @@ test('ignores of one test path share one Ruff per-file-ignores list', async () =
     ) as RuffConfig;
     expect(ignored.lint['per-file-ignores']?.['../../../**/test_*.py']).toStrictEqual(['S101', 'D102', 'D103']);
 });
-
-async function buildRuffIgnore(tables: string): Promise<string[]> {
-    const ruff = parse(
-        await buildGeneratedFile(
-            buildSandboxSettings(['python'], { tables }),
-            getManifestTarget('python', 'ruff.toml'),
-            { 'example.py': 'value = 1\n' },
-        ),
-    ) as { lint: { ignore: string[] } };
-    return ruff.lint.ignore;
-}
 
 test('tools.ruff.rules turns on a rule that gspot leaves off, and an ignore of it still wins', async () => {
     expect(await buildRuffIgnore('[tools.ruff]\nrules = ["D100"]\n')).not.toContain('D100');

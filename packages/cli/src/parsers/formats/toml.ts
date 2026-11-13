@@ -189,21 +189,19 @@ export function buildPatchedToml(
         const text = insertTomlComments(comments, pathNode.kind, pathNode.path);
         if (text === '') continue;
         const start = getTomlRange(pathNode.node)[0];
-        chunks.push({ start, end: start, text: text + '\n' });
+        chunks.push({ start, end: start, text: `${text}\n` });
     }
     let position = 0;
-    return (
-        (
-            chunks
-                .toSorted((left, right) => left.start - right.start)
-                .map((chunk) => {
-                    const piece = patched.slice(position, chunk.start) + chunk.text;
-                    position = chunk.end;
-                    return piece;
-                })
-                .join('') + patched.slice(position)
-        ).trimEnd() + '\n'
-    );
+    return `${(
+        chunks
+            .toSorted((left, right) => left.start - right.start)
+            .map((chunk) => {
+                const piece = patched.slice(position, chunk.start) + chunk.text;
+                position = chunk.end;
+                return piece;
+            })
+            .join('') + patched.slice(position)
+    ).trimEnd()}\n`;
 }
 
 export function parseTomlFile(path: string, text: string): Record<string, unknown>;
@@ -288,7 +286,7 @@ export function parseTomlSyntax(source: string, parsed: Record<string, unknown>)
     return {
         document,
         value: parsed,
-        pathNodes: pathNodes,
+        pathNodes,
         comments: comments.toSorted((left, right) => getTomlRange(left)[0] - getTomlRange(right)[0]),
     };
 }

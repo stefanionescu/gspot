@@ -17,7 +17,7 @@ import type { Session } from '#cli/types/tools.ts';
 
 function findCommandForm(
     command: ScriptFile['commands'][number],
-    isAll: boolean,
+    { isAll }: { isAll: boolean },
 ): Pick<CheckFinding, 'rule' | 'message'> | undefined {
     const form = COMMAND_FORMS[command.name];
     if (form === undefined || (!isAll && form.allLevel === true)) return undefined;
@@ -32,13 +32,13 @@ function findCommandForm(
 function listCommandFindings(
     file: ScriptFile,
     command: ScriptFile['commands'][number],
-    isAll: boolean,
+    level: { isAll: boolean },
 ): CheckFinding[] {
     const kill = BROAD_KILL_COMMANDS.get(command.name);
     if (kill !== undefined)
         return [{ file: file.path, line: command.line, rule: SAFETY_RULES.broadKill, message: kill }];
     if (file.functions.some(({ name }) => name === command.name)) return [];
-    const form = findCommandForm(command, isAll);
+    const form = findCommandForm(command, level);
     if (form !== undefined) return [{ file: file.path, line: command.line, ...form }];
     if (
         command.name !== 'rm' ||
@@ -64,7 +64,7 @@ async function checkSafety(session: Session, planned: PlannedCheck): Promise<Che
     const scripts = await readScripts(session, planned);
     const isAll = session.settings.level === 'all';
     return scripts.flatMap((file) => [
-        ...file.commands.flatMap((command) => listCommandFindings(file, command, isAll)),
+        ...file.commands.flatMap((command) => listCommandFindings(file, command, { isAll })),
         ...file.forms
             .filter(({ form }) => isAll || !ALL_LEVEL_FORMS.has(form))
             .map(({ form, line }) => ({ file: file.path, line, rule: form, message: BASH_FORM_MESSAGES[form] })),

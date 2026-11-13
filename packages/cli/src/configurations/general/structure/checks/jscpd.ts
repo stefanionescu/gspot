@@ -26,7 +26,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes, readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 /**
 Count the lines of a clone that the import patterns cover. jscpd drops the tokens of an import and still counts

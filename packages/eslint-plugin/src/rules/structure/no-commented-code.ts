@@ -107,7 +107,7 @@ export const noCommentedCode = createRule<[], 'code'>({
         const parser = isParser(configured) ? configured : (scriptParser ?? context.languageOptions.parser);
         if (parser === undefined) return {};
         return {
-            'Program:exit'() {
+            'Program:exit': function () {
                 const groups = groupComments(context.sourceCode.getAllComments());
                 const locations = groups.flatMap((group) => listCodeLocations(parser, group));
                 for (const loc of locations) context.report({ loc, messageId: 'code' });

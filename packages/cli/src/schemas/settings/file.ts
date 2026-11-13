@@ -34,7 +34,7 @@ import {
 import { hooksSchema } from '#cli/schemas/settings/general.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { ciSchema, importRulesSchema, namingSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
-import { toolsSchema as publicToolsSchema } from '#cli/schemas/settings/tools.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 
 function describeTables<Shape extends Record<string, z.ZodType>>(shape: Shape): Shape {
@@ -128,7 +128,7 @@ const { structure: rootStructure, json: rootJson, ...scopeTables } = configurati
 
 const rootBody = {
     ...scopeTables,
-    tools: publicToolsSchema.optional(),
+    tools: toolsSchema.optional(),
 };
 
 const scopeBody = describeTables({
@@ -147,13 +147,13 @@ const scopeBody = describeTables({
     naming: namingSchema.omit({ exception: true }).optional(),
     structure: rootStructure.unwrap().pick({ environment_readers: true }).optional(),
     format: formatSchema.optional(),
-    tools: publicToolsSchema
+    tools: toolsSchema
         .extend({
-            eslint: publicToolsSchema.shape.eslint
+            eslint: toolsSchema.shape.eslint
                 .unwrap()
                 .omit({ override: true })
                 .optional()
-                .describe(publicToolsSchema.shape.eslint.description as string),
+                .describe(toolsSchema.shape.eslint.description as string),
         })
         .optional(),
 });

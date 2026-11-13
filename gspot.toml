@@ -5,6 +5,9 @@ configurations = ["typescript", "markdown", "github-actions", "bash"]
 setup_command = ["mise", "run", "setup"]
 enabled = true
 
+[limits]
+max_function_parameters = 4
+
 [naming]
 banned_words = ["catalog", "corpus", "render", "sync", "materialize", "coerce", "scoped", "bind", "load", "fetch", "resolve", "fixture", "diagnostic", "directory", "envelope", "outcome", "emit", "violation", "problem", "tooling", "implementation", "candidate", "fragment", "invocation", "lexeme", "substantial", "substance", "floor", "hint", "sink", "inputs", "memo", "collect", "summarize", "verdict", "your", "odd", "qa", "obsolete", "release hold", "installed root", "working folder", "root path", "item", "part", "known", "declared", "needed", "prepared", "pinned", "existing", "current", "extra", "complete", "whole", "plain", "full", "real", "additional", "given", "retained", "observed", "computed", "actual", "effective", "original", "specific", "captured", "recorded", "chosen", "internal", "payload", "attempt", "normalized", "expanded", "composed", "perform", "execute", "various", "several", "certain", "resulting", "handled", "wrapped", "underlying", "corresponding", "relevant", "appropriate", "proper", "basic", "overall"]
 
@@ -78,7 +81,7 @@ entry_files = [
     "packages/cli/src/bin.ts",
     "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
     "packages/cli/src/configurations/framework/site/files/purgecss.ts",
-    ".mise/release/changelog.ts",
+    "packages/cli/scripts/changelog.ts",
     "packages/cli/scripts/notices.ts",
     "packages/cli/scripts/pin-ages.ts",
 ]
@@ -206,11 +209,6 @@ paths = ["tests/setup/**"]
 [[import_rule]]
 name = "tests"
 paths = ["tests/suites/**"]
-
-[[import_rule]]
-name = "mise-scripts"
-paths = [".mise/release/**"]
-can_import = []
 
 [[ignore]]
 check = "dependencies/osv-scanner"

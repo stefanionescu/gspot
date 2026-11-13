@@ -17,7 +17,7 @@ import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 function formatNextjsFailure(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');

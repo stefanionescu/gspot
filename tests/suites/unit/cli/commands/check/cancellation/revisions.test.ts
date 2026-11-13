@@ -58,6 +58,31 @@ async function cancelAtPause(
     return { result, started };
 }
 
+async function fakePausingGit(
+    folder: string,
+    options: { operation: 'init' | 'checkout-index'; marker: string; pauseOnCall: number },
+): Promise<Record<string, string>> {
+    const executable = Bun.which('git');
+    if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
+    await writeProgramCommand(
+        folder,
+        'git',
+        'fakes/git',
+        '--git',
+        executable,
+        '--operation',
+        options.operation,
+        '--pause-on-call',
+        String(options.pauseOnCall),
+        '--counter',
+        join(folder, 'calls.txt'),
+        '--marker',
+        options.marker,
+        '--',
+    );
+    return { PATH: `${folder}${delimiter}${buildSpawnEnvironment()['PATH'] ?? ''}` };
+}
+
 test.skipIf(isWindows).each([...SIGNAL_EXITS])(
     'canceling check --staged during git $operation exits with the signal code, keeps the index and the working file, and a second run passes',
     async ({ operation, signal, exitCode }) => {
@@ -162,28 +187,3 @@ test.skipIf(isWindows)('canceling a pre-push check while its stdin is open exits
         await child.stdin.end();
     }
 });
-
-async function fakePausingGit(
-    folder: string,
-    options: { operation: 'init' | 'checkout-index'; marker: string; pauseOnCall: number },
-): Promise<Record<string, string>> {
-    const executable = Bun.which('git');
-    if (executable === null) throw new Error('The pausing Git fake requires Git on PATH.');
-    await writeProgramCommand(
-        folder,
-        'git',
-        'fakes/git',
-        '--git',
-        executable,
-        '--operation',
-        options.operation,
-        '--pause-on-call',
-        String(options.pauseOnCall),
-        '--counter',
-        join(folder, 'calls.txt'),
-        '--marker',
-        options.marker,
-        '--',
-    );
-    return { PATH: `${folder}${delimiter}${buildSpawnEnvironment()['PATH'] ?? ''}` };
-}

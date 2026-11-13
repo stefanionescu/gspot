@@ -141,3 +141,19 @@ export const UNMATCHED_PATH_CASES = [
         ],
     },
 ] as const;
+
+// weakenings check
+export const IMPORT_RULE_TABLES = `[[import_rule]]
+name = "core"
+paths = ["src/core/**"]
+
+[[import_rule]]
+name = "store"
+paths = ["src/store/**"]
+can_import = []
+
+[[import_rule]]
+name = "app"
+paths = ["src/app/**"]
+can_import = ["core"]
+`;

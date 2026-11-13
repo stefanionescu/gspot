@@ -16,5 +16,6 @@ export function formatHeader(path: string, notes: string[] = []): string {
     if (!isSlashComment && JSON_EXTENSIONS.has(extension)) return '';
     const lines = [GENERATED_HEADER_TEXT, ...notes];
     const mark = isSlashComment ? '//' : '#';
-    return lines.map((line) => (line === '' ? mark : `${mark} ${line}`)).join('\n') + '\n';
+    const comments = lines.map((line) => (line === '' ? mark : `${mark} ${line}`));
+    return `${comments.join('\n')}\n`;
 }

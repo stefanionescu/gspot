@@ -86,10 +86,11 @@ test.each(
         const version = await runGspot(sandbox.path, [...commandArguments]);
         expect(version).toStrictEqual({
             code: 0,
-            stdout:
-                (commandArguments.includes('--json')
+            stdout: `${
+                commandArguments.includes('--json')
                     ? JSON.stringify({ version: cliPackage.version, exitCode: 0, notes: [] }, null, 2)
-                    : cliPackage.version) + '\n',
+                    : cliPackage.version
+            }\n`,
             stderr: '',
         });
     },

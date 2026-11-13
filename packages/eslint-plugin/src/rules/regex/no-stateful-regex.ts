@@ -88,17 +88,17 @@ export const noStatefulRegex = createRule<[], 'loop' | 'subjects'>({
             ...buildRegexVisitors((node, { flags }) => {
                 if (flags.global && isLoopExec(node, source)) context.report({ node, messageId: 'loop' });
             }, source),
-            'CallExpression:exit'(node: TSESTree.CallExpression) {
+            'CallExpression:exit': function (node: TSESTree.CallExpression) {
                 const variable = getGlobalVariable(node, source);
                 if (variable === undefined) return;
                 calls.set(variable, [...(calls.get(variable) ?? []), node]);
             },
-            'AssignmentExpression > MemberExpression.left'(node: TSESTree.MemberExpression) {
+            'AssignmentExpression > MemberExpression.left': function (node: TSESTree.MemberExpression) {
                 if (!ASTUtils.isIdentifier(node.object) || ASTUtils.getPropertyName(node) !== 'lastIndex') return;
                 const variable = ASTUtils.findVariable(source.getScope(node), node.object);
                 if (variable !== null) resets.add(variable);
             },
-            'Program:exit'() {
+            'Program:exit': function () {
                 const reused = listReusedRegexes(calls, resets, source);
                 for (const node of reused) context.report({ node, messageId: 'subjects' });
             },

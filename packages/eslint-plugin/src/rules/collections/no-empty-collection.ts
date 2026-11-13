@@ -67,7 +67,7 @@ export const noEmptyCollection = createRule<[], 'empty'>({
     create(context) {
         const source = context.sourceCode;
         return {
-            'Program:exit'() {
+            'Program:exit': function () {
                 for (const variable of listLocalVariables(source))
                     for (const { identifier } of listEmptyReads(variable, source))
                         context.report({ node: identifier, messageId: 'empty', data: { name: identifier.name } });

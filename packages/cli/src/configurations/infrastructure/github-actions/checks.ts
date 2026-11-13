@@ -36,7 +36,7 @@ import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listStepReferences(steps: unknown): unknown[] {

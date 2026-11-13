@@ -1,10 +1,6 @@
 import { CREATE_STORE_MESSAGE, ZUSTAND_STORE_IMPORTS } from '#cli/config/configurations/library.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import {
-    type ConfigurationBlocks,
-    type EslintBlockBuilder,
-    type EslintScope,
-} from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildZustandBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {
     const { eslintFiles, settings } = scope;

@@ -27,17 +27,16 @@ export const noNestedVitestMock = createRule<[], 'scope'>({
     create(context) {
         const origins = isModuleUsed(context, ['vitest']) ? VITEST_GLOBAL_ORIGINS : VITEST_IMPORT_ORIGINS;
         return {
-            'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.object.type="Identifier"][callee.property.name="mock"]'(
-                node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
-            ) {
-                const callee = getCalleeName(node.callee, context.sourceCode);
-                const isVitest =
-                    callee !== undefined && VITEST_MOCK_RECEIVERS.has(callee.name) && origins.has(callee.module);
-                const isTopLevel =
-                    node.parent.type === AST_NODE_TYPES.ExpressionStatement &&
-                    node.parent.parent.type === AST_NODE_TYPES.Program;
-                if (isVitest && !isTopLevel) context.report({ node: node.callee, messageId: 'scope' });
-            },
+            'CallExpression[optional=false][callee.type="MemberExpression"][callee.optional=false][callee.object.type="Identifier"][callee.property.name="mock"]':
+                function (node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression }) {
+                    const callee = getCalleeName(node.callee, context.sourceCode);
+                    const isVitest =
+                        callee !== undefined && VITEST_MOCK_RECEIVERS.has(callee.name) && origins.has(callee.module);
+                    const isTopLevel =
+                        node.parent.type === AST_NODE_TYPES.ExpressionStatement &&
+                        node.parent.parent.type === AST_NODE_TYPES.Program;
+                    if (isVitest && !isTopLevel) context.report({ node: node.callee, messageId: 'scope' });
+                },
         };
     },
 });

@@ -16,6 +16,7 @@ example = "A tracked `packages/cli/AGENTS.md` reports `nested-agents-file`. Move
 files = { filenames = ["AGENTS.md"] }
 help = "Move the rules into the AGENTS.md at the root of the repository, and delete this file."
 name = "nested-files"
+rules = ["WORKING.md"]
 runs = "files"
 stage = "commit"
 summary = "Reports each tracked `AGENTS.md` outside the repository root."

@@ -23,15 +23,18 @@ export const CHAI_ASSERT_CHECKS = [
     ['deepEqual', { comparison: 'deep', negated: false }],
     ['notDeepEqual', { comparison: 'deep', negated: true }],
 ] as const;
-export const CHAI_COMPARISONS = [
+export const CHAI_COMPARISONS: ReadonlyMap<string | null | undefined, 'deep' | 'strict'> = new Map([
     ['equal', 'strict'],
     ['equals', 'strict'],
     ['eq', 'strict'],
     ['eql', 'deep'],
     ['eqls', 'deep'],
-] as const;
+]);
 export const CHAI_MODULES = ['chai', 'chai/register-assert', 'chai/register-expect', 'chai/register-should', 'cypress'];
-export const CHAI_PREDICATES = [
+export const CHAI_PREDICATES: ReadonlyMap<
+    string | null,
+    'exists' | 'false' | 'null' | 'true' | 'truthy' | 'undefined'
+> = new Map([
     ['ok', 'truthy'],
     ['true', 'true'],
     ['false', 'false'],
@@ -39,21 +42,22 @@ export const CHAI_PREDICATES = [
     ['undefined', 'undefined'],
     ['exist', 'exists'],
     ['exists', 'exists'],
-] as const;
+]);
 export const CYPRESS_ASSERTIONS: ReadonlySet<string | null> = new Set(['should', 'and']);
 export const CYPRESS_MODULES = ['cypress'];
-export const EXPECT_COMPARISONS = [
+export const EXPECT_COMPARISONS: ReadonlyMap<string | null, 'deep' | 'strict'> = new Map([
     ['toBe', 'strict'],
     ['toEqual', 'deep'],
     ['toStrictEqual', 'deep'],
-] as const;
-export const EXPECT_PREDICATES = [
-    ['toBeTruthy', 'truthy'],
-    ['toBeFalsy', 'falsy'],
-    ['toBeDefined', 'defined'],
-    ['toBeUndefined', 'undefined'],
-    ['toBeNull', 'null'],
-] as const;
+]);
+export const EXPECT_PREDICATES: ReadonlyMap<string | null, 'defined' | 'falsy' | 'null' | 'truthy' | 'undefined'> =
+    new Map([
+        ['toBeTruthy', 'truthy'],
+        ['toBeFalsy', 'falsy'],
+        ['toBeDefined', 'defined'],
+        ['toBeUndefined', 'undefined'],
+        ['toBeNull', 'null'],
+    ]);
 export const EXPECT_STYLES = [
     { style: 'jest-like', modules: ['vitest', 'bun:test', '@jest/globals'], dependencies: ['jest'] },
     { style: 'jasmine', modules: ['jasmine'], dependencies: [...JASMINE_PACKAGES] },
@@ -71,27 +75,6 @@ export const NODE_ASSERT_CHECKS = [
     ['notDeepEqual', { comparison: 'loose', negated: true }],
 ] as const;
 export const NODE_ASSERT_MODULES = ['assert', 'node:assert', 'assert/strict', 'node:assert/strict'];
-
-// no-constant-assertions rule
-export const DEEP_MATCHERS = {
-    'jest-like': ['toEqual', 'not.toEqual'],
-    jasmine: ['toEqual', 'not.toEqual'],
-    playwright: ['toEqual', 'not.toEqual'],
-    'chai-bdd': ['deep.equal', 'not.deep.equal'],
-    cypress: ['deep.equal', 'not.deep.equal'],
-    'chai-assert': ['deepEqual', 'notDeepEqual'],
-    'node-assert': ['deepStrictEqual', 'notDeepStrictEqual'],
-} as const;
-export const FRESH_PREDICATES = new Set<string>(['truthy', 'defined', 'exists']);
-export const FRESH_VALUES = new Set<string>([
-    'ArrayExpression',
-    'ObjectExpression',
-    'FunctionExpression',
-    'ArrowFunctionExpression',
-    'ClassExpression',
-    'NewExpression',
-]);
-export const IDENTITY_STYLES = new Set<string>(['jest-like', 'playwright', 'node-assert']);
 
 // no-incomplete-assertions rule
 export const ASSERTION_METHODS: ReadonlySet<string | null> = new Set([

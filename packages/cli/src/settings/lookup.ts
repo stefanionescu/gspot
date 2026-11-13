@@ -33,7 +33,7 @@ export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object
     }).map(([name, fields]) => [name, Object.keys(fields)]),
 );
 
-function getSettingValueType(schema: z.ZodType, isPath: boolean): Setting['type'] {
+function getSettingValueType(schema: z.ZodType, { isPath }: { isPath: boolean }): Setting['type'] {
     if (schema instanceof z.ZodArray) return 'list';
     if (schema instanceof z.ZodNumber) return 'number';
     if (schema instanceof z.ZodBoolean) return 'boolean';
@@ -95,11 +95,11 @@ export function findChildSchema(schema: z.ZodType | undefined, segment: KeyPath[
 export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_role'> {
     const inner = unwrapSettingInput(schema);
     const metadata = schema.meta() ?? inner.meta();
-    const elementRole = inner instanceof z.ZodArray ? (inner.element as z.ZodType).meta()?.['path_role'] : undefined;
-    const role = metadata?.['path_role'] ?? elementRole;
+    const elementRole = inner instanceof z.ZodArray ? (inner.element as z.ZodType).meta()?.path_role : undefined;
+    const role = metadata?.path_role ?? elementRole;
     const pathRole = PATH_ROLES.find((allowed) => allowed === role);
     return {
-        type: getSettingValueType(inner, pathRole !== undefined),
+        type: getSettingValueType(inner, { isPath: pathRole !== undefined }),
         ...(pathRole !== undefined && { path_role: pathRole }),
     };
 }

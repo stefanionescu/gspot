@@ -49,7 +49,7 @@ function classifyRule(rule: string, state: RuleState, shipped: RuleState | undef
     return isDeepStrictEqual(state.options, shipped.options) ? 'covered' : 'options';
 }
 
-export function convertRule(value: unknown, hasSeverity: boolean): RuleState {
+export function convertRule(value: unknown, { hasSeverity }: { hasSeverity: boolean }): RuleState {
     const [first, ...rest] = [value].flat();
     if (hasSeverity) return { on: first !== 0 && first !== 'off', options: rest };
     if (first === null || first === false) return { on: false, options: [] };
@@ -123,7 +123,7 @@ export async function readPrintedRules(input: PrintedRules): Promise<RuleTable |
     if (printed.code !== 0) return undefined;
     try {
         const { rules } = parseJsonFile(tool, printed.stdout, printedRulesSchema);
-        return new Map(Object.entries(rules).map(([rule, value]) => [rule, convertRule(value, hasSeverity)]));
+        return new Map(Object.entries(rules).map(([rule, value]) => [rule, convertRule(value, { hasSeverity })]));
     } catch (error) {
         if (error instanceof GspotError) return undefined;
         throw error;

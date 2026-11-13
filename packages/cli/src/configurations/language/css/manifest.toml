@@ -53,6 +53,7 @@ fix = ["stylelint", "--config", "{config_file:stylelint}", "--fix", "--allow-emp
 help = "Run the `fix:` command that the report prints for the rules that fix themselves."
 name = "stylelint"
 output = { format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$" }
+rules = ["CSS.md", "HTML.md", "ACCESSIBILITY.md"]
 stage = "commit"
 summary = "Lints every stylesheet with the standard stylelint rules, and refuses left and right properties and values, `outline: none`, and a `font-size` outside `rem`, `em`, and `%`."
 tool = ["stylelint", "stylelint-config-standard", "postcss-html"]

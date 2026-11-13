@@ -33,6 +33,7 @@ files = { paths = ["**/.github/workflows/*.{yml,yaml}"], kinds = ["source", "gen
 help = "Fix the line actionlint names."
 name = "actionlint"
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*?) \\[(?<rule>[a-z-]+)\\]$" }
+rules = ["GITHUB-ACTIONS.md"]
 stage = "commit"
 summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
 tool = ["actionlint", "shellcheck"]
@@ -43,6 +44,7 @@ example = "A job with no `timeout-minutes` reports `job-timeout`. Add `timeout-m
 files = { paths = ["**/.github/workflows/*.{yml,yaml}"] }
 help = "Apply the fix that the message names."
 name = "workflow-shape"
+rules = ["GITHUB-ACTIONS.md", "SECURITY.md"]
 stage = "commit"
 summary = "Checks each workflow for a job timeout, a pinned runner, a reason above `continue-on-error`, no expression or piped download in `run:`, no secret in the top-level `env`, a `concurrency` group that fits its triggers, and `retention-days` on uploads."
 why = "A hung job or a moving runner image costs a day to find, and an expression in `run:` becomes shell code."
@@ -54,6 +56,7 @@ exit_codes = [11, 12, 13, 14]
 help = "Apply the fix zizmor names."
 name = "zizmor"
 output = { format = "regex", pattern = "^::(?:warning|error|notice) file=(?<file>[^,]+),line=(?<line>\\d+),title=(?<rule>[^:]+)::(?<message>.*)$" }
+rules = ["GITHUB-ACTIONS.md"]
 stage = "commit"
 summary = "Audits GitHub Actions workflows and composite actions with zizmor for template injection, excessive permissions, and dangerous triggers."
 why = "A workflow runs with the repository's credentials; an injectable expression can hand them to a stranger."

@@ -12,7 +12,7 @@ import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function parseVultureFinding(line: string, selected: ReadonlySet<string>): CheckFinding[] {
     const groups = VULTURE_FINDING.exec(line)?.groups;

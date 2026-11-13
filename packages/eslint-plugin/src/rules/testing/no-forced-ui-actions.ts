@@ -56,7 +56,7 @@ export const noForcedUiActions = createRule<[], 'force'>({
         if (!frameworks.hasCypress && !frameworks.hasPlaywright) return {};
         const source = context.sourceCode;
         return {
-            'CallExpression[callee.type="MemberExpression"]'(node: MemberCall) {
+            'CallExpression[callee.type="MemberExpression"]': function (node: MemberCall) {
                 const position = getActionPosition(node, source, frameworks);
                 const options =
                     position !== undefined && node.arguments.length > position ? node.arguments.at(-1) : undefined;

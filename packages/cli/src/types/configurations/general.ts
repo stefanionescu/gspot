@@ -57,6 +57,7 @@ export type BannedWord = {
     list?: string;
     categories?: string[];
     firstWord?: boolean;
+    wholeName?: boolean;
     replacement?: string;
 };
 
@@ -168,3 +169,9 @@ export type SwiftDeclarations = { owners: Map<string, Set<string>>; hidden: Map<
 export type ReaderNames = { environmentFunctions: string[]; readerVariables: Set<string> };
 
 export type TrivialFunction = { finding: CheckFinding; key?: string };
+
+// `caller` names the function that calls the name, or the file when the call sits outside a function. A use that is
+// not a call has no caller.
+export type ScriptUse = { name: string; caller?: string };
+
+export type ExportedFunction = { name: string; file: string; line: number; column: number };

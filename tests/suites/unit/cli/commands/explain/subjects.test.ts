@@ -149,6 +149,19 @@ test('explain of a check says whether its configuration is selected and names th
     ).toStrictEqual(['Selected in this repository: no (gspot add docker)']);
 });
 
+test.each(['structure/function-order', 'agents/nested-files'])(
+    'explain of a check lists the rule files that its record names: %s',
+    async (check) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['bash'], { rules: true }),
+            'source.sh': 'echo example\n',
+        });
+        const result = await runGspot(sandbox.path, ['explain', check, '--json']);
+        expect(result.code, result.stderr).toBe(0);
+        expect(JSON.parse(result.stdout)).toMatchObject({ ruleFiles: ['WORKING.md'] });
+    },
+);
+
 test.each([
     { subject: ['bash/shellcheck'], fields: { kind: 'check', selected: true } },
     { subject: ['yaml/syntax', 'documents'], fields: { kind: 'lint-rule' } },

@@ -33,14 +33,14 @@ export const noTestRetries = createRule<[], 'retry'>({
         const isJestUsed = isModuleUsed(context, RETRY_MODULES, ['jest']);
         const source = context.sourceCode;
         return {
-            'CallExpression[callee.type="MemberExpression"][callee.property.name="retryTimes"]'(
+            'CallExpression[callee.type="MemberExpression"][callee.property.name="retryTimes"]': function (
                 node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression },
             ) {
                 const origin = getJestOrigin(node.callee.object, source);
                 const isJest = origin === '@jest/globals' || (origin === 'global' && isJestUsed);
                 if (isJest) context.report({ node, messageId: 'retry' });
             },
-            'CallExpression[callee.object.type="ThisExpression"][callee.property.name="retries"]'(
+            'CallExpression[callee.object.type="ThisExpression"][callee.property.name="retries"]': function (
                 node: TSESTree.CallExpression,
             ) {
                 const isInSuite = listEnclosingTestCalls(node, source).some(

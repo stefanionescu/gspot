@@ -11,16 +11,12 @@ import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';
-import type { WrittenTable } from '#cli/types/generation.ts';
-import type { Settings, TomlTable } from '#cli/types/settings.ts';
+import type { WrittenTable, WrittenTables } from '#cli/types/generation.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 
 function isInheritedValueChanged(
-    name: string,
-    key: string,
-    segments: string[],
-    writtenTable: WrittenTable,
-    tables: WrittenTable[],
-    settings: Settings,
+    { name, key, segments }: { name: string; key: string; segments: string[] },
+    { writtenTable, tables, settings }: WrittenTables,
 ): boolean {
     const consumers = tables.filter(({ scopePath }) => isInScope(scopePath, writtenTable.scopePath));
     const omitted = structuredClone(writtenTable.table);
@@ -41,13 +37,8 @@ function isInheritedValueChanged(
     );
 }
 
-function stripTableDefaults(
-    table: TomlTable,
-    writtenTable: WrittenTable,
-    tables: WrittenTable[],
-    settings: Settings,
-    path: string[] = [],
-): TomlTable {
+function stripTableDefaults(table: TomlTable, written: WrittenTables, path: string[] = []): TomlTable {
+    const { writtenTable } = written;
     const fields = Object.entries(table).map(([name, value]) => {
         const segments = [...path, name];
         const key = segments.join('.');
@@ -56,11 +47,9 @@ function stripTableDefaults(
     const settingFields = new Map(
         fields
             .filter(({ setting }) => setting !== undefined)
-            .flatMap(({ name, value, key, segments }) => {
-                return isInheritedValueChanged(name, key, segments, writtenTable, tables, settings)
-                    ? [[name, value]]
-                    : [];
-            }),
+            .flatMap(({ name, value, key, segments }) =>
+                isInheritedValueChanged({ name, key, segments }, written) ? [[name, value]] : [],
+            ),
     );
     const rootFields = new Map<string, z.ZodType>(path.length === 0 ? Object.entries(settingsSchema.shape) : []);
     const remaining = new Map(
@@ -69,12 +58,7 @@ function stripTableDefaults(
             .flatMap(({ name, value, segments }) => {
                 const defaultValue = rootFields.get(name)?.safeParse(undefined);
                 if (defaultValue?.success === true && isDeepStrictEqual(value, defaultValue.data)) return [];
-                return [
-                    [
-                        name,
-                        isTable(value) ? stripTableDefaults(value, writtenTable, tables, settings, segments) : value,
-                    ],
-                ];
+                return [[name, isTable(value) ? stripTableDefaults(value, written, segments) : value]];
             }),
     );
     const kept = new Map([...settingFields, ...remaining]);
@@ -111,8 +95,8 @@ export function stripDefaults(settings: TomlTable): TomlTable {
     const tables = [root, ...scopeTables].toSorted((left, right) => compareScopeDepth(left.scopePath, right.scopePath));
     for (const key of DETECTED_SETTINGS) for (const table of tables) table.availableSettings.defaults.delete(key);
     const scopeValues = scopeTables.map((writtenTable) =>
-        stripTableDefaults(writtenTable.table, writtenTable, tables, allSettings),
+        stripTableDefaults(writtenTable.table, { writtenTable, tables, settings: allSettings }),
     );
-    const rootValues = stripTableDefaults(settings, root, tables, allSettings);
+    const rootValues = stripTableDefaults(settings, { writtenTable: root, tables, settings: allSettings });
     return scopes.length > 0 ? { ...rootValues, scope: scopeValues } : rootValues;
 }

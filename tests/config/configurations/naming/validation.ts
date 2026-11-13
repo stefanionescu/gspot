@@ -203,9 +203,9 @@ export const NUMBERED_FILE_FINDINGS = [
     { file: '.mise/tasks/01-build.sh', rule: 'case' },
     { file: '.mise/tasks/01-build.sh', rule: 'digits' },
 ] as const;
-export const NUMBERED_PREFIX_OVERRIDE =
-    '[[naming.exception]]\npaths = [".mise/tasks/*.sh"]\n' +
-    String.raw`categories = ["files"]
+export const NUMBERED_PREFIX_OVERRIDE = String.raw`[[naming.exception]]
+paths = [".mise/tasks/*.sh"]
+categories = ["files"]
 ignored_prefix = '^\d{2}-'
 reason = "The project orders its tasks by this prefix."
 `;

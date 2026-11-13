@@ -40,19 +40,16 @@ import { lookUpTool } from '#cli/tools/inspect.ts';
 import { readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
 import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
-import type { CiState, CommandDefinition, CommandLocation, DoctorReport, DoctorTool } from '#cli/types/commands.ts';
+import type {
+    CiState,
+    CommandDefinition,
+    CommandLocation,
+    DoctorReport,
+    DoctorStates,
+    DoctorTool,
+} from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
-
-type DoctorStates = {
-    hooks: string;
-    ci: string;
-    broken: DoctorTool[];
-    commandPrograms: ReadonlySet<string>;
-    systemTools: ReadonlySet<string>;
-    toolsWithoutMise: ReadonlySet<string>;
-    pinNotes: string[];
-};
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';

@@ -18,7 +18,7 @@ import { composeSchema } from '#cli/schemas/configurations.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { ComposeDeclaration, ComposeDocuments, ComposeFiles } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/tools.ts';
 

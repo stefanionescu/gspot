@@ -14,7 +14,7 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckResult, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function addUnbuiltPackageNote(session: CheckSession, result: CheckResult): CheckResult {

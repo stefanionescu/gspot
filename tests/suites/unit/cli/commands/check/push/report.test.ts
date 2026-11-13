@@ -55,7 +55,7 @@ test('a pushed commit that changes gspot.toml checks every file of that commit',
     await writeFile(join(sandbox.path, 'changed.sh'), 'echo changed\n');
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        buildSandboxSettings(['bash'], { tables: BASH_SYNTAX_PUSH_CHECK + '[hooks]\n' }),
+        buildSandboxSettings(['bash'], { tables: `${BASH_SYNTAX_PUSH_CHECK}[hooks]\n` }),
     );
     runGitStep(sandbox.path, ['add', 'gspot.toml', 'changed.sh']);
     runGitStep(sandbox.path, ['commit', '-qm', 'full pushed tree']);

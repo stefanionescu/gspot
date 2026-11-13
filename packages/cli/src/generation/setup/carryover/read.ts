@@ -160,13 +160,15 @@ function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInpu
     const user: RuleTable = new Map(
         rules
             .filter(([rule]) => MARKDOWNLINT_RULE_ID.test(rule))
-            .map(([rule, value]) => [rule, convertRule(value, false)]),
+            .map(([rule, value]) => [rule, convertRule(value, { hasSeverity: false })]),
     );
     const compared = compareRules({
         check: MARKDOWNLINT_CHECK,
         user,
         lookup: (rule) =>
-            MARKDOWNLINT_RETIRED_RULES.has(rule) ? undefined : convertRule(document[rule] ?? true, false),
+            MARKDOWNLINT_RETIRED_RULES.has(rule)
+                ? undefined
+                : convertRule(document[rule] ?? true, { hasSeverity: false }),
     });
     return buildToolCarryover({
         setting: 'markdownlint',
@@ -194,7 +196,7 @@ async function readCommitlintCarryover({ repository, session, tools }: Carryover
     const compared = compareRules({
         check: COMMITLINT_CHECK,
         user,
-        lookup: (rule) => (shipped[rule] === undefined ? undefined : convertRule(shipped[rule], true)),
+        lookup: (rule) => (shipped[rule] === undefined ? undefined : convertRule(shipped[rule], { hasSeverity: true })),
     });
     return buildToolCarryover({
         setting: 'commitlint',

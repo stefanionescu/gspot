@@ -2,9 +2,6 @@
 #MISE description="Tag a tested main commit whose npm pins are past the release hold. Then create the GitHub release from the CHANGELOG.md section of the CLI version, and set the repository description and homepage from the CLI package."
 set -euo pipefail
 
-# shellcheck source=.mise/release/workflows.sh
-source .mise/release/workflows.sh
-
 # assert_release_commit: Refuses a release unless main has no changes and both workflows passed on HEAD.
 assert_release_commit() {
     local branch
@@ -18,7 +15,7 @@ assert_release_commit() {
         return 1
     fi
     commit=$(git rev-parse HEAD) || return 1
-    assert_workflows_passed "${commit}"
+    mise run release:check-ci "${commit}"
 }
 
 # assert_version_raised: Refuses a package whose code changed since the tag of a version that npm already serves.

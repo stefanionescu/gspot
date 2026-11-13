@@ -6,6 +6,21 @@ import { FUNCTION_NODES, TYPE_ASSERTION_NODES } from './plugin.ts';
 export const CONSTRUCTOR_BODY_DEPTH = 2;
 export const SETTLE_METHOD = 'resolve';
 
+// no-boolean-parameters rule
+export const BOOLEAN_UNION_MEMBERS: ReadonlySet<string> = new Set([
+    'TSBooleanKeyword',
+    'TSNullKeyword',
+    'TSUndefinedKeyword',
+]);
+export const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
+export const TYPED_VALUE_PARENTS: ReadonlySet<string> = new Set([
+    'AssignmentExpression',
+    'JSXExpressionContainer',
+    'TSAsExpression',
+    'TSSatisfiesExpression',
+]);
+export const VALUE_CONTAINERS: ReadonlySet<string> = new Set(['ArrayExpression', 'ObjectExpression', 'Property']);
+
 // no-empty-return-value rule
 export const EMPTY_RETURN_TYPES = new Set(['TSVoidKeyword', 'TSNeverKeyword', 'TSUndefinedKeyword']);
 export const UNUSED_CALL_PARENTS = new Set([

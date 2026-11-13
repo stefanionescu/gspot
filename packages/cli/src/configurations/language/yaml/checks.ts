@@ -29,9 +29,9 @@ import { YAML_EXPLANATIONS } from '#cli/configurations/language/yaml/explanation
 import { readText } from '#cli/system/files/reads.ts';
 import type { YamlAnchorToken, YamlFinding } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
-function listScalarFindings(node: Scalar, isKey: boolean): YamlFinding[] {
+function listScalarFindings(node: Scalar, { isKey }: { isKey: boolean }): YamlFinding[] {
     if (node.type !== 'PLAIN' || node.tag !== undefined) return [];
     const source = node.source ?? '';
     const offset = node.range?.[0] ?? 0;
@@ -140,7 +140,7 @@ function listDocumentFindings(text: string, document: Document.Parsed): YamlFind
         if (!isScalar(node)) return;
         if (key === 'key' && node.value === '<<')
             findings.push({ offset: node.range?.[0] ?? 0, rule: YAML_RULES.merge, message: YAML_MESSAGES.merge });
-        findings.push(...listScalarFindings(node, key === 'key'));
+        findings.push(...listScalarFindings(node, { isKey: key === 'key' }));
     });
     return findings;
 }

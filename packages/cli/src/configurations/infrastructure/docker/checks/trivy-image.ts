@@ -15,7 +15,7 @@ import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { ImageFinding } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const config = join(session.root, getConfigPath(session, planned, TRIVY_CONFIG_FILE));

@@ -14,7 +14,7 @@ import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
 import * as assets from '#cli/system/assets.ts';
 import type { Level } from '#cli/types/settings.ts';
-import { RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
+import { PLAYWRIGHT_RULE_CASES, RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -67,6 +67,16 @@ test.each([...RUNTIME_RULE_CASES])('$name selects the runtime rules $rules', asy
     expect(paths.filter((path) => /^DENO\.md$/u.test(path))).toStrictEqual([...rules]);
 });
 
+test.each([...PLAYWRIGHT_RULE_CASES])('$name', async ({ files, rules }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript'], { rules: true }),
+        ...files,
+    });
+    const session = await openSession(sandbox.path);
+    const paths = selectRuleFiles(session).map((file) => file.path);
+    expect(paths.filter((path) => path === 'PLAYWRIGHT.md')).toStrictEqual([...rules]);
+});
+
 test('a rule file shows the limit that gspot.toml sets', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['markdown'], {
@@ -89,7 +99,7 @@ test('at level basic, a rule file loses its level-all sections with their subsec
     const text = before + omitted + after;
     expect(await selectGuideContents(text, 'basic')).toStrictEqual([before + after]);
     expect(await selectGuideContents(text, 'all')).toStrictEqual([
-        before + '## Convention\n\nContent.\n\n### Detail\n\n```md\n## Not a boundary\n```\n\n' + after,
+        `${before}## Convention\n\nContent.\n\n### Detail\n\n\`\`\`md\n## Not a boundary\n\`\`\`\n\n${after}`,
     ]);
 });
 

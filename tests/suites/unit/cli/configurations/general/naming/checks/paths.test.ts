@@ -73,7 +73,7 @@ test('a numbered file name needs an ignored_prefix override', async () => {
 });
 
 test('a banned folder word such as shared is reported in folder names', async () => {
-    const paths = ['shared/first.js', 'app/shared/first.js', 'app/worker/shared/entry.js'];
+    const paths = ['shared/first.js', 'app/shared/first.js', 'app/worker/shared/entry.js', 'mocks/first.js'];
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'naming'], {
             level: 'all',

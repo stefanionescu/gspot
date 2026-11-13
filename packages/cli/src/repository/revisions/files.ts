@@ -79,7 +79,7 @@ export async function readCommittedTexts(
     const result = await runGit(
         root,
         GIT_BLOBS_ARGUMENTS,
-        { stdin: hashes.join('\n') + '\n', cancelSignal },
+        { stdin: `${hashes.join('\n')}\n`, cancelSignal },
         async (chunks) => {
             for await (const [hash, bytes] of parseGitBlobs(chunks, hashes)) blobs.set(hash, bytes);
         },

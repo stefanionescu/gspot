@@ -120,10 +120,10 @@ function insertTopLevelSetting(
 function formatTaploValue(node: TomlValue, text: string): string {
     if (isTomlKind(node, 'InlineArray'))
         return `[${node.items.map(({ item: element }) => formatTaploValue(element as TomlValue, text)).join(', ')}]`;
-    if (isTomlKind(node, 'InlineTable'))
-        return node.items.length === 0
-            ? '{}'
-            : `{ ${node.items.map(({ item: pair }) => pair.key.raw + ' = ' + formatTaploValue(pair.value, text)).join(', ')} }`;
+    if (isTomlKind(node, 'InlineTable')) {
+        const pairs = node.items.map(({ item: pair }) => `${pair.key.raw} = ${formatTaploValue(pair.value, text)}`);
+        return pairs.length === 0 ? '{}' : `{ ${pairs.join(', ')} }`;
+    }
     const [start, end] = getTomlRange(node);
     return text.slice(start, end);
 }

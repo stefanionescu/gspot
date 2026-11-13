@@ -278,13 +278,13 @@ const lists = {
 export const namingSchema = z.strictObject({
     ...namingCategorySchema.shape,
     ...lists,
-    typescript: languageSchemas['typescript'].optional(),
-    python: languageSchemas['python'].optional(),
-    swift: languageSchemas['swift'].optional(),
-    bash: languageSchemas['bash'].optional(),
-    sql: languageSchemas['sql'].optional(),
-    css: languageSchemas['css'].optional(),
-    html: languageSchemas['html'].optional(),
+    typescript: languageSchemas.typescript.optional(),
+    python: languageSchemas.python.optional(),
+    swift: languageSchemas.swift.optional(),
+    bash: languageSchemas.bash.optional(),
+    sql: languageSchemas.sql.optional(),
+    css: languageSchemas.css.optional(),
+    html: languageSchemas.html.optional(),
 });
 
 export const ruleFilesSchema = z.strictObject({

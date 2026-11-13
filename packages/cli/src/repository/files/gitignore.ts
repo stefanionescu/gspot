@@ -85,7 +85,7 @@ export function listGitignorePatterns(cache: RunCache, trackedPaths: string[]): 
 export async function readIgnoredPaths(root: string, paths: string[], cancelSignal?: AbortSignal): Promise<string[]> {
     if (paths.length === 0) return [];
     const result = await runGit(root, GIT_CHECK_IGNORE_ARGUMENTS, {
-        stdin: paths.join('\0') + '\0',
+        stdin: `${paths.join('\0')}\0`,
         cancelSignal,
     });
     if (result.code !== 0 && result.code !== 1) throw buildGitError(GIT_CHECK_IGNORE_ARGUMENTS, result);

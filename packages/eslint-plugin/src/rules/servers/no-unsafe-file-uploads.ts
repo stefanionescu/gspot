@@ -37,8 +37,11 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
     create(context) {
         const source = context.sourceCode;
         const forms = new Map<TSESLint.Scope.Variable, UploadForm>();
-        const report = (node: TSESTree.Node, hasFolder: boolean, hasExtensions: boolean): void => {
-            const key = `${String(hasFolder)},${String(hasExtensions)}`;
+        const report = (
+            node: TSESTree.Node,
+            { hasFolder, keepsExtensions }: Pick<UploadForm, 'hasFolder' | 'keepsExtensions'>,
+        ): void => {
+            const key = `${String(hasFolder)},${String(keepsExtensions)}`;
             const messageId = Object.hasOwn(UPLOAD_MESSAGES, key) ? UPLOAD_MESSAGES[key] : undefined;
             if (messageId) context.report({ node, messageId });
         };
@@ -48,11 +51,10 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
             if (node.arguments.length === 0) return;
             const extensions = getOptionProperties(node.arguments[0], source).get('keepExtensions');
             const hasFolder = Boolean(getOptionProperties(node.arguments[0], source).get('uploadDir'));
-            report(
-                node.callee,
+            report(node.callee, {
                 hasFolder,
-                extensions?.value.type === AST_NODE_TYPES.Literal && extensions.value.value === true,
-            );
+                keepsExtensions: extensions?.value.type === AST_NODE_TYPES.Literal && extensions.value.value === true,
+            });
         };
         const checkMulter = (node: TSESTree.CallExpression | TSESTree.NewExpression): void => {
             const storage = getExpressionValue(
@@ -65,10 +67,10 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
                 storage.callee.type === AST_NODE_TYPES.MemberExpression &&
                 ASTUtils.getPropertyName(storage.callee) === 'diskStorage';
             if (isDisk && !getOptionProperties(storage.arguments[0], source).get('destination'))
-                report(node.callee, false, false);
+                report(node.callee, { hasFolder: false, keepsExtensions: false });
         };
         return {
-            'CallExpression, NewExpression'(node: TSESTree.CallExpression | TSESTree.NewExpression) {
+            'CallExpression, NewExpression': function (node: TSESTree.CallExpression | TSESTree.NewExpression) {
                 const [module] =
                     node.callee.type === AST_NODE_TYPES.Identifier
                         ? (getQualifiedName(node.callee, source) ?? '').split('.')
@@ -82,9 +84,8 @@ export const noUnsafeFileUploads = createRule<[], 'folder' | 'extension' | 'exte
                 if (form === undefined || assignment === undefined) return;
                 setFormOption(form, assignment.property, node.right);
             },
-            'Program:exit'() {
-                for (const { node, hasFolder, keepsExtensions } of forms.values())
-                    report(node, hasFolder, keepsExtensions);
+            'Program:exit': function () {
+                for (const form of forms.values()) report(form.node, form);
             },
         };
     },

@@ -23,7 +23,7 @@ import { remember } from '#cli/system/cache.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { SwiftBuildOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Files } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 

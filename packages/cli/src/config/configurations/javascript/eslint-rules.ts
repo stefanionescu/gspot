@@ -52,6 +52,13 @@ const ESLINT_RULES = {
     'prefer-const': 'error',
 
     'no-param-reassign': 'error',
+    'no-implicit-coercion': 'error',
+    'no-lonely-if': 'error',
+    'object-shorthand': ['error', 'always', { avoidQuotes: true }],
+    'operator-assignment': 'error',
+    'prefer-object-has-own': 'error',
+    'prefer-template': 'error',
+    radix: 'error',
 
     'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' }],
 } as const;
@@ -175,6 +182,10 @@ const UNICORN_RULES = {
     'unicorn/prefer-simple-condition-first': 'off',
     'unicorn/prefer-combined-guards': 'off',
     'unicorn/expiring-todo-comments': 'off',
+    'unicorn/consistent-destructuring': 'error',
+    'unicorn/no-repeated-call-wrappers': 'error',
+    'unicorn/no-unused-properties': 'error',
+    'unicorn/no-useless-coercion': 'error',
     'unicorn/consistent-boolean-name': [
         'error',
         {

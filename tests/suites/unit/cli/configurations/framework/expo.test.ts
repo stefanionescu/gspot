@@ -18,6 +18,39 @@ const APP_FOLDERS = ['apps/first', 'apps/second'] as const;
 
 const EXPO_PACKAGE_JSON = '{"private":true,"dependencies":{"expo":"54.0.0"}}\n';
 
+async function prepareExpoApps(
+    result: Partial<SpawnResult>,
+): Promise<AsyncDisposable & { path: string; folders: string[] }> {
+    await using resources = new AsyncDisposableStack();
+    const outside = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            scopes: APP_FOLDERS.map((path) => ({ path, configurations: ['expo'] })),
+        }),
+        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor`]: '// The process boundary supplies the Doctor report.\n',
+        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor.cmd`]: '@echo off\r\n',
+        ...Object.fromEntries(
+            APP_FOLDERS.flatMap((scope) => [
+                [`${scope}/package.json`, EXPO_PACKAGE_JSON],
+                [`${scope}/node_modules/expo/package.json`, '{"name":"expo","version":"54.0.0"}\n'],
+            ]),
+        ),
+    });
+    const sandbox = resources.use(outside);
+    const version = getTool(readConfigurations().values(), 'expo-doctor').version;
+    await createFileTree(sandbox.path, {
+        [`${GSPOT_PATHS.nodeModules}/expo-doctor/package.json`]: JSON.stringify({ name: 'expo-doctor', version }),
+    });
+    const folders: string[] = [];
+    resources.use(
+        fakeCommands().mockImplementation((_command, options) => {
+            folders.push(options.cwd);
+            return Promise.resolve(buildProcessResult(result));
+        }),
+    );
+    const owned = resources.move();
+    return { path: sandbox.path, folders, [Symbol.asyncDispose]: () => owned.disposeAsync() };
+}
+
 test('Expo Doctor reports each failed check once in each app folder', async () => {
     await using apps = await prepareExpoApps({ code: 1, stdout: FAILED_DOCTOR_OUTPUT });
     for (const scope of APP_FOLDERS) {
@@ -53,36 +86,3 @@ test('Expo Doctor reports an uninstalled Expo project instead of accepting its e
     const uninstalledError = await captureRejection(runSandboxCheck(sandbox.path, 'expo/expo-doctor'));
     expect(uninstalledError).toMatchObject({ name: 'CheckStop', status: 'missing' });
 });
-
-async function prepareExpoApps(
-    result: Partial<SpawnResult>,
-): Promise<AsyncDisposable & { path: string; folders: string[] }> {
-    await using resources = new AsyncDisposableStack();
-    const outside = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([], {
-            scopes: APP_FOLDERS.map((path) => ({ path, configurations: ['expo'] })),
-        }),
-        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor`]: '// The process boundary supplies the Doctor report.\n',
-        [`${GSPOT_PATHS.nodeModules}/.bin/expo-doctor.cmd`]: '@echo off\r\n',
-        ...Object.fromEntries(
-            APP_FOLDERS.flatMap((scope) => [
-                [`${scope}/package.json`, EXPO_PACKAGE_JSON],
-                [`${scope}/node_modules/expo/package.json`, '{"name":"expo","version":"54.0.0"}\n'],
-            ]),
-        ),
-    });
-    const sandbox = resources.use(outside);
-    const version = getTool(readConfigurations().values(), 'expo-doctor').version;
-    await createFileTree(sandbox.path, {
-        [`${GSPOT_PATHS.nodeModules}/expo-doctor/package.json`]: JSON.stringify({ name: 'expo-doctor', version }),
-    });
-    const folders: string[] = [];
-    resources.use(
-        fakeCommands().mockImplementation((_command, options) => {
-            folders.push(options.cwd);
-            return Promise.resolve(buildProcessResult(result));
-        }),
-    );
-    const owned = resources.move();
-    return { path: sandbox.path, folders, [Symbol.asyncDispose]: () => owned.disposeAsync() };
-}

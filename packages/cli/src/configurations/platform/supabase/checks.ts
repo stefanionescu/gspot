@@ -47,7 +47,7 @@ import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import { listMatchingLines } from '#cli/system/text.ts';
 import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { type CheckCode, type CheckFinding, type CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -152,7 +152,7 @@ function listDefaultEntrypoints(planned: PlannedCheck): Map<string, FunctionEntr
     for (const { path } of planned.files) {
         const folder = posix.dirname(path);
         if (
-            !path.startsWith(base + '/') ||
+            !path.startsWith(`${base}/`) ||
             !FUNCTION_ENTRYPOINT.test(path) ||
             folder.split('/').length !== base.split('/').length + 1 ||
             posix.basename(folder).startsWith(SHARED_PREFIX)

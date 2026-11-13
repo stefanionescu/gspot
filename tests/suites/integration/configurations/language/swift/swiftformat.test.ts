@@ -96,6 +96,17 @@ const SPACED_COMMENT_FINDINGS = [
 
 const installedSandbox = shareInstalledSandbox(SWIFT_SANDBOX);
 
+async function readFormatFindings(root: string, code: 0 | 1) {
+    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
+    expect(result.code, result.stdout + result.stderr).toBe(code);
+    expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
+        { scope: '', status: code === 0 ? 'passed' : 'failed' },
+    ]);
+    return result.report.checks.flatMap(({ findings }) =>
+        findings.map(({ file, line, column, rule }) => [file, line, column, rule]),
+    );
+}
+
 test.skipIf(!hasToolBuild('swiftformat'))('swiftformat keeps the source header when it fixes spacing', async () => {
     const { root } = installedSandbox();
     const path = join(root, 'Sources/App/Greeting.swift');
@@ -123,17 +134,6 @@ test.skipIf(!hasToolBuild('swiftformat'))(
         );
     },
 );
-
-async function readFormatFindings(root: string, code: 0 | 1) {
-    const result = parseCheckReport(await spawnGspot(root, ['check', '--only', 'swift/swiftformat', '--json']));
-    expect(result.code, result.stdout + result.stderr).toBe(code);
-    expect(result.report.checks.map(({ scope, status }) => ({ scope, status }))).toStrictEqual([
-        { scope: '', status: code === 0 ? 'passed' : 'failed' },
-    ]);
-    return result.report.checks.flatMap(({ findings }) =>
-        findings.map(({ file, line, column, rule }) => [file, line, column, rule]),
-    );
-}
 
 test.skipIf(!hasToolBuild('swiftformat'))(
     'at level all, SwiftFormat reports and fixes Swift block comments',

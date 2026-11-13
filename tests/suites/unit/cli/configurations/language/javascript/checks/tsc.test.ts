@@ -29,6 +29,29 @@ async function listTscResults(root: string): Promise<readonly CheckResult[]> {
     return report.checks;
 }
 
+async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
+    const settings = buildSandboxSettings(['javascript'], {
+        scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
+    });
+    const bad = '/** @type {string} */\nexport const name = 42;\n';
+    const corrected = bad.replace('42', '"name"');
+    const config = '{"extends":"./base.json"}\n';
+    await createFileTree(root, {
+        'gspot.toml': settings,
+        'source.js': corrected,
+        'app/source.js': 'export const value = localValue;\n',
+        'app/node_modules/@types/domain/index.d.ts': 'declare const localValue: string;\n',
+        'app/jsconfig.json': config,
+        'app/base.json':
+            '{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","types":["domain"],"incremental":true,"tsBuildInfoFile":"authored.cache"},"include":["**/*.js"],"exclude":["excluded"]}',
+        'app/excluded/ignored.js': 'unknownValue();\n',
+        'app/authored.cache': AUTHORED_CACHE,
+        'app/child/source.js': bad,
+        'sibling/source.js': corrected,
+    });
+    return { config, corrected };
+}
+
 test.each([...JSCONFIG_CASES])('javascript/tsc checks $name and keeps the authored files', async (row) => {
     const files = { ...JAVASCRIPT_PROJECT_FILES, ...row.files };
     await using sandbox = await createGitSandbox({
@@ -105,29 +128,6 @@ test('javascript/tsc resolves a types entry from the folder of the tsconfig of a
 });
 
 const AUTHORED_CACHE = 'Preserve this cache.\n';
-
-async function prepareJsconfigScopes(root: string): Promise<{ config: string; corrected: string }> {
-    const settings = buildSandboxSettings(['javascript'], {
-        scopes: [{ path: 'app' }, { path: 'app/child' }, { path: 'sibling' }],
-    });
-    const bad = '/** @type {string} */\nexport const name = 42;\n';
-    const corrected = bad.replace('42', '"name"');
-    const config = '{"extends":"./base.json"}\n';
-    await createFileTree(root, {
-        'gspot.toml': settings,
-        'source.js': corrected,
-        'app/source.js': 'export const value = localValue;\n',
-        'app/node_modules/@types/domain/index.d.ts': 'declare const localValue: string;\n',
-        'app/jsconfig.json': config,
-        'app/base.json':
-            '{"compilerOptions":{"target":"ES2022","module":"ESNext","moduleResolution":"Bundler","types":["domain"],"incremental":true,"tsBuildInfoFile":"authored.cache"},"include":["**/*.js"],"exclude":["excluded"]}',
-        'app/excluded/ignored.js': 'unknownValue();\n',
-        'app/authored.cache': AUTHORED_CACHE,
-        'app/child/source.js': bad,
-        'sibling/source.js': corrected,
-    });
-    return { config, corrected };
-}
 
 test("javascript/tsc reads each scope's own jsconfig options, and a broken one fails only its scope", async () => {
     await using sandbox = await createGitSandbox({});

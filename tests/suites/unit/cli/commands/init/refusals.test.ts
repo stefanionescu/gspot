@@ -21,6 +21,23 @@ const UNCOMMITTED_FORMAT_CASES = ['unborn Git', 'untracked', 'staged changes', '
     state,
 }));
 
+async function prepareUncommittedFormat(
+    root: string,
+    scenario: (typeof UNCOMMITTED_FORMAT_CASES)[number],
+): Promise<void> {
+    const { state, path, original, changed } = scenario;
+    if (state === 'unborn Git') runGitStep(root, ['init', '-q']);
+    else if (state === 'untracked') commitAll(root);
+    await writeFile(join(root, path), original);
+    if (!(state === 'staged changes' || state === 'unstaged changes')) {
+        return;
+    }
+
+    commitAll(root);
+    await writeFile(join(root, path), changed);
+    if (state === 'staged changes') runGitStep(root, ['add', '--', path]);
+}
+
 test('init refuses an unreadable package.json before writing', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);
     await using sandbox = await createGitSandbox({ 'package.json': '{', 'source.ts': 'export {};\n' });
@@ -67,20 +84,3 @@ test.each(UNCOMMITTED_FORMAT_CASES)('init refuses to replace $path absent from H
     });
     expect(await readTree(sandbox.path)).toStrictEqual(before);
 });
-
-async function prepareUncommittedFormat(
-    root: string,
-    scenario: (typeof UNCOMMITTED_FORMAT_CASES)[number],
-): Promise<void> {
-    const { state, path, original, changed } = scenario;
-    if (state === 'unborn Git') runGitStep(root, ['init', '-q']);
-    else if (state === 'untracked') commitAll(root);
-    await writeFile(join(root, path), original);
-    if (!(state === 'staged changes' || state === 'unstaged changes')) {
-        return;
-    }
-
-    commitAll(root);
-    await writeFile(join(root, path), changed);
-    if (state === 'staged changes') runGitStep(root, ['add', '--', path]);
-}

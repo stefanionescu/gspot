@@ -32,5 +32,5 @@ export function readSettingsFile(root: string): SettingsFile {
 export function writeSettings(writer: Files, text: string, previous: FileContents | undefined): void {
     const next = { bytes: Buffer.from(text), mode: previous?.mode ?? OWNER_WRITABLE_FILE };
     if (isDeepStrictEqual(next, previous)) return;
-    writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, previous: previous }]));
+    writePlans(writer, planReplacements(writer, [{ path: SETTINGS_FILE, next, previous }]));
 }

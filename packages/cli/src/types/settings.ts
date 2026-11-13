@@ -149,6 +149,13 @@ export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
 export type SettingsError = { path: KeyPath; message: string };
 
+export type WrittenKeyLookup = {
+    availableSettings: AvailableSettings;
+    settings: Settings;
+    scopePath: string;
+    offered: ReadonlySet<string>;
+};
+
 export type SettingsFailure = { errors: SettingsError[]; syntax: TomlSyntax };
 
 export type TomlTable = Record<string, unknown>;

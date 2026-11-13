@@ -13,6 +13,11 @@ import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
+async function runSharedPrefixes(root: string): Promise<RunReport['checks']> {
+    const result = await runChecks(await openSession(root), buildRunOptions({ only: ['structure/shared-prefixes'] }));
+    return result.report.checks;
+}
+
 test("shared-prefixes and file-folder-clashes leave gspot's own file names out", async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['typescript'], { level: 'all' }),
@@ -69,15 +74,15 @@ test('shared-prefixes groups files and folders once, and honors an ignore and a 
         { file: 'cards/asset-card.ts', rule: 'shared-prefix' },
         { file: 'mixed/turn.ts', rule: 'shared-prefix' },
     ]);
-    const allowed =
-        settings +
-        '[[ignore]]\ncheck = "structure/shared-prefixes"\npaths = ["cards/**"]\nreason = "Required public names."\n';
+    const allowed = `${
+        settings
+    }[[ignore]]\ncheck = "structure/shared-prefixes"\npaths = ["cards/**"]\nreason = "Required public names."\n`;
     await writeFile(join(sandbox.path, 'gspot.toml'), allowed);
     const kept = await runChecks(await openSession(sandbox.path), options);
     expect(kept.report.checks[0]?.findings).toMatchObject([{ file: 'mixed/turn.ts' }]);
     await writeFile(
         join(sandbox.path, 'gspot.toml'),
-        allowed + '[limits]\nmin_shared_prefix_files = { value = 3, reason = "Required grouping limit." }\n',
+        `${allowed}[limits]\nmin_shared_prefix_files = { value = 3, reason = "Required grouping limit." }\n`,
     );
     const raised = await runChecks(await openSession(sandbox.path), options);
     expect(raised.report.failed).toStrictEqual([]);
@@ -168,8 +173,3 @@ test('snake_case and PascalCase siblings share their first word', async () => {
         { file: 'snake/invoice_list.ts', rule: 'shared-prefix' },
     ]);
 });
-
-async function runSharedPrefixes(root: string): Promise<RunReport['checks']> {
-    const result = await runChecks(await openSession(root), buildRunOptions({ only: ['structure/shared-prefixes'] }));
-    return result.report.checks;
-}

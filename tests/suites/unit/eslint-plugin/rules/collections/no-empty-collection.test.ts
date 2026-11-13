@@ -15,15 +15,18 @@ buildRuleTester().run('no-empty-collection', noEmptyCollection, {
         },
         {
             code: 'function find(key) { const cache = new Map(); return cache.has(key) ? cache.get(key) : key; }',
-            errors: [{ messageId: 'empty' }, { messageId: 'empty' }],
+            errors: [
+                { messageId: 'empty', data: { name: 'cache' } },
+                { messageId: 'empty', data: { name: 'cache' } },
+            ],
         },
         {
             code: 'function first() { let names = []; names = []; return names[0]; }',
-            errors: [{ messageId: 'empty', column: 55 }],
+            errors: [{ messageId: 'empty', data: { name: 'names' }, column: 55 }],
         },
         {
             code: 'function list() { const names = Array(); return names.join(); }',
-            errors: [{ messageId: 'empty' }],
+            errors: [{ messageId: 'empty', data: { name: 'names' } }],
         },
     ],
 });

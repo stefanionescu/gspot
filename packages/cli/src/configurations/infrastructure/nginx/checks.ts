@@ -39,12 +39,7 @@ import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import {
-    type BuiltInCheckResult,
-    type CheckCode,
-    type CheckFinding,
-    type CheckSession,
-} from '#cli/types/engine/run.ts';
+import type { BuiltInCheckResult, CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listIncludedFiles(planned: PlannedCheck, text: string, base: string): Array<Pick<Mount, 'path' | 'target'>> {

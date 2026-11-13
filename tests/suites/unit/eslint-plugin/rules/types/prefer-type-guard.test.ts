@@ -20,8 +20,14 @@ buildRuleTester().run('prefer-type-guard', preferTypeGuard, {
             code: 'function isFish(pet: Pet) { return (pet as Fish).swim !== undefined; }',
             errors: [{ messageId: 'guard', data: { value: 'pet', type: 'Fish' } }],
         },
-        { code: 'function isFish(pet: Pet) { return Boolean((pet as Fish).swim); }', errors: [{ messageId: 'guard' }] },
-        { code: 'function isFish(pet: Pet) { return !!(pet as Fish).swim; }', errors: [{ messageId: 'guard' }] },
+        {
+            code: 'function isFish(pet: Pet) { return Boolean((pet as Fish).swim); }',
+            errors: [{ messageId: 'guard', data: { value: 'pet', type: 'Fish' } }],
+        },
+        {
+            code: 'function isFish(pet: Pet) { return !!(pet as Fish).swim; }',
+            errors: [{ messageId: 'guard', data: { value: 'pet', type: 'Fish' } }],
+        },
         {
             code: 'class Pet { isFish() { return (this as Fish).swim !== undefined; } }',
             errors: [{ messageId: 'guard', data: { value: 'this', type: 'Fish' } }],
@@ -30,7 +36,7 @@ buildRuleTester().run('prefer-type-guard', preferTypeGuard, {
             code: 'function isCat(value: unknown): boolean { return (<Cat>value).meow !== undefined; }',
             filename: 'file.ts',
             languageOptions: { parserOptions: { ecmaFeatures: { jsx: false } } },
-            errors: [{ messageId: 'guard' }],
+            errors: [{ messageId: 'guard', data: { value: 'value', type: 'Cat' } }],
         },
     ],
 });

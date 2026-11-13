@@ -1,4 +1,4 @@
-import { type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
 
 import { DEFAULT_IDENTICAL_LINES, IDENTICAL_FUNCTIONS_OPTIONS_SCHEMA } from '../../config/functions.ts';
 import { haveSameTokens } from '../../language/syntax.ts';

@@ -7,11 +7,7 @@ import {
 } from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { ASTRO_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import {
-    type ConfigurationBlocks,
-    type EslintBlockBuilder,
-    type EslintScope,
-} from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildTypescriptBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles' | 'settings'>,

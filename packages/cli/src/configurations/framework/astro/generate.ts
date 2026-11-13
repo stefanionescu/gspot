@@ -1,11 +1,7 @@
 import { ASTRO_RULE_OPTIONS, ASTRO_RULES, ASTRO_TYPED_RULES } from '#cli/config/configurations/framework.ts';
 import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/shared.ts';
 import { TYPESCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import {
-    type ConfigurationBlocks,
-    type EslintBlockBuilder,
-    type EslintScope,
-} from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildAstroBlocks(scope: Pick<EslintScope, 'settings'>): ConfigurationBlocks {
     const blocks: ConfigurationBlocks = [

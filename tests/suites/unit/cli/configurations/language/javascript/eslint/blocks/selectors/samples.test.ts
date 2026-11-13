@@ -11,21 +11,6 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import type { SelectorSample } from '#tests/types/configurations.ts';
 
-test.each([...BASE_SELECTOR_SAMPLES, ...CONFIGURATION_SELECTOR_SAMPLES])('$name', async (sample) => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(sample.configurations, {
-            level: sample.level,
-            ...(sample.tables !== undefined && { tables: sample.tables }),
-        }),
-        ...sample.files,
-    });
-    const eslint = await buildEslint(sandbox.path);
-    expect(await listSelectorLines(eslint, sandbox.path, sample)).toStrictEqual(sample.findings);
-    if (sample.corrected === undefined) return;
-    await createFileTree(sandbox.path, sample.corrected);
-    expect(await listSelectorLines(eslint, sandbox.path, sample)).toStrictEqual({});
-});
-
 async function listSelectorLines(
     eslint: ESLint,
     root: string,
@@ -42,3 +27,18 @@ async function listSelectorLines(
     }
     return lines;
 }
+
+test.each([...BASE_SELECTOR_SAMPLES, ...CONFIGURATION_SELECTOR_SAMPLES])('$name', async (sample) => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(sample.configurations, {
+            level: sample.level,
+            ...(sample.tables !== undefined && { tables: sample.tables }),
+        }),
+        ...sample.files,
+    });
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listSelectorLines(eslint, sandbox.path, sample)).toStrictEqual(sample.findings);
+    if (sample.corrected === undefined) return;
+    await createFileTree(sandbox.path, sample.corrected);
+    expect(await listSelectorLines(eslint, sandbox.path, sample)).toStrictEqual({});
+});

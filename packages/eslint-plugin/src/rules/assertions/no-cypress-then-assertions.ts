@@ -58,8 +58,7 @@ function isGlobalName(node: TSESTree.Node | undefined, name: string, source: TSE
 
 function isSafeArgument(
     argument: TSESTree.CallExpressionArgument,
-    isSelector: boolean,
-    source: TSESLint.SourceCode,
+    { isSelector, source }: { isSelector: boolean; source: TSESLint.SourceCode },
 ): boolean {
     const isText = argument.type === AST_NODE_TYPES.Literal || argument.type === AST_NODE_TYPES.TemplateLiteral;
     const isSelectorText = isText && SELECTOR_TEXT.test(source.getText(argument));
@@ -71,7 +70,9 @@ function isRetriedQuery(node: TSESTree.CallExpression, source: TSESLint.SourceCo
     const method = callee.type === AST_NODE_TYPES.MemberExpression ? ASTUtils.getPropertyName(callee) : null;
     return (
         CYPRESS_QUERIES.has(method) &&
-        node.arguments.every((value, index) => isSafeArgument(value, method === 'get' && index === 0, source))
+        node.arguments.every((value, index) =>
+            isSafeArgument(value, { isSelector: method === 'get' && index === 0, source }),
+        )
     );
 }
 

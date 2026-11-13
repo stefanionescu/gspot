@@ -25,7 +25,7 @@ test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
                             id: 'project/slow',
                             stage: 'commit',
                             paths: ['source.txt'],
-                            command: command,
+                            command,
                         },
                     ],
                 }),

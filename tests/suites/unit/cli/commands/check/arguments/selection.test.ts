@@ -182,7 +182,7 @@ test('--staged keeps every stage while --only commit selects only commit checks'
         id: `sandbox/${stage}`,
         command: buildProgramCommand('fakes/tool'),
         paths: ['source.txt'],
-        stage: stage,
+        stage,
     }));
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: definitions }) }),
