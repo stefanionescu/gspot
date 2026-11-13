@@ -82,37 +82,34 @@ const XCODE_TOOL_PROJECT = `// !$*UTF8*$!
 }
 `;
 
-test.skipIf(Bun.which('swift') === null)(
-    'swift/build reuses its compiled objects and still reports a changed source',
-    async () => {
-        await using sandbox = await createGitSandbox({
-            'gspot.toml': buildSandboxSettings(['swift']),
-            'Package.swift': SWIFT_LANGUAGE_PACKAGE,
-            'Sources/Example/Value.swift': 'public let value: Int = 1\n',
-        });
-        await using _cache = await redirectCacheFolder();
-        const command = ['check', '--only', 'swift/build', '--json'];
-        const first = await runGspot(sandbox.path, command);
-        expect(first.code, first.stdout + first.stderr).toBe(0);
-        const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: readCacheFolder() }));
-        expect(files).toHaveLength(1);
-        const compiledFile = join(readCacheFolder(), files[0]!);
-        const { mtimeMs: modified } = await stat(compiledFile);
-        const again = await runGspot(sandbox.path, command);
-        expect(again.code, again.stdout + again.stderr).toBe(0);
-        expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
-        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
-        const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
-        expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
-        expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
-            { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
-        ]);
-        await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
-        const repairedBuild = parseCheckReport(await runGspot(sandbox.path, command));
-        expect(repairedBuild.code, repairedBuild.stdout + repairedBuild.stderr).toBe(0);
-        expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
-    },
-);
+test.skipIf(!isMacos)('swift/build reuses its compiled objects and still reports a changed source', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift']),
+        'Package.swift': SWIFT_LANGUAGE_PACKAGE,
+        'Sources/Example/Value.swift': 'public let value: Int = 1\n',
+    });
+    await using _cache = await redirectCacheFolder();
+    const command = ['check', '--only', 'swift/build', '--json'];
+    const first = await runGspot(sandbox.path, command);
+    expect(first.code, first.stdout + first.stderr).toBe(0);
+    const files = await Array.fromAsync(new Bun.Glob('**/Value.swift.o').scan({ cwd: readCacheFolder() }));
+    expect(files).toHaveLength(1);
+    const compiledFile = join(readCacheFolder(), files[0]!);
+    const { mtimeMs: modified } = await stat(compiledFile);
+    const again = await runGspot(sandbox.path, command);
+    expect(again.code, again.stdout + again.stderr).toBe(0);
+    expect(await stat(compiledFile)).toMatchObject({ mtimeMs: modified });
+    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = "wrong"\n');
+    const failedBuild = parseCheckReport(await runGspot(sandbox.path, command));
+    expect(failedBuild.code, failedBuild.stdout + failedBuild.stderr).toBe(1);
+    expect(failedBuild.report.checks.flatMap(({ findings }) => findings)).toMatchObject([
+        { file: 'Sources/Example/Value.swift', line: 1, rule: 'compiler' },
+    ]);
+    await writeFile(join(sandbox.path, 'Sources/Example/Value.swift'), 'public let value: Int = 2\n');
+    const repairedBuild = parseCheckReport(await runGspot(sandbox.path, command));
+    expect(repairedBuild.code, repairedBuild.stdout + repairedBuild.stderr).toBe(0);
+    expect(repairedBuild.report.checks.flatMap(({ findings }) => findings)).toStrictEqual([]);
+});
 
 test.skipIf(!isMacos)(
     'swift/build reuses the compiled objects of an Xcode project and reports source errors without changing the project',
