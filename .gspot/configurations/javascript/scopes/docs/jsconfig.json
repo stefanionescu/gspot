@@ -26,7 +26,7 @@
         "../../../../../docs/**/eslint.config.mjs",
         "../../../../../docs/**/eslint.config.js",
         "../../../../../docs/**/eslint.config.cjs",
-        "../../../../../node_modules/.bun/astro@7.3.8+1d657e85d183a787/node_modules/astro/tsconfigs/${configDir}/dist"
+        "../../../../../node_modules/.bun/astro@7.4.7+1d657e85d183a787/node_modules/astro/tsconfigs/${configDir}/dist"
     ],
     "files": [
         "../../../../../packages/cli/src/types/global.d.ts",
