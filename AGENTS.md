@@ -210,6 +210,12 @@ sits in that topic's file of `config/` or `types/`, also when another topic read
   `tools/installers/` or `generation/`. No folder outside `commands/` takes a command's name.
 - `system/` holds the code every layer may import: access to files, processes, the environment, and the terminal, and
   the pure text and value helpers that `parsers/` needs. Git sits in `repository/git/`.
+- Inside a layer, code sits in the subfolder of its subject, such as `engine/plan/` and `engine/run/`,
+  `repository/setup/`, or `tools/installers/`.
+- A file holds one subject: what every importer comes to it for. When importers come for different exports, split the
+  file.
+- A parser of a file format or of a project file sits in `parsers/`, also when one check reads it.
+- Name a file or folder with plain words that say what it holds.
 - The layers of `packages/cli/src/` run from the base up: `system/`, `parsers/`, `manifests/`, `repository/`,
   `settings/`, `tools/`, `engine/`, `configurations/`, `generation/`, `commands/`, then `main.ts`, `bin.ts`, and
   `reference.ts`.
