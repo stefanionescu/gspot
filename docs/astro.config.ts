@@ -165,6 +165,8 @@ export default defineConfig({
             alias: {
                 '#docs': fileURLToPath(new URL('src', import.meta.url)),
                 '#cli-package': fileURLToPath(new URL('../packages/cli/package.json', import.meta.url)),
+                // The CLI exports this entry under a condition that only this repository sets, so npm serves no path to it.
+                '@gspothq/cli/reference': fileURLToPath(new URL('../packages/cli/src/reference.ts', import.meta.url)),
             },
         },
         oxc: { target: 'es2022' },

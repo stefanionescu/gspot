@@ -4,6 +4,7 @@
         "target": "ESNext",
         "module": "Preserve",
         "moduleDetection": "force",
+        "customConditions": ["gspot-source"],
         "allowImportingTsExtensions": true,
         "verbatimModuleSyntax": true,
         "erasableSyntaxOnly": true,

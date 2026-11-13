@@ -19,7 +19,8 @@ import { findPackagePin } from '#cli/tools/pins.ts';
 import type { CliReference, CommandReference } from '#cli/types/main.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
 
-// The docs site imports the CLI only through this file, which package.json names in `exports`.
+// The docs site imports the CLI only through this file. package.json names it in `exports` under the condition
+// `gspot-source`, which only this repository sets, because the published package holds no source.
 export { DOCS_PATHS } from '#cli/config/manifests.ts';
 export { compareText, formatNameList } from '#cli/system/text.ts';
 export type { CliReference, CommandReference } from '#cli/types/main.ts';

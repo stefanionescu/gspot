@@ -1,6 +1,6 @@
 {
     "name": "@gspothq/cli",
-    "version": "0.4.2",
+    "version": "0.4.3",
     "publishConfig": {
         "access": "public"
     },
@@ -29,7 +29,9 @@
     },
     "exports": {
         "./package.json": "./package.json",
-        "./reference": "./src/reference.ts"
+        "./reference": {
+            "gspot-source": "./src/reference.ts"
+        }
     },
     "files": [
         "dist/selector-process.js",

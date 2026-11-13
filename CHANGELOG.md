@@ -5,9 +5,7 @@
 gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories, an audit of the code, and an outside report
 found. Two configurations take new names, seven ESLint plugin rules are gone, and `removed_configurations` refuses two
 kinds of entry. Level `all` turns on more lint rules, and four checks report more. `gspot check --fix` now rewrites
-stale generated files.
-
-This section is not released.
+stale generated files. `@gspothq/eslint-plugin` is 0.3.0.
 
 ### Breaking changes
 
@@ -130,7 +128,7 @@ Level `all` rules that the 0.3.8 section did not name:
 - The CI workflow runs `gspot check` under `mise exec`, so a command check reads the `[env]` of your mise config again.
   (aba847c)
 - gspot reads the whole output of a tool. A tool that exits with output still in a pipe lost what came after 64 KB, and
-  `html/html-validate` then failed with `The output is not JSON`. (aba847c)
+  `html/html-validate` then failed with `The output is not JSON`. (aba847c, a0cff99)
 - A `[[command_check]]` with regex output that exits 0 reports only the lines that name a file or a line. (aba847c)
 - A push of a new branch compares with the merge base of the pushed commit, where it used the branch that was checked
   out. A push of a new orphan branch no longer fails. (d44150b)
