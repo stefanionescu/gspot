@@ -10,7 +10,7 @@ import {
     listDisabledRules,
     readToolDisabledRules,
 } from '#cli/configurations/rule-options.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { buildModuleSpecifier } from '#cli/system/paths.ts';

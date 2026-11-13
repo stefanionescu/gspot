@@ -12,9 +12,9 @@ import {
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { REFERENCE_EXPLANATIONS } from '#cli/configurations/general/commits/explanations.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { readSelectedCommits } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { readGitSetting, runGit } from '#cli/repository/git/run.ts';
+import { readSelectedCommits } from '#cli/repository/revisions/push.ts';
 import { remember } from '#cli/system/cache.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
@@ -26,7 +26,7 @@ const COMMENT_CHARACTER = Symbol('comment character');
 
 async function checkCommitlintPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
     using folder = createTemporaryFolder();
-    const commits = await readSelectedCommits(session);
+    const commits = await readSelectedCommits(session.toolsRoot, session.selection?.commits, session.cancelSignal);
     const read = await session.limitProcess(() =>
         runGit(session.root, GIT_COMMIT_MESSAGE_ARGUMENTS, {
             stdin: `${commits.join('\n')}\n`,

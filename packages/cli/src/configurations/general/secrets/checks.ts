@@ -18,12 +18,11 @@ import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { keepListedFindings } from '#cli/configurations/ignores.ts';
 import { assertCommandCheck } from '#cli/engine/plan.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
-import { readSelectedCommits } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { readPushedRange } from '#cli/repository/revisions/push.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import { readPushedRange, readSelectedCommits } from '#cli/repository/revisions/push.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
@@ -122,7 +121,7 @@ async function checkGitleaksStaged(
 Scans each pushed commit with Gitleaks, so a secret removed before the last commit still shows.
 */
 async function checkGitleaksPushed(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const commits = await readSelectedCommits(session);
+    const commits = await readSelectedCommits(session.toolsRoot, session.selection?.commits, session.cancelSignal);
     if (commits.length === 0) return buildBaseResult(planned, session);
     const range = session.selection?.range ?? (await readPushedRange(session.toolsRoot, session.cancelSignal));
     assertCommandCheck(planned);

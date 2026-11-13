@@ -6,8 +6,11 @@ import { Readable } from 'node:stream';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { mergeAttributes, parseAttributePatterns, parseGitBlobs } from '#cli/repository/git/output.ts';
+import { mergeAttributes, parseAttributePatterns, readLinguistPatterns } from '#cli/repository/git/attributes.ts';
+import { parseGitBlobs } from '#cli/repository/git/output.ts';
 import { readGitLines, readGitText } from '#cli/repository/git/run.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import {
     ATTRIBUTE_LINES,
     BINARY_BLOB,
@@ -16,7 +19,7 @@ import {
     SHA256,
     TRAILING_BLOB_CHUNKS,
 } from '#tests/config/repository.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
@@ -114,4 +117,16 @@ test('in a hook, Git reads the hook index in its repository, a check copy and a 
     } finally {
         process.chdir(previous);
     }
+});
+
+test('a tracked .gitattributes that is missing from the working tree is refused, not read as empty', async () => {
+    await using sandbox = await testdir({ '.gitattributes': 'dist/** linguist-generated\n' });
+
+    expect(() => readLinguistPatterns(createRunCache(sandbox.path), ['.gitattributes', 'app/.gitattributes'])).toThrow(
+        matchFields<GspotError>({
+            name: 'GspotError',
+            code: 'filesystem',
+            message: expect.stringContaining('app/.gitattributes') as string,
+        }),
+    );
 });

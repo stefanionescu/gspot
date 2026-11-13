@@ -18,7 +18,7 @@ import {
     VERSION_FLAG,
 } from '#cli/config/tools/programs.ts';
 import { normalizePythonName, readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes/run.ts';

@@ -2,13 +2,17 @@ import { createTwoFilesPatch } from 'diff';
 
 import { DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation/files.ts';
 import { OCTAL_RADIX } from '#cli/config/system.ts';
-import { planGeneratedWrites } from '#cli/generation/write.ts';
+import { convertToGlobs } from '#cli/configurations/ignores.ts';
+import { buildConfigs } from '#cli/generation/configs/build.ts';
+import { buildGspotSection } from '#cli/generation/configs/ignores.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { planGeneratedWrites, writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import type { StaleFile } from '#cli/types/engine/run.ts';
+import type { CheckGeneration, StaleFile } from '#cli/types/engine/run.ts';
 import type { WritePlan } from '#cli/types/repository.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
@@ -68,3 +72,13 @@ export function listStaleFiles(
     ];
     return stale.toSorted((a, b) => compareText(a.path, b.path));
 }
+
+export const CHECK_GENERATION: CheckGeneration = {
+    buildConfigs,
+    listStaleFiles: (session, flags) => listStaleFiles(session, buildGeneratedFiles(session), flags),
+    listWrittenGlobs: (session) => convertToGlobs([buildGspotSection(session, buildConfigs(session))]),
+    writeStaleFiles: async (session) => {
+        const { written, updated, deleted } = await writeEveryGeneratedFile(session, openFiles(session.root));
+        return [...written, ...updated, ...deleted];
+    },
+};

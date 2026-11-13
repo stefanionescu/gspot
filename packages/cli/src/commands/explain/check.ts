@@ -10,7 +10,7 @@ import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
 import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { findCheck } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';

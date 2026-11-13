@@ -11,7 +11,7 @@ import { buildProgram } from '#cli/main.ts';
 import { listChecksById } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatDetectionConditions, listRuleReferences } from '#cli/manifests/reference.ts';
-import { buildSetupReference } from '#cli/repository/version-pin.ts';
+import { buildSetupReference } from '#cli/repository/projects/runner.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
 import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';

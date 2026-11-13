@@ -6,7 +6,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/tool-runs.ts';
 import { BROKEN_IF_SCRIPT, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';

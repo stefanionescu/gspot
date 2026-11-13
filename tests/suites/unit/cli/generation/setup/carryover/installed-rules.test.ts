@@ -2,7 +2,8 @@ import { expect, test } from 'bun:test';
 
 import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { compareInstalledRules, convertRule, readUserRules } from '#cli/generation/setup/carryover/lint-rules.ts';
+import { compareInstalledRules, readUserRules } from '#cli/generation/setup/carryover/installed-rules.ts';
+import { convertRule } from '#cli/generation/setup/carryover/rules.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';

@@ -7,7 +7,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { runBuiltInCheck } from '#cli/engine/results.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import * as environment from '#cli/system/environment.ts';

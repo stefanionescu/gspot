@@ -12,7 +12,7 @@ import {
 } from '#cli/config/engine.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/system.ts';
 import { buildBaseResult, formatExplainCommand } from '#cli/engine/results.ts';
-import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/projects/dependencies.ts';
 import { formatScopePrefix } from '#cli/repository/scopes.ts';
 import { rewriteProgress, writeProgress } from '#cli/system/terminal.ts';
 import { formatNameList, formatSeconds } from '#cli/system/text/messages.ts';

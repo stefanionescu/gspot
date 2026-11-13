@@ -13,7 +13,8 @@ import { hasReleasedScanner } from '#cli/configurations/general/dependencies/gen
 import { openSession } from '#cli/engine/session.ts';
 import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { formatApplyReport, listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { formatApplyReport, listInstallNotes } from '#cli/generation/report.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { selectScope } from '#cli/repository/scopes.ts';

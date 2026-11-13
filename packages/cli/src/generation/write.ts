@@ -1,36 +1,70 @@
-import { dirname } from 'node:path';
+import { lstatSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
 
-import {
-    CHANGE_LABEL_WIDTH,
-    HOOKS_CHANGED_NOTE,
-    STALE_LOCKFILE_NOTE,
-    TOOL_PROJECT_FILES,
-    TOOLS_CHANGED_NOTE,
-} from '#cli/config/generation/files.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation/setup.ts';
+import { INSTALLED_TOOL_FOLDERS, LEADING_PATH_SEGMENTS, TEMPORARY_FILE_NAME } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { INSTALLED_TOOL_FOLDERS, TEMPORARY_FILE_NAME } from '#cli/config/repository/setup.ts';
+import { GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { AGENTS_FILE, VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { EXECUTABLE_FILE, GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { listOwnablePaths } from '#cli/generation/configs/paths.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { listOwnablePaths } from '#cli/generation/pointers.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { readHooks } from '#cli/repository/setup.ts';
+import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
+import { isGspotOwned } from '#cli/repository/files/ownership.ts';
 import {
-    listStrayPaths,
     planBlock,
     planManagedKeys,
     planRemovals,
     planReplacements,
     writePlans,
-} from '#cli/repository/writer.ts';
+} from '#cli/repository/files/writes.ts';
+import { readGeneratedPatterns } from '#cli/repository/git/attributes.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { readHooks } from '#cli/repository/setup/read.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import type { ApplyReport, GeneratedWritePlans } from '#cli/types/generation.ts';
+import type { Repository } from '#cli/types/repository.ts';
 import type { FileContents, Files } from '#cli/types/system.ts';
 import type { Generation, Session } from '#cli/types/tools.ts';
+
+function isTemporaryPath(path: string): boolean {
+    if (TEMPORARY_FILE_NAME.test(basename(path))) return true;
+    const [folder, name] = path.split('/', LEADING_PATH_SEGMENTS);
+    return folder === GSPOT_FOLDER && name !== undefined && VALE_TEMPORARY_NAME.test(name);
+}
+
+function listStrayPaths(
+    session: { root: string; repository: Repository },
+    expected: ReadonlySet<string>,
+    ownablePaths: ReadonlySet<string>,
+): string[] {
+    const disk = openFiles(session.root);
+    const blockPaths = new Set([AGENTS_FILE, GITIGNORE_FILE, GITATTRIBUTES_FILE]);
+    const installations = Object.values(INSTALLED_TOOL_FOLDERS);
+    const ownPaths: string[] = [];
+    walkFiles(disk, GSPOT_FOLDER, (path) => {
+        if (isTemporaryPath(path) || installations.some((folder) => isInScope(path, folder))) return false;
+        if (lstatSync(join(session.root, path)).isDirectory()) return true;
+        ownPaths.push(path);
+        return false;
+    });
+    const generatedPatterns = readGeneratedPatterns(disk);
+    const writtenPaths = new Set([
+        ...ownPaths,
+        ...session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),
+        ...blockPaths,
+    ]);
+    return [...writtenPaths].filter((path) => {
+        if (isTemporaryPath(path) || installations.some((folder) => isInScope(path, folder)) || expected.has(path))
+            return false;
+        if (isGspotOwned(path, disk, generatedPatterns, ownablePaths)) return true;
+        if (!blockPaths.has(path)) return false;
+        const text = disk.read(path)?.bytes.toString('utf8');
+        return text !== undefined && findBlockSpan(text, path) !== undefined;
+    });
+}
 
 function deleteUnusedToolFolders(writer: Files, paths: ReadonlySet<string>): void {
     for (const [path, keep] of [
@@ -53,28 +87,6 @@ function listExpectedPaths(session: Pick<Session, 'toolPackageManager'>, generat
         else if (file.path === GSPOT_PATHS.pythonProject) paths.add(GSPOT_PATHS.uvLockfile);
     }
     return paths;
-}
-
-export function listGeneratedChangeLines(report: ApplyReport): string[] {
-    const lines: string[] = [];
-    for (const [action, paths] of [
-        ['wrote', report.written],
-        ['updated', report.updated],
-        ['removed', report.deleted],
-    ] as const) {
-        const gspotCount = paths.filter((path) => isGspotPath(path)).length;
-        const label = action.padEnd(CHANGE_LABEL_WIDTH);
-        if (gspotCount > 0) lines.push(`${label}${formatCount(gspotCount, GENERATED_FILE_NOUN)} in ${GSPOT_FOLDER}/`);
-        lines.push(...paths.filter((path) => !isGspotPath(path)).map((path) => `${label}${path}`));
-    }
-    return lines;
-}
-
-export function formatApplyReport(report: ApplyReport): string {
-    const lines = listGeneratedChangeLines(report);
-    if (lines.length === 0) lines.push('Generated files: none changed.');
-    lines.push(...report.notes.map((note) => `note     ${note}`));
-    return `${lines.join('\n')}\n`;
 }
 
 /**
@@ -155,22 +167,4 @@ export async function writeEveryGeneratedFile(session: Session, writer: Files): 
     );
     for (const folder of folders) deleteStaleTemporaryPaths(writer, folder === '.' ? '' : folder, TEMPORARY_FILE_NAME);
     return writeGeneratedFiles(session, generated, writer);
-}
-
-export async function listInstallNotes(
-    session: Session,
-    generated: Generation,
-    report: ApplyReport,
-): Promise<string[]> {
-    const notes: string[] = [];
-    const { hooksPath } = await readHooks(session.repository);
-    if (
-        session.settings.hooks.enabled &&
-        hooksPath !== GSPOT_PATHS.hooks &&
-        [...report.deleted, ...report.written].some((path) => path.startsWith(`${GSPOT_PATHS.hooks}/`))
-    )
-        notes.push(HOOKS_CHANGED_NOTE);
-    if (listStaleLockfiles(session, generated.files).length === 0) return notes;
-    const hasToolChanges = report.written.some((path) => TOOL_PROJECT_FILES.includes(path));
-    return [...notes, hasToolChanges ? TOOLS_CHANGED_NOTE : STALE_LOCKFILE_NOTE];
 }

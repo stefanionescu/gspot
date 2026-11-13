@@ -26,7 +26,7 @@ import {
 } from '#cli/config/tools/installers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
-import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';

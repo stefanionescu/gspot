@@ -5,9 +5,13 @@ import { pathToFileURL } from 'node:url';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { readPushedRevisions, readSelectedCommits } from '#cli/repository/revisions/push.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { prepareNestedRepository, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import {
+    createGitSandbox,
+    prepareNestedRepository,
+    preparePushRepository,
+} from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each(['origin', undefined, 'file:///unused'] as const)(
@@ -148,4 +152,40 @@ test('a push refuses to rewrite the default branch, and needs its remote tip in 
     expect(corrupt).toMatchObject({ name: 'GspotError', code: 'git' });
     expect(corrupt.message).toContain('merge-base');
     expect(corrupt.message).not.toContain('force-push');
+});
+
+test('push comparison tells a missing upstream from an upstream whose commit is gone', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
+    commitAll(sandbox.path);
+    expect(await readSelectedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    await writeFile(join(sandbox.path, 'source.ts'), 'export const changed = true;\n');
+    runGitStep(sandbox.path, ['add', '.']);
+    runGitStep(sandbox.path, ['commit', '-qm', 'Second']);
+    runGitStep(sandbox.path, ['branch', 'upstream']);
+    runGitStep(sandbox.path, ['branch', '--set-upstream-to=upstream']);
+    expect(await readSelectedCommits(sandbox.path, undefined)).toStrictEqual([]);
+    runGitStep(sandbox.path, ['update-ref', '-d', 'refs/heads/upstream']);
+    const error = await captureRejection(readSelectedCommits(sandbox.path, undefined));
+    expect(error).toMatchObject({ name: 'GspotError', code: 'arguments' });
+    expect(error.message).toContain('refs/heads/upstream');
+});
+
+test('push comparison of an unborn HEAD has no commits', async () => {
+    await using sandbox = await createGitSandbox({ 'source.ts': 'export {};\n' });
+
+    expect(await readSelectedCommits(sandbox.path, undefined)).toStrictEqual([]);
+});
+
+test('a branch without an upstream pushes the commits that the remote default branch lacks', async () => {
+    await using sandbox = await testdir({ 'source.ts': 'export {};\n' });
+
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['update-ref', 'refs/remotes/origin/main', 'HEAD']);
+    runGitStep(sandbox.path, ['symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main']);
+    runGitStep(sandbox.path, ['checkout', '-qb', 'topic']);
+    runGitStep(sandbox.path, ['commit', '--allow-empty', '-qm', 'Unpublished']);
+    expect(await readSelectedCommits(sandbox.path, undefined)).toStrictEqual([
+        runGitStep(sandbox.path, ['rev-parse', 'HEAD']),
+    ]);
 });

@@ -3,9 +3,9 @@ import parseExpression from 'spdx-expression-parse';
 import { z } from 'zod';
 
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
+import { CI_PROVIDERS } from '#cli/config/repository/setup.ts';
 import {
     CI_PINS,
-    CI_PROVIDERS,
     DOCSTRING_CONVENTIONS,
     GITHUB_ONLY_CI_KEYS,
     NAMING_LANGUAGE_CATEGORIES,

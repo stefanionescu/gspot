@@ -4,7 +4,7 @@ import { printProgress } from '#cli/engine/report.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { assertCheckExists, listCheckIds, readShippedChecks } from '#cli/manifests/checks.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope } from '#cli/repository/scopes.ts';

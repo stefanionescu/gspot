@@ -1,6 +1,4 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
-import { TEMPORARY_FILE_PREFIX, TEMPORARY_FILE_SUFFIX } from '#cli/config/system.ts';
 
 // config conflicts
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
@@ -11,16 +9,6 @@ export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
 // file writes
 export const AGENTS_FILE = 'AGENTS.md';
 export const EMPTY_JSON_TEXT = '{}\n';
-export const INSTALLED_TOOL_FOLDERS = {
-    npm: GSPOT_PATHS.nodeModules,
-    python: GSPOT_PATHS.pythonEnvironment,
-    vale: GSPOT_PATHS.valePackages,
-} as const;
-export const LEADING_PATH_SEGMENTS = 2;
-export const TEMPORARY_FILE_NAME = new RegExp(
-    `^\\${TEMPORARY_FILE_PREFIX}(?:(?<pid>[1-9]\\d{0,8})-)?[\\da-f-]{36}\\${TEMPORARY_FILE_SUFFIX}$`,
-    'u',
-);
 export const TOML_BARE_KEY = /^[\w-]+$/u;
 export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
 export const VALE_INSTALL_PREFIX = 'vale-';
@@ -35,6 +23,7 @@ export const ROOT_SCOPE_MARK = '.';
 // setup scan
 export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
 const ALL_FILES_GLOB = '**/*';
+export const CI_PROVIDERS = ['github', 'gitlab'] as const;
 export const EVERY_FILE_GLOBS = ['**', ALL_FILES_GLOB] as const;
 export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
@@ -62,7 +51,10 @@ export const LFS_PUSH_CALLS: ReadonlySet<string> = new Set([
     'git lfs push --stdin $*',
 ]);
 export const LINT_FOLDERS = ['quality', 'lint', 'linting', '.qlty', 'code-quality'] as const;
+export const ORIGIN_URL_SETTING = 'remote.origin.url';
 export const PRE_COMMIT_FILE = '.pre-commit-config.yaml';
+export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
+export const REMOTE_URL_USER = /^[^@/]+@/u;
 export const RULE_FOLDERS = ['rules', '.rules', '.cursor/rules', 'docs/rules', '.claude/rules'] as const;
 export const SAMPLE_HOOK_SUFFIX = '.sample';
 export const SIMPLE_GIT_HOOKS_KEY = 'simple-git-hooks';

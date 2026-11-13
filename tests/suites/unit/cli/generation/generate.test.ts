@@ -16,7 +16,7 @@ import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { hasGeneratedHeader } from '#cli/repository/files/classify.ts';
+import { hasGeneratedHeader } from '#cli/repository/files/ownership.ts';
 import { PROJECT_FILES, UNPARSED_CONFIGS } from '#tests/config/generation/generate.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';

@@ -6,12 +6,12 @@ import { createFileTree } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
 import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
-import { classifyFile, hasGeneratedHeader } from '#cli/repository/files/classify.ts';
+import { classifyFile } from '#cli/repository/files/classify.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { GENERATED_HEADERS, GENERATED_PATH_CASES, NOT_GENERATED, SHEBANGS } from '#tests/config/repository.ts';
+import { GENERATED_PATH_CASES, SHEBANGS } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
@@ -174,14 +174,6 @@ test('.git/info/attributes marks a file generated while the working .gitattribut
     expect(repository.attributes.get('source.ts')).toMatchObject({
         'linguist-generated': 'set',
     });
-});
-
-test.each([...GENERATED_HEADERS])('the generated header is found in each comment form: %j', (text) => {
-    expect(hasGeneratedHeader(text)).toBe(true);
-});
-
-test.each([...NOT_GENERATED])('your own comment is not a generated header: %j', (text) => {
-    expect(hasGeneratedHeader(text)).toBe(false);
 });
 
 test('generated Gradle and Maven launchers are classified generated and never select Bash', async () => {

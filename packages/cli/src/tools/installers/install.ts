@@ -1,7 +1,7 @@
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
-import { planReplacements, writePlans } from '#cli/repository/writer.ts';
+import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { getRootScope } from '#cli/settings/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { readHost } from '#cli/system/environment.ts';

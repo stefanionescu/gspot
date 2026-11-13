@@ -8,7 +8,7 @@ import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { listBuiltFiles, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CheckStop } from '#cli/system/errors.ts';
 import { compareText } from '#cli/system/text/order.ts';

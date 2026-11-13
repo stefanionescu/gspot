@@ -20,8 +20,8 @@ import {
 } from '#cli/config/settings/detected.ts';
 import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { isInScope, joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
 import { setKey } from '#cli/settings/toml/edit.ts';
 import { createRunCache } from '#cli/system/cache.ts';

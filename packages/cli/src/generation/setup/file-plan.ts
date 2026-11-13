@@ -1,29 +1,16 @@
-import { styleText } from 'node:util';
-
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
     ADDS_BLOCK_NOTE,
-    ALWAYS_SELECTED_NOUN,
     ATTRIBUTES_ROW,
-    CARRYOVER_GROUPS,
-    CARRYOVER_HEADING,
-    CHANGE_LATER_MESSAGE,
     CI_FILE_NOTE,
     CI_FILE_NOTES,
-    CI_OFF_MESSAGE,
-    COLUMN_GAP,
-    CONFIGURATION_WIDTH,
-    DELETED_RULES_NOTE,
     DROPPED_LINE_SETTINGS_NOTE,
     FOREIGN_HOOK_NOTE,
     GENERATED_FILE_NOUN,
     GSPOT_FOLDER_NOTE,
     INSTALL_LOCKFILE_NOTE,
-    LINT_COMMANDS_HEADING,
     LINT_FOLDER_MESSAGE,
-    LINT_FOLDERS_HEADING,
     NPM_PIN_NOUN,
-    ORIGIN_WIDTH,
     PRETTIER_SCRIPT_NOTE,
     PYTHON_PIN_NOUN,
     TOOL_PIN_NOUN,
@@ -32,13 +19,13 @@ import {
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { formatScope, isInScope } from '#cli/repository/scopes.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
 import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
-import type { CarryoverRow, ConflictingConfigs, InitFileRow, InitPlan, InitScan } from '#cli/types/generation.ts';
+import type { ConflictingConfigs, InitFileRow, InitPlan, InitScan } from '#cli/types/generation.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { Settings } from '#cli/types/settings.ts';
 import type { Generation } from '#cli/types/tools.ts';
@@ -64,12 +51,6 @@ function buildToolProjectRows(configurations: Configuration[]): InitPlan['change
     ];
 }
 
-function formatFileSection(title: string, rows: InitFileRow[]): string[] {
-    if (rows.length === 0) return [];
-    const width = Math.max(...rows.map((row) => row.path.length)) + COLUMN_GAP;
-    return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
-}
-
 function listOutermostScopes(name: string, scopes: InitScan['scopes']): string[] {
     const selecting = scopes
         .filter((scope) => scope.configurations.some((configuration) => configuration.name === name))
@@ -93,28 +74,6 @@ function buildConfigurationRows(
             checksOff: configuration.checks.length - checks,
         };
     });
-}
-
-function formatCheckCounts(rows: InitPlan['configurations'], level: InitPlan['level']): string {
-    const checks = rows.reduce((total, row) => total + row.checks, 0);
-    const checksOff = rows.reduce((total, row) => total + row.checksOff, 0);
-    return `${formatCount(checks, 'check')} (${String(checksOff)} off at ${level})`;
-}
-
-function formatConfigurationSection(rows: InitPlan['configurations'], level: InitPlan['level']): string[] {
-    const always = rows.filter((row) => row.origin === 'always');
-    const selected = rows.filter((row) => row.origin !== 'always');
-    const scopeWidth = Math.max(0, ...selected.map((row) => row.scopes.join(', ').length));
-    const lines = selected.map((row) =>
-        [
-            row.configuration.padEnd(CONFIGURATION_WIDTH),
-            row.origin.padEnd(ORIGIN_WIDTH),
-            row.scopes.join(', ').padEnd(scopeWidth),
-            formatCheckCounts([row], level),
-        ].join(' '),
-    );
-    const alwaysLine = `${formatCount(always.length, ALWAYS_SELECTED_NOUN)}: ${formatCheckCounts(always, level)}`;
-    return ['configurations', ...[...lines, alwaysLine].map((line) => `  ${line}`), ''];
 }
 
 function buildGeneratedRow(path: string, conflicts: ConflictingConfigs): InitFileRow {
@@ -149,19 +108,6 @@ function buildGeneratedRows(generated: Generation, conflicts: ConflictingConfigs
     return [...generated.files, ...generated.blocks.filter(({ path }) => !tracked.has(path))]
         .filter(({ path }) => !isGspotPath(path) && path !== ATTRIBUTES_ROW.path)
         .map(({ path }) => buildGeneratedRow(path, conflicts));
-}
-
-export function listCarryoverLines(rows: CarryoverRow[]): InitFileRow[] {
-    return rows.flatMap((row) => {
-        const groups = Object.entries(CARRYOVER_GROUPS)
-            .filter(([key]) => row[key as keyof typeof CARRYOVER_GROUPS].length > 0)
-            .map(([key, title]) => `${title}: ${row[key as keyof typeof CARRYOVER_GROUPS].join(', ')}`);
-        const note = [...(row.covered > 0 ? [`covered: ${String(row.covered)}`] : []), ...groups].join('; ');
-        return [
-            ...(note === '' ? [] : [{ path: row.path, note }]),
-            ...row.reasons.map((line) => ({ path: row.path, note: `needs a reason: ${line}` })),
-        ];
-    });
 }
 
 export function planInitFiles(
@@ -218,41 +164,4 @@ export function planInitFiles(
         lintCommands: scan.lintCommands,
         carryover: scan.carryover,
     };
-}
-
-export function formatInitPlan(plan: InitPlan, settingsText: string): string {
-    const lines = [
-        ...formatConfigurationSection(plan.configurations, plan.level),
-        ...(plan.from === undefined
-            ? []
-            : formatFileSection(
-                  `left out of ${plan.from.file}`,
-                  plan.from.leftOutSettings.map(({ key, note }) => ({ path: key, note })),
-              )),
-        ...formatFileSection('write', plan.write),
-        ...formatFileSection(
-            `delete ${styleText('dim', DELETED_RULES_NOTE, { stream: process.stdout })}`,
-            plan.deleted,
-        ),
-        ...formatFileSection('keep', plan.keep),
-        ...formatFileSection('change', plan.change),
-        ...formatFileSection(LINT_FOLDERS_HEADING, plan.lintFolders),
-        ...formatFileSection(CARRYOVER_HEADING, listCarryoverLines(plan.carryover)),
-        ...formatFileSection(
-            LINT_COMMANDS_HEADING,
-            plan.lintCommands.map(({ file, line, command, fix }) => ({
-                path: `${file}:${String(line)}`,
-                note: `${command}  ${fix}`,
-            })),
-        ),
-        CI_OFF_MESSAGE,
-        CHANGE_LATER_MESSAGE,
-        '',
-        SETTINGS_FILE,
-        ...settingsText
-            .trimEnd()
-            .split('\n')
-            .map((line) => (line === '' ? '' : `  ${line}`)),
-    ];
-    return `${lines.join('\n')}\n`;
 }

@@ -9,8 +9,8 @@ import {
     UV_REINSTALL_FLAG,
     UV_TOOL,
 } from '#cli/config/tools/installers.ts';
+import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';

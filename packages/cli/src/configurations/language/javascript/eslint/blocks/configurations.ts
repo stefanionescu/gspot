@@ -18,7 +18,7 @@ import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/test
 import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
 import { SUPABASE_BLOCK_BUILDERS } from '#cli/configurations/platform/supabase/generate.ts';
 import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { joinTables } from '#cli/system/tables.ts';
 import type {

@@ -5,8 +5,8 @@ import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectScopeFolders, findProjectFolder } from '#cli/repository/detection/scopes.ts';
+import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { PROJECT_FILE_FOLDERS } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';

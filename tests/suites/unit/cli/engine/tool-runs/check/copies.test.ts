@@ -9,7 +9,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

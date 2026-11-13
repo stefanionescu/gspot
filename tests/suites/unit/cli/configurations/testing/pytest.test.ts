@@ -7,7 +7,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { planChecks } from '#cli/engine/plan.ts';
 import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { COVERAGE_PROJECT_FILES } from '#tests/config/configurations/python.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

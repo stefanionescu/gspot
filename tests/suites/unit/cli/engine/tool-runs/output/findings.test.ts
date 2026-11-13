@@ -10,7 +10,7 @@ import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { buildCheckResult, parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { listChecksById } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';

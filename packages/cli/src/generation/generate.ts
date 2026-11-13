@@ -4,25 +4,27 @@ import {
     ATTRIBUTE_QUOTED_CHARACTERS,
     CI_SYSTEMS_SETTING,
     GIT_ATTRIBUTES_BLOCK,
+    INSTALLED_TOOL_FOLDERS,
 } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
-import { AGENTS_FILE, INSTALLED_TOOL_FOLDERS } from '#cli/config/repository/setup.ts';
+import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
+import { buildAgentsBlock, hasTopHeading } from '#cli/generation/builders/agents.ts';
 import {
     buildGithubWorkflow,
     buildGitlabWorkflow,
     listProjectInstallLines,
     listTestChecks,
-} from '#cli/generation/ci.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
-import { buildHookFiles } from '#cli/generation/hooks.ts';
-import { listWrittenPaths } from '#cli/generation/ignores.ts';
-import { buildPointerFieldEdits } from '#cli/generation/pointers.ts';
-import { buildAgentsBlock, hasTopHeading, selectRuleFiles } from '#cli/generation/rules.ts';
+    readCiNode,
+} from '#cli/generation/builders/ci.ts';
+import { buildHookFiles } from '#cli/generation/builders/hooks.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
+import { buildConfigs } from '#cli/generation/configs/build.ts';
+import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
+import { buildPointerFieldEdits } from '#cli/generation/configs/pointers.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { readCiNode } from '#cli/repository/version-pin.ts';
 import { ciFields } from '#cli/schemas/settings/tables.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
@@ -56,7 +58,7 @@ function addWorkflow(session: Session, generated: Generation): void {
     );
 }
 
-function buildAttributePattern(path: string): string {
+function formatAttributePath(path: string): string {
     const escaped = path.replaceAll(ATTRIBUTE_GLOB_CHARACTERS, (character) => `\\${character}`);
     const pattern = `/${escaped}`;
     if (!ATTRIBUTE_QUOTED_CHARACTERS.test(pattern)) return pattern;
@@ -67,7 +69,7 @@ function buildAttributePattern(path: string): string {
 function addManagedBlocks(session: Session, rules: RuleFile[], generated: Generation, configs: ConfigTargets): void {
     const { settings, cache } = session;
     const generatedLines = listWrittenPaths(session, configs).map(
-        (path) => `${buildAttributePattern(path)} linguist-generated`,
+        (path) => `${formatAttributePath(path)} linguist-generated`,
     );
     generated.blocks.push({ path: GITATTRIBUTES_FILE, body: [GIT_ATTRIBUTES_BLOCK, ...generatedLines].join('\n') });
     if (!settings.rule_files.enabled) return;

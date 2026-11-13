@@ -23,7 +23,7 @@ import {
     splitGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { getLimit, getTable } from '#cli/settings/tables.ts';
 import { joinScopeSelector } from '#cli/settings/values/paths.ts';

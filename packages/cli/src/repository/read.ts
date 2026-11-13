@@ -1,19 +1,15 @@
 import { realpathSync } from 'node:fs';
-import { posix, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import {
     FILE_PREFIX_BYTES,
-    GENERATED_ATTRIBUTE,
     GIT_CHECK_ATTRIBUTES_ARGUMENTS,
     GIT_INDEX_FILES_ARGUMENTS,
     GIT_UNTRACKED_FILES_ARGUMENTS,
-    GITATTRIBUTES_FILE,
     NEEDS_GIT_MESSAGE,
     ROOT_SCOPE,
-    SET_VALUES,
     SETTINGS_FILE,
-    VENDORED_ATTRIBUTE,
 } from '#cli/config/repository/files.ts';
 import {
     GIT_LOCALE,
@@ -27,18 +23,13 @@ import {
 } from '#cli/config/repository/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { detectScopeFolders } from '#cli/repository/detection/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
-import {
-    mergeAttributes,
-    parseAttributePatterns,
-    parseListingLine,
-    parsePathAttributes,
-} from '#cli/repository/git/output.ts';
+import { parsePathAttributes } from '#cli/repository/git/attributes.ts';
+import { parseListingLine } from '#cli/repository/git/output.ts';
 import { readGitFlag, readGitPaths, runGit } from '#cli/repository/git/run.ts';
+import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -124,27 +115,6 @@ export async function readRepository(
             .toArray()
             .toSorted((left, right) => compareText(left.path, right.path)),
     };
-}
-
-export function readLinguistPatterns(cache: RunCache, paths: string[]): string[] {
-    return [
-        ...new Set(
-            paths
-                .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
-                .flatMap((path) => {
-                    const authored = stripBlock(readText(cache, path), path);
-                    return parseAttributePatterns(authored, posix.dirname(path))
-                        .filter((rule) =>
-                            Object.entries(mergeAttributes(rule.attributes)).some(
-                                ([name, value]) =>
-                                    (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
-                                    SET_VALUES.has(value),
-                            ),
-                        )
-                        .map((rule) => rule.pattern);
-                }),
-        ),
-    ];
 }
 
 export async function readRepositoryRoot(start: string): Promise<string> {

@@ -4,7 +4,7 @@ import {
     ENVIRONMENT_SELECTOR,
 } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';

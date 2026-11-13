@@ -1,38 +1,25 @@
-import { posix } from 'node:path';
-
 import type { z } from 'zod';
 
-import { SET_STATE, UNSET_STATE } from '#cli/config/repository/files.ts';
 import {
-    ANY_FOLDER_PREFIX,
-    ATTRIBUTE_ASSIGNMENT_SIDES,
-    ATTRIBUTE_FIELDS,
-    ATTRIBUTE_LINE,
     BLOB_HEADER,
     CONFLICT_END,
     CONFLICT_SEPARATOR,
     CONFLICT_START,
     FIRST_NON_PRINTABLE_BYTE,
     FIRST_PRINTABLE_BYTE,
-    IGNORED_ATTRIBUTE_LINE,
-    IGNORED_ATTRIBUTE_PATTERN,
     INDEX_LINE,
     INVALID_GIT_STREAM_MESSAGE,
     LINE_FEED,
     OCTAL_BYTE_WIDTH,
-    OCTAL_PATH_BYTE,
-    PATH_ESCAPES,
-    QUOTED_ATTRIBUTE_PATTERN,
-    QUOTED_PATH_CHUNKS,
     SIZE_GROUP,
     TREE_LINE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/repository/git.ts';
-import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
+import { OCTAL_RADIX } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
-import type { AttributePattern, GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
+import type { GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
 
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
     while (stream.cursor === stream.chunk.length) {
@@ -75,27 +62,6 @@ function parseBlobSize(header: string, hash: string): number {
     return size;
 }
 
-function decodeQuotedPattern(pattern: string): string | undefined {
-    if (!QUOTED_ATTRIBUTE_PATTERN.test(pattern)) return undefined;
-    const bytes: Buffer[] = [];
-    const chunks = pattern.slice(1, -1).matchAll(QUOTED_PATH_CHUNKS);
-    for (const [chunk] of chunks) {
-        if (!chunk.startsWith('\\')) {
-            bytes.push(Buffer.from(chunk));
-            continue;
-        }
-        if (OCTAL_PATH_BYTE.test(chunk)) {
-            const value = Number.parseInt(chunk.slice(1), OCTAL_RADIX);
-            bytes.push(Buffer.from([value]));
-            continue;
-        }
-        const decoded = PATH_ESCAPES[chunk.slice(1)];
-        if (decoded === undefined) return undefined;
-        bytes.push(Buffer.from(decoded));
-    }
-    return Buffer.concat(bytes).toString('utf8');
-}
-
 function formatUnreadablePath(record: string): string {
     const path = INDEX_LINE.exec(record)?.groups?.['path'] ?? TREE_LINE.exec(record)?.groups?.['path'] ?? record;
     const quoted = [...Buffer.from(path, 'latin1')]
@@ -110,55 +76,10 @@ function formatUnreadablePath(record: string): string {
     return `"${quoted}"`;
 }
 
-function buildAttributePattern(match: RegExpExecArray, line: string, folder: string): AttributePattern[] {
-    const quoted = match[1] as string;
-    const pattern = quoted.startsWith('"') ? decodeQuotedPattern(quoted) : quoted;
-    if (pattern === undefined || IGNORED_ATTRIBUTE_PATTERN.test(pattern)) return [];
-    const bare = pattern.replace(LEADING_SLASH, '');
-    const local = LEADING_SLASH.test(pattern) || bare.includes('/') ? bare : `${ANY_FOLDER_PREFIX}${bare}`;
-    return [
-        {
-            pattern: posix.join(folder, local),
-            attributes: line.slice(match[0].length).split(WHITESPACE_RUN).filter(Boolean),
-        },
-    ];
-}
-
 export function parseListingLine<T>(match: RegExpExecArray | null, schema: z.ZodType<T>): T {
     const parsed = schema.safeParse(match?.groups);
     if (!parsed.success) throw new GspotError('git', UNSUPPORTED_GIT_FILE_MESSAGE);
     return parsed.data;
-}
-
-export function parseAttributePatterns(text: string, folder: string): AttributePattern[] {
-    return text.split('\n').flatMap((line) => {
-        const trimmed = line.trim();
-        if (IGNORED_ATTRIBUTE_LINE.test(trimmed)) return [];
-        const match = ATTRIBUTE_LINE.exec(trimmed);
-        return match === null ? [] : buildAttributePattern(match, trimmed, folder);
-    });
-}
-
-export function mergeAttributes(tokens: string[]): Record<string, string> {
-    const attributes = new Map<string, string>();
-    for (const match of tokens) {
-        const [name = '', value = SET_STATE] = match.split('=', ATTRIBUTE_ASSIGNMENT_SIDES);
-        if (name.startsWith('!')) attributes.delete(name.slice(1));
-        else if (name.startsWith('-')) attributes.set(name.slice(1), UNSET_STATE);
-        else attributes.set(name, value);
-    }
-    return Object.fromEntries(attributes);
-}
-
-export function parsePathAttributes(text: string): Map<string, Record<string, string>> {
-    const fields = text.split('\0');
-    const attributes = new Map<string, Record<string, string>>();
-    for (let index = 0; index + ATTRIBUTE_FIELDS <= fields.length; index += ATTRIBUTE_FIELDS) {
-        const [path, name, value] = fields.slice(index, index + ATTRIBUTE_FIELDS) as [string, string, string];
-        const table = { ...attributes.get(path), [name]: value };
-        attributes.set(path, table);
-    }
-    return attributes;
 }
 
 /**

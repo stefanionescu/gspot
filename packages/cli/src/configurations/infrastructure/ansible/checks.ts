@@ -8,7 +8,7 @@ import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { isInScope, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
 import { isInInstalledFolder } from '#cli/system/paths.ts';

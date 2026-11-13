@@ -4,7 +4,7 @@ import { posix } from 'node:path';
 import { FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE, ROOT_RUNS } from '#cli/config/engine.ts';
 import { SETTINGS_FILE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { isInScope, isOutsideChildScopes, joinScope, listNestedScopes, selectScope } from '#cli/repository/scopes.ts';
 import { getTable, listIgnores } from '#cli/settings/tables.ts';

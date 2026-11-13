@@ -1,214 +1,34 @@
 import { posix } from 'node:path';
 
-import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/markdown.ts';
-import { RUFF_CHECK } from '#cli/config/configurations/python.ts';
 import {
     CARRIED_TOOLS,
     CARRYOVER_ROW_START,
-    COMMITLINT_CHECK,
-    COMMITLINT_CONFIG_PATH,
-    COMMITLINT_TARGET,
     EDITORCONFIG_FILE,
     EDITORCONFIG_WORDS,
     EMPTY_CARRYOVER,
-    IGNORE_REASON_START,
-    MARKDOWNLINT_ALIASES,
-    MARKDOWNLINT_CHECK,
-    MARKDOWNLINT_CONFIG_FILES,
-    MARKDOWNLINT_RETIRED_RULES,
-    MARKDOWNLINT_RUNNER_FILE,
-    MARKDOWNLINT_TARGET,
     PRETTIER_EXCLUDE_KEY,
     PRETTIER_OVERRIDES_KEY,
     PRINTED_RULE_TOOLS,
-    RUFF_CHECK_IDS,
-    RUFF_FORMAT_KEYS,
-    RUFF_STYLE_KEYS,
     SCAN_FIRST_MESSAGE,
     UNREAD_CONFIG_MESSAGE,
     UNREAD_TYPOS_MESSAGE,
     UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/generation/setup.ts';
-import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
-import { convertIgnorePattern, readIgnoreFiles } from '#cli/generation/setup/carryover/ignore-files.ts';
-import {
-    compareRuffRules,
-    compareRules,
-    convertRule,
-    readPrintedRules,
-} from '#cli/generation/setup/carryover/lint-rules.ts';
+import { readIgnoreFiles } from '#cli/generation/setup/carryover/ignore-files.ts';
 import { readPyrightCarryover } from '#cli/generation/setup/carryover/pyright.ts';
+import { readRuffCarryover } from '#cli/generation/setup/carryover/ruff.ts';
+import { readCommitlintCarryover, readMarkdownlintCarryover } from '#cli/generation/setup/carryover/rules.ts';
 import {
     buildPrettierOverrides,
     parsePrettierFile,
     readPrettierOptions,
-    readRuffOptions,
-} from '#cli/generation/setup/format.ts';
+} from '#cli/generation/setup/format/prettier.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
-import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
-import { configTableSchema } from '#cli/schemas/parsers.ts';
-import { toolsSchema } from '#cli/schemas/settings/tools.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/projects/dependencies.ts';
+import { listUnparsedCiFiles } from '#cli/repository/setup/lint-commands.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type {
-    Carryover,
-    CarryoverInput,
-    CarryoverRow,
-    CarryoverSection,
-    MarkdownlintConfig,
-    RuleTable,
-    ToolCarryoverInput,
-} from '#cli/types/generation.ts';
-
-function readRuffCarryover(input: CarryoverInput): CarryoverSection {
-    const { repository, tools, session } = input;
-    const { level } = session.settings;
-    const found = tools.has('ruff') ? readRuffOptions(repository.root) : undefined;
-    if (found === undefined) return EMPTY_CARRYOVER;
-    const { path, options } = found;
-    const shipped = session.toolConfigurations.flatMap(({ ruff }) => [
-        ...ruff.basic,
-        ...(level === 'all' ? ruff.all : []),
-    ]);
-    const { rules, ignores, row } = compareRuffRules({ path, options, shipped });
-    const tracked = repository.files.map((file) => file.path);
-    const excludes = [...(options.exclude ?? []), ...(options['extend-exclude'] ?? [])];
-    const paths = excludes.flatMap((pattern) => convertIgnorePattern(pattern, '', tracked) ?? []);
-    const reason = `${IGNORE_REASON_START} ${path}.`;
-    const format = [
-        ...RUFF_FORMAT_KEYS.filter((key) => options[key] !== undefined),
-        ...RUFF_STYLE_KEYS.filter((key) => options.format?.[key] !== undefined).map((key) => `format.${key}`),
-    ];
-    return {
-        tools: rules.length === 0 ? {} : { ruff: { rules } },
-        ignore: [
-            ...(paths.length === 0 ? [] : RUFF_CHECK_IDS.map((check) => ({ check, paths, reason }))),
-            ...ignores.map(({ rule, file }) => ({
-                check: RUFF_CHECK,
-                rule,
-                ...(file !== undefined && { paths: [file] }),
-                reason,
-            })),
-        ],
-        rows: [{ ...row, carried: [...row.carried, ...format, ...paths] }],
-    };
-}
-
-function splitMarkdownlintTable(path: string, table: Record<string, unknown>): MarkdownlintConfig {
-    if (!MARKDOWNLINT_RUNNER_FILE.test(path)) return { path, rules: table, dropped: [] };
-    const { config, ...others } = table;
-    return { path, rules: isTable(config) ? config : {}, dropped: Object.keys(others) };
-}
-
-function readMarkdownlintFile(root: string): MarkdownlintConfig | undefined {
-    for (const path of MARKDOWNLINT_CONFIG_FILES) {
-        const text = findText(root, path);
-        if (text === undefined) continue;
-        const parse = path.includes('.json') ? parseJsonFile : parseYamlFile;
-        const table = tryParseFile(() => parse(path, text, configTableSchema));
-        return table === undefined
-            ? { path, rules: {}, dropped: [UNREADABLE_CONFIG_MESSAGE] }
-            : splitMarkdownlintTable(path, table);
-    }
-    return undefined;
-}
-
-function parseGeneratedConfig(session: CarryoverInput['session'], target: string): Record<string, unknown> {
-    const generated = buildConfigs(session).files.find(({ path }) => path === target);
-    return parseJsonFile(target, generated?.content ?? '{}');
-}
-
-function buildToolCarryover(input: ToolCarryoverInput): CarryoverSection {
-    const { setting, check, tool, path, compared, options, dropped } = input;
-    const held = Map.groupBy(
-        options,
-        ([rule, value]) => toolsSchema.shape[setting].safeParse({ rules: { [rule]: value } }).success,
-    );
-    const carried = held.get(true) ?? [];
-    const row: CarryoverRow = {
-        ...CARRYOVER_ROW_START,
-        path,
-        tool,
-        covered: compared.covered,
-        carried: [...carried.map(([rule]) => rule), ...compared.weakened.map((rule) => `ignore ${rule}`)],
-        dropped: [...dropped, ...compared.added, ...(held.get(false) ?? []).map(([rule]) => rule)],
-    };
-    const rules = Object.fromEntries(carried);
-    const reason = `${IGNORE_REASON_START} ${path}.`;
-    return {
-        tools: carried.length === 0 ? {} : { [setting]: { rules } },
-        ignore: compared.weakened.map((rule) => ({ check, rule, reason })),
-        rows: [row],
-    };
-}
-
-function readMarkdownlintCarryover({ repository, session, tools }: CarryoverInput): CarryoverSection {
-    const found = tools.has('markdownlint-cli2') ? readMarkdownlintFile(repository.root) : undefined;
-    if (found === undefined) return EMPTY_CARRYOVER;
-    const document = {
-        ...Object.fromEntries(MARKDOWNLINT_PRETTIER_DISABLED.map((rule) => [rule, false])),
-        ...parseGeneratedConfig(session, MARKDOWNLINT_TARGET),
-    };
-    const rules = Object.entries(found.rules).map(
-        ([rule, value]) => [MARKDOWNLINT_ALIASES[rule] ?? rule, value] as const,
-    );
-    const user: RuleTable = new Map(
-        rules
-            .filter(([rule]) => MARKDOWNLINT_RULE_ID.test(rule))
-            .map(([rule, value]) => [rule, convertRule(value, { hasSeverity: false })]),
-    );
-    const compared = compareRules({
-        check: MARKDOWNLINT_CHECK,
-        user,
-        lookup: (rule) =>
-            MARKDOWNLINT_RETIRED_RULES.has(rule)
-                ? undefined
-                : convertRule(document[rule] ?? true, { hasSeverity: false }),
-    });
-    return buildToolCarryover({
-        setting: 'markdownlint',
-        check: MARKDOWNLINT_CHECK,
-        tool: 'markdownlint-cli2',
-        path: found.path,
-        compared,
-        options: new Map([...compared.options].map(([rule, [table]]) => [rule, table])),
-        dropped: [...found.dropped, ...rules.map(([rule]) => rule).filter((rule) => !MARKDOWNLINT_RULE_ID.test(rule))],
-    });
-}
-
-async function readCommitlintCarryover({ repository, session, tools }: CarryoverInput): Promise<CarryoverSection> {
-    const config = repository.files.find(({ path }) => COMMITLINT_CONFIG_PATH.test(path));
-    if (config === undefined || !tools.has('commitlint')) return EMPTY_CARRYOVER;
-    const user = await readPrintedRules({
-        root: repository.root,
-        tool: 'commitlint',
-        search: { folders: [repository.root] },
-        commandArguments: ['--print-config', 'json'],
-        hasSeverity: true,
-    });
-    if (user === undefined) return EMPTY_CARRYOVER;
-    const shipped = parseGeneratedConfig(session, COMMITLINT_TARGET)['rules'] as Record<string, readonly unknown[]>;
-    const compared = compareRules({
-        check: COMMITLINT_CHECK,
-        user,
-        lookup: (rule) => (shipped[rule] === undefined ? undefined : convertRule(shipped[rule], { hasSeverity: true })),
-    });
-    return buildToolCarryover({
-        setting: 'commitlint',
-        check: COMMITLINT_CHECK,
-        tool: 'commitlint',
-        path: config.path,
-        compared,
-        options: compared.options,
-        dropped: [],
-    });
-}
+import type { Carryover, CarryoverInput, CarryoverRow } from '#cli/types/generation.ts';
 
 function listUncomparedRows({ conflictingConfigs, tools }: CarryoverInput): CarryoverRow[] {
     return PRINTED_RULE_TOOLS.flatMap(({ tool }) =>

@@ -1,5 +1,9 @@
 import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';
-import { isProjectSource, listToolOnlyPackages, listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
+import {
+    isProjectSource,
+    listToolOnlyPackages,
+    listUnparsedDependencyFiles,
+} from '#cli/repository/projects/dependencies.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { Configuration } from '#cli/types/manifests.ts';

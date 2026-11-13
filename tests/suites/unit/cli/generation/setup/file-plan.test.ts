@@ -6,19 +6,11 @@ import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation/setup.ts';
-import { formatInitPlan } from '#cli/generation/setup/file-plan.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { applySandboxInit, planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-
-const WORKSPACE_PYTHON_FILES = {
-    'package.json': '{"private":true,"workspaces":["service"]}',
-    'source.ts': 'export {};\n',
-    'service/package.json': '{"private":true}',
-    'service/main.py': 'value = 1\n',
-} as const;
 
 const QUALITY_PACKAGE_FILES = {
     'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',
@@ -138,16 +130,4 @@ test('init identifies a configuration detected from a file', async () => {
     await using sandbox = await createGitSandbox({ Dockerfile: 'FROM node:24\n' });
     const { plan } = await planSandboxInit(sandbox.path);
     expect(plan.configurations.find(({ configuration }) => configuration === 'docker')?.origin).toBe('detected');
-});
-
-test('the init plan prints each scope, folds the always-selected configurations, and shows gspot.toml', async () => {
-    await using sandbox = await createGitSandbox({ ...WORKSPACE_PYTHON_FILES, 'AGENTS.md': '# Agents\n' });
-    const { plan, settingsText } = await planSandboxInit(sandbox.path);
-    const printed = formatInitPlan(plan, settingsText);
-    expect(printed).toMatch(/^ {2}python +detected +service +\d+ checks \(\d+ off at basic\)$/mu);
-    expect(printed).toMatch(/^ {2}\d+ always-selected configurations: \d+ checks \(\d+ off at basic\)$/mu);
-    expect(printed).not.toMatch(/^ {2}format /mu);
-    expect(printed).toContain('gspot.toml\n  # Change these settings');
-    expect(printed).toMatch(/^ {2}\.gspot\/package\.json +\d+ pinned npm tools; lockfile written by gspot install$/mu);
-    expect(printed).toMatch(/^change\n(?: {2}.+\n)*? {2}AGENTS\.md +adds the gspot block$/mu);
 });

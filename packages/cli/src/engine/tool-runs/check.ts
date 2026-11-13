@@ -23,7 +23,7 @@ import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/tool-
 import { listSecondaryTools } from '#cli/engine/tools.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';

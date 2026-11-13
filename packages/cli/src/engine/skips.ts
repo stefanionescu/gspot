@@ -1,7 +1,7 @@
 import { LOCAL_RULE_EXTENSION, LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
 import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
 import { isSettingEmpty } from '#cli/settings/values/written.ts';

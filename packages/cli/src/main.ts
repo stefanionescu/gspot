@@ -49,8 +49,8 @@ import {
 } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
+import { assertGspotPin } from '#cli/repository/projects/pin.ts';
 import { readRepositoryRoot } from '#cli/repository/read.ts';
-import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';

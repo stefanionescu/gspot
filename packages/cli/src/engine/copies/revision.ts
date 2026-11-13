@@ -39,8 +39,8 @@ import { copyDependencies, readDeclarationDependencies } from '#cli/engine/copie
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
 import { readGitPath, readGitSetting, readGitText, runGit } from '#cli/repository/git/run.ts';
+import { listPackageFiles } from '#cli/repository/projects/workspaces.ts';
 import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
-import { listPackageFiles } from '#cli/repository/workspaces.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { preparePath } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';

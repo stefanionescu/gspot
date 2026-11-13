@@ -12,7 +12,7 @@ import {
 } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';

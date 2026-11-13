@@ -17,7 +17,7 @@ import {
 } from '#cli/config/tools/installers.ts';
 import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
 import { runGit } from '#cli/repository/git/run.ts';
-import { readHooks } from '#cli/repository/setup.ts';
+import { readHooks } from '#cli/repository/setup/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';

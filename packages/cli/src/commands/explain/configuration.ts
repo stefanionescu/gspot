@@ -8,7 +8,7 @@ import {
     TOOL_PINS,
 } from '#cli/config/commands/lookup.ts';
 import { GSPOT_ADD } from '#cli/config/manifests.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { formatDetectionConditions } from '#cli/manifests/reference.ts';
 import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';

@@ -1,4 +1,4 @@
-import type { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
+import type { CI_PROVIDERS } from '#cli/config/repository/setup.ts';
 
 // doctor
 export const CI_FILE_SUFFIXES = {
@@ -10,9 +10,6 @@ export const CI_OFF_NOTES = {
     gitlab: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
 } as const satisfies Record<(typeof CI_PROVIDERS)[number], string>;
 export const LABEL_WIDTH = 9;
-export const ORIGIN_URL_SETTING = 'remote.origin.url';
-export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;
-export const REMOTE_URL_USER = /^[^@/]+@/u;
 export const TOOL_STATE_COLORS = {
     ok: 'green',
     error: 'red',

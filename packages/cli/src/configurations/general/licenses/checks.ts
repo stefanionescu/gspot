@@ -22,7 +22,7 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
 import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { readSettingsText } from '#cli/settings/toml/file.ts';

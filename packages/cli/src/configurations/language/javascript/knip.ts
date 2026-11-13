@@ -17,8 +17,8 @@ import { listExternals } from '#cli/configurations/language/javascript/eslint/bl
 import { listCodePatterns, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
+import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
-import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { joinScopeSelector } from '#cli/settings/values/paths.ts';
 import { listApplicableTables } from '#cli/settings/values/written.ts';

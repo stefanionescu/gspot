@@ -1,6 +1,6 @@
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { listPathTags } from '#cli/repository/files/classify.ts';
+import { listPathTags } from '#cli/repository/files/tags.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { buildFilenameMatcher, buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';

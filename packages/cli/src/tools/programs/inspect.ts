@@ -12,8 +12,8 @@ import {
     ROOT_FOLDER_NAME,
 } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { detectPackageManager } from '#cli/repository/package-manager.ts';
-import { selectInstallCommand } from '#cli/repository/version-pin.ts';
+import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
+import { selectInstallCommand } from '#cli/repository/projects/runner.ts';
 import { remember } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { isInside } from '#cli/system/paths.ts';

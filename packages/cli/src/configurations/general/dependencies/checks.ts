@@ -34,8 +34,8 @@ import {
     listSpecifiers,
     SPECIFIER_PARSERS,
 } from '#cli/parsers/projects/lockfiles.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
 import { miseToolsSchema } from '#cli/schemas/repository.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';

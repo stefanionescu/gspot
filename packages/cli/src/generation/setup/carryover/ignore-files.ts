@@ -7,7 +7,8 @@ import {
     IGNORE_REASON_START,
 } from '#cli/config/generation/setup.ts';
 import { LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
@@ -27,7 +28,7 @@ function convertIgnoreFile(path: string, text: string, tracked: string[]): { pat
 export function convertIgnorePattern(pattern: string, folder: string, tracked: string[]): string | undefined {
     const inFolder = tracked.filter((path) => folder === '' || path.startsWith(`${folder}/`));
     const base = pattern.replace(LEADING_SLASH, '').replace(TRAILING_SLASH, '');
-    const isAnchored = pattern.slice(0, -1).includes('/');
+    const isAnchored = isAnchoredPattern(pattern);
     const glob = joinScope(folder, isAnchored ? base : `**/${base}`);
     return [glob, `${glob}/**`].find((selector) => {
         const isMatched = buildPathMatcher([selector]);

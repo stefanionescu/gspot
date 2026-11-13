@@ -7,7 +7,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { MISE_LAUNCHER_FOLDER, MISE_WHICH, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';

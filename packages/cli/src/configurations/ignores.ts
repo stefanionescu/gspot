@@ -1,3 +1,4 @@
+import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
 import type { IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
@@ -18,7 +19,7 @@ export function convertToGlob(pattern: string): string {
     if (isAnchored) path = path.slice(1);
     const isFolder = path.endsWith('/');
     const bare = isFolder ? path.slice(0, -1) : path;
-    const prefix = isAnchored || bare.includes('/') ? '' : '**/';
+    const prefix = isAnchored || isAnchoredPattern(path) ? '' : '**/';
     return `${negative}${prefix}${bare}${isFolder ? '/**' : ''}`;
 }
 

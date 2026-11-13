@@ -4,7 +4,7 @@ import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blo
 import { COMPONENT_CONFIGURATIONS, MISE_TASKS_GLOB } from '#cli/config/configurations/javascript/eslint-config.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
 import { compareScopeDepth, isInScope, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import { extractExtension } from '#cli/system/paths.ts';

@@ -7,8 +7,8 @@ import { GSPOT_FOLDER, NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listUnreadFiles } from '#cli/engine/files.ts';
+import { listWorkspaceSources } from '#cli/repository/projects/workspaces.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { listWorkspaceSources } from '#cli/repository/workspaces.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

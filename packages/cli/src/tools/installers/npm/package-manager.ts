@@ -4,7 +4,7 @@ import { CI_NODE } from '#cli/config/repository/version-pin.ts';
 import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { PACKAGE_MANAGER_UPGRADES, RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
-import { buildPackageManagerCommand, selectToolPackageManager } from '#cli/repository/package-manager.ts';
+import { buildPackageManagerCommand, selectToolPackageManager } from '#cli/repository/projects/package-manager.ts';
 import { packageManagerSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes/run.ts';

@@ -1,52 +1,33 @@
 import { posix } from 'node:path';
 
-import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
-import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { MARKERS } from '#cli/config/parsers/formats.ts';
-import { JAVASCRIPT_RUNTIMES, LOCKFILES } from '#cli/config/parsers/projects.ts';
 import {
     BANNER_BYTES,
-    BINARY_EXTENSIONS,
-    BINARY_TAG,
     BUILD_LAUNCHERS,
-    DEFAULT_DIALECT,
     DIFF_ATTRIBUTE,
-    DOCKERFILE_EXTENSION,
-    DOCKERFILE_NAME,
-    DOTENV_PREFIX,
-    ENV_EXECUTABLE_SUFFIX,
-    ENV_SPLIT_FLAG,
     EXTENSION_TAGS,
-    FILENAME_TAGS,
     FILTER_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
-    GENERATED_HEADER_LINE,
     GENERATOR_OUTPUT_BANNERS,
     GITATTRIBUTES_FILE,
-    HEADER_LINES_CHECKED,
-    INTERPRETER_DIALECTS,
     KIND_ORIGINS,
     LFS_FILTER,
     LICENSE_FILE,
     LICENSE_TAGS,
     MARKDOWN_EXTENSION,
     NOTICE_FILE,
-    RUNTIME_TAG,
     SET_STATE,
     SET_VALUES,
-    SHEBANG_INTERPRETERS,
-    SHEBANG_PREFIX,
-    SHEBANG_TAGS,
     SOURCE_KIND,
     TEXT_ATTRIBUTE,
-    TEXT_TAG,
-    TRAILING_VERSION,
     UNSET_STATE,
     VENDORED_ATTRIBUTE,
     VENDORED_FOLDERS,
 } from '#cli/config/repository/files.ts';
-import { GSPOT_FOLDER, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { hasGeneratedHeader, isGspotPath } from '#cli/repository/files/ownership.ts';
+import { tagFile } from '#cli/repository/files/tags.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
@@ -55,7 +36,6 @@ import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type {
     FileClassification,
     FileKindRules,
-    FileTags,
     GeneratedPaths,
     ListedFile,
     RepositoryListing,
@@ -128,29 +108,6 @@ function classifyKind(
     return classifyManagedDocument(root, listed, prefix);
 }
 
-function listShebangTags(firstLine: string): string[] {
-    const interpreter = parseShebang(firstLine);
-    if (interpreter === undefined) return [];
-    const shebang =
-        SHEBANG_INTERPRETERS.get(interpreter) ?? SHEBANG_INTERPRETERS.get(interpreter.replace(TRAILING_VERSION, ''));
-    if (shebang === undefined) return [];
-    const dialect = INTERPRETER_DIALECTS.get(interpreter) ?? DEFAULT_DIALECT;
-    const runtime = JAVASCRIPT_RUNTIMES.find((name) => name === interpreter);
-    return [
-        ...(SHEBANG_TAGS[shebang] ?? []),
-        `${SHEBANG_TAG}${shebang}`,
-        ...(shebang === SCRIPT_TAG ? [dialect] : []),
-        ...(runtime === undefined ? [] : [`${RUNTIME_TAG}${runtime}`]),
-    ];
-}
-
-function tagTextFile(tags: Set<string>, firstLine: string): FileTags {
-    for (const tag of listShebangTags(firstLine)) tags.add(tag);
-    if (INTERPRETER_DIALECTS.values().some((dialect) => tags.has(dialect))) tags.delete(DEFAULT_DIALECT);
-    tags.add(TEXT_TAG);
-    return { tags: [...tags], isBinary: false };
-}
-
 function listPointerFiles(path: string, files: Config[]): string[] {
     return files.flatMap((file) => {
         const pointer = file.pointer;
@@ -158,53 +115,6 @@ function listPointerFiles(path: string, files: Config[]): string[] {
         const scopePath = file.per_scope ? path : '';
         return (pointer.folders ?? ['']).map((folder) => posix.join(scopePath, folder, pointer.path));
     });
-}
-
-function parseShebang(firstLine: string): string | undefined {
-    if (!firstLine.startsWith(SHEBANG_PREFIX)) return undefined;
-    const tokens = firstLine.slice(SHEBANG_PREFIX.length).trim().split(WHITESPACE_RUN);
-    let index = 0;
-    if (tokens[index]?.endsWith(ENV_EXECUTABLE_SUFFIX) === true) index += 1;
-    if (tokens[index] === ENV_SPLIT_FLAG) index += 1;
-    const word = tokens[index];
-    return word === undefined || word === '' ? undefined : posix.basename(word);
-}
-
-function tagFile(file: ListedFile, prefix: Buffer): FileTags {
-    const tags = new Set<string>([
-        ...listPathTags(file.path),
-        ...(file.isSymlink ? ['symlink'] : []),
-        ...(file.executable ? ['executable'] : []),
-    ]);
-    if (BINARY_EXTENSIONS.has(extractExtension(file.path)) || prefix.includes(0))
-        return { tags: [BINARY_TAG, ...tags], isBinary: true };
-    const text = prefix.toString('utf8');
-    const newline = text.indexOf('\n');
-    return tagTextFile(tags, newline === -1 ? text : text.slice(0, newline));
-}
-
-export function listPathTags(path: string): string[] {
-    const extension = extractExtension(path);
-    const base = posix.basename(path);
-    const flags: Array<[boolean, string]> = [
-        [LOCKFILES.some((lockfile) => lockfile.file === base), 'lockfile'],
-        [base.startsWith(DOCKERFILE_NAME) || extension === DOCKERFILE_EXTENSION, 'dockerfile'],
-        [base.startsWith(DOTENV_PREFIX), 'dotenv'],
-    ];
-    return [
-        ...(EXTENSION_TAGS[extension] ?? []),
-        ...(FILENAME_TAGS.get(base) ?? []),
-        ...flags.filter(([isSet]) => isSet).map(([, tag]) => tag),
-    ];
-}
-
-export function isGspotPath(path: string): boolean {
-    return path.startsWith(`${GSPOT_FOLDER}/`);
-}
-
-export function hasGeneratedHeader(text: string): boolean {
-    const lines = text.split('\n', HEADER_LINES_CHECKED);
-    return lines.some((line) => GENERATED_HEADER_LINE.test(line));
 }
 
 export function classifyFile(
@@ -222,12 +132,6 @@ export function classifyFile(
         executable: file.executable,
         size: file.size,
     };
-}
-
-export function listTaggedExtensions(...tags: string[]): string[] {
-    return Object.entries(EXTENSION_TAGS)
-        .filter(([, owned]) => owned.some((tag) => tags.includes(tag)))
-        .map(([extension]) => extension);
 }
 
 export function listConfigurationGeneratedPaths(selected: Map<string, Configuration[]>): GeneratedPaths[] {

@@ -21,7 +21,7 @@ import {
     PACKAGE_MANAGER_ARGUMENTS,
     PACKAGE_MANAGER_SETTINGS_NAME,
 } from '#cli/config/tools/installers.ts';
-import { buildPackageManagerCommand } from '#cli/repository/package-manager.ts';
+import { buildPackageManagerCommand } from '#cli/repository/projects/package-manager.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';

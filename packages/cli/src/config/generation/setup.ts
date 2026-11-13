@@ -236,6 +236,7 @@ export const UNREAD_SUBMODULE_MESSAGE = 'submodule; init does not read it';
 
 // script indent
 export const SCRIPT_EXTENSIONS: readonly string[] = ['.sh', '.bash'];
+export const SCRIPT_FILES = SCRIPT_EXTENSIONS.map((extension) => `**/*${extension}`);
 export const TAB_STEP = 'tab';
 
 // settings template

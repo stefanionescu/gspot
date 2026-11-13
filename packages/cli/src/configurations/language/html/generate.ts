@@ -6,7 +6,7 @@ import {
 } from '#cli/config/configurations/html.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 /**

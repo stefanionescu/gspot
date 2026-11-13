@@ -9,7 +9,7 @@ import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import * as manifests from '#cli/manifests/read.ts';
 import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
 import { buildFixerSettings, buildRunOptions, planFixer } from '#tests/setup/cli/run.ts';

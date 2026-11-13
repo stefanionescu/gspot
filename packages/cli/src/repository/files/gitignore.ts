@@ -5,7 +5,7 @@ import ignore from 'ignore';
 import { GITIGNORE_FILE, SKIPPED_PATTERN_STARTS } from '#cli/config/repository/files.ts';
 import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/repository/git.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { isGspotPath } from '#cli/repository/files/classify.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { buildGitError, runGit } from '#cli/repository/git/run.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -14,15 +14,14 @@ import type { GitignoreMatcher } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
 /**
-Anchor one line of a .gitignore file at the folder of that file. A pattern with a slash before its end is relative to
-that folder, and any other pattern matches at any depth below it.
+Anchor one line of a .gitignore file at the folder of that file.
 */
 function anchorPattern(line: string, folder: string): string[] {
     const pattern = line.trimEnd();
     if (pattern === '' || pattern.includes('\\') || SKIPPED_PATTERN_STARTS.some((start) => pattern.startsWith(start)))
         return [];
     const body = pattern.startsWith('/') ? pattern.slice(1) : pattern;
-    const isAnchored = pattern.slice(0, -1).includes('/');
+    const isAnchored = isAnchoredPattern(pattern);
     if (folder === '') return [isAnchored ? `/${body}` : body];
     return [isAnchored ? `/${folder}/${body}` : `/${folder}/**/${body}`];
 }
@@ -36,6 +35,14 @@ function isIgnored(path: string, ignores: GitignoreMatcher[]): boolean {
         else if (result.unignored) isPathIgnored = false;
     }
     return isPathIgnored;
+}
+
+/**
+Tell whether an ignore pattern is anchored at the folder of its file. A pattern with a slash before its end is relative
+to that folder, and any other pattern matches at any depth below it.
+*/
+export function isAnchoredPattern(pattern: string): boolean {
+    return pattern.slice(0, -1).includes('/');
 }
 
 export function buildGitignoreMatcher(cache: RunCache, trackedPaths: string[]): (path: string) => boolean {

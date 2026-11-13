@@ -10,7 +10,7 @@ import { buildCheckSession, runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildCommandLaunch } from '#cli/engine/tool-runs/check.ts';
 import { expandCommand, listCopyFiles, replacePlaceholders } from '#cli/engine/tool-runs/placeholders.ts';
-import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';

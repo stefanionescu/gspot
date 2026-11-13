@@ -4,13 +4,14 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { HOOKS_CHANGED_NOTE, STALE_LOCKFILE_NOTE, TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
+import { HOOKS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { formatHeader } from '#cli/generation/builders/header.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { formatHeader } from '#cli/generation/header.ts';
+import { listInstallNotes } from '#cli/generation/report.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
-import { listInstallNotes, writeGeneratedFiles } from '#cli/generation/write.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
@@ -107,20 +108,6 @@ test('writing a mise project preserves its lockfile and asks for an install afte
     const changed = await writeGeneratedFiles(configured, output, writer);
     expect(changed.written).toContain('.gspot/hooks/pre-commit');
     expect(await listInstallNotes(configured, output, changed)).not.toContain(HOOKS_CHANGED_NOTE);
-});
-
-test('the install notes name changed tools after the first write, and a missing lockfile after a repeated one', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings([]),
-        'package.json': '{"private":true}',
-    });
-    const session = await openSession(sandbox.path);
-    const writer = openFiles(sandbox.path);
-    const generated = buildGeneratedFiles(session);
-    const first = await writeGeneratedFiles(session, generated, writer);
-    expect(await listInstallNotes(session, generated, first)).toStrictEqual([TOOLS_CHANGED_NOTE]);
-    const repeated = await writeGeneratedFiles(session, generated, writer);
-    expect(await listInstallNotes(session, generated, repeated)).toStrictEqual([STALE_LOCKFILE_NOTE]);
 });
 
 test('at level basic, gspot removes the Vale configuration and the installed style packages', async () => {

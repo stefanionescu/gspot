@@ -6,25 +6,21 @@ import {
     CI_FILE_SUFFIXES,
     CI_OFF_NOTES,
     LABEL_WIDTH,
-    ORIGIN_URL_SETTING,
-    REMOTE_URL_SCHEME,
-    REMOTE_URL_USER,
     TOOL_STATE_COLORS,
     VERSION_GAP,
 } from '#cli/config/commands/lookup.ts';
 import { CI_FILES } from '#cli/config/generation/files.ts';
-import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { EXIT_FINDINGS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
 import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { selectRuleFiles } from '#cli/generation/rules.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { findCommandTool, findToolName, listDistinctTools, listToolNames } from '#cli/manifests/tools.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { readGitSetting } from '#cli/repository/git/run.ts';
+import { findGspotPinMismatch, readGspotPin } from '#cli/repository/projects/pin.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { findGspotPinMismatch, readGspotPin } from '#cli/repository/version-pin.ts';
+import { detectCiProvider } from '#cli/repository/setup/read.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';
 import { compareText } from '#cli/system/text/order.ts';
@@ -115,17 +111,6 @@ async function inspectScopeTools(session: Session): Promise<DoctorTool[]> {
         .values()
         .toArray()
         .toSorted((left, right) => compareText(left.name, right.name));
-}
-
-async function detectCiProvider(root: string, paths: string[]): Promise<CiState['provider']> {
-    if (paths.includes(GITLAB_CI_FILE)) return 'gitlab';
-    if (paths.some((path) => path.startsWith(GITHUB_WORKFLOWS_FOLDER))) return 'github';
-    const remote = (await readGitSetting(root, ORIGIN_URL_SETTING)) ?? '';
-    const host = remote.replace(REMOTE_URL_SCHEME, '').replace(REMOTE_URL_USER, '');
-    const providers = Object.keys(CI_OFF_NOTES) as Array<keyof typeof CI_OFF_NOTES>;
-    return (
-        providers.find((provider) => host.startsWith(`${provider}.com:`) || host.startsWith(`${provider}.com/`)) ?? null
-    );
 }
 
 async function readCiState(session: Session): Promise<CiState & { text: string }> {

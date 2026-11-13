@@ -233,3 +233,16 @@ export async function readPushedRange(root: string, cancelSignal?: AbortSignal):
     const base = await readPushBase(root, { ref: 'HEAD', hash: 'HEAD', cancelSignal });
     return [`${base}..HEAD`];
 }
+
+/**
+List the commits that the run selects, or the commits that a push sends when the run selects none.
+*/
+export async function readSelectedCommits(
+    root: string,
+    commits: string[] | undefined,
+    cancelSignal?: AbortSignal,
+): Promise<string[]> {
+    if (commits !== undefined) return commits;
+    const range = await readPushedRange(root, cancelSignal);
+    return range.length === 0 ? [] : readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
+}

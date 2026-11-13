@@ -4,7 +4,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
-import { buildConfigs } from '#cli/generation/configs.ts';
+import { buildConfigs } from '#cli/generation/configs/build.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import type { Session } from '#cli/types/tools.ts';

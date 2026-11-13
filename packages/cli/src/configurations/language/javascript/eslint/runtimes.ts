@@ -7,7 +7,7 @@ import {
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
 import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listScriptFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { findNearestPackageJson } from '#cli/repository/dependencies.ts';
+import { findNearestPackageJson } from '#cli/repository/projects/dependencies.ts';
 import { compareScopeDepth, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import type { EslintRuntime } from '#cli/types/configurations/javascript.ts';
