@@ -11,8 +11,8 @@ import {
     UNINSTALLED_EXPO_MESSAGE,
 } from '#cli/config/configurations/framework.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findInstalledDependency } from '#cli/tools/programs/packages.ts';

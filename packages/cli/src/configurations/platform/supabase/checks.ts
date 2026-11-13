@@ -32,8 +32,8 @@ import {
     STORAGE_POLICY_EXPLANATIONS,
 } from '#cli/configurations/platform/supabase/explanations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { assertToolFindings, formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertToolFindings, formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';

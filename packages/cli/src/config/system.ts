@@ -117,6 +117,7 @@ export const TEMPORARY_STALE_DAYS = 1;
 export const EXIT_ERROR = 2;
 export const EXIT_FINDINGS = 1;
 export const PROGRESS_CLEAR = '\r\u{1B}[2K';
+export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
 export const RESULT_JSON_INDENT = 2;
 export const SIGNAL_EXIT_CODES = { SIGHUP: 129, SIGINT: 130, SIGTERM: 143 } as const;
 const ESCAPE_CODE_POINT = 0x1b;

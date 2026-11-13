@@ -3,8 +3,8 @@ import { isDeepStrictEqual } from 'node:util';
 
 import { OVERRIDES_PLACEHOLDER, TARGET_MODULE_PLACEHOLDER, TARGET_PLACEHOLDER } from '#cli/config/generation/files.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
-import { listCheckTools } from '#cli/engine/tools.ts';
+import { listCheckTools } from '#cli/engine/plan/tools.ts';
+import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
 import { formatHeader } from '#cli/generation/builders/header.ts';
 import { selectScopeChecks } from '#cli/generation/configs/owned.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

@@ -1,3 +1,6 @@
+import { posix } from 'node:path';
+
+import { ROOT_RUNS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { formatSimilarNames } from '#cli/system/text/messages.ts';
@@ -47,4 +50,33 @@ export function findCheck(
     const commandCheck = commandChecks?.[checkId];
     if (commandCheck !== undefined) return { check: commandCheck, configuration: undefined };
     return readShippedChecks().get(checkId);
+}
+
+export function extractConfigName(file: string): string {
+    const name = posix.basename(file);
+    const dot = name.indexOf('.');
+    return dot === -1 ? name : name.slice(0, dot);
+}
+
+export function isRepositoryRun(check: Pick<Check, 'runs'>): boolean {
+    return (ROOT_RUNS as readonly string[]).includes(check.runs);
+}
+
+/**
+Check whether a per-file check of a general or always-selected configuration runs once at the root. A check that reads
+a scope config file does not.
+*/
+export function isRootOnlyCheck(configuration: Configuration | undefined, check: Check): boolean {
+    if (configuration === undefined) return true;
+    const isEveryScope = configuration.group === 'general' || configuration.always_selected;
+    if (!isEveryScope || configuration.files.languages || check.runs === 'scope') return false;
+    const command = [...(check.command ?? []), ...(check.env === undefined ? [] : Object.values(check.env))];
+    return configuration.configs.every(
+        (config) =>
+            !(
+                config.per_scope &&
+                (config.check.includes(check.id) ||
+                    command.some((argument) => argument.includes(`{config_file:${extractConfigName(config.file)}}`)))
+            ),
+    );
 }

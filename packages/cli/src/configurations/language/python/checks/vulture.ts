@@ -8,8 +8,8 @@ import {
 } from '#cli/config/configurations/python.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { VULTURE_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';

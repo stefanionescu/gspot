@@ -12,8 +12,8 @@ import {
 } from '#cli/config/configurations/site.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';

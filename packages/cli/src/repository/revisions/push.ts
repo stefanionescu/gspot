@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
 
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import {
     ABSENT_HASH,
     BRANCHES_PREFIX,
@@ -15,9 +16,12 @@ import {
     GIT_REV_LIST_ARGUMENTS,
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_TREE_ARGUMENTS,
+    GIT_TREE_NAMES_ARGUMENTS,
     HASH_PATTERN,
     INVALID_PUSH_INPUT_MESSAGE,
     MISSING_PUSH_REVISION_MESSAGE,
+    NO_CHANGES_REASON,
+    NO_SETTINGS_REASON,
     NON_COMMIT_REASON,
     NOT_FLAG,
     PEEL_FAILURE_MESSAGE,
@@ -245,4 +249,19 @@ export async function readSelectedCommits(
     if (commits !== undefined) return commits;
     const range = await readPushedRange(root, cancelSignal);
     return range.length === 0 ? [] : readGitLines(root, [...GIT_REV_LIST_ARGUMENTS, ...range, '--'], { cancelSignal });
+}
+
+/**
+Find why a pushed revision needs no check: it changes no path and sends no commit, or its tree holds no gspot.toml.
+*/
+export async function findPushSkipReason(
+    root: string,
+    revision: PushRevision,
+    cancelSignal: AbortSignal,
+): Promise<PushedRevisions['skipped'][number]['reason'] | undefined> {
+    if (revision.paths?.length === 0 && revision.commits.length === 0) return NO_CHANGES_REASON;
+    const settings = await readGitLines(root, [...GIT_TREE_NAMES_ARGUMENTS, revision.hash, '--', SETTINGS_FILE], {
+        cancelSignal,
+    });
+    return settings.length === 0 ? NO_SETTINGS_REASON : undefined;
 }

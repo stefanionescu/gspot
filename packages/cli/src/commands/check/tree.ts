@@ -1,9 +1,10 @@
-import { formatFixes, formatRunReport, printFailedFixers } from '#cli/commands/check/report.ts';
+import { formatFixes, printFailedFixers } from '#cli/commands/check/fixes.ts';
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { printProgress } from '#cli/engine/report.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { findSettingsSkip } from '#cli/engine/plan/skips.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { printProgress } from '#cli/engine/run/progress.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { assertCheckExists, listCheckIds, readShippedChecks } from '#cli/manifests/checks.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';

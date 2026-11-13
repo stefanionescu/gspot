@@ -1,6 +1,6 @@
 import { expect } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';

@@ -2,7 +2,7 @@ import { writeFile } from 'node:fs/promises';
 
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { OS_VALUE_SOURCE, PYTHON_ENVIRONMENT_SOURCE } from '#tests/config/configurations/structure/files.ts';

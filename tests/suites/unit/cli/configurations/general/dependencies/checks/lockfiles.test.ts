@@ -3,7 +3,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
     ALLOWED_GITHUB_REGISTRIES,

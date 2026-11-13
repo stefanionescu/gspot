@@ -30,7 +30,7 @@ import {
 } from '#cli/config/configurations/nginx.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { DOCKER_DAEMON_NOTE, DOCKER_TOOL } from '#cli/config/tools/programs.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { getTable } from '#cli/settings/tables.ts';

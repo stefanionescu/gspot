@@ -7,7 +7,7 @@ import {
 } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
-import { isSettingUnread } from '#cli/engine/skips.ts';
+import { isSettingUnread } from '#cli/engine/plan/skips.ts';
 import { readShippedChecks } from '#cli/manifests/checks.ts';
 import { findToolName } from '#cli/manifests/tools.ts';
 import { findNamingParent } from '#cli/settings/lookup.ts';

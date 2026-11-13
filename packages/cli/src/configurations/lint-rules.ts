@@ -1,11 +1,11 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildUnknownRuleError, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
-import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/outputs/rules.ts';
+import { findCheck, readShippedChecks } from '#cli/manifests/checks.ts';
 import { isConfigurationSelected } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readToolBinPaths } from '#cli/tools/programs/mise.ts';
 import { readLintRuleExplanation } from '#cli/tools/rules/explanations.ts';
-import type { Check } from '#cli/types/manifests.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
 
 function rethrowForUnselectedCheck(error: unknown, check: Check, session: Session | undefined): never {
@@ -63,4 +63,21 @@ export async function readListedRuleExplanation(
     const docs = await readCheckRuleExplanation(root, check, rule, session);
     if (docs === undefined) throw buildUnknownRuleError(rule, check.id);
     return docs;
+}
+
+/**
+Find a check whose findings name their lint rule, so that gspot can explain or ignore one of its rules.
+
+@param refusal the message of the error when the findings of the check name no lint rule.
+@returns undefined when no check has this id.
+*/
+export function findRuleCheck(
+    checkId: string,
+    commandChecks: Readonly<Record<string, Check>> | undefined,
+    refusal: string,
+): { check: Check; configuration: Configuration | undefined } | undefined {
+    const found = findCheck(checkId, commandChecks);
+    if (found !== undefined && !canIgnoreRule(found.check, selectCheckCode(found.check)))
+        throw new GspotError('arguments', refusal);
+    return found;
 }

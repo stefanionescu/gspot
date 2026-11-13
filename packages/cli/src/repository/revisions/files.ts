@@ -1,4 +1,4 @@
-import { copyFileSync } from 'node:fs';
+import { copyFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { GIT_INDEX_FILES_ARGUMENTS, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
@@ -10,12 +10,14 @@ import {
     GIT_HEAD_ARGUMENTS,
     GIT_LINE_ENDINGS_ARGUMENTS,
     GIT_LS_TREE_ARGUMENTS,
+    GIT_SETUP_FILES_ARGUMENTS,
     GIT_SHALLOW_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
     GIT_WRITE_TREE_ARGUMENTS,
     INDEX_LINE,
     PRIVATE_INDEX_FILE,
     READ_COMMITTED_MESSAGE,
+    SETUP_PATHS,
     TRAILING_NEWLINE,
     TREE_LINE,
     UNREADABLE_HISTORY_MESSAGE,
@@ -133,4 +135,14 @@ export async function listCommittedPaths(root: string, paths: string[]): Promise
 export async function isShallowClone(root: string, cancelSignal?: AbortSignal): Promise<boolean> {
     const answer = await readGitText(root, GIT_SHALLOW_ARGUMENTS, { cancelSignal });
     return answer.trim() === 'true';
+}
+
+/**
+List the setup paths, gspot.toml and the .gspot folder, that exist on disk and hold no file in the index.
+*/
+export async function listUnstagedSetupPaths(root: string, cancelSignal: AbortSignal): Promise<string[]> {
+    const indexed = await readGitPaths(root, GIT_SETUP_FILES_ARGUMENTS, { cancelSignal });
+    return SETUP_PATHS.filter(
+        (path) => existsSync(join(root, path)) && indexed.every((file) => !file.startsWith(path)),
+    );
 }

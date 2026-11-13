@@ -1,5 +1,5 @@
-import { listEnabledChecks } from '#cli/engine/plan.ts';
-import { selectToolConfigurations } from '#cli/engine/tools.ts';
+import { listEnabledChecks } from '#cli/engine/plan/checks.ts';
+import { selectToolConfigurations } from '#cli/engine/plan/tools.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { listConfigurationGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { detectPackageManager, selectToolPackageManager } from '#cli/repository/projects/package-manager.ts';

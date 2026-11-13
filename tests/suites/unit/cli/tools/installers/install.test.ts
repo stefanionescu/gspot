@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -15,10 +15,10 @@ import {
 } from '#cli/config/configurations/general.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
 import { buildRootRelativePath } from '#cli/engine/outputs/formats.ts';
-import { assertShippedCheck } from '#cli/engine/plan.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertShippedCheck } from '#cli/engine/plan/checks.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
 import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';

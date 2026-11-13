@@ -17,8 +17,8 @@ import {
 } from '#cli/config/configurations/swift.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { acquireBuildLock, planSwiftBuild, prepareBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { remember } from '#cli/system/cache.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { SwiftBuildOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';

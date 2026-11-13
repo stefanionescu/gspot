@@ -1,0 +1,232 @@
+import { existsSync } from 'node:fs';
+import { appendFile, mkdir, unlink } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { expect, test } from 'bun:test';
+
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
+import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+
+async function replaceChildScopeChecks(session: Session): Promise<void> {
+    if (existsSync(join(session.root, '.git/info/exclude')))
+        await appendFile(join(session.root, '.git/info/exclude'), '\n.gspot/mock-tsc*\n');
+    await writeProgramCommand(
+        session.root,
+        `${GSPOT_FOLDER}/mock-tsc`,
+        'fakes/tool',
+        '--line',
+        'Project finding',
+        '--exit',
+        '1',
+    );
+    const configuration = readConfigurations().get('typescript')!;
+    const check: Check = {
+        ...BASE_CHECK,
+        id: 'typescript/tsc',
+        stage: TSC_PUSH_OPTIONS.stage,
+        runs: 'scope',
+        cwd: 'root',
+        command: [join(session.root, `${GSPOT_FOLDER}/mock-tsc`)],
+        output: { format: 'regex', pattern: '(?<message>.+)' },
+        files: configuration.files,
+    };
+    const fileCheck = { ...check, id: 'json/v8r', runs: 'files' as const };
+    for (const scope of session.scopes) {
+        if (scope.path !== '') scope.configurations = [{ ...configuration, tools: [], checks: [check, fileCheck] }];
+    }
+}
+
+test.each(LAST_FILE_CHANGES)(
+    `a %s of the last file of a project runs only that project's check with %s files`,
+    async (operation, selection) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': TWO_SCOPES_SETTINGS,
+            'api/source.ts': 'export {};\n',
+            'web/kept.ts': 'export {};\n',
+        });
+
+        commitAll(sandbox.path);
+        runGitStep(
+            sandbox.path,
+            operation === 'delete' ? ['rm', 'api/source.ts'] : ['mv', 'api/source.ts', 'web/source.ts'],
+        );
+        await mkdir(join(sandbox.path, 'api'), { recursive: true });
+        const session = await openSession(sandbox.path);
+        await replaceChildScopeChecks(session);
+        const selected =
+            selection === 'staged' ? await readTreeStatus(sandbox.path) : await readChangedPaths(sandbox.path, 'HEAD');
+        const revision = {
+            selection:
+                'staged' in selected
+                    ? { content: 'index' as const, paths: selected.staged }
+                    : { content: 'working-tree' as const, paths: selected.paths },
+        };
+        const planned = planChecks(session, { ...TSC_PUSH_OPTIONS, ...revision });
+        const api = planned.find((check) => check.scope.path === 'api')!;
+        expect(api.files).toStrictEqual([]);
+        expect(api.triggerPaths).toStrictEqual(['api/source.ts']);
+        const fileChecks = planChecks(session, { ...TSC_PUSH_OPTIONS, only: ['json/v8r'], ...revision });
+        expect(fileChecks.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
+        expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toStrictEqual(
+            operation === 'delete' ? [] : ['web/source.ts'],
+        );
+        const result = await runChecks(session, buildRunOptions({ ...TSC_PUSH_OPTIONS, ...revision }));
+        expect(result.report.exitCode).toBe(1);
+        const active = result.report.checks.filter((check) => check.status !== 'skipped');
+        expect(active.map((check) => check.scope)).toStrictEqual(operation === 'delete' ? ['api'] : ['api', 'web']);
+    },
+);
+
+test('a deleted file from another language does not trigger a TypeScript project', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': TWO_SCOPES_SETTINGS, 'api/kept.ts': 'export {};\n' });
+
+    const session = await openSession(sandbox.path);
+    await replaceChildScopeChecks(session);
+    const planned = planChecks(session, {
+        ...TSC_PUSH_OPTIONS,
+        selection: { content: 'working-tree', paths: ['api/removed.py'] },
+    });
+    expect(planned.flatMap((check) => check.files)).toStrictEqual([]);
+    expect(planned.flatMap((check) => check.triggerPaths)).toStrictEqual([]);
+});
+
+test(`deleting a file of a child scope runs only the child project's check`, async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': `${TWO_SCOPES_SETTINGS}
+[[scope]]
+path = "api/nested"
+configurations = []
+`,
+        'api/kept.ts': 'export {};\n',
+        'api/nested/README.md': '# Nested\n',
+        'web/kept.ts': 'export {};\n',
+    });
+
+    const session = await openSession(sandbox.path);
+    await replaceChildScopeChecks(session);
+    const planned = planChecks(session, {
+        ...TSC_PUSH_OPTIONS,
+        selection: { content: 'working-tree', paths: ['api/nested/removed.ts'] },
+    });
+    expect(
+        planned.filter((check) => check.triggerPaths.length > 0).map((check) => [check.scope.path, check.triggerPaths]),
+    ).toStrictEqual([['api/nested', ['api/nested/removed.ts']]]);
+});
+
+test.each(['gspot.toml', getManifestTarget('docs', 'lychee.toml')])(
+    'a change to %s re-runs docs/lychee in every scope and keeps its path ignores',
+    async (path) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': `configurations = ["docs"]\n[[scope]]\npath = "api"\n\nconfigurations = ["docs"]\n[[ignore]]\ncheck = "docs/lychee"\npaths = ["api/ignored/**"]\nreason = "These pages are evaluated only after the documentation build."\n`,
+            'README.md': '# Root\n',
+            'api/guide.md': '# API\n',
+            'api/ignored/guide.md': '# Built pages\n',
+        });
+
+        const session = await openSession(sandbox.path);
+        const planned = planChecks(session, {
+            stage: 'commit',
+            selection: { content: 'working-tree', paths: [path] },
+            only: ['docs/lychee'],
+        });
+        expect(
+            planned.map((plannedCheck) => ({
+                scope: plannedCheck.scope.path,
+                files: plannedCheck.files.map((file) => file.path).toSorted(compareText),
+            })),
+        ).toStrictEqual([
+            { scope: '', files: ['README.md'] },
+            { scope: 'api', files: ['api/guide.md'] },
+        ]);
+    },
+);
+
+test('a staged change to gspot.toml reads only the staged files', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['docs']),
+        'README.md': '# Root\n',
+    });
+    const planned = planChecks(await openSession(sandbox.path), {
+        stage: 'commit',
+        selection: { content: 'index', paths: ['gspot.toml'] },
+        only: ['docs/lychee'],
+    });
+    expect(planned.flatMap(({ files }) => files.map(({ path }) => path))).toStrictEqual([]);
+});
+
+test('dependencies/osv-scanner reads every lockfile, and runs only when a trigger file changes', async () => {
+    await using sandbox = await createGitSandbox({
+        'uv.lock': '',
+        'app/uv.lock': '',
+        'ignored/uv.lock': '',
+        'gspot.toml': buildSandboxSettings(['dependencies'], {
+            level: 'all',
+            tables: '[[ignore]]\ncheck = "dependencies/osv-scanner"\npaths = ["ignored/**"]\nreason = "This external project has its own installation."\n',
+            scopes: [{ path: 'app', configurations: ['dependencies'] }],
+        }),
+        'package.json': '{"name":"root","private":true}\n',
+        'bun.lock': 'Root lockfile.\n',
+        'source.txt': 'Root source.\n',
+        'app/package.json': '{"name":"child","private":true}\n',
+        'app/source.txt': 'Child source.\n',
+    });
+    const session = await openSession(sandbox.path);
+    const options = { stage: 'push' as const, only: ['dependencies/osv-scanner'] };
+    const [scopeCheck] = planChecks(session, options);
+    expect(scopeCheck!.files.map(({ path }) => path)).toStrictEqual(['app/uv.lock', 'bun.lock', 'uv.lock']);
+    for (const prefix of ['', 'app/']) {
+        const [triggered] = planChecks(session, {
+            ...options,
+            selection: { content: 'index', paths: [`${prefix}uv.lock`] },
+        });
+        expect(triggered!.files).toStrictEqual(scopeCheck!.files);
+        const [unrelated] = planChecks(session, {
+            ...options,
+            selection: { content: 'index', paths: [`${prefix}source.txt`] },
+        });
+        expect(isActive(unrelated!)).toBe(false);
+    }
+    await unlink(join(sandbox.path, 'app/uv.lock'));
+    const reopened = await openSession(sandbox.path);
+    const [deleted] = planChecks(reopened, { ...options, selection: { content: 'index', paths: ['app/uv.lock'] } });
+    expect(deleted!.triggerPaths).toStrictEqual(['app/uv.lock']);
+    expect(deleted!.files.map(({ path }) => path)).toStrictEqual(['bun.lock', 'uv.lock']);
+});
+
+test.each([
+    ['scope', ['docs/guide.md']],
+    ['files', []],
+])('a command check with runs = "%s" gets the deleted files it covers as triggers', async (runs, triggers) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], {
+            tables: `[[command_check]]\nid = "links"\ncommand = ["true"]\npaths = ["docs/**"]\nruns = "${runs}"\nstage = "commit"\n`,
+        }),
+        'docs/guide.md': '# Guide\n',
+        'docs/index.md': '# Index\n',
+    });
+    commitAll(sandbox.path);
+    runGitStep(sandbox.path, ['rm', 'docs/guide.md']);
+    const session = await openSession(sandbox.path);
+    const [links] = planChecks(session, {
+        stage: 'commit',
+        only: ['links'],
+        selection: { content: 'index', paths: ['docs/guide.md'] },
+    });
+    expect(links!.triggerPaths).toStrictEqual(triggers);
+    expect(isActive(links!)).toBe(triggers.length > 0);
+});

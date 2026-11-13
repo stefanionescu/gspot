@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { listHostCheckTools } from '#cli/engine/tools.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { buildToolInstall } from '#cli/tools/installers/install.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';

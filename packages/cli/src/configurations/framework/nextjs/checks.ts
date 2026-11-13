@@ -12,7 +12,7 @@ import { TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import { runTsc } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';

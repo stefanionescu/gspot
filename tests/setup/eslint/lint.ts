@@ -2,8 +2,8 @@ import { join, relative } from 'node:path';
 
 import { ESLint } from 'eslint';
 
-import { extractConfigName } from '#cli/engine/files.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { extractConfigName } from '#cli/manifests/checks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';

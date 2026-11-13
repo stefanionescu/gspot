@@ -1,12 +1,9 @@
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import { EMPTY_PUSH_MESSAGE, NO_PENDING_REFS } from '#cli/config/commands/check.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { NO_CHANGES_REASON, NO_SETTINGS_REASON } from '#cli/config/repository/git.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { readGitLines } from '#cli/repository/git/run.ts';
 import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
 import { readHead } from '#cli/repository/revisions/files.ts';
-import { readPushedRevisions } from '#cli/repository/revisions/push.ts';
+import { findPushSkipReason, readPushedRevisions } from '#cli/repository/revisions/push.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { CheckOptions, CleanHead, PushReport, RevisionCheckResult } from '#cli/types/commands.ts';
 import type { PushedRevisions, PushRevision } from '#cli/types/repository.ts';
@@ -51,15 +48,9 @@ async function runRevisionCheck(
     cancelSignal: AbortSignal,
     checked: { revision: PushRevision; cleanHead: CleanHead | undefined },
 ): Promise<RevisionCheckResult | undefined> {
-    const { revision } = checked;
-    if (revision.paths?.length === 0 && revision.commits.length === 0) return { skipped: NO_CHANGES_REASON };
     try {
-        const settings = await readGitLines(root, ['ls-tree', '--name-only', revision.hash, '--', SETTINGS_FILE], {
-            cancelSignal,
-        });
-        return settings.length === 0
-            ? { skipped: NO_SETTINGS_REASON }
-            : await checkRevisionTree(root, options, cancelSignal, checked);
+        const skipped = await findPushSkipReason(root, checked.revision, cancelSignal);
+        return skipped === undefined ? await checkRevisionTree(root, options, cancelSignal, checked) : { skipped };
     } catch (error) {
         if (!cancelSignal.aborted) throw error;
         return undefined;

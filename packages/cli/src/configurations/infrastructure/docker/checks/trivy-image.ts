@@ -7,9 +7,9 @@ import {
     TRIVY_IMAGE_COMMAND,
 } from '#cli/config/configurations/docker.ts';
 import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
 import { CheckStop } from '#cli/system/errors.ts';

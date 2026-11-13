@@ -5,7 +5,7 @@ import { join, relative } from 'node:path';
 import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { isInside, splitSystemPath } from '#cli/system/paths.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import type { PathBytes, RunCache } from '#cli/types/system.ts';
 
 function readFilePrefix(path: string, limit: number): Buffer {
     const buffer = Buffer.alloc(limit);
@@ -45,6 +45,19 @@ export function readBytes(source: string | RunCache, path: string, options?: { l
     const bytes = readFileSync(readContainedPath(source.root, path));
     source.sources.set(path, bytes);
     return bytes;
+}
+
+export function readContents(sourceRoot: string, paths: string[]): PathBytes {
+    const contents: PathBytes = new Map();
+    for (const path of paths) {
+        try {
+            contents.set(path, readBytes(sourceRoot, path));
+        } catch (error) {
+            if (!hasErrorCode(error, 'ENOENT')) throw error;
+            contents.set(path, undefined);
+        }
+    }
+    return contents;
 }
 
 export function findText(source: string | RunCache, path: string): string | undefined {

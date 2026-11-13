@@ -1,36 +1,33 @@
 import { realpathSync } from 'node:fs';
-import { setImmediate } from 'node:timers/promises';
+import { join, relative } from 'node:path';
 
 import {
     BASE_FLAG,
+    FAILED_STATUSES,
+    FIX_FLAG,
+    GSPOT_CHECK_PREFIX,
     HOOK_FLAG,
     INCOMPLETE_STATUSES,
     ONLY_FLAG,
+    RAN_STATUSES,
     SHORT_HASH_LENGTH,
     STAGED_FLAG,
 } from '#cli/config/engine.ts';
 import { GSPOT_CHECK } from '#cli/config/manifests.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
-import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { buildDashSafePath } from '#cli/engine/tool-runs/batches.ts';
-import { readShippedChecks } from '#cli/manifests/checks.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { listRootPrefixes } from '#cli/engine/outputs/formats.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { buildDashSafePath } from '#cli/engine/run/tool-runs/batches.ts';
+import { listConflictedPaths } from '#cli/repository/git/output.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { remember } from '#cli/system/cache.ts';
+import { buildArgumentPath, convertToPosixPath } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import { canReadRuleExplanations } from '#cli/tools/rules/explanations.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
-import type {
-    BuiltInCheck,
-    CheckCode,
-    CheckResult,
-    CheckRunOptions,
-    CheckSession,
-    Finding,
-    RunOptions,
-} from '#cli/types/engine/run.ts';
-import type { Check } from '#cli/types/manifests.ts';
+import type { CheckResult, CheckSession, Run, RunOptions } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
+
+const WRITTEN_FILES = Symbol('written files');
 
 function listSelectionArguments(selection: RunSelection): string[] {
     const base = selection.content === 'commit' ? selection.base?.slice(0, SHORT_HASH_LENGTH) : selection.base;
@@ -41,46 +38,93 @@ function listSelectionArguments(selection: RunSelection): string[] {
     return words;
 }
 
-export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolean {
-    return OUTPUT_FORMATS[check.output.format].namesRules(check.output) || code?.explanations !== undefined;
+function buildWrittenPathMatcher(run: Run, result: CheckResult): (path: string) => boolean {
+    const { session } = run;
+    if (result.findings.length === 0 || result.check.startsWith(GSPOT_CHECK_PREFIX)) return () => false;
+    return remember(session.cache, WRITTEN_FILES, session.root, () =>
+        buildPathMatcher(session.generation.listWrittenGlobs(session)),
+    );
 }
 
-/**
-Find the tool whose rules gspot reads: the tool of a check whose output names lint rules.
-*/
-export function findRuleTool(check: Check): string | undefined {
-    return OUTPUT_FORMATS[check.output.format].namesRules(check.output) ? findToolName(check) : undefined;
+function removeAcceptedFindings(run: Run, result: CheckResult): CheckResult {
+    const { ignore } = run.session.settings;
+    const isWritten = buildWrittenPathMatcher(run, result);
+    const kept = result.findings.filter(
+        (finding) =>
+            !isWritten(finding.file) &&
+            ignore.every((record) => {
+                const isOtherFinding =
+                    (record.check !== undefined && record.check !== finding.check) ||
+                    (record.rule !== undefined && record.rule !== finding.rule && record.rule !== finding.fingerprint);
+                return isOtherFinding || (record.paths !== undefined && !buildPathMatcher(record.paths)(finding.file));
+            }),
+    );
+    if (!RAN_STATUSES.has(result.status)) return { ...result, findings: kept };
+    return { ...result, findings: kept, status: kept.length > 0 ? 'failed' : 'passed' };
 }
 
-/**
-Tell whether a check has a rule catalog that covers a rule: rule explanations in its code, or a tool whose rules gspot
-reads. Only then can gspot explain the rule, or check it against the rules that exist.
-*/
-export function hasRuleExplanations(check: Check, code: CheckCode | undefined, rule: string): boolean {
-    if (code?.explanations !== undefined) return true;
-    const tool = findRuleTool(check);
-    return tool !== undefined && canReadRuleExplanations(tool, rule);
+function removeOutsideFindings(result: CheckResult, run: Run): CheckResult {
+    const { options, session } = run;
+    if (options.paths === undefined) return result;
+    const named = options.pathArguments.map((path) => buildArgumentPath(session.toolsRoot, options.cwd, path));
+    return {
+        ...result,
+        findings: result.findings.filter(({ file }) => file === '' || named.some((path) => isInScope(file, path))),
+    };
 }
 
-export function buildUnknownRuleError(rule: string, checkId: string): GspotError {
-    return new GspotError('arguments', `gspot does not know rule ${rule} of ${checkId}.`);
+function findFixCommand(run: Run, result: CheckResult): Pick<CheckResult, 'fixCommand'> {
+    const { options, session } = run;
+    if (options.fix) return {};
+    const listed = new Set(session.repository.files.map(({ path }) => path));
+    const fixable = [
+        ...new Set(
+            result.findings.filter((finding) => finding.fixable && listed.has(finding.file)).map(({ file }) => file),
+        ),
+    ];
+    const conflicted = new Set(listConflictedPaths(session.root, fixable));
+    const files = new Set(fixable.filter((file) => !conflicted.has(file)));
+    if (files.size === 0) return {};
+    const command = [GSPOT_CHECK, FIX_FLAG, ONLY_FLAG, quoteArgument(result.check)];
+    const isEveryFileChecked = options.paths === undefined && options.selection?.paths === undefined;
+    if (isEveryFileChecked && result.findings.every(({ file }) => files.has(file)))
+        return { fixCommand: command.join(' ') };
+    const paths = [...files].map((file) => {
+        const path = convertToPosixPath(relative(options.cwd, join(session.toolsRoot, file)));
+        return quoteArgument(buildDashSafePath(path));
+    });
+    return { fixCommand: [...command, ...paths].join(' ') };
 }
 
-export function formatExplainCommand(
-    finding: Pick<Finding, 'check' | 'rule'>,
-    selectCheckCode: (check: Check) => CheckCode | undefined,
+function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
+    let restored = result;
+    if (session.root !== session.toolsRoot) {
+        const roots = new Set([session.root, realpathSync(session.root)]);
+        for (const root of roots) restored = restoreCommandPaths(restored, root, session.toolsRoot);
+    }
+    let { note } = restored;
+    if (note === undefined) return restored;
+    const prefixes = listRootPrefixes(convertToPosixPath(session.toolsRoot));
+    for (const prefix of prefixes) note = note.replaceAll(prefix, '');
+    return { ...restored, note };
+}
+
+function formatReproduceCommand(
+    checkId: string,
+    scopeArgument: string | undefined,
+    options: Pick<RunOptions, 'pathArguments' | 'selection'>,
 ): string {
-    const argumentsList = [finding.check];
-    const found = readShippedChecks().get(finding.check);
-    const code = found === undefined ? undefined : selectCheckCode(found.check);
-    if (
-        found !== undefined &&
-        finding.rule !== undefined &&
-        hasRuleExplanations(found.check, code, finding.rule) &&
-        (code?.explanations === undefined || Object.hasOwn(code.explanations, finding.rule))
-    )
-        argumentsList.push(finding.rule);
-    return `gspot explain ${argumentsList.map((argument) => quoteArgument(argument)).join(' ')}`;
+    const { pathArguments: paths, selection = { content: 'working-tree' } } = options;
+    const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
+    const targets = isScopeTarget ? [scopeArgument] : paths;
+    const words = [
+        GSPOT_CHECK,
+        ...targets.map((path) => quoteArgument(buildDashSafePath(path))),
+        ONLY_FLAG,
+        quoteArgument(checkId),
+        ...listSelectionArguments(selection),
+    ];
+    return words.join(' ');
 }
 
 export function buildBaseResult(planned: PlannedCheck, session: Pick<Session, 'scopes'>): CheckResult {
@@ -128,29 +172,12 @@ export function mergeCheckResults(merged: CheckResult, next: CheckResult): Check
     };
 }
 
-export async function runBuiltInCheck(
-    builtInCheck: BuiltInCheck,
-    session: CheckSession,
-    planned: PlannedCheck,
-    options: CheckRunOptions,
-): Promise<CheckResult> {
-    await setImmediate();
-    const started = performance.now();
-    const result = await builtInCheck(session, planned, options);
-    const findings = (Array.isArray(result) ? result : result.findings).map((finding) => ({
-        ...finding,
-        check: planned.check.id,
-        fixable: finding.fixable === true,
-    }));
-    const files = Array.isArray(result) ? undefined : [...new Set(result.files)];
-    return {
-        ...buildBaseResult(planned, session),
-        findings,
-        ...(files !== undefined && { files, fileCount: files.length }),
-        ...(!Array.isArray(result) && result.notes !== undefined && { reportNotes: result.notes }),
-        status: findings.length > 0 ? 'failed' : 'passed',
-        duration: Math.round(performance.now() - started),
-    };
+/**
+Keep the findings in the files that the repository lists, for a tool that walks the disk past what Git tracks.
+*/
+export function keepListedFindings(session: CheckSession, result: CheckResult): CheckResult {
+    const listed = new Set(session.repository.files.map(({ path }) => path));
+    return { ...result, findings: result.findings.filter(({ file }) => listed.has(file)) };
 }
 
 export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourceRoot: string): CheckResult {
@@ -164,33 +191,16 @@ export function restoreCommandPaths(result: CheckResult, copyRoot: string, sourc
     };
 }
 
-export function normalizeResultPaths(session: Session, result: CheckResult): CheckResult {
-    let restored = result;
-    if (session.root !== session.toolsRoot) {
-        const roots = new Set([session.root, realpathSync(session.root)]);
-        for (const root of roots) restored = restoreCommandPaths(restored, root, session.toolsRoot);
-    }
-    let { note } = restored;
-    if (note === undefined) return restored;
-    const prefixes = listRootPrefixes(convertToPosixPath(session.toolsRoot));
-    for (const prefix of prefixes) note = note.replaceAll(prefix, '');
-    return { ...restored, note };
-}
-
-export function formatReproduceCommand(
-    checkId: string,
-    scopeArgument: string | undefined,
-    options: Pick<RunOptions, 'pathArguments' | 'selection'>,
-): string {
-    const { pathArguments: paths, selection = { content: 'working-tree' } } = options;
-    const isScopeTarget = scopeArgument !== undefined && selection.messageFile === undefined && paths.length === 0;
-    const targets = isScopeTarget ? [scopeArgument] : paths;
-    const words = [
-        GSPOT_CHECK,
-        ...targets.map((path) => quoteArgument(buildDashSafePath(path))),
-        ONLY_FLAG,
-        quoteArgument(checkId),
-        ...listSelectionArguments(selection),
-    ];
-    return words.join(' ');
+export function finishResult(run: Run, ran: CheckResult): CheckResult {
+    const result = normalizeResultPaths(run.session, removeAcceptedFindings(run, removeOutsideFindings(ran, run)));
+    if (!FAILED_STATUSES.has(result.status) || run.session.cancelSignal?.aborted === true) return result;
+    const scopeArgument =
+        result.scope === ''
+            ? undefined
+            : convertToPosixPath(relative(run.options.cwd, join(run.session.toolsRoot, result.scope))) || '.';
+    return {
+        ...result,
+        ...findFixCommand(run, result),
+        rerun: formatReproduceCommand(result.check, scopeArgument, run.options),
+    };
 }

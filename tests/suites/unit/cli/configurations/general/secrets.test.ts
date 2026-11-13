@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import {
     COMPONENT_ENVIRONMENT_FINDINGS,

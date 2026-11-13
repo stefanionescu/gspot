@@ -11,10 +11,10 @@ import {
     OUTPUT_FLAG,
 } from '#cli/config/configurations/structure.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
-import { buildMissingFileStop } from '#cli/engine/tool-runs/check.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { buildMissingFileStop } from '#cli/engine/run/tool-runs/check.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';

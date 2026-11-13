@@ -9,8 +9,8 @@ import {
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { ADD_COMMAND } from '#cli/commands/add.ts';
+import { beginCheckReport } from '#cli/commands/check/annotations.ts';
 import { CHECK_COMMAND } from '#cli/commands/check/check.ts';
-import { beginCheckReport } from '#cli/commands/check/report.ts';
 import { DOCTOR_COMMAND } from '#cli/commands/doctor.ts';
 import { EXPLAIN_COMMAND } from '#cli/commands/explain/explain.ts';
 import { IGNORE_COMMAND } from '#cli/commands/ignore.ts';

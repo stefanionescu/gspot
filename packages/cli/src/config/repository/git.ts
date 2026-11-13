@@ -1,3 +1,6 @@
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+
 // changed revisions
 
 export const COMMIT_SUFFIX = '^{commit}';
@@ -60,6 +63,7 @@ export const GIT_REMOTE_ARGUMENTS = ['remote'] as const;
 export const GIT_REV_LIST_ARGUMENTS = ['rev-list'] as const;
 export const GIT_ROOT_COMMITS_ARGUMENTS = ['rev-list', '--max-parents=0'] as const;
 export const GIT_TREE_ARGUMENTS = ['rev-parse', '--verify'] as const;
+export const GIT_TREE_NAMES_ARGUMENTS = ['ls-tree', '--name-only'] as const;
 const HASH_SOURCE = '(?:[a-f0-9]{40}|[a-f0-9]{64})';
 export const HASH_PATTERN = new RegExp(`^${HASH_SOURCE}$`, 'iu');
 export const INVALID_PUSH_INPUT_MESSAGE = 'Invalid Git pre-push input. Supply every local and remote ref/object pair.';
@@ -165,11 +169,13 @@ export const GIT_COMMITTED_PATHS_ARGUMENTS = ['ls-files', '-z', '--'] as const;
 export const GIT_HEAD_ARGUMENTS = ['rev-parse', '--verify', '--quiet', 'HEAD'] as const;
 export const GIT_LINE_ENDINGS_ARGUMENTS = ['ls-files', '--eol', '-z'] as const;
 export const GIT_LS_TREE_ARGUMENTS = ['ls-tree', '-r', '-z'] as const;
+export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SETTINGS_FILE, GSPOT_FOLDER] as const;
 export const GIT_SHALLOW_ARGUMENTS = ['rev-parse', '--is-shallow-repository'] as const;
 export const GIT_SYMBOLIC_HEAD_ARGUMENTS = ['symbolic-ref', '--quiet', 'HEAD'] as const;
 export const GIT_WRITE_TREE_ARGUMENTS = ['write-tree'] as const;
 export const PRIVATE_INDEX_FILE = 'index';
 export const READ_COMMITTED_MESSAGE =
     'Cannot read your committed tool configs. Run git status, then commit or stash the change.';
+export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
 export const UNREADABLE_HISTORY_MESSAGE =
     'Cannot read committed Git history. Run git status, then commit or stash the change.';

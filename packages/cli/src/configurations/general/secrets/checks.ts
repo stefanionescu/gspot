@@ -15,10 +15,9 @@ import {
 } from '#cli/config/configurations/general.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
-import { keepListedFindings } from '#cli/configurations/ignores.ts';
-import { assertCommandCheck } from '#cli/engine/plan.ts';
-import { buildBaseResult } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { buildBaseResult, keepListedFindings } from '#cli/engine/results.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';

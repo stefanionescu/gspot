@@ -11,9 +11,10 @@ import {
 import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
-import { assertToolFindings, clearOutsideLinkExit } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { clearOutsideLinkExit } from '#cli/engine/run/tool-runs/output.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

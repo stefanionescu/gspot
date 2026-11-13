@@ -1,6 +1,6 @@
 import { FILE_LINES_RULE } from '#cli/config/configurations/structure.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import { getLimit } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';

@@ -2,10 +2,10 @@ import { join } from 'node:path';
 
 import { SEMGREP_TOOL } from '#cli/config/configurations/general.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
-import { assertCommandCheck } from '#cli/engine/plan.ts';
-import { listLocalRuleConfigs } from '#cli/engine/skips.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { listLocalRuleConfigs } from '#cli/engine/plan/skips.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';

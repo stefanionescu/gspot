@@ -20,7 +20,7 @@ import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
 import { listEnforcedTsconfigOptions, writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { buildBaseResult } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { listSourceFiles, readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { remember } from '#cli/system/cache.ts';
 import { requireTypescript } from '#cli/system/package/typescript.ts';

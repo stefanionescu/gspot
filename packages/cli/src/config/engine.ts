@@ -86,7 +86,6 @@ export const COVERAGE_DIMENSIONS = [
 export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
 export const LOCAL_RULES_SETTING = 'security.semgrep_rules';
 export const LOCAL_RULE_EXTENSION = '.yml';
-export const ROOT_RUNS = ['once', 'history'] as const;
 
 // run notes
 export const GSPOT_CHECK_PREFIX = 'gspot/';

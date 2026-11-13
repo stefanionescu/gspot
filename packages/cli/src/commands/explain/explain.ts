@@ -1,6 +1,7 @@
-import { explainCheck, explainLintRule } from '#cli/commands/explain/check.ts';
+import { explainCheck } from '#cli/commands/explain/check.ts';
 import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 import { explainPath } from '#cli/commands/explain/path.ts';
+import { explainLintRule } from '#cli/commands/explain/rule.ts';
 import { explainSetting } from '#cli/commands/explain/setting.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';

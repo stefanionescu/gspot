@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { executableLayout } from '#cli/system/processes/programs.ts';
 import * as processes from '#cli/system/processes/run.ts';

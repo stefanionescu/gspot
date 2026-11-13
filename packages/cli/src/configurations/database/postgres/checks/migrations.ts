@@ -10,7 +10,7 @@ import {
 } from '#cli/config/configurations/postgres.ts';
 import { SQL_EXTENSION, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
-import { listCheckFiles } from '#cli/engine/files.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
 import { getTable } from '#cli/settings/tables.ts';

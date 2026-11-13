@@ -4,7 +4,7 @@ import { MISSING_MODULE_RULE, QUOTED_MODULE, TYPESCRIPT_TAG } from '#cli/config/
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';

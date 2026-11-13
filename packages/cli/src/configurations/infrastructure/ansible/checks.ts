@@ -2,11 +2,11 @@ import { join } from 'node:path';
 
 import { ANSIBLE_CONFIG_EXTENSION, ANSIBLE_CONFIG_FILE } from '#cli/config/configurations/infrastructure.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { assertCommandCheck } from '#cli/engine/plan.ts';
-import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { buildCommandSubstitutions } from '#cli/engine/run/tool-runs/check.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { expandCommand } from '#cli/engine/run/tool-runs/placeholders.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';

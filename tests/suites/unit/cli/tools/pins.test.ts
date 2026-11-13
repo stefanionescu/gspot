@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { planChecks } from '#cli/engine/plan.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';

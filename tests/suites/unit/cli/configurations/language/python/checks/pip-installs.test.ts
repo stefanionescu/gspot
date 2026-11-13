@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { REQUIREMENTS_FILE_FINDINGS } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

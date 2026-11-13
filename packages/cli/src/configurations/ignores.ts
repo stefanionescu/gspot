@@ -1,16 +1,7 @@
 import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
 import type { IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
-
-/**
-Keep the findings in the files that the repository lists, for a tool that walks the disk past what Git tracks.
-*/
-export function keepListedFindings(session: CheckSession, result: CheckResult): CheckResult {
-    const listed = new Set(session.repository.files.map(({ path }) => path));
-    return { ...result, findings: result.findings.filter(({ file }) => listed.has(file)) };
-}
 
 export function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';

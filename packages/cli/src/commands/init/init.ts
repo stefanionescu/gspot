@@ -11,8 +11,8 @@ import {
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { EXIT_FINDINGS } from '#cli/config/system.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
 import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
 import { formatInitPlan } from '#cli/generation/setup/report.ts';

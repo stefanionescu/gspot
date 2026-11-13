@@ -6,7 +6,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { formatFixes, formatRunReport } from '#cli/commands/check/report.ts';
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
@@ -203,11 +203,4 @@ test('a finding message occupies one report line', () => {
     };
     const text = formatRunReport(report, { verbose: false });
     expect(text).toContain('First line. Second line. Third line.');
-});
-
-test('the fix report names the conflicted and the broken files', () => {
-    expect(formatFixes({ results: [], changed: [], broken: ['broken.ts'], conflicted: ['merge.ts'] })).toStrictEqual([
-        'The fixers left a syntax error in broken.ts; gspot put back the file as it was before the fixers.',
-        'The fixers skipped merge.ts, because it holds merge-conflict markers.',
-    ]);
 });

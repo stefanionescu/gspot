@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
 import { SEMGREP_MATCH, SEMGREP_PARSE_ERROR, SEMGREP_REFUSED_REPORTS } from '#tests/config/engine/outputs.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';

@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { compareText } from '#cli/system/text/order.ts';

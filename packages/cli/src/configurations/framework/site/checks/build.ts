@@ -3,8 +3,8 @@ import { join, normalize, relative } from 'node:path';
 
 import { BUILD_RULE, BUILD_SCRIPT, UNBUILT_SITE_NOTE } from '#cli/config/configurations/site.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';

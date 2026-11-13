@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'bun:test';
 
-import { planChecks } from '#cli/engine/plan.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';

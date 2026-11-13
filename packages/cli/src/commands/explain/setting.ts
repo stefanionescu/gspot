@@ -1,6 +1,6 @@
 import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/lookup.ts';
-import { isSettingUnread, listSettingReaders } from '#cli/engine/skips.ts';
+import { isSettingUnread, listSettingReaders } from '#cli/engine/plan/skips.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatScope } from '#cli/repository/scopes.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';

@@ -27,7 +27,7 @@ import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
 import { TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
+import { getScalarSetting } from '#cli/engine/run/tool-runs/placeholders.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { extractProseLines } from '#cli/parsers/formats/markdown.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';

@@ -7,7 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { acquireBuildLock, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';

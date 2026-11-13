@@ -7,7 +7,7 @@ import { createFileTree } from 'testdirs';
 
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
 import { REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';

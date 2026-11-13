@@ -1,99 +1,79 @@
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
 import { expect, spyOn, test } from 'bun:test';
 
-import { runChecks } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import type { CheckProgress } from '#cli/types/engine/run.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { waitForFile } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { printProgress } from '#cli/engine/run/progress.ts';
+import { setOutputOptions } from '#cli/system/terminal.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 
-test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
-    const tables = stringify({
-        ignore: [{ check: 'project/fast', rule: 'demo', reason: 'The sandbox tests filtered progress.' }],
-        command_check: [
-            {
-                id: 'project/fast',
-                paths: ['source.sh'],
-                stage: 'commit',
-                command: buildProgramCommand(
-                    'fakes/tool',
-                    '--stdout',
-                    'source.sh:demo:Ignored finding\n',
-                    '--exit',
-                    '1',
-                ),
-                output: { format: 'regex', pattern: '^(?<file>[^:]+):(?<rule>[^:]+):(?<message>.*)$' },
-            },
-            {
-                id: 'project/waiting',
-                paths: ['source.sh'],
-                stage: 'commit',
-                command: buildProgramCommand('fakes/tool', '--until', 'completed'),
-            },
-        ],
-    });
-    await using sandbox = await createGitSandbox({
-        'source.sh': 'echo example\n',
-        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
-    });
-
-    const finished: number[] = [];
-    const ready = Promise.withResolvers<number>();
-    const running = runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({
-            only: ['project/fast', 'project/waiting'],
-            onProgress: (progress) => {
-                finished.push(progress.finished);
-                if (progress.finished === 1) ready.resolve(progress.finished);
-            },
-        }),
-    );
-    await Promise.race([ready.promise, running]);
-    await writeFile(join(sandbox.path, 'completed'), 'ready');
-    const result = await running;
-    expect(result.report.exitCode).toBe(0);
-    expect(finished).toStrictEqual([1, 2]);
-    expect(result.report.checks.map((each) => each.check)).toStrictEqual(['project/fast', 'project/waiting']);
-    expect(result.report.checks[0]).toMatchObject({ status: 'passed', findings: [] });
+test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {
+    const terminal: string[] = [];
+    const log: string[] = [];
+    setOutputOptions({ isJson: false, isVerbose: false });
+    using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color' });
+    for (const [isTerminal, lines] of [
+        [true, terminal],
+        [false, log],
+    ] as const) {
+        using _terminals = fakeTerminals([
+            [process.stdout, true],
+            [process.stderr, isTerminal],
+        ]);
+        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+            lines.push(String(chunk));
+            return true;
+        });
+        const place = { total: 3, comparison: null };
+        printProgress({ ...place, kind: 'finished', check: 'bash/shfmt', scope: '', duration: 1200, finished: 1 });
+        printProgress({
+            ...place,
+            kind: 'running',
+            running: [
+                { check: 'python/ruff', scope: 'api' },
+                { check: 'javascript/eslint', scope: '' },
+            ],
+            elapsed: 10_000,
+            finished: 1,
+        });
+        printProgress({
+            ...place,
+            kind: 'finished',
+            check: 'python/ruff',
+            scope: 'api',
+            duration: 12_300,
+            finished: 2,
+        });
+    }
+    expect(terminal).toHaveLength(3);
+    for (const line of terminal) expect(line).toStartWith('\r\u{1B}[2K');
+    expect(log).toStrictEqual([
+        'running  api  python/ruff and javascript/eslint  10.0s\n',
+        'done  api  python/ruff  12.3s\n',
+    ]);
 });
 
-test('a check still running at the progress interval is reported as running, and then as finished', async () => {
-    const command = buildProgramCommand('fakes/tool', '--write', 'started=yes', '--until', 'completed');
-    const waiting = { id: 'project/waiting', paths: ['notes.txt'], stage: 'commit', command };
-    await using sandbox = await createGitSandbox({
-        'notes.txt': 'plain\n',
-        'gspot.toml': buildSandboxSettings([], { tables: stringify({ command_check: [waiting] }) }),
-    });
-    const events: CheckProgress[] = [];
-    const ticks: Array<() => void> = [];
-    using _clock = spyOn(globalThis, 'setInterval').mockImplementation(((tick: () => void) => {
-        ticks.push(tick);
-        return 0;
-    }) as typeof setInterval);
-    const running = runChecks(
-        await openSession(sandbox.path),
-        buildRunOptions({
-            only: ['project/waiting'],
-            onProgress: (progress) => {
-                events.push(progress);
-            },
-        }),
-    );
-    expect(await waitForFile(join(sandbox.path, 'started'))).toBe(true);
-    for (const tick of ticks) tick();
-    await writeFile(join(sandbox.path, 'completed'), 'ready');
-    await running;
-    expect(events.find(({ kind }) => kind === 'running')).toMatchObject({
-        running: [{ check: 'project/waiting', scope: '' }],
-        finished: 0,
-        total: 1,
-    });
-    expect(events.at(-1)).toMatchObject({ kind: 'finished', check: 'project/waiting', finished: 1 });
-});
+test.each([{ TERM: 'dumb' }, { NO_COLOR: '1' }])(
+    'a terminal with %p gets the plain progress lines, without control sequences',
+    (environment) => {
+        const lines: string[] = [];
+        setOutputOptions({ isJson: false, isVerbose: false });
+        using _environment = overrideEnvironment({ NO_COLOR: undefined, TERM: 'xterm-256color', ...environment });
+        using _terminals = fakeTerminals([
+            [process.stdout, true],
+            [process.stderr, true],
+        ]);
+        using _write = spyOn(process.stderr, 'write').mockImplementation((chunk) => {
+            lines.push(String(chunk));
+            return true;
+        });
+        printProgress({
+            kind: 'finished',
+            check: 'python/ruff',
+            scope: '',
+            duration: 12_300,
+            finished: 1,
+            total: 1,
+            comparison: null,
+        });
+        expect(lines).toStrictEqual(['done  python/ruff  12.3s\n']);
+    },
+);

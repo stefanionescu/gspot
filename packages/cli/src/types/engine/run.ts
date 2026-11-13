@@ -18,6 +18,7 @@ import type {
 } from '#cli/types/engine/plan.ts';
 import type { CommandLine, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
 import type { Check } from '#cli/types/manifests.ts';
+import type { PathBytes } from '#cli/types/system.ts';
 import type { RuleExplanations, Session } from '#cli/types/tools.ts';
 
 export type Finding = z.infer<typeof findingSchema>;
@@ -34,8 +35,6 @@ export type FinishedRun = {
     results: CheckResult[];
     fixes: FixReport | undefined;
 };
-
-export type PathBytes = Map<string, Buffer | undefined>;
 
 export type FixRounds = { results: FixResult[]; before: PathBytes; after: PathBytes };
 

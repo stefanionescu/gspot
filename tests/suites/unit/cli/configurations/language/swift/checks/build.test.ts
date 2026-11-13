@@ -6,7 +6,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import {
     FAILED_BUILD_FINDINGS,

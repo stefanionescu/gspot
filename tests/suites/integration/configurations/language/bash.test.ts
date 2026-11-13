@@ -4,9 +4,9 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { planChecks } from '#cli/engine/plan.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { parseCommandFindings } from '#cli/engine/tool-runs/output.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';

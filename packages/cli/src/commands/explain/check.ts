@@ -1,27 +1,17 @@
 import { CODE_MARK } from '#cli/config/commands/help.ts';
-import {
-    LINT_RULE_LABELS,
-    REPOSITORY_COMMAND,
-    RUN_IN_COPY_MESSAGE,
-    SELECTED_YES_MESSAGE,
-} from '#cli/config/commands/lookup.ts';
-import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
-import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
+import { REPOSITORY_COMMAND, RUN_IN_COPY_MESSAGE, SELECTED_YES_MESSAGE } from '#cli/config/commands/lookup.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
-import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
 import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { findCheck } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { isConfigurationSelected } from '#cli/settings/scopes.ts';
-import { findRuleSetting } from '#cli/settings/validation/rules.ts';
 import { formatArgumentSelector } from '#cli/settings/values/paths.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { quoteArgument, quoteCommand } from '#cli/system/text/quoting.ts';
-import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands.ts';
+import type { CheckExplanation, CheckIgnore, Explanation } from '#cli/types/commands.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';
+import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string, cwd: string): CheckIgnore[] {
     if (session === undefined) return [];
@@ -90,69 +80,6 @@ function formatCheckExplanation(facts: CheckExplanation): string {
     return `${lines.join('\n')}\n`;
 }
 
-function formatRuleOptions(
-    { check, configuration }: { check: Check; configuration: Configuration | undefined },
-    tool: string | undefined,
-    identifier: string,
-): string | undefined {
-    if (tool === undefined || configuration === undefined) return undefined;
-    if (!hasRuleExplanations(check, selectCheckCode(check), identifier)) return undefined;
-    const owner = findRuleSetting(tool, identifier);
-    if (owner !== undefined) return `gspot set ${owner} <value>`;
-    const key = `tools.${tool}.rules`;
-    const setting = SETTINGS_BY_CONFIGURATION.get(configuration.name)?.find(({ name }) => name === key);
-    if (setting?.type !== 'table') return undefined;
-    const ruleExample = quoteArgument(`{ ${JSON.stringify(identifier)} = [<options>] }`);
-    return `gspot set ${quoteArgument(key)} ${ruleExample}`;
-}
-
-function formatLintRuleLines(facts: LintRuleExplanation): string[] {
-    const { tool, rule, page } = facts;
-    const pageLines = page === null ? [] : [`The tool's page: ${page}`];
-    if (page === null && tool !== null) pageLines.push(`Read the ${tool} documentation for ${rule}.`);
-    return [
-        `${facts.check} ${rule}`,
-        '',
-        ...LINT_RULE_LABELS.flatMap(([key, label]) => (facts[key] === null ? [] : [`${label}: ${facts[key]}`])),
-        ...(facts.explanation === null ? [] : ['', facts.explanation]),
-        ...pageLines,
-        '',
-        'Ignore it only with a reason your team accepts.',
-        `Ignore it everywhere: ${facts.turnOff.everywhere}`,
-        ...(facts.turnOff.paths === null ? [] : [`Ignore it for some paths: ${facts.turnOff.paths}`]),
-        ...(facts.changeOptions === null ? [] : [`Change its options: ${facts.changeOptions}`]),
-    ];
-}
-
-function buildRuleDocFacts(
-    docs: RuleExplanation,
-    { verbose }: { verbose: boolean | undefined },
-): Pick<LintRuleExplanation, 'page' | 'description' | 'why' | 'fix' | 'example' | 'explanation'> {
-    const { url, description, why, fix, example } = docs;
-    const explanation = verbose === true ? (docs.explanation ?? null) : null;
-    return {
-        page: url ?? null,
-        description: description ?? null,
-        why: why ?? null,
-        fix: fix ?? null,
-        example: example ?? null,
-        explanation,
-    };
-}
-
-function findRuleCheck(
-    checkId: string,
-    session: Session | undefined,
-): { check: Check; configuration: Configuration | undefined } | undefined {
-    const found = findCheck(checkId, session?.settings.commandChecks);
-    if (found !== undefined && !canIgnoreRule(found.check, selectCheckCode(found.check)))
-        throw new GspotError(
-            'arguments',
-            `gspot cannot explain one lint rule of ${checkId}. Leave out the rule to explain the whole check.`,
-        );
-    return found;
-}
-
 function buildCheckOrigin(
     check: Check,
     configuration: Configuration | undefined,
@@ -215,43 +142,4 @@ export function explainCheck(session: Session | undefined, checkId: string, cwd:
     if (found === undefined) return undefined;
     const facts = buildCheckExplanation(found, session, cwd);
     return { kind: 'check', subject: checkId, text: formatCheckExplanation(facts), facts };
-}
-
-/**
-Explain one lint rule: its page, its description from the installed tool, and how to ignore it or change its
-options. A rule of a command check gets the help of its check and the command that ignores it.
-
-@param options.session the repository settings and tool project, when available.
-@returns the explanation. A name outside the rules that gspot reads gets the help of its check.
-@throws GspotError when gspot cannot name one lint rule of the check, when no shipped check and no command check has
-this name, or when the check lists its rules and this is not one.
-*/
-export async function explainLintRule(
-    root: string,
-    checkId: string,
-    identifier: string,
-    { verbose, session }: { verbose?: boolean; session?: Session },
-): Promise<Explanation> {
-    const found = findRuleCheck(checkId, session);
-    if (found === undefined) throw buildUnknownRuleError(identifier, checkId);
-    const tool = findRuleTool(found.check);
-    const docs = (await readListedRuleExplanation(root, found.check, identifier, session)) ?? { fix: found.check.help };
-    const ignore = `gspot ignore ${quoteArgument(found.check.id)} --rule ${quoteArgument(identifier)}`;
-    const facts: LintRuleExplanation = {
-        tool: tool ?? null,
-        rule: identifier,
-        check: found.check.id,
-        ...buildRuleDocFacts(docs, { verbose }),
-        turnOff: {
-            everywhere: `${ignore} --reason "<why>"`,
-            paths: found.check.id === WEAKENINGS_CHECK ? null : `${ignore} --paths "<path>" --reason "<why>"`,
-        },
-        changeOptions: formatRuleOptions(found, tool, identifier) ?? null,
-    };
-    return {
-        kind: 'lint-rule',
-        subject: `${checkId} ${identifier}`,
-        text: `${formatLintRuleLines(facts).join('\n')}\n`,
-        facts,
-    };
 }

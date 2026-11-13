@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir, type TestdirResult } from 'testdirs';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as environment from '#cli/system/environment.ts';
 import type { RunResult } from '#cli/types/engine/run.ts';

@@ -137,6 +137,7 @@ export const NAMED_CATEGORIES = [
     'path_parameters',
 ] as const;
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
+export const ROOT_RUNS = ['once', 'history'] as const;
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
 export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;

@@ -10,8 +10,8 @@ import {
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/validation.ts';
 import { hasReleasedScanner } from '#cli/configurations/general/dependencies/generate.ts';
+import { findEmptySetting } from '#cli/engine/plan/skips.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { findEmptySetting } from '#cli/engine/skips.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { formatApplyReport, listInstallNotes } from '#cli/generation/report.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';

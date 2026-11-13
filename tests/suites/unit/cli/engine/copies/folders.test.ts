@@ -7,7 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -6,7 +6,7 @@ import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/co
 import { FILTER_ATTRIBUTE, LFS_FILTER, SYMLINK_MODE } from '#cli/config/repository/files.ts';
 import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
-import { getMaxFileBytes } from '#cli/engine/files.ts';
+import { getMaxFileBytes } from '#cli/engine/plan/files.ts';
 import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';

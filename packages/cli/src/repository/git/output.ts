@@ -17,7 +17,7 @@ import {
 } from '#cli/config/repository/git.ts';
 import { OCTAL_RADIX } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { decodeUtf8, readContents } from '#cli/system/files/reads.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
 import type { GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
 
@@ -153,4 +153,9 @@ export function listConflictMarkerLines(text: string): number[] {
         } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index + 1);
     }
     return markers;
+}
+
+export function listConflictedPaths(root: string, paths: string[]): string[] {
+    const contents = readContents(root, paths);
+    return paths.filter((path) => listConflictMarkerLines(contents.get(path)?.toString('utf8') ?? '').length > 0);
 }

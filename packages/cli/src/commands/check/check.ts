@@ -1,9 +1,9 @@
 import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
-import { addAbortSignal } from 'node:stream';
+import { isAbsolute, relative, resolve } from 'node:path';
 
+import { formatAnnotations } from '#cli/commands/check/annotations.ts';
 import { runPushCheck } from '#cli/commands/check/push.ts';
-import { formatAnnotations } from '#cli/commands/check/report.ts';
+import { runStagedCheck } from '#cli/commands/check/staged.ts';
 import { runTreeCheck } from '#cli/commands/check/tree.ts';
 import {
     CHECK_INPUT_HOOKS,
@@ -11,33 +11,21 @@ import {
     CHECK_STOPPED_MESSAGE,
     COMMIT_FILE_MESSAGE,
     EMPTY_CHECKS_MESSAGE,
-    GIT_SETUP_FILES_ARGUMENTS,
     GIT_STAGED_SETTINGS_ARGUMENTS,
     HOOK_REFUSAL_REASONS,
-    NOTHING_STAGED_MESSAGE,
-    PUSH_INPUT_MESSAGE,
     PUSH_STDIN_MESSAGE,
-    SETUP_PATHS,
-    STAGE_SETUP_MESSAGE,
-    UNSTAGED_TOOLS_NOTE,
 } from '#cli/config/commands/check.ts';
 import { BASE_OPTION, HOOK_OPTION, ONLY_OPTION, SKIP_OPTION } from '#cli/config/commands/help.ts';
 import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
-import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { buildEmptyRunReport } from '#cli/engine/report.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { readGitPaths, readGitText } from '#cli/repository/git/run.ts';
-import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { writeIndexTree } from '#cli/repository/revisions/files.ts';
+import { readGitText } from '#cli/repository/git/run.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runCancelableCommand } from '#cli/system/processes/signals.ts';
-import { rewriteProgress } from '#cli/system/terminal.ts';
-import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
+import { readPushInput, rewriteProgress } from '#cli/system/terminal.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type {
     CheckCommandJson,
     CheckFlags,
@@ -46,21 +34,6 @@ import type {
     CommandLocation,
 } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
-    cancelSignal.throwIfAborted();
-    const decoder = new TextDecoder('utf-8', { fatal: true });
-    let input = '';
-    try {
-        for await (const chunk of addAbortSignal(cancelSignal, process.stdin) as AsyncIterable<Buffer>)
-            input += decoder.decode(chunk, { stream: true });
-        return input + decoder.decode();
-    } catch (error) {
-        cancelSignal.throwIfAborted();
-        if (error instanceof TypeError) throw new GspotError('git', PUSH_INPUT_MESSAGE, { cause: error });
-        throw error;
-    }
-}
 
 function assertHookFlags(flags: CheckFlags, hook: NonNullable<CheckFlags['hook']>): void {
     const list = [
@@ -141,54 +114,6 @@ function selectOnlyStage({ only, hook }: CheckFlags): CheckOptions['stage'] {
 function formatMessageArgument(typed: string, cwd: string): string {
     if (!isAbsolute(typed) || !existsSync(typed)) return typed;
     return convertToPosixPath(relative(realpathSync(cwd), realpathSync(typed)));
-}
-
-async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promise<void> {
-    const indexed = await readGitPaths(root, GIT_SETUP_FILES_ARGUMENTS, { cancelSignal });
-    const unstaged = SETUP_PATHS.filter(
-        (path) => existsSync(join(root, path)) && indexed.every((file) => !file.startsWith(path)),
-    );
-    if (unstaged.length > 0)
-        throw new GspotError('git', `${formatNameState(unstaged, 'not staged')}. ${STAGE_SETUP_MESSAGE}`);
-}
-
-async function runStagedCheck(
-    root: string,
-    options: CheckOptions,
-    cancelSignal: AbortSignal,
-): Promise<CommandResult<CheckCommandJson>> {
-    const started = new Date();
-    await assertSetupStaged(root, cancelSignal);
-    const status = await readTreeStatus(root, cancelSignal);
-    if (!status.hasStagedChanges) {
-        const json = buildEmptyRunReport(options.stage ?? 'all', started, [NOTHING_STAGED_MESSAGE]);
-        return { text: `${NOTHING_STAGED_MESSAGE}\n`, json, exitCode: 0 };
-    }
-    const { staged: stagedPaths, unstaged, untracked } = status;
-    const unstagedPaths = new Set(unstaged);
-    const selection = {
-        content: 'index',
-        paths: stagedPaths,
-        unstagedChanges: stagedPaths.filter((path) => unstagedPaths.has(path)).length,
-    } as const;
-    // The disk holds the staged bytes, so checks run in place, unless gspot.toml has edits that the commit leaves out.
-    if (selection.unstagedChanges === 0 && !unstagedPaths.has(SETTINGS_FILE))
-        return await runTreeCheck(root, options, cancelSignal, {
-            session: { toolsRoot: root, untracked: { paths: [], unreadablePaths: untracked.unreadablePaths } },
-            started,
-            selection: { ...selection, reference: await writeIndexTree(root, cancelSignal) },
-        });
-    using copy = await copyRevision(root, { kind: 'index', paths: stagedPaths }, cancelSignal);
-    // The tools on disk follow the tool files on disk, and the copy asks for the tools of the staged settings.
-    const toolFiles = TOOL_PROJECT_FILES.filter((path) => unstagedPaths.has(path));
-    const changed = `${formatNameList(toolFiles)} ${toolFiles.length === 1 ? 'has' : 'have'}`;
-    return await runTreeCheck(copy.root, options, cancelSignal, {
-        session: { toolsRoot: root, unreadablePaths: copy.unreadablePaths },
-        started,
-        selection: { ...selection, reference: copy.tree },
-        ...(copy.dependencyNote !== undefined && { dependencyNote: copy.dependencyNote }),
-        ...(toolFiles.length > 0 && { missingToolsNote: UNSTAGED_TOOLS_NOTE.replace('<files>', () => changed) }),
-    });
 }
 
 async function runCheckSelection(

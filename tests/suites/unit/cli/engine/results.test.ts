@@ -1,63 +1,7 @@
 import { expect, test } from 'bun:test';
 
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { formatExplainCommand, mergeCheckResults, restoreCommandPaths, runBuiltInCheck } from '#cli/engine/results.ts';
-import { buildCheckSession } from '#cli/engine/run.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-test('the built-in dispatcher attaches the check ID and fixability to sparse findings, and keeps the help of a finding', async () => {
-    await using sandbox = await createGitSandbox({
-        'gspot.toml': buildSandboxSettings(['naming'], { level: 'all' }),
-        'source.js': 'export const source = 1;\n',
-    });
-    const session = await openSession(sandbox.path);
-    const planned = planSandboxCheck(session, 'naming/identifiers');
-    const result = await runBuiltInCheck(
-        () => [
-            { file: 'source.js', rule: 'name', message: 'Choose a descriptive name.' },
-            { file: 'source.js', rule: 'name', message: 'Choose another name.', help: 'Use the project vocabulary.' },
-        ],
-        buildCheckSession(session, CHECK_GENERATION),
-        planned,
-        {},
-    );
-    expect(result.status).toBe('failed');
-    expect(result.findings).toStrictEqual([
-        {
-            check: 'naming/identifiers',
-            fixable: false,
-            file: 'source.js',
-            rule: 'name',
-            message: 'Choose a descriptive name.',
-        },
-        {
-            check: 'naming/identifiers',
-            fixable: false,
-            file: 'source.js',
-            rule: 'name',
-            message: 'Choose another name.',
-            help: 'Use the project vocabulary.',
-        },
-    ]);
-});
-
-test.each([
-    ['bash/shellcheck', 'SC2086', 'gspot explain bash/shellcheck SC2086'],
-    ['repository/encoding', 'path-encoding', 'gspot explain repository/encoding path-encoding'],
-    ['repository/encoding', 'unlisted', 'gspot explain repository/encoding'],
-    ['typescript/tsc', 'TS2322', 'gspot explain typescript/tsc'],
-    ['javascript/eslint', 'import-lite/no-default-export', 'gspot explain javascript/eslint'],
-] as const)(
-    'the explain command of %s for %s names the rule only when the check has it listed',
-    (check, rule, command) => {
-        expect(formatExplainCommand({ check, rule }, selectCheckCode)).toBe(command);
-    },
-);
 
 test('a result from a copy names repository paths in its command and its note', () => {
     const base: CheckResult = {

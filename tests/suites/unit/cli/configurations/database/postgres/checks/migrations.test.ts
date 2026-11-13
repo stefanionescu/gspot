@@ -5,8 +5,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { readMigrations, selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import { runChecks } from '#cli/engine/run.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text/order.ts';

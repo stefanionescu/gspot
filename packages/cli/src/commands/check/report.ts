@@ -1,17 +1,11 @@
-import { randomUUID } from 'node:crypto';
 import { styleText } from 'node:util';
 
 import {
-    ANNOTATION_ESCAPES,
-    ANNOTATION_MESSAGE_CHARACTERS,
-    ANNOTATION_PROPERTY_CHARACTERS,
     CANCELED_RUN_MESSAGE,
     CHECK_STATUS_COLORS,
     FINDINGS_SHOWN,
     FIX_LABEL,
     FIX_SENTENCE,
-    FIXER_ERROR_PREFIX,
-    GITHUB_ANNOTATION_LIMIT,
     INSTALL_REMINDER,
     NOTE_STATUSES,
     RERUN_LABEL,
@@ -19,20 +13,16 @@ import {
     STANDARD_INSTALL_HELP,
     STATUS_LABEL_WIDTH,
     SUMMARY_STATUSES,
-    UNCHANGED_FIX_MESSAGE,
 } from '#cli/config/commands/check.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { formatCheckedContent } from '#cli/engine/report.ts';
+import { formatCheckedContent } from '#cli/engine/run/progress.ts';
 import { formatScopePrefix } from '#cli/repository/scopes.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { print, printWarning } from '#cli/system/terminal.ts';
 import { formatCount, formatSeconds } from '#cli/system/text/messages.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { CheckCommandJson } from '#cli/types/commands.ts';
-import type { CheckResult, CheckStatus, Finding, FixReport, RunReport } from '#cli/types/engine/run.ts';
+import type { CheckResult, CheckStatus, Finding, RunReport } from '#cli/types/engine/run.ts';
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];
@@ -209,28 +199,6 @@ function formatMissingChecks(checks: readonly CheckResult[]): string[] {
     return lines.length === 0 ? [] : [...lines, ''];
 }
 
-export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
-    for (const result of fixes.results) {
-        if (result.status !== 'failed') continue;
-        const note = result.note;
-        const detail =
-            note
-                .split('\n')
-                .find((line) => FIXER_ERROR_PREFIX.test(line))
-                ?.replace(FIXER_ERROR_PREFIX, '') ??
-            note.split('\n', 1)[0] ??
-            '';
-        const failure = detail.endsWith('.') ? detail.slice(0, -1) : detail;
-        const toolOutput = verbose
-            ? `\n${note
-                  .split('\n')
-                  .map((line) => `  ${line}`)
-                  .join('\n')}`
-            : '';
-        printWarning(`The ${result.check} fixer failed: ${failure}.${toolOutput}`);
-    }
-}
-
 export function formatRunReport(
     report: RunReport,
     {
@@ -258,61 +226,4 @@ export function formatRunReport(
         `Time: ${formatSeconds(report.duration)}. ${ending}`,
     );
     return `${formatComparison(report.comparison)}${lines.join('\n')}\n`;
-}
-
-/**
-Format one GitHub error annotation per finding, up to the number of error annotations that GitHub shows for one step.
-The annotations print after the report, once workflow commands run again. The escapes keep tool text from closing a
-property or from starting a second command.
-*/
-export function formatAnnotations(json: CheckCommandJson): string[] {
-    if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true' || 'error' in json) return [];
-    const reports = 'revisions' in json ? json.revisions.map(({ report }) => report) : [json];
-    const findings = reports.flatMap(({ checks }) => checks.flatMap((check) => check.findings));
-    return findings.slice(0, GITHUB_ANNOTATION_LIMIT).map((finding) => {
-        const properties = [
-            ['file', finding.file === '' ? undefined : finding.file],
-            ['line', finding.line === undefined ? undefined : String(finding.line)],
-            ['col', finding.column === undefined ? undefined : String(finding.column)],
-            ['title', [finding.check, finding.rule].filter((name) => name !== undefined).join(' ')],
-        ] as const;
-        const fields = properties.flatMap(([name, value]) =>
-            value === undefined
-                ? []
-                : [
-                      `${name}=${value.replaceAll(ANNOTATION_PROPERTY_CHARACTERS, (character) => ANNOTATION_ESCAPES[character] ?? character)}`,
-                  ],
-        );
-        const message = finding.message.replaceAll(
-            ANNOTATION_MESSAGE_CHARACTERS,
-            (character) => ANNOTATION_ESCAPES[character] ?? character,
-        );
-        return `::error ${fields.join(',')}::${message}`;
-    });
-}
-
-/**
-Stop GitHub workflow command parsing until the check's output has finished.
-*/
-export function beginCheckReport(): (() => void) | undefined {
-    if (readEnvironmentVariable('GITHUB_ACTIONS') !== 'true') return undefined;
-    const token = randomUUID();
-    print(`::stop-commands::${token}`);
-    return () => {
-        print(`::${token}::`);
-    };
-}
-
-export function formatFixes(fixes: FixReport): string[] {
-    const count = fixes.changed.length;
-    if (count === 0 && fixes.broken.length === 0 && fixes.conflicted.length === 0) return [UNCHANGED_FIX_MESSAGE];
-    return [
-        ...(count === 0
-            ? []
-            : [`Fixed ${formatCount(count, 'file')}: ${fixes.changed.join(', ')}. The changes are not staged.`]),
-        ...fixes.broken.map(
-            (path) => `The fixers left a syntax error in ${path}; gspot put back the file as it was before the fixers.`,
-        ),
-        ...fixes.conflicted.map((path) => `The fixers skipped ${path}, because it holds merge-conflict markers.`),
-    ];
 }

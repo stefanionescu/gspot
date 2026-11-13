@@ -5,6 +5,8 @@ import type { Result } from 'execa';
 
 export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
 
+export type PathBytes = Map<string, Buffer | undefined>;
+
 export type Files = {
     readCanonicalPath(path: string): string;
     list(path: string): string[];

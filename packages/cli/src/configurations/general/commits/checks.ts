@@ -12,7 +12,7 @@ import {
 import { PRIVATE_FILE } from '#cli/config/system.ts';
 import { REFERENCE_EXPLANATIONS } from '#cli/configurations/general/commits/explanations.ts';
 import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { readGitSetting, runGit } from '#cli/repository/git/run.ts';
 import { readSelectedCommits } from '#cli/repository/revisions/push.ts';
 import { remember } from '#cli/system/cache.ts';

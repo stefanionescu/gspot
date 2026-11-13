@@ -6,7 +6,7 @@ import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/co
 import { GSPOT_FOLDER, NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { listUnreadFiles } from '#cli/engine/files.ts';
+import { listUnreadFiles } from '#cli/engine/plan/files.ts';
 import { listWorkspaceSources } from '#cli/repository/projects/workspaces.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';

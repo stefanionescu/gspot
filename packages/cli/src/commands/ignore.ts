@@ -3,11 +3,9 @@ import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION, REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
-import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { canIgnoreRule } from '#cli/engine/results.ts';
+import { findRuleCheck, readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { assertCheckExists, findCheck, listCheckIds } from '#cli/manifests/checks.ts';
+import { assertCheckExists, listCheckIds } from '#cli/manifests/checks.ts';
 import { findToolName } from '#cli/manifests/tools.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
 import { mergeIgnore } from '#cli/settings/toml/edit.ts';
@@ -18,7 +16,6 @@ import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CommandDefinition, EditContext, IgnoreFlags, IgnoreOptions } from '#cli/types/commands.ts';
-import type { Check } from '#cli/types/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -29,21 +26,13 @@ function formatIgnoreSummary(options: IgnoreOptions, paths: string[] | undefined
     return `Ignored ${target}${suffix}.`;
 }
 
-function findRuleCheck({ settings }: Session, checkId: string): Check {
-    const check = findCheck(checkId, settings.commandChecks)?.check;
-    if (check === undefined || !canIgnoreRule(check, selectCheckCode(check)))
-        throw new GspotError(
-            'arguments',
-            `gspot cannot ignore one lint rule of ${checkId}. Leave out --rule, and give --paths to ignore the check for those files.`,
-        );
-    return check;
-}
-
 async function assertDocumentedRule(
     session: Session,
     { checkId, rule }: { checkId: string; rule: string },
 ): Promise<void> {
-    const check = findRuleCheck(session, checkId);
+    const refusal = `gspot cannot ignore one lint rule of ${checkId}. Leave out --rule, and give --paths to ignore the check for those files.`;
+    const check = findRuleCheck(checkId, session.settings.commandChecks, refusal)?.check;
+    if (check === undefined) throw new GspotError('arguments', refusal);
     if (findToolName(check) === 'ruff' && RUFF_RULE_PREFIX.test(rule)) return;
     await readListedRuleExplanation(session.root, check, rule, session);
 }

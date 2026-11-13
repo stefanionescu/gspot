@@ -1,0 +1,262 @@
+import { existsSync } from 'node:fs';
+import { readFile, unlink, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import { stringify } from '@decimalturn/toml-patch';
+import { expect, spyOn, test } from 'bun:test';
+
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
+import { runFixers } from '#cli/engine/run/fixes.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import * as manifests from '#cli/manifests/read.ts';
+import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
+import { buildFixerSettings, buildRunOptions, planFixer } from '#tests/setup/cli/run.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+
+test('the fixer tool owns crash detection when exit is 0', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(
+        session,
+        buildProgramCommand('fakes/tool', '--stderr', 'Fatal: cannot write\n', '--exit', '0'),
+    );
+    planned.check = { ...planned.check, exit_codes: [3] };
+    const shipped = manifests.readConfigurations();
+    const configuration = shipped.values().next().value!;
+    using _configurations = spyOn(manifests, 'readConfigurations').mockReturnValue(
+        new Map([
+            ...shipped,
+            [
+                configuration.name,
+                { ...configuration, tools: [{ ...planned.tool!, crash_pattern: '^Fatal:' }, ...configuration.tools] },
+            ],
+        ]),
+    );
+    planned.tool = { ...planned.tool!, name: 'different-checker', crash_pattern: '^Checker-only:' };
+    const failedRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const failed = failedRun.results[0];
+    expect(failed).toMatchObject({
+        status: 'failed',
+        changed: [],
+        note: 'Fatal: cannot write',
+    });
+});
+
+test.each([...FIXER_RESULTS])(
+    '$name classifies $status from the exit code and the bytes it leaves',
+    async ({ toolArguments, exit_codes: exitCodes, status, after, note }) => {
+        await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+        const session = await openSession(sandbox.path);
+        const planned = planFixer(session, buildProgramCommand('fakes/tool', ...toolArguments));
+        if (exitCodes !== undefined) planned.check = { ...planned.check, exit_codes: [...exitCodes] };
+        const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+        const result = resultRun.results[0];
+        expect({ status: result!.status, note: 'note' in result! ? result.note : undefined }).toStrictEqual({
+            status,
+            note,
+        });
+        expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe(after);
+        expect(result!.changed).toStrictEqual(after === 'original' ? [] : ['source.txt']);
+    },
+);
+
+test('a fixer canceled while it runs keeps its changed paths and cancels the later fixers', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    const marker = join(sandbox.path, 'fixer-ready');
+    const controller = new AbortController();
+    const session = await openSession(sandbox.path);
+    session.cancelSignal = controller.signal;
+    const first = planFixer(
+        session,
+        buildProgramCommand('fakes/tool', '--write', 'source.txt=partial', '--mark', marker, '--wait'),
+    );
+    // Fixers of one check run together, so the later fixer takes another check ID.
+    const second = { ...first, check: { ...first.check, id: 'sandbox/later' } };
+    const running = runFixers(buildCheckSession(session, CHECK_GENERATION), [first, second], selectCheckCode);
+    expect(await waitForFile(marker)).toBe(true);
+    controller.abort(143);
+    const { results } = await running;
+    expect(results[0]).toMatchObject({
+        status: 'canceled',
+        changed: ['source.txt'],
+        note: 'sandbox/fixer was canceled.',
+    });
+    expect(results[1]?.status).toBe('canceled');
+    await waitForExit(Number(await readFile(marker, 'utf8')));
+});
+
+test('a fixer that swaps one invalid UTF-8 byte for another reports the file as changed', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write-hex', 'source.txt=fe'));
+    await writeFile(join(sandbox.path, 'source.txt'), Buffer.from([0xff]));
+    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const result = resultRun.results[0];
+    expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
+    expect(await readFile(join(sandbox.path, 'source.txt'))).toStrictEqual(Buffer.from([0xfe]));
+});
+
+test('a fixer that deletes an empty file reports it as changed', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': '' });
+
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
+    const resultRun = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    const result = resultRun.results[0];
+    expect(result).toMatchObject({ status: 'changed', changed: ['source.txt'] });
+    expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
+});
+
+test('a skipped fixer reports skipped, and a fixer whose program is missing fails', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=wrong'));
+    const skippedRun = await runFixers(
+        buildCheckSession(session, CHECK_GENERATION),
+        [{ ...planned, skip: { cause: 'level', note: 'Not selected.' } }],
+        selectCheckCode,
+    );
+    const skipped = skippedRun.results[0]!;
+    const failedRun = await runFixers(
+        buildCheckSession(session, CHECK_GENERATION),
+        [{ ...planned, check: { ...planned.check, fix: [join(sandbox.path, 'absent-tool')] } }],
+        selectCheckCode,
+    );
+    const failed = failedRun.results[0]!;
+    expect(skipped.status).toBe('skipped');
+    expect(failed).toMatchObject({
+        status: 'failed',
+        note: expect.stringContaining(join(sandbox.path, 'absent-tool')) as string,
+    });
+});
+
+test('a fixer runs its own program when the check program is missing', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=corrected'));
+    const resultRun = await runFixers(
+        buildCheckSession(session, CHECK_GENERATION),
+        [{ ...planned, tool: { name: join(sandbox.path, 'absent-check-tool'), installers: {}, kind: 'program' } }],
+        selectCheckCode,
+    );
+    const result = resultRun.results[0]!;
+    expect(result.status).toBe('changed');
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
+});
+
+test('a fix that exits nonzero fails the run even when its check passes', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+
+    const session = await openSession(sandbox.path);
+    const result = await runChecks(session, buildRunOptions({ fix: true, only: ['sandbox/fixer'] }));
+    expect(result.report.checks[0]?.status).toBe('passed');
+    expect(result.report.exitCode).toBe(2);
+    expect(result.report.failed).toStrictEqual(['sandbox/fixer']);
+    expect(result.fixes?.results[0]?.status).toBe('failed');
+});
+
+test('a fixer of a deleted trigger path restores it', async () => {
+    await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'source.txt=restored'));
+    await unlink(join(sandbox.path, 'source.txt'));
+    const fixed = await runFixers(
+        buildCheckSession(session, CHECK_GENERATION),
+        [{ ...planned, skip: undefined, files: [], triggerPaths: ['source.txt'] }],
+        selectCheckCode,
+    );
+    expect(fixed.changed).toStrictEqual(['source.txt']);
+    expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('restored');
+});
+
+test('a fixer that breaks a file with an unstaged edit puts the file back and exits 2', async () => {
+    const tables = stringify({
+        command_check: [
+            {
+                id: 'project/merge-imports',
+                stage: 'commit',
+                paths: ['*.ts'],
+                command: buildProgramCommand('fakes/tool'),
+                fix: buildProgramCommand('fakes/tool', '--text', "import Hls, type { A } from 'hls.js';\n", '{files}'),
+                output: { format: 'none' },
+            },
+        ],
+    });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { rules: true, tables }),
+        'client.ts': "import Hls from 'hls.js';\nexport { Hls };\n",
+        'notes.ts': "export const note = 'kept';\n",
+    });
+    commitAll(sandbox.path);
+    await writeFile(join(sandbox.path, 'client.ts'), "export const localEdit = 'keep';\n");
+    const before = await readFile(join(sandbox.path, 'client.ts'));
+    const session = await openSession(sandbox.path);
+    const result = await runChecks(session, buildRunOptions({ only: ['project/merge-imports'], fix: true }));
+    expect(result.fixes?.broken).toStrictEqual(['client.ts', 'notes.ts']);
+    expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
+    expect(result.fixes?.changed).toStrictEqual([]);
+    expect(result.report.exitCode).toBe(2);
+    expect(result.report.failed).toStrictEqual([]);
+});
+
+test('a file with merge-conflict markers stays out of every fixer and is listed as conflicted', async () => {
+    const conflict = 'one\n<<<<<<< HEAD\ntwo\n=======\nthree\n>>>>>>> branch\n';
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildFixerSettings(['*.txt']),
+        'conflict.txt': conflict,
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'conflict.txt=lost\n'));
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    expect(await readFile(join(sandbox.path, 'conflict.txt'), 'utf8')).toBe(conflict);
+    expect(fixed.conflicted).toStrictEqual(['conflict.txt']);
+});
+
+test('a fixer that leaves a code file that fails to parse gets the file put back and listed as broken', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildFixerSettings(['*.ts']),
+        'client.ts': 'export const client = true;\n',
+        'notes.ts': 'export const note = false;\n',
+    });
+    const before = await readFile(join(sandbox.path, 'client.ts'));
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(
+        session,
+        buildProgramCommand(
+            'fakes/tool',
+            '--write',
+            'client.ts=export const =;',
+            '--write',
+            'notes.ts=export const note = true;\n',
+        ),
+    );
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    expect(fixed.broken).toStrictEqual(['client.ts']);
+    expect(fixed.changed).toStrictEqual(['notes.ts']);
+    expect(await readFile(join(sandbox.path, 'client.ts'))).toStrictEqual(before);
+    expect(await readFile(join(sandbox.path, 'notes.ts'), 'utf8')).toBe('export const note = true;\n');
+});
+
+test('a file that did not parse before the fix keeps the fixer bytes and counts as changed', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildFixerSettings(['*.ts']),
+        'client.ts': 'export const =;',
+    });
+    const session = await openSession(sandbox.path);
+    const planned = planFixer(session, buildProgramCommand('fakes/tool', '--write', 'client.ts=export let =;'));
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
+    expect(fixed.broken).toStrictEqual([]);
+    expect(fixed.changed).toStrictEqual(['client.ts']);
+    expect(await readFile(join(sandbox.path, 'client.ts'), 'utf8')).toBe('export let =;');
+});

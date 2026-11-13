@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 import executables from 'which';
 
-import { runChecks } from '#cli/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';

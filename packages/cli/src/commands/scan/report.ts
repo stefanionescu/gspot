@@ -18,7 +18,7 @@ import {
 import { INCOMPLETE_STATUSES, RAN_STATUSES } from '#cli/config/engine.ts';
 import { BYTES_PER_MEGABYTE, GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { canIgnoreRule } from '#cli/engine/results.ts';
+import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/report.ts';
 import { readShippedChecks } from '#cli/manifests/checks.ts';
 import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
@@ -114,7 +114,7 @@ function formatRuleRows(rules: ScanCategory['rules']): string[] {
     return [
         ...rules.map((each) => `${[each.check, each.rule].join(' ').trimEnd()}  ${formatCount(each.count, 'finding')}`),
         rule !== '' && found !== undefined && canIgnoreRule(found, selectCheckCode(found))
-            ? `To leave a rule out: gspot ignore ${quoteArgument(check)} --rule ${quoteArgument(rule)} --reason "<why>"`
+            ? `To leave a rule out: ${formatIgnoreCommand(check, rule)}`
             : `To leave files out: gspot ignore ${quoteArgument(check)} --paths <path> --reason "<why>"`,
     ];
 }

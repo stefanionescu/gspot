@@ -18,7 +18,7 @@ import {
     TRIVIAL_FUNCTION_RULES,
 } from '#cli/config/configurations/structure.ts';
 import { selectGrammar } from '#cli/configurations/syntax.ts';
-import { listCheckFiles } from '#cli/engine/files.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { getLimit } from '#cli/settings/tables.ts';

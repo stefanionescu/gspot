@@ -8,8 +8,8 @@ import {
     VENDORED_ELIGIBLE_MESSAGE,
 } from '#cli/config/commands/lookup.ts';
 import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
-import { listCheckedFiles } from '#cli/engine/files.ts';
-import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
+import { buildCheckState, planChecks } from '#cli/engine/plan/checks.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { formatScope, selectScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';

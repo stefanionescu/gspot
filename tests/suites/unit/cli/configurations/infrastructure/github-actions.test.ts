@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { buildCheckSession, runCheckCode } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

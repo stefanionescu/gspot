@@ -6,8 +6,8 @@ import {
     TOOLS_MISSING_MESSAGE,
 } from '#cli/config/commands/setup.ts';
 import { EXIT_FINDINGS } from '#cli/config/system.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { listGeneratedChangeLines } from '#cli/generation/report.ts';
 import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { openFiles } from '#cli/system/files/open.ts';

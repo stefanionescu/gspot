@@ -14,7 +14,7 @@ import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { UV_FLAGS, UV_TOOL } from '#cli/config/tools/installers.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';

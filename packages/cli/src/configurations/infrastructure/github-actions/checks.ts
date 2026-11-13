@@ -21,7 +21,7 @@ import { GIT_METADATA_NAME, PRIVATE_FILE } from '#cli/config/system.ts';
 import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 import { readText } from '#cli/system/files/reads.ts';

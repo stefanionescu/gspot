@@ -3,7 +3,7 @@ import { dirname, join, relative } from 'node:path/posix';
 
 import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation/files.ts';
 import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
-import { getConfigTarget } from '#cli/engine/tool-runs/placeholders.ts';
+import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
 import { formatHeader } from '#cli/generation/builders/header.ts';
 import { buildIgnoreSections } from '#cli/generation/configs/ignores.ts';
 import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';

@@ -8,9 +8,9 @@ import {
     SCOPES_NAMED,
     VALUE_WIDTH,
 } from '#cli/config/commands/lookup.ts';
-import { isRepositoryRun, isRootOnlyCheck } from '#cli/engine/files.ts';
-import { buildCheckState, planChecks } from '#cli/engine/plan.ts';
+import { buildCheckState, planChecks } from '#cli/engine/plan/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatScope } from '#cli/repository/scopes.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';

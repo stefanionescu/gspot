@@ -1,14 +1,17 @@
+import { addAbortSignal } from 'node:stream';
 import { stripVTControlCharacters, styleText } from 'node:util';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import {
     EXIT_ERROR,
     PROGRESS_CLEAR,
+    PUSH_INPUT_MESSAGE,
     RESULT_JSON_INDENT,
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
 } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { CommandFailureJson, CommandJson, CommandResult, OutputOptions, OutputState } from '#cli/types/system.ts';
 
 const options: OutputState = { isJson: false, isVerbose: false, notes: [] };
@@ -94,6 +97,21 @@ export function rewriteProgress(text: string): boolean {
 export function print(text: string): void {
     if (options.isJson) return;
     writePrintableLine(process.stdout, text);
+}
+
+export async function readPushInput(cancelSignal: AbortSignal): Promise<string> {
+    cancelSignal.throwIfAborted();
+    const decoder = new TextDecoder('utf-8', { fatal: true });
+    let input = '';
+    try {
+        for await (const chunk of addAbortSignal(cancelSignal, process.stdin) as AsyncIterable<Buffer>)
+            input += decoder.decode(chunk, { stream: true });
+        return input + decoder.decode();
+    } catch (error) {
+        cancelSignal.throwIfAborted();
+        if (error instanceof TypeError) throw new GspotError('git', PUSH_INPUT_MESSAGE, { cause: error });
+        throw error;
+    }
 }
 
 /**

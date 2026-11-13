@@ -10,7 +10,7 @@ import {
     RAISES_MISMATCH_RULE,
 } from '#cli/config/configurations/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
+import { runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope } from '#cli/repository/scopes.ts';

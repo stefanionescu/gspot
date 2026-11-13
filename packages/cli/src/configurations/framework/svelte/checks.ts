@@ -8,8 +8,8 @@ import {
     SVELTE_TSCONFIG_FLAG,
 } from '#cli/config/configurations/framework.ts';
 import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { failureMessageSchema, svelteFindingSchema } from '#cli/schemas/configurations.ts';

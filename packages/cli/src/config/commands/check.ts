@@ -12,17 +12,14 @@ export const CHECK_STAGES = ['commit', 'push'] as const;
 export const CHECK_STOPPED_MESSAGE = 'Check stopped before every check finished.';
 export const COMMIT_FILE_MESSAGE = '--hook commit-msg needs one commit message file after --.';
 export const EMPTY_CHECKS_MESSAGE = 'Name a check, such as python/ruff.';
-export const GIT_SETUP_FILES_ARGUMENTS = ['ls-files', '--cached', '-z', '--', SETTINGS_FILE, GSPOT_FOLDER] as const;
 export const GIT_STAGED_SETTINGS_ARGUMENTS = ['show', `:${SETTINGS_FILE}`] as const;
 export const HOOK_REFUSAL_REASONS = {
     'pre-push': 'it checks the pushed commits',
     'commit-msg': 'it checks the commit message',
 } as const;
 export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
-export const PUSH_INPUT_MESSAGE = 'Git sent pre-push input that is not UTF-8 text.';
 export const PUSH_STDIN_MESSAGE =
     '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';
-export const SETUP_PATHS = [SETTINGS_FILE, `${GSPOT_FOLDER}/`] as const;
 export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
 export const UNSTAGED_TOOLS_NOTE = `<files> changes that are not staged, so the installed tools are not the tools of the staged settings. ${STAGE_SETUP_MESSAGE}`;
 
