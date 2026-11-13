@@ -1,9 +1,8 @@
 import { stringify } from 'yaml';
 
+import { SCHEMA_CHECK_NOTES } from '#cli/config/configurations/language.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-
-const V8R_NOTES = ['# The other selected tools check files without a known schema.'];
 
 function buildV8rFile(planned: PlannedConfig): string {
     const schemas = getTable(planned.scope.settings, 'json').schemas.map(({ paths, url }) => ({
@@ -12,7 +11,7 @@ function buildV8rFile(planned: PlannedConfig): string {
         location: url,
     }));
     return [
-        ...V8R_NOTES,
+        ...SCHEMA_CHECK_NOTES,
         stringify({
             ignoreErrors: true,
             ...(schemas.length > 0 && { customCatalog: { schemas } }),

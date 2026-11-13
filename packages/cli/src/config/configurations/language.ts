@@ -65,6 +65,9 @@ export const TAILWIND_AT_RULES = [
 // import paths
 export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;
 
+// json generated config
+export const SCHEMA_CHECK_NOTES = ['# The other selected tools check files without a known schema.'];
+
 // sql generated config
 export const SQLFLUFF_CAPITALISATION = {
     'capitalisation.keywords': { capitalisation_policy: 'upper' },
