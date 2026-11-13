@@ -1,6 +1,7 @@
 import { dirname, join, relative } from 'node:path';
 
 import {
+    CONFIG_FOLDER_TEMPLATE,
     JAVASCRIPT_BUNDLED_IMPORTS,
     JAVASCRIPT_EXTENSIONS,
     JAVASCRIPT_IGNORED_GLOBS,
@@ -38,7 +39,11 @@ function buildExtendedExclude(
         .find(({ exclude }) => Array.isArray(exclude));
     const inherited = Array.isArray(declaring?.exclude)
         ? declaring.exclude.map((excluded) => {
-              const excludedPath = join(dirname(declaring.file), String(excluded));
+              // TypeScript reads ${configDir} as the folder of the tsconfig in use, here the one that the jsconfig extends.
+              const text = String(excluded);
+              const excludedPath = CONFIG_FOLDER_TEMPLATE.test(text)
+                  ? join(dirname(paths.owner), text.replace(CONFIG_FOLDER_TEMPLATE, ''))
+                  : join(dirname(declaring.file), text);
               return convertToPosixPath(relative(generatedFolder, excludedPath));
           })
         : [];

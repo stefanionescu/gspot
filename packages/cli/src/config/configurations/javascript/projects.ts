@@ -8,6 +8,7 @@ export const LOCAL_PATH_PREFIX = './';
 export const BIOME_TYPESCRIPT_FILES = ['**/*.{ts,tsx,mts,cts,astro,vue,svelte}'];
 
 // jsconfig
+export const CONFIG_FOLDER_TEMPLATE = /^\$\{configDir\}/u;
 export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
 export const JAVASCRIPT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx'] as const;
 export const JAVASCRIPT_IGNORED_GLOBS = [

@@ -48,6 +48,21 @@ test('a scoped jsconfig anchors recursive excludes in its scope and other exclud
     expect(excluded).not.toContain(resolve('docs/**'));
 });
 
+test('an inherited exclude reads ${configDir} as the folder of the extending tsconfig, and other paths from the base', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['javascript']),
+        'tsconfig.json': '{"extends":"./config/base.json","compilerOptions":{"allowJs":true}}',
+        'config/base.json': `{"exclude":["\${configDir}/dist","generated"]}`,
+        'source.js': 'export const value = 1;\n',
+    });
+    const output = buildGeneratedFiles(await openSession(sandbox.path));
+    const file = output.files.find(({ path }) => path === getManifestTarget('javascript', 'jsconfig.json'))!;
+    const config = JSON.parse(file.content) as { exclude: string[] };
+    const excluded = config.exclude.map((path) => resolve(sandbox.path, dirname(file.path), path));
+    expect(excluded).toContain(resolve(sandbox.path, 'dist'));
+    expect(excluded).toContain(resolve(sandbox.path, 'config/generated'));
+});
+
 test('the extensionless import options reach only the scope that holds JavaScript', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript'], {
