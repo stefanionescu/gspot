@@ -1,6 +1,6 @@
 import { SHARED_NAMING_LANGUAGES } from '#cli/config/configurations/naming.ts';
-import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
-import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
+import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/tables.ts';
+import { CATEGORY_PARENTS } from '#cli/config/settings/values.ts';
 import { splitWords } from '#cli/configurations/general/naming/words.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { getTable } from '#cli/settings/tables.ts';
@@ -13,7 +13,7 @@ import type {
     NamingException,
     NamingSettings,
     ParsedNamingLanguageFields,
-} from '#cli/types/configurations/general.ts';
+} from '#cli/types/configurations/naming.ts';
 import type { Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
 
 function compileException(exception: NamingException): CompiledException {

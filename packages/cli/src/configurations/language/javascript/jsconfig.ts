@@ -6,11 +6,11 @@ import {
     JAVASCRIPT_IGNORED_GLOBS,
     JAVASCRIPT_OPTIONS,
     SOURCE_SELECTION_FIELDS,
-} from '#cli/config/configurations/javascript/tools.ts';
+} from '#cli/config/configurations/javascript/projects.ts';
 import { STANDALONE_OPTIONS } from '#cli/config/configurations/shared.ts';
 import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';

@@ -1,4 +1,4 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/files.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/builders.ts';
 import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';
 import { isPointerInherited, listPointerPaths } from '#cli/generation/configs/pointers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

@@ -17,7 +17,7 @@ import { formatRefusedImport } from '#cli/configurations/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { RuleLookup, SwiftDeclarations } from '#cli/types/configurations/general.ts';
+import type { RuleLookup, SwiftDeclarations } from '#cli/types/configurations/structure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { SourceTree } from '#cli/types/parsers.ts';

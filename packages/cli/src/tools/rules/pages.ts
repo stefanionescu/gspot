@@ -1,5 +1,5 @@
 import { RULE_PLACEHOLDER } from '#cli/config/manifests.ts';
-import { ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL } from '#cli/config/tools/programs.ts';
+import { ESLINT_MANIFEST_TOOL, STYLELINT_MANIFEST_TOOL } from '#cli/config/tools/rules.ts';
 import { VALE_TOOL } from '#cli/config/tools/vale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';

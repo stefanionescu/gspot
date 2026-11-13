@@ -1,9 +1,9 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
+import { PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { ACTIVE_ENVIRONMENT_VARIABLE } from '#cli/config/tools/programs.ts';
+import { ACTIVE_ENVIRONMENT_VARIABLE, PYTHON_EXECUTABLE } from '#cli/config/tools/programs.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { executableLayout } from '#cli/system/processes/programs.ts';
 import type { Tool } from '#cli/types/manifests.ts';

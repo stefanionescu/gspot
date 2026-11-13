@@ -7,7 +7,8 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE, NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
+import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
+import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
 import { listMisePins } from '#cli/tools/pins.ts';

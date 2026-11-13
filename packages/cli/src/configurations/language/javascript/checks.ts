@@ -1,7 +1,7 @@
 import { chmodSync, writeFileSync } from 'node:fs';
 import { dirname, extname, join, relative } from 'node:path';
 
-import { JAVASCRIPT_TSC_COMMAND, JSCONFIG_TSBUILDINFO } from '#cli/config/configurations/javascript/tools.ts';
+import { JAVASCRIPT_TSC_COMMAND, JSCONFIG_TSBUILDINFO } from '#cli/config/configurations/javascript/projects.ts';
 import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/shared.ts';
 import { RAN_STATUSES } from '#cli/config/engine.ts';
 import { JSCONFIG_FILE } from '#cli/config/parsers/projects.ts';

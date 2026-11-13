@@ -1,5 +1,5 @@
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
-import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
+import { WEAKENINGS_CHECK } from '#cli/config/settings/file.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
 import { findCommandTool, findToolName } from '#cli/manifests/tools.ts';

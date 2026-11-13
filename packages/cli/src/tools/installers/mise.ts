@@ -4,7 +4,8 @@ import { dirname, join } from 'node:path';
 import { patch } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, OWNER_WRITABLE_FILE, UV_PROGRAM } from '#cli/config/system.ts';
+import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
 import {
     GITHUB_RATE_LIMIT,
     GITHUB_TOKEN_MESSAGE,
@@ -21,9 +22,7 @@ import {
     MISE_RELEASE_PROTOCOL,
     MISE_TOOL_NOUN,
     MISE_TRUSTED_PATHS_VARIABLE,
-    NETWORK_ADVICE,
-    UV_TOOL,
-} from '#cli/config/tools/installers.ts';
+} from '#cli/config/tools/mise.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
 import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
@@ -52,7 +51,8 @@ function selectMiseTools(install: ToolInstall) {
     const toolNamesByPin = new Map(hookTools.map((tool) => [findMisePin(tool)?.name, tool.name]));
     const pins = listMisePins(configurations).filter(
         (pin) =>
-            toolNamesByPin.has(pin.name) || (pin.name === UV_TOOL && listPackagePins(configurations).python.length > 0),
+            toolNamesByPin.has(pin.name) ||
+            (pin.name === UV_PROGRAM && listPackagePins(configurations).python.length > 0),
     );
     return { pins, hookTools, toolNamesByPin };
 }
@@ -196,7 +196,7 @@ export async function installMiseTools(install: ToolInstall): Promise<MiseInstal
     const { pins, hookTools, toolNamesByPin } = selectMiseTools(install);
     if (misePath === undefined) {
         const missing = pins.flatMap((pin) => {
-            const name = pin.name === UV_TOOL ? UV_TOOL : getRequired(toolNamesByPin, pin.name, 'mise tool');
+            const name = pin.name === UV_PROGRAM ? UV_PROGRAM : getRequired(toolNamesByPin, pin.name, 'mise tool');
             return findProgram(name) === undefined ? [`${name} ${pin.version}`] : [];
         });
         const note = missing.length === 0 ? '' : `Install mise, or install these tools yourself: ${missing.join(', ')}`;

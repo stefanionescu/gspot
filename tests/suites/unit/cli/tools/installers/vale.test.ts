@@ -6,7 +6,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';

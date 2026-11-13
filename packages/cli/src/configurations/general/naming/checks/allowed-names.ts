@@ -6,7 +6,7 @@ import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { FileNames, NamedCategory, NamingException } from '#cli/types/configurations/general.ts';
+import type { FileNames, NamedCategory, NamingException } from '#cli/types/configurations/naming.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

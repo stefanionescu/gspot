@@ -4,7 +4,6 @@ import { GIT_METADATA_NAME, GSPOT_FOLDER, NODE_MODULES } from '#cli/config/syste
 export const COMPOSE_CHECK = 'docker/compose';
 export const COMPOSE_FILE_FLAG = '-f';
 export const COMPOSE_OVERRIDE = /^(?<base>compose|docker-compose)\.[^.]+\.ya?ml$/u;
-export const COMPOSE_SUFFIXES = ['.yaml', '.yml'] as const;
 export const DOCKERIGNORE = '.dockerignore';
 
 // dockerignore check
@@ -69,7 +68,6 @@ export const LOCKED_INSTALLS: Readonly<Record<string, { verbs: string[]; flags: 
     uv: { verbs: ['sync'], flags: ['--frozen', '--locked'] },
 };
 export const NGINX_IMAGE = /(?:^|\/)nginx$/u;
-export const NPM_COMMAND = 'npm';
 export const NPM_INSTALL_VERBS: ReadonlySet<string> = new Set(['install', 'i']);
 export const PATCH_LEVEL_VERSION = /^\d+\.\d+\.\d+/u;
 export const SECOND_INDEX_FLAG = /^--extra-index-url(?:=|$)/u;

@@ -11,7 +11,7 @@ import {
     PLUGIN_SOURCE_REFUSAL,
     RULE_CONDITIONS,
     VENDOR_PREFIX_RULE,
-} from '#cli/config/settings/schema.ts';
+} from '#cli/config/settings/tables.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';

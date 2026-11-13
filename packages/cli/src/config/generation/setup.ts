@@ -1,9 +1,9 @@
 import { SQL_FILES } from '#cli/config/configurations/language.ts';
 import { PYTHON_FILES, RUFF_CHECK } from '#cli/config/configurations/python.ts';
 import { SWIFT_FILES } from '#cli/config/configurations/swift.ts';
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/files.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/builders.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GITATTRIBUTES_FILE } from '#cli/config/repository/files.ts';
+import { GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
 
 // carryover
 export const CARRIED_TOOLS: ReadonlySet<string> = new Set([

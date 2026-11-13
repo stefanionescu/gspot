@@ -3,9 +3,10 @@ import { basename, dirname, join } from 'node:path';
 
 import { INSTALLED_TOOL_FOLDERS, LEADING_PATH_SEGMENTS, TEMPORARY_FILE_NAME } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GITATTRIBUTES_FILE, GITIGNORE_FILE } from '#cli/config/repository/files.ts';
-import { AGENTS_FILE, VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
 import { EXECUTABLE_FILE, GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { VALE_TEMPORARY_NAME } from '#cli/config/tools/vale.ts';
 import { listOwnablePaths } from '#cli/generation/configs/paths.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';

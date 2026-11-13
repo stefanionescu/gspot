@@ -16,7 +16,7 @@ import { getTable } from '#cli/settings/tables.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
-import type { SitemapUrls } from '#cli/types/configurations/language.ts';
+import type { SitemapUrls } from '#cli/types/configurations/framework.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

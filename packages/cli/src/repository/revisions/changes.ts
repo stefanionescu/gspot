@@ -1,3 +1,4 @@
+import { HASH_PATTERN } from '#cli/config/repository/git.ts';
 import {
     ABSENT_HASH,
     COMMIT_SUFFIX,
@@ -13,7 +14,6 @@ import {
     GIT_STATUS_ARGUMENTS,
     GIT_UPSTREAM_ARGUMENTS,
     GIT_VERIFY_COMMIT_ARGUMENTS,
-    HASH_PATTERN,
     ORIGIN_REMOTE,
     REMOTE_HEAD,
     REMOTE_HEAD_FIELD_COUNT,
@@ -23,7 +23,7 @@ import {
     STATUS_PATH_START,
     UNCHANGED_STATUS,
     UNTRACKED_STATUS,
-} from '#cli/config/repository/git.ts';
+} from '#cli/config/repository/revisions.ts';
 import { decodeGitPath } from '#cli/repository/git/output.ts';
 import {
     buildGitError,

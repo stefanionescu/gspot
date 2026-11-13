@@ -1,7 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/validation.ts';
+import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/file.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';

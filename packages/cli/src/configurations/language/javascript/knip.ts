@@ -8,10 +8,10 @@ import {
     KNIP_JAVASCRIPT_ENTRY_FILES,
     PACKAGE_RUNNERS,
     UNQUOTED_COMMENT,
-} from '#cli/config/configurations/javascript/tools.ts';
+} from '#cli/config/configurations/javascript/projects.ts';
 import { COMMAND_SEPARATORS, MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import {
     listCodePatterns,

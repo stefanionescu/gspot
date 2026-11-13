@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { Identifier } from '#cli/types/configurations/general.ts';
+import type { Identifier } from '#cli/types/configurations/naming.ts';
 import {
     BASH_SOURCE_NAMES,
     DECLARATION_CASES,

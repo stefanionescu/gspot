@@ -4,7 +4,7 @@ import {
     STYLELINT_COMPONENTS,
     TAILWIND_AT_RULES,
 } from '#cli/config/configurations/language.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import {
     assertRunningRuleOptions,
     listDisabledRules,

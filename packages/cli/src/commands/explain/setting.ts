@@ -12,7 +12,7 @@ import { findSetting, findSettingDefault, formatSettingSource, getSettingValue }
 import { formatNameList } from '#cli/system/text/messages.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands.ts';
-import type { Setting } from '#cli/types/manifests.ts';
+import type { Setting } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {

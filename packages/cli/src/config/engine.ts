@@ -11,15 +11,29 @@ export const HOOK_FLAG = '--hook';
 export const ONLY_FLAG = '--only';
 export const STAGED_FLAG = '--staged';
 
-// check states
-export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error', 'canceled'] as const;
+// check plan
 export const COMPARED_CONTENTS = ['working-tree', 'index', 'commit'] as const;
+export const CONFIG_BOUND_RUNNERS = new Set(['vitest', 'jest']);
+export const COVERAGE_DIMENSIONS = [
+    'min_line_percent',
+    'min_branch_percent',
+    'min_function_percent',
+    'min_statement_percent',
+] as const;
+export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
+export const LOCAL_RULES_SETTING = 'security.semgrep_rules';
+export const LOCAL_RULE_EXTENSION = '.yml';
+export const SKIP_CAUSES = ['level', 'system', 'replaced', 'setting', 'condition', 'ignore'] as const;
+export const STAGE_FILTERS = [...STAGES, 'all'] as const;
+
+// check results
+export const CHECK_STATUSES = ['passed', 'failed', 'missing', 'skipped', 'error', 'canceled'] as const;
 export const FAILED_STATUSES = new Set<CheckStatus>(['failed', 'error']);
+export const GSPOT_CHECK_PREFIX = 'gspot/';
 export const INCOMPLETE_STATUSES = new Set<CheckStatus>(['missing', 'error', 'canceled']);
 export const RAN_STATUSES = new Set<CheckStatus>(['passed', 'failed']);
-export const SKIP_CAUSES = ['level', 'system', 'replaced', 'setting', 'condition', 'ignore'] as const;
 export const REPORTED_SKIP_CAUSES = [...SKIP_CAUSES, 'no-files'] as const;
-export const STAGE_FILTERS = [...STAGES, 'all'] as const;
+export const SHORT_HASH_LENGTH = 7;
 
 // command batches
 export const BATCH_FILE = /\.(?:bat|cmd)$/iu;
@@ -57,12 +71,7 @@ export const RAW_BLOB_ATTRIBUTES = '* -text -filter -ident -working-tree-encodin
 export const FIX_CANCELED_MESSAGE = 'The fix was canceled.';
 export const FIX_ROUNDS = 3;
 
-// placeholders
-export const COMMAND_PLACEHOLDER = /\{(?<name>[a-z_]+)(?::(?<value>[^{}]+))?\}/gu;
-export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
-export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
-export const FILES_PLACEHOLDER = /^\{files(?::prefix=(?<prefix>[^}]*))?\}$/u;
-export const FILE_PLACEHOLDER = '{file}';
+// formatter checks
 export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
     'format/prettier',
     'python/ruff-format',
@@ -71,29 +80,25 @@ export const FORMATTER_CHECKS: ReadonlySet<string> = new Set([
     'toml/taplo',
     'sql/sqlfluff',
 ]);
+
+// placeholders
+export const COMMAND_PLACEHOLDER = /\{(?<name>[a-z_]+)(?::(?<value>[^{}]+))?\}/gu;
+export const CONFIG_PLACEHOLDER = /\{config_file:(?<name>[a-z0-9-]+)\}/gu;
+export const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
+export const FILES_PLACEHOLDER = /^\{files(?::prefix=(?<prefix>[^}]*))?\}$/u;
+export const FILE_PLACEHOLDER = '{file}';
 export const POINTER_PLACEHOLDER = /\{pointer:(?<name>[^}]+)\}/gu;
 export const SETTING_ONLY_PLACEHOLDER = new RegExp(`^${SETTING_PLACEHOLDER.source}$`, 'u');
 export const WORKSPACE_PLACEHOLDER = /^\{workspace:(?<name>[^}]+)\}$/u;
 
-// planned files
-export const CONFIG_BOUND_RUNNERS = new Set(['vitest', 'jest']);
-export const COVERAGE_DIMENSIONS = [
-    'min_line_percent',
-    'min_branch_percent',
-    'min_function_percent',
-    'min_statement_percent',
-] as const;
-export const IGNORED_PATHS_MESSAGE = 'every selected path is ignored in gspot.toml';
-export const LOCAL_RULES_SETTING = 'security.semgrep_rules';
-export const LOCAL_RULE_EXTENSION = '.yml';
-
-// run notes
-export const GSPOT_CHECK_PREFIX = 'gspot/';
-export const MISSING_GENERATED_FILE_MESSAGE = 'The generated file <path> is missing. Run gspot install.';
+// run progress
+export const PROGRESS_INTERVAL_MILLISECONDS = 10_000;
+export const RUNNING_CHECKS_SHOWN = 3;
+export const STAGED_FILES = 'the staged files';
+export const WORKING_TREE = 'the working tree';
 
 // run report
 export const NO_FILES_MESSAGE = 'No matching files.';
-export const PROGRESS_INTERVAL_MILLISECONDS = 10_000;
 export const REPORT_STAGES = {
     commit: ['commit'],
     push: ['push'],
@@ -101,13 +106,10 @@ export const REPORT_STAGES = {
     manual: ['manual'],
     all: ['commit', 'push'],
 } as const;
-export const RUNNING_CHECKS_SHOWN = 3;
-export const SHORT_HASH_LENGTH = 7;
-export const STAGED_FILES = 'the staged files';
-export const WORKING_TREE = 'the working tree';
 
 // tool failures
 export const BROKEN_TOOL_ADVICE = `A tool in ${GSPOT_PATHS.nodeModules} failed to load. Run gspot install.`;
+export const MISSING_GENERATED_FILE_MESSAGE = 'The generated file <path> is missing. Run gspot install.';
 // Node prints one of these when a module fails to resolve or parse, before the tool runs.
 export const MODULE_FAILURE =
     /\b(?:ERR_MODULE_NOT_FOUND|MODULE_NOT_FOUND|ERR_REQUIRE_ESM|ERR_PACKAGE_PATH_NOT_EXPORTED|ERR_UNSUPPORTED_DIR_IMPORT|ERR_INVALID_PACKAGE_CONFIG)\b|Cannot find (?:module|package)|does not provide an export named|^SyntaxError: /mu;
@@ -119,7 +121,7 @@ export const PROCESS_KILLED_LINE = /^Command was killed with /u;
 export const RAISE_TIMEOUT_MESSAGE = 'Raise the limit with gspot set tool_timeout_seconds <seconds>.';
 export const TAIL_LINES = 20;
 
-// tool output formats
+// tool outputs
 export const EMPTY_FINDING_MESSAGE = 'The JSON report contains a finding without its mapped message.';
 export const FILE_GROUP = '(?<file>';
 export const FILE_LINK = /^file:\/\/\/[^\s#?]+/u;

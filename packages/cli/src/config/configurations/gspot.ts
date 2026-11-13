@@ -1,10 +1,11 @@
 import {
+    BASE_RULES,
     ENVIRONMENT_RULES,
     IMPORT_LAYOUT_RULES,
+    JAVASCRIPT_RULES,
     NODE_RULES,
     PACKAGE_JSON_RULES,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { BASE_RULES, JAVASCRIPT_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
+} from '#cli/config/configurations/javascript/rules.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';

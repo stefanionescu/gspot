@@ -7,7 +7,7 @@ import {
     PUSH_INPUT_REPLAY,
     PUSH_INPUT_SAVE,
     YARN_PNP_FILE,
-} from '#cli/config/generation/files.ts';
+} from '#cli/config/generation/builders.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';

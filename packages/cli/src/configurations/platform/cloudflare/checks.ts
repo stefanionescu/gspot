@@ -23,7 +23,7 @@ import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { HEADER_EXPLANATIONS } from '#cli/configurations/platform/cloudflare/explanations.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/infrastructure.ts';
+import type { HeaderBlock, ParsedHeadersFile } from '#cli/types/configurations/platform.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';

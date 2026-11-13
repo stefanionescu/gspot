@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { PLUGIN_SOURCE_REFUSAL } from '#cli/config/settings/schema.ts';
+import { PLUGIN_SOURCE_REFUSAL } from '#cli/config/settings/tables.ts';
 import { parseSettings, safeParseSettings } from '#cli/settings/parse.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';

@@ -1,4 +1,4 @@
-import { SCOPE_PATH_MESSAGES } from '#cli/config/settings/schema.ts';
+import { SCOPE_PATH_MESSAGES } from '#cli/config/settings/file.ts';
 
 // key validation
 export const SETTING_RULE_OPTIONS = [

@@ -2,23 +2,20 @@ import { realpathSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, LINE_BREAK, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, LINE_BREAK, MISE_PROGRAM } from '#cli/config/system.ts';
 import {
     MISE_BIN_PATHS_ARGUMENTS,
     MISE_CEILING_PATHS_VARIABLE,
-    MISE_PROJECT_MESSAGE,
-    MISE_STALE_PROJECT_MESSAGE,
-    MISE_TOOL,
-    MISE_TOOL_SOURCE_ARGUMENTS,
-    MISE_TRUSTED_PATHS_VARIABLE,
-} from '#cli/config/tools/installers.ts';
-import {
     MISE_CONFIG_NAMES,
     MISE_CONFIG_PREFIXES,
     MISE_PROJECT_FILES,
+    MISE_PROJECT_MESSAGE,
+    MISE_STALE_PROJECT_MESSAGE,
+    MISE_TOOL_SOURCE_ARGUMENTS,
+    MISE_TRUSTED_PATHS_VARIABLE,
     MISE_WHICH,
-    TOOL_ENVIRONMENT,
-} from '#cli/config/tools/programs.ts';
+} from '#cli/config/tools/mise.ts';
+import { PYTHON_EXECUTABLE, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
 import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
@@ -67,7 +64,7 @@ export async function readMiseBinPaths(
     toolNames: string[],
     options: { timeoutSeconds: number; project: string },
 ): Promise<MiseBinPaths> {
-    if (toolNames.length === 0 || findProgram(MISE_TOOL) === undefined) return { folders: [] };
+    if (toolNames.length === 0 || findProgram(MISE_PROGRAM) === undefined) return { folders: [] };
     const trust = buildMiseTrust(root, options.project);
     if ('refusal' in trust) return { folders: [], failure: trust.refusal };
     const command = [...MISE_BIN_PATHS_ARGUMENTS, ...toolNames];
@@ -94,7 +91,7 @@ export async function findRepositoryPython(
     const spawn = { cwd, env: TOOL_ENVIRONMENT, ...limits };
     const listed = await runProcess([misePath, ...MISE_TOOL_SOURCE_ARGUMENTS, PYTHON_EXECUTABLE], spawn);
     if (listed.code !== 0) return undefined;
-    const source = parseToolOutput(MISE_TOOL, listed.stdout, miseToolSourcesSchema)[0]?.source?.path;
+    const source = parseToolOutput(MISE_PROGRAM, listed.stdout, miseToolSourcesSchema)[0]?.source?.path;
     if (source === undefined || !isInside(relative(root, source))) return undefined;
     const found = await runProcess([misePath, MISE_WHICH, PYTHON_EXECUTABLE], spawn);
     const python = found.stdout.trim();

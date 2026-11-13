@@ -1,4 +1,3 @@
-import type { MessageFormatElement } from '@formatjs/icu-messageformat-parser';
 import type { Node } from 'web-tree-sitter';
 import type { CST } from 'yaml';
 import type { z } from 'zod';
@@ -9,27 +8,6 @@ import type { deptrySchema, xccovSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { ParsedTsconfig, ScriptSyntax } from '#cli/types/parsers.ts';
 import type { Files } from '#cli/types/system.ts';
-
-export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
-
-export type SiteBuild = {
-    root: string;
-    cwd: string;
-    command: string[];
-    folder: string;
-    built: boolean;
-    failure: string;
-};
-
-export type PurgecssConstructor = new () => {
-    purge(options: Record<string, unknown>): Promise<Array<{ file?: string; rejected?: string[] }>>;
-};
-
-export type PurgecssRequest = { config: string; css: string[]; content: string[] };
-
-export type AssetSource = { path: string; text: string; matches: (path: string) => boolean };
-
-export type AssetGlobImport = { patterns: string[]; text: string };
 
 export type LayoutFinding = { line: number; rule: string; message: string };
 
@@ -72,10 +50,6 @@ export type SwiftBuildSetup = { files: Files; source: string };
 export type CoverageOutput = z.infer<typeof xccovSchema>;
 
 export type CoverageRun = CoverageOutput & { failures: CheckFinding[] };
-
-export type MessageFiles = { folder: string; base: string; paths: ReadonlySet<string> };
-
-export type ParsedMessage = { line: number; elements: MessageFormatElement[] | undefined; error: string | undefined };
 
 export type BashCommandForm = {
     rule: string;

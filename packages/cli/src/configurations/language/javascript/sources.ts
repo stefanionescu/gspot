@@ -1,5 +1,8 @@
-import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { COMPONENT_CONFIGURATIONS, MISE_TASKS_GLOB } from '#cli/config/configurations/javascript/eslint-config.ts';
+import {
+    CODE_LANGUAGES,
+    COMPONENT_CONFIGURATIONS,
+    MISE_TASKS_GLOB,
+} from '#cli/config/configurations/javascript/projects.ts';
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';

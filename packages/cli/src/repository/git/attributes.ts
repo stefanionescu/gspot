@@ -1,8 +1,8 @@
 import { posix } from 'node:path';
 
+import { GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
 import {
     GENERATED_ATTRIBUTE,
-    GITATTRIBUTES_FILE,
     SET_STATE,
     SET_VALUES,
     UNSET_STATE,

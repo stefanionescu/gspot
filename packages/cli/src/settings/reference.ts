@@ -4,8 +4,12 @@ import { z } from 'zod';
 
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { HIDDEN_FACT_KEYS, JSON_SCHEMA_DIALECT, SCHEMA_DESCRIPTION } from '#cli/config/settings/schema.ts';
-import { SETTING_NAME_PLACEHOLDER } from '#cli/config/settings/validation.ts';
+import {
+    HIDDEN_FACT_KEYS,
+    JSON_SCHEMA_DIALECT,
+    SCHEMA_DESCRIPTION,
+    SETTING_NAME_PLACEHOLDER,
+} from '#cli/config/settings/file.ts';
 import { listCheckIds } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';

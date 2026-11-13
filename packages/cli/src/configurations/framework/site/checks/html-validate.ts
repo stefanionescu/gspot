@@ -6,7 +6,7 @@ import {
     HTML_VALIDATE_OUTPUT,
     HTML_VALIDATE_TOOL,
 } from '#cli/config/configurations/site.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
 import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';

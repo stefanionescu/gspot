@@ -4,8 +4,14 @@ import { isDeepStrictEqual } from 'node:util';
 import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
 import semver from 'semver';
 
-import { LOCKFILES, NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } from '#cli/config/parsers/projects.ts';
-import { BUN_LOCKFILE, INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
+import {
+    BUN_LOCKFILE,
+    LOCKFILES,
+    NPM_PACKAGE_FOLDER,
+    PNPM_PEER_START,
+    PNPM_ROOT_IMPORTER,
+} from '#cli/config/parsers/projects.ts';
+import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parsePnpmProjectLock, splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { parseFileFields, tryParseFile } from '#cli/parsers/validation.ts';

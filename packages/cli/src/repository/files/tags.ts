@@ -1,7 +1,6 @@
 import { posix } from 'node:path';
 
 import { SHEBANG_TAG } from '#cli/config/manifests.ts';
-import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
 import { JAVASCRIPT_RUNTIMES, LOCKFILES } from '#cli/config/parsers/projects.ts';
 import {
     BINARY_EXTENSIONS,
@@ -16,6 +15,7 @@ import {
     FILENAME_TAGS,
     INTERPRETER_DIALECTS,
     RUNTIME_TAG,
+    SCRIPT_TAG,
     SHEBANG_INTERPRETERS,
     SHEBANG_PREFIX,
     SHEBANG_TAGS,

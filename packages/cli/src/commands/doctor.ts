@@ -9,9 +9,8 @@ import {
     TOOL_STATE_COLORS,
     VERSION_GAP,
 } from '#cli/config/commands/lookup.ts';
-import { CI_FILES } from '#cli/config/generation/files.ts';
-import { EXIT_FINDINGS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { CI_FILES } from '#cli/config/generation/builders.ts';
+import { EXIT_FINDINGS, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -135,7 +134,7 @@ function listMissingEnvironments(session: Session): string[] {
 }
 
 function listToolsWithoutMise(session: Session): ReadonlySet<string> {
-    if (findProgram(MISE_TOOL) !== undefined) return new Set();
+    if (findProgram(MISE_PROGRAM) !== undefined) return new Set();
     const tools = listDistinctTools(session.toolConfigurations);
     return new Set(tools.filter((tool) => findMisePin(tool) !== undefined).map(({ name }) => name));
 }

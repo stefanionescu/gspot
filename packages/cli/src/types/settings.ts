@@ -1,19 +1,36 @@
 import type { z } from 'zod';
 
 import type { LEVELS, SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import type { IMPORT_EXTENSION_STYLES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/schema.ts';
+import type { PATH_ROLES, REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/settings/fields.ts';
+import type { IMPORT_EXTENSION_STYLES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/tables.ts';
 import type { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import type { removedConfigurationSchema, settingOriginSchema } from '#cli/schemas/settings/fields.ts';
 import type { settingsSchema } from '#cli/schemas/settings/file.ts';
 import type { limitFields } from '#cli/schemas/settings/limits.ts';
 import type { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import type { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import type { Check, Configuration, Setting } from '#cli/types/manifests.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
 import type { Repository, ScopeFolder } from '#cli/types/repository.ts';
 import type { FileContents } from '#cli/types/system.ts';
 
 export type Level = (typeof LEVELS)[number];
+
+export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
+
+export type Setting = {
+    name: string;
+    type: (typeof SETTING_TYPES)[number];
+    path_role?: (typeof PATH_ROLES)[number];
+    default?: unknown;
+    default_all?: unknown;
+    language_defaults?: Record<string, unknown>;
+    reason_for?: ReasonRequirement;
+    reason_values?: boolean;
+    reasoned?: boolean;
+    description: string;
+    languages?: readonly string[];
+};
 
 export type ImportExtensionStyle = (typeof IMPORT_EXTENSION_STYLES)[number];
 

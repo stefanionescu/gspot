@@ -12,7 +12,7 @@ import {
     TYPOS_LOCKFILE_GLOBS,
 } from '#cli/config/configurations/general.ts';
 import { MESSAGE_FILE_SUFFIX, TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import {
     commentSectionTitle,
     convertToGlobs,

@@ -10,7 +10,7 @@ import {
     JSCPD_TOOL,
     OUTPUT_FLAG,
 } from '#cli/config/configurations/structure.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
 import { buildMissingFileStop } from '#cli/engine/run/tool-runs/check.ts';
 import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
 import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';

@@ -1,4 +1,3 @@
-import { MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
 import { NODE_MODULES } from '#cli/config/system.ts';
 
 // check needs
@@ -7,12 +6,10 @@ export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
 export const DOCKER_MISSING_MESSAGE = 'Docker is not installed. Install Docker to run this check.';
 export const DOCKER_TOOL = 'docker';
 
-// mise lookup
-export const MISE_CONFIG_NAMES: ReadonlySet<string> = new Set(['.tool-versions', '.config']);
-export const MISE_CONFIG_PREFIXES = ['mise', '.mise', '.rtx'] as const;
-export const MISE_LAUNCHER_FOLDER = 'shims';
-export const MISE_PROJECT_FILES = new Set([MISE_CONFIG_FILE, MISE_LOCKFILE]);
-export const MISE_WHICH = 'which';
+// generated configs
+export const CONFIG_FLAG = '--config';
+export const CONFIG_TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, bracketSpacing: false } as const;
+export const JSON_INDENT = 4;
 
 // npm bin folder
 export const BIN_FOLDER_NAME = '.bin';
@@ -22,23 +19,7 @@ export const NPM_BIN_FOLDER = `${NODE_MODULES}/${BIN_FOLDER_NAME}`;
 export const ACTIVE_ENVIRONMENT_VARIABLE = 'VIRTUAL_ENV';
 export const PROJECT_ENVIRONMENT_MESSAGE =
     'The project has no .venv folder, and VIRTUAL_ENV names no environment. Create the environment with the package manager of the project, such as uv sync, or activate it, then check again.';
-
-// rule explanations
-export const ESLINT_BUILTIN_RULES = 'eslint/use-at-your-own-risk';
-export const ESLINT_MANIFEST_TOOL = 'eslint';
-export const INSTALL_FOR_RULES_MESSAGE =
-    'gspot explain reads lint rules from the tools that gspot install puts in .gspot/node_modules. Run gspot install.';
-export const MARKDOWNLINT_RULE_DESCRIPTION = /^MD\d+\/[^:]+ : (.+) : (https:\/\/\S+)$/u;
-export const MARKDOWNLINT_RULE_SCHEMA = '../schema/markdownlint-config-schema.json';
-export const RUFF_SUMMARY_FIELD = /\{(\w+)?(?::[^{}]*)?\}/gu;
-export const SHELLCHECK_RULE_IDENTIFIER = /^SC\d{4}$/u;
-export const STYLELINT_MANIFEST_TOOL = 'stylelint';
-export const SWIFTLINT_RULE_ARGUMENTS = ['rules', '--default-config', '--config'] as const;
-export const SWIFTLINT_RULE_IDENTIFIER = /^[a-z][a-z0-9_]*$/u;
-export const SWIFTLINT_UNKNOWN_RULE = 'No rule with identifier';
-// ESLint cannot name the gspot setting that declares the global names of another runtime.
-export const UNDEFINED_NAME_FIX =
-    'Declare or import the name. For a global name of another runtime, such as `document` in a browser script, write a [[tools.eslint.override]] record in gspot.toml with the paths of the files and runtime = "browser", then run gspot install.';
+export const PYTHON_EXECUTABLE = 'python';
 
 // tool processes
 export const TOOL_ENVIRONMENT = { NO_COLOR: '1', FORCE_COLOR: '0', PYTHONUTF8: '1' } as const;

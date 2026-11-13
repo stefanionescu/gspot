@@ -2,8 +2,9 @@ import { copyFileSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { BUN_LOCKFILE, JSON_INDENT, NPM_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
+import { BUN_LOCKFILE, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { NPM_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { downloadGrammar } from '#cli/tools/installers/grammars.ts';

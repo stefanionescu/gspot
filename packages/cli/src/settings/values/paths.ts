@@ -4,7 +4,7 @@ import { join, relative } from 'node:path';
 import { z } from 'zod';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
+import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/values.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';

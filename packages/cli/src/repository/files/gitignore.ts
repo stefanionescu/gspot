@@ -2,8 +2,7 @@ import { posix } from 'node:path';
 
 import ignore from 'ignore';
 
-import { GITIGNORE_FILE, SKIPPED_PATTERN_STARTS } from '#cli/config/repository/files.ts';
-import { GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/repository/git.ts';
+import { GIT_CHECK_IGNORE_ARGUMENTS, GITIGNORE_FILE, SKIPPED_PATTERN_STARTS } from '#cli/config/repository/files.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { buildGitError, runGit } from '#cli/repository/git/run.ts';

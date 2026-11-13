@@ -11,8 +11,8 @@ import {
     UV_RUN_ARGUMENTS,
 } from '#cli/config/configurations/python.ts';
 import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { UV_FLAGS, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
+import { UV_FLAGS } from '#cli/config/tools/installers.ts';
 import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { getTool } from '#cli/manifests/tools.ts';
@@ -56,7 +56,7 @@ function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ..
     const tool = getTool(scope.configurations, command[0]);
     const packagePin = tool.installers.pypi as VersionedInstaller;
     return [
-        UV_TOOL,
+        UV_PROGRAM,
         ...UV_RUN_ARGUMENTS,
         UV_FLAGS.project,
         scopeRoot,

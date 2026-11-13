@@ -21,10 +21,10 @@ import {
     RUFF_UNFIXABLE,
 } from '#cli/config/configurations/python.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
-import { UV_LOCKFILE } from '#cli/config/manifests.ts';
+import { UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
 import { FASTAPI_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';

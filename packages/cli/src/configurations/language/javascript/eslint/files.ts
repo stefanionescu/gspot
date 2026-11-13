@@ -1,5 +1,4 @@
-import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/eslint-config.ts';
+import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/projects.ts';
 import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
 import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';

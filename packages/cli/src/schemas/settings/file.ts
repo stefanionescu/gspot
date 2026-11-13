@@ -7,6 +7,7 @@ import {
     DEVICE_NAME,
     GSPOT_FOLDER_PATH,
     LEVEL_SUMMARY,
+    NO_CHECK_PATHS_MESSAGE,
     NO_CHECK_RULE_MESSAGE,
     SCOPE_PATH_MESSAGES,
     SETTINGS_EXAMPLES,
@@ -14,12 +15,9 @@ import {
     TOOL_TIMEOUT_SECONDS_DEFAULT,
     UNSAFE_CHARACTERS,
     UNSAFE_PATH_END,
-} from '#cli/config/settings/schema.ts';
-import {
-    NO_CHECK_PATHS_MESSAGE,
     WEAKENINGS_CHECK,
     WEAKENINGS_IGNORE_MESSAGE,
-} from '#cli/config/settings/validation.ts';
+} from '#cli/config/settings/file.ts';
 import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
 import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
 import { levelSchema } from '#cli/schemas/manifests/fields.ts';

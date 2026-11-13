@@ -8,13 +8,18 @@ export const BASH_SOURCE_COMMANDS = new Set(['source', '.']);
 // deno
 export const DENO_CONFIG_FILES = ['deno.json', 'deno.jsonc'] as const;
 
+// eslint settings
+export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
+
+// exclude flag
+export const EXCLUDE_FLAG = '--exclude';
+
 // format defaults
 export const DEFAULT_QUOTES = { prettier: 'single', ruff: 'double' } as const;
 
 // framework files
 export const ASTRO_FILES = ['**/*.astro'] as const;
 export const ASTRO_SCRIPT_FILES = ['**/*.astro/*.ts', '**/*.astro/*.js'] as const;
-export const EXCLUDE_FLAG = '--exclude';
 export const REACT_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;
 
 // generator outputs
@@ -41,10 +46,11 @@ export const IGNORE_SECTION_TITLES = {
     gitignore: 'Paths that the tracked .gitignore files leave out',
 } as const;
 
-// javascript sources
-export const ESLINT_SETTINGS_TABLE = 'tools.eslint';
+// import rule messages
 // ESLint's message template prints a category whole, so a category opens the quote that formatRefusedImport closes.
 export const IMPORT_RULE_CATEGORY = 'rule "';
+
+// node scripts
 export const NODE_SHEBANG_TAG = `${SHEBANG_TAG}node`;
 
 // python docstrings

@@ -4,7 +4,19 @@ import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import type { CheckStatus } from '#cli/types/engine/run.ts';
 
-// check flags and staged run
+// check annotations
+export const ANNOTATION_ESCAPES: Readonly<Record<string, string>> = {
+    '%': '%25',
+    '\r': '%0D',
+    '\n': '%0A',
+    ':': '%3A',
+    ',': '%2C',
+};
+export const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
+export const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
+export const GITHUB_ANNOTATION_LIMIT = 10;
+
+// check command
 export const CHECK_INPUT_HOOKS = ['pre-push', 'commit-msg'] as const satisfies ReadonlyArray<
     (typeof CHECK_HOOKS)[number]
 >;
@@ -17,22 +29,14 @@ export const HOOK_REFUSAL_REASONS = {
     'pre-push': 'it checks the pushed commits',
     'commit-msg': 'it checks the commit message',
 } as const;
-export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
 export const PUSH_STDIN_MESSAGE =
     '--hook pre-push reads the lines that Git writes to standard input. Run it from the pre-push hook.';
-export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
-export const UNSTAGED_TOOLS_NOTE = `<files> changes that are not staged, so the installed tools are not the tools of the staged settings. ${STAGE_SETUP_MESSAGE}`;
+
+// check fixes
+export const FIXER_ERROR_PREFIX = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
+export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
 
 // check report
-export const ANNOTATION_ESCAPES: Readonly<Record<string, string>> = {
-    '%': '%25',
-    '\r': '%0D',
-    '\n': '%0A',
-    ':': '%3A',
-    ',': '%2C',
-};
-export const ANNOTATION_MESSAGE_CHARACTERS = /[%\r\n]/gu;
-export const ANNOTATION_PROPERTY_CHARACTERS = /[%\r\n:,]/gu;
 export const CANCELED_RUN_MESSAGE = 'A signal stopped the run.';
 export const CHECK_STATUS_COLORS = {
     passed: 'green',
@@ -43,10 +47,8 @@ export const CHECK_STATUS_COLORS = {
     skipped: 'yellow',
 } as const;
 export const FINDINGS_SHOWN = 200;
-export const FIXER_ERROR_PREFIX = /^(?:[\w.]*(?:Error|error))(?: \[[^\]]+\])?:\s*/u;
 export const FIX_LABEL = 'fix:';
 export const FIX_SENTENCE = /^Run the fix: command that the report prints[^.,;]*(?:\.|, then |; )\s*/u;
-export const GITHUB_ANNOTATION_LIMIT = 10;
 export const INSTALL_REMINDER = ' (run gspot install)';
 export const NOTE_STATUSES = new Set(['missing', 'error', 'canceled', 'skipped']);
 export const RERUN_LABEL = 'rerun:';
@@ -54,8 +56,12 @@ export const SENTENCE_END = /\.(?= |$)/u;
 export const STANDARD_INSTALL_HELP = ` ${INSTALL_HELP}`;
 export const STATUS_LABEL_WIDTH = 7;
 export const SUMMARY_STATUSES: readonly CheckStatus[] = ['failed', 'error', 'canceled', 'missing', 'passed', 'skipped'];
-export const UNCHANGED_FIX_MESSAGE = 'No fixer changed anything.';
 
 // pre-push
 export const EMPTY_PUSH_MESSAGE = 'The push sends no commits to check.\n';
 export const NO_PENDING_REFS = 'none; see canceled checks above';
+
+// staged check
+export const NOTHING_STAGED_MESSAGE = 'Nothing is staged.';
+export const STAGE_SETUP_MESSAGE = `Stage ${SETTINGS_FILE} and ${GSPOT_FOLDER}/.`;
+export const UNSTAGED_TOOLS_NOTE = `<files> changes that are not staged, so the installed tools are not the tools of the staged settings. ${STAGE_SETUP_MESSAGE}`;

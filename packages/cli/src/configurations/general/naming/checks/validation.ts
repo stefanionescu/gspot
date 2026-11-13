@@ -33,7 +33,7 @@ import type {
     Identifier,
     NamingCase,
     NamingSettings,
-} from '#cli/types/configurations/general.ts';
+} from '#cli/types/configurations/naming.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 
 function isSnakeMigration(name: string): boolean {

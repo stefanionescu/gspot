@@ -1,14 +1,8 @@
 import { join } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import {
-    MISE_TOOL,
-    UV_CHECK_FLAG,
-    UV_PROJECT_INSTALL_ARGUMENTS,
-    UV_REINSTALL_FLAG,
-    UV_TOOL,
-} from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
+import { UV_CHECK_FLAG, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
 import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -78,10 +72,10 @@ function findStalePythonLockfile(
 
 async function findUvPath(install: ToolInstall, miseBinPaths: string[]): Promise<string | undefined> {
     const { session, misePath } = install;
-    if (misePath === undefined && findProgram(UV_TOOL) === undefined) return undefined;
+    if (misePath === undefined && findProgram(UV_PROGRAM) === undefined) return undefined;
     const search = { folders: [], miseBinPaths, timeoutSeconds: session.settings.tool_timeout_seconds };
-    const { paths } = await listExecutablePaths(session.toolsRoot, UV_TOOL, search);
-    return paths[0] ?? UV_TOOL;
+    const { paths } = await listExecutablePaths(session.toolsRoot, UV_PROGRAM, search);
+    return paths[0] ?? UV_PROGRAM;
 }
 
 /**
@@ -127,7 +121,7 @@ export function listStaleLockfiles(
     const projects = new Set(generated.map((file) => file.path));
     const files = openFiles(root);
     const lockfiles: Array<StaleLockfile | undefined> = [];
-    if (projects.has(GSPOT_PATHS.miseProject) && findProgram(MISE_TOOL) !== undefined)
+    if (projects.has(GSPOT_PATHS.miseProject) && findProgram(MISE_PROGRAM) !== undefined)
         lockfiles.push(findStaleMiseLockfile(files, toolConfigurations));
     if (toolPackageManager !== undefined && projects.has(GSPOT_PATHS.npmProject))
         lockfiles.push(findStaleNpmLockfile(files, toolPackageManager, session));

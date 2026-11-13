@@ -1,4 +1,4 @@
-import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/eslint-config.ts';
+import type { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/projects.ts';
 import type { Configuration, ParsedManifest } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Level, Scope, ScopeSettings, Settings, WrittenSettings } from '#cli/types/settings.ts';

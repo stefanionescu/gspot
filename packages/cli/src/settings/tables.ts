@@ -1,4 +1,4 @@
-import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/schema.ts';
+import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/tables.ts';
 import { isScopeCovered } from '#cli/repository/scopes.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';

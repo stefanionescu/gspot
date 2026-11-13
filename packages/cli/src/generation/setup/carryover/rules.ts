@@ -19,7 +19,7 @@ import {
     PRINT_TIMEOUT_SECONDS,
     UNREADABLE_CONFIG_MESSAGE,
 } from '#cli/config/generation/setup.ts';
-import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/schema.ts';
+import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/tables.ts';
 import { buildConfigs } from '#cli/generation/configs/build.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';

@@ -1,0 +1,22 @@
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+
+export type SitemapUrls = { urls: URL[]; findings: CheckFinding[] };
+
+export type SiteBuild = {
+    root: string;
+    cwd: string;
+    command: string[];
+    folder: string;
+    built: boolean;
+    failure: string;
+};
+
+export type PurgecssConstructor = new () => {
+    purge(options: Record<string, unknown>): Promise<Array<{ file?: string; rejected?: string[] }>>;
+};
+
+export type PurgecssRequest = { config: string; css: string[]; content: string[] };
+
+export type AssetSource = { path: string; text: string; matches: (path: string) => boolean };
+
+export type AssetGlobImport = { patterns: string[]; text: string };

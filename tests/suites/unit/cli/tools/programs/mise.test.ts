@@ -6,7 +6,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
+import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { readMiseBinPaths } from '#cli/tools/programs/mise.ts';
 import type { SpawnOptions } from '#cli/types/system.ts';

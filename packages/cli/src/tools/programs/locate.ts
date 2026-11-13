@@ -4,9 +4,9 @@ import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import which from 'which';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import { MISE_LAUNCHER_FOLDER, MISE_WHICH, NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
+import { GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { MISE_LAUNCHER_FOLDER, MISE_WHICH } from '#cli/config/tools/mise.ts';
+import { NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -47,7 +47,7 @@ function isExecutablePresent(files: Files, root: string, path: string): boolean 
 
 async function listSystemExecutablePaths(cwd: string, name: string, timeoutSeconds: number): Promise<ExecutableList> {
     const paths = filterOutsidePaths(which.sync(name, { nothrow: true, all: true }) ?? [], GSPOT_FOLDER);
-    const mise = findProgram(MISE_TOOL);
+    const mise = findProgram(MISE_PROGRAM);
     const selected = await Promise.all(
         paths.map(async (path): Promise<ExecutableList> => {
             if (mise === undefined || basename(dirname(path)) !== MISE_LAUNCHER_FOLDER) return { paths: [path] };

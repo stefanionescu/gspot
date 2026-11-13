@@ -6,7 +6,7 @@ import {
     SWIFTLINT_ANALYZE_COMMAND,
     SWIFTLINT_TOOL,
 } from '#cli/config/configurations/swift.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
 import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';

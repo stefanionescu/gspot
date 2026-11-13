@@ -8,7 +8,7 @@ import { validateIdentifiers } from '#cli/configurations/general/naming/checks/v
 import { NAMING_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { extractBaseName } from '#cli/system/paths.ts';
-import type { Identifier, PathContainer } from '#cli/types/configurations/general.ts';
+import type { Identifier, PathContainer } from '#cli/types/configurations/naming.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

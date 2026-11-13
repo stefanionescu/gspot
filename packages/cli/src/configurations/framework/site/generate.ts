@@ -1,4 +1,4 @@
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { buildHtmlValidateFile } from '#cli/configurations/language/html/generate.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';

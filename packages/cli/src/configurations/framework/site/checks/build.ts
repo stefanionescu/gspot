@@ -14,7 +14,7 @@ import { findContainedPath } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { quoteCommand } from '#cli/system/text/quoting.ts';
-import type { SiteBuild } from '#cli/types/configurations/language.ts';
+import type { SiteBuild } from '#cli/types/configurations/framework.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

@@ -1,5 +1,5 @@
 import { LEADING_COMMENTS } from '#cli/config/generation/setup.ts';
-import { SETTINGS_PREFACE_LINES } from '#cli/config/settings/validation.ts';
+import { SETTINGS_PREFACE_LINES } from '#cli/config/settings/file.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { readScopeFormat } from '#cli/generation/setup/format/prettier.ts';
 import { leaveOutUnreadSettings } from '#cli/generation/setup/template.ts';

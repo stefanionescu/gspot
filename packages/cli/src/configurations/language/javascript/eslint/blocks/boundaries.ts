@@ -12,7 +12,7 @@ import {
     TRPC_SERVER_CATEGORY,
     TRPC_SERVER_VALUE_POLICY,
     UNKNOWN_IMPORT_POLICIES,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+} from '#cli/config/configurations/javascript/blocks.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/import-rules.ts';

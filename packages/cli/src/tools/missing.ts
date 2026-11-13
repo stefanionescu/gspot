@@ -1,5 +1,5 @@
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/projects.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import {
     CANCELED_CHECK_NOTE,

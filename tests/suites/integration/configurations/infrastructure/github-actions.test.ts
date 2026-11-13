@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { GITHUB_WORKFLOW } from '#cli/config/generation/files.ts';
+import { GITHUB_WORKFLOW } from '#cli/config/generation/builders.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

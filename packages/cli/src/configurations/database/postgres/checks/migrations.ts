@@ -9,7 +9,7 @@ import {
     SQUAWK_CHECK,
 } from '#cli/config/configurations/postgres.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/tables.ts';
 import { buildSyntaxFinding } from '#cli/configurations/syntax.ts';
 import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';

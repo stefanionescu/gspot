@@ -8,7 +8,7 @@ import {
     SWIFT_CALLABLE_NODES,
 } from '#cli/config/configurations/naming.ts';
 import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
-import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/general.ts';
+import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/naming.ts';
 
 function addTypes(found: FileIdentifiers, syntaxRoot: Node): void {
     const declarations = syntaxRoot.descendantsOfType([...TYPE_NODES]);

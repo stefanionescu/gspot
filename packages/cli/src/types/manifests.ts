@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 
-import type { GROUPS, PATH_ROLES, REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/manifests.ts';
+import type { GROUPS } from '#cli/config/manifests.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
@@ -51,27 +51,6 @@ export type ToolInstallers = Record<string, InstallerPin> & { pypi?: VersionedIn
 
 export type Tool = Exclude<ParsedManifest['tools'][number], string>;
 
-export type ConfigurationReference = Configuration & {
-    selection: { conditions: string[]; exclusions: string[]; requiredBy: string[] };
-    ruleFiles: Array<{ path: string; conditions: string[]; exclusions: string[] }>;
-    installedTools: Array<{ name: string; version: string | undefined; source: string }>;
-    settings: Setting[];
-};
-
-export type ReasonRequirement = keyof typeof REASON_DESCRIPTIONS;
-
-export type Setting = {
-    name: string;
-    type: (typeof SETTING_TYPES)[number];
-    path_role?: (typeof PATH_ROLES)[number];
-    default?: unknown;
-    default_all?: unknown;
-    language_defaults?: Record<string, unknown>;
-    reason_for?: ReasonRequirement;
-    reason_values?: boolean;
-    reasoned?: boolean;
-    description: string;
-    languages?: readonly string[];
-};
+export type RuleFileReference = { path: string; conditions: string[]; exclusions: string[] };
 
 export type RequirementWalk = { errors: string[]; order: Configuration[]; seen: Set<string> };

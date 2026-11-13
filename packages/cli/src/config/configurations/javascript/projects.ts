@@ -1,16 +1,13 @@
-// aliases
+import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
 
+// aliases
 export const IMPORT_CONDITIONS = new Set(['node', 'import', 'default']);
 export const LOCAL_PATH_PREFIX = './';
 
 // biome config
 export const BIOME_TYPESCRIPT_FILES = ['**/*.{ts,tsx,mts,cts,astro,vue,svelte}'];
 
-// checks
-export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p'] as const;
-export const JSCONFIG_TSBUILDINFO = 'jsconfig.check.tsbuildinfo';
-
-// jsconfig config
+// jsconfig
 export const JAVASCRIPT_BUNDLED_IMPORTS = { module: 'ESNext', moduleResolution: 'Bundler' } as const;
 export const JAVASCRIPT_EXTENSIONS = ['js', 'mjs', 'cjs', 'jsx'] as const;
 export const JAVASCRIPT_IGNORED_GLOBS = [
@@ -44,3 +41,12 @@ export const PACKAGE_RUNNERS: Readonly<Record<string, readonly string[]>> = {
     yarn: ['exec', 'dlx'],
 };
 export const UNQUOTED_COMMENT = /('[^']*'|"(?:[^"\\]|\\.)*")|(?<![^\s;&|()])#.*/gu;
+
+// sources
+export const CODE_LANGUAGES = ['javascript', 'typescript'] as const;
+export const COMPONENT_CONFIGURATIONS = ['vue', 'svelte'] as const;
+export const MISE_TASKS_GLOB = `{${MISE_TASK_FOLDERS.join(',')}}/**`;
+
+// tsc check
+export const JAVASCRIPT_TSC_COMMAND = ['tsc', '-p'] as const;
+export const JSCONFIG_TSBUILDINFO = 'jsconfig.check.tsbuildinfo';

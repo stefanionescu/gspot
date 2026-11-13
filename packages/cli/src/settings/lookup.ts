@@ -1,14 +1,14 @@
 import { z } from 'zod';
 
-import { PATH_ROLES } from '#cli/config/manifests.ts';
-import { CATEGORY_PARENTS, NAMING_KEY_LENGTH } from '#cli/config/settings/validation.ts';
+import { PATH_ROLES } from '#cli/config/settings/fields.ts';
+import { CATEGORY_PARENTS, NAMING_KEY_LENGTH } from '#cli/config/settings/values.ts';
 import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { commandCheckSchema, ignoreSchema, scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema, namingSchema } from '#cli/schemas/settings/tables.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import type { Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
+import type { Setting } from '#cli/types/settings.ts';
 
 export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
     Object.entries({

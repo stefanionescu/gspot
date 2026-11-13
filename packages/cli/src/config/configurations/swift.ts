@@ -1,20 +1,4 @@
-// build check
-
-export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
-export const COMPILER_RULE = 'compiler';
-export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
-export const MESSAGE_LINE =
-    /^(?<file>(?:[A-Za-z]:)?[\\/][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
-export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
-export const RESPONSE_FILE = /@(?<path>(?:[A-Za-z]:)?[\\/]\S+)/gu;
-export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
-export const SWIFTC_CALL = 'swiftc ';
-export const SWIFT_BUILD_NAME = 'Swift build';
-export const WARNING_LEVELS: ReadonlySet<string> = new Set(['warning']);
-export const XCODE_CLEAN_ACTION = 'clean';
-export const XCODE_WARNINGS_MARKER = 'warnings';
-
-// cache check
+// build cache
 export const BUILD_LOCK = 'build.lock';
 export const BUILD_LOCK_WAIT_MILLISECONDS = 250;
 export const BUILD_LOG = 'build.log';
@@ -60,26 +44,20 @@ export const XCODE_TEST_ACTION = 'test-without-building';
 export const XCODE_WORKSPACE_FLAG = '-workspace';
 export const XCODE_WORKSPACE_SUFFIX = '.xcworkspace';
 
-// coverage check
-export const APP_TARGET_SUFFIX = '.app';
-export const COVERAGE_BUNDLE = 'coverage.xcresult';
-export const COVERAGE_RULE = 'coverage';
-export const FAILED_BUILD_NOTE = 'The Swift build failed; swift/build reports it.';
-export const FAILED_TEST_RULE = 'failed-test';
-export const MISSING_COVERAGE_MESSAGE = 'Swift produced no UTF-8 coverage report at its reported path.';
-export const SWIFT_CODECOV_COMMAND = ['swift', 'test', '--show-codecov-path'] as const;
-export const SWIFT_DESCRIBE_COMMAND = ['swift', 'package', 'describe', '--type', 'json'] as const;
-export const SWIFT_PACKAGE_NAME = 'swift package';
-export const SWIFT_TARGET_MODULE = 'SwiftTarget';
-export const SWIFT_TESTING_FAILURE_LINE =
-    /Test .+? recorded an issue at (?<file>.+?):(?<line>\d+):(?<column>\d+): (?<message>.+)$/u;
-export const SWIFT_TESTS_MESSAGE = 'Swift tests failed';
-export const SWIFT_TEST_NAME = 'swift test';
-export const TEST_RUNNER_MESSAGE = 'The test runner printed no error output.';
-export const TEST_TARGET_TYPE = 'test';
-export const XCCOV_COMMAND = ['xcrun', 'xccov', 'view', '--report', '--json'] as const;
-export const XCODE_COVERAGE_FLAGS = ['-enableCodeCoverage', 'YES', '-resultBundlePath'] as const;
-export const XCTEST_FAILURE_LINE = /^(?<file>.+?):(?<line>\d+): error: -\[.+?\] : (?<message>.+)$/u;
+// build check
+export const BUILD_LEVELS: ReadonlySet<string> = new Set(['error']);
+export const COMPILER_RULE = 'compiler';
+export const MACOS_PRIVATE_PATH = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
+export const MESSAGE_LINE =
+    /^(?<file>(?:[A-Za-z]:)?[\\/][^\r\n]+?):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
+export const REPORTED_LEVELS: ReadonlySet<string> = new Set(['error', 'warning']);
+export const RESPONSE_FILE = /@(?<path>(?:[A-Za-z]:)?[\\/]\S+)/gu;
+export const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
+export const SWIFTC_CALL = 'swiftc ';
+export const SWIFT_BUILD_NAME = 'Swift build';
+export const WARNING_LEVELS: ReadonlySet<string> = new Set(['warning']);
+export const XCODE_CLEAN_ACTION = 'clean';
+export const XCODE_WARNINGS_MARKER = 'warnings';
 
 // periphery check
 export const PERIPHERY_COMMAND = [
@@ -225,12 +203,6 @@ export const SWIFTFORMAT_OPTIONS = {
 export const SWIFT_FILES = ['**/*.swift'] as const;
 export const SWIFT_TOOLS_VERSION = /^\s*\/\/\s*swift-tools-version\s*:\s*(\d+(?:\.\d+){1,2})\b/u;
 
-// swiftlint check
-export const ANALYZER_RULE = 'analyzer';
-export const COMPILER_LOG_FLAG = '--compiler-log-path';
-export const SWIFTLINT_ANALYZE_COMMAND = ['swiftlint', 'analyze', '--strict', '--quiet'] as const;
-export const SWIFTLINT_TOOL = 'swiftlint';
-
 // swiftlint config
 export const SWIFTLINT_ANALYZER: ReadonlySet<string> = new Set([
     'capture_variable',
@@ -317,3 +289,30 @@ export const SWIFTLINT_OPT_IN: ReadonlySet<string> = new Set([
     'discouraged_optional_boolean',
     'discouraged_optional_collection',
 ]);
+
+// swiftlint-analyze check
+export const ANALYZER_RULE = 'analyzer';
+export const COMPILER_LOG_FLAG = '--compiler-log-path';
+export const SWIFTLINT_ANALYZE_COMMAND = ['swiftlint', 'analyze', '--strict', '--quiet'] as const;
+export const SWIFTLINT_TOOL = 'swiftlint';
+
+// tests check
+export const APP_TARGET_SUFFIX = '.app';
+export const COVERAGE_BUNDLE = 'coverage.xcresult';
+export const COVERAGE_RULE = 'coverage';
+export const FAILED_BUILD_NOTE = 'The Swift build failed; swift/build reports it.';
+export const FAILED_TEST_RULE = 'failed-test';
+export const MISSING_COVERAGE_MESSAGE = 'Swift produced no UTF-8 coverage report at its reported path.';
+export const SWIFT_CODECOV_COMMAND = ['swift', 'test', '--show-codecov-path'] as const;
+export const SWIFT_DESCRIBE_COMMAND = ['swift', 'package', 'describe', '--type', 'json'] as const;
+export const SWIFT_PACKAGE_NAME = 'swift package';
+export const SWIFT_TARGET_MODULE = 'SwiftTarget';
+export const SWIFT_TESTING_FAILURE_LINE =
+    /Test .+? recorded an issue at (?<file>.+?):(?<line>\d+):(?<column>\d+): (?<message>.+)$/u;
+export const SWIFT_TESTS_MESSAGE = 'Swift tests failed';
+export const SWIFT_TEST_NAME = 'swift test';
+export const TEST_RUNNER_MESSAGE = 'The test runner printed no error output.';
+export const TEST_TARGET_TYPE = 'test';
+export const XCCOV_COMMAND = ['xcrun', 'xccov', 'view', '--report', '--json'] as const;
+export const XCODE_COVERAGE_FLAGS = ['-enableCodeCoverage', 'YES', '-resultBundlePath'] as const;
+export const XCTEST_FAILURE_LINE = /^(?<file>.+?):(?<line>\d+): error: -\[.+?\] : (?<message>.+)$/u;

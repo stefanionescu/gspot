@@ -1,5 +1,4 @@
 // cloudflare types
-
 export const OPENNEXT_PACKAGE = '@opennextjs/cloudflare';
 export const OPENNEXT_TYPE_DEFAULTS = {
     types_file: 'cloudflare-env.d.ts',

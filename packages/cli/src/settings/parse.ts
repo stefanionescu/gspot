@@ -2,15 +2,8 @@ import { parse } from '@decimalturn/toml-patch';
 import type { z } from 'zod';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import {
-    BOOLEAN_WORDS,
-    COMMAND_CHECK_DEFAULTS,
-    COMMAND_CHECK_HELP,
-    COMMAND_CHECK_WHY,
-    NUMBER_TEXT,
-    TOML_COMPOUND_START,
-    TOML_QUOTES,
-} from '#cli/config/settings/validation.ts';
+import { COMMAND_CHECK_DEFAULTS, COMMAND_CHECK_HELP, COMMAND_CHECK_WHY } from '#cli/config/settings/file.ts';
+import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/settings/values.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
@@ -24,8 +17,14 @@ import { validateSettings } from '#cli/settings/validation/settings.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import type { ParsedSettings, ParsedSettingValue, Settings, SettingsFailure, TomlTable } from '#cli/types/settings.ts';
+import {
+    type ParsedSettings,
+    type ParsedSettingValue,
+    type Setting,
+    type Settings,
+    type SettingsFailure,
+    type TomlTable,
+} from '#cli/types/settings.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {
     return Object.fromEntries(

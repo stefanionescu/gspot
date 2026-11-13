@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { GSPOT_MISE_TOOL } from '#cli/config/repository/version-pin.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { MISE_TRUST } from '#tests/config/setup/sandboxes.ts';

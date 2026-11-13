@@ -13,8 +13,10 @@ export const UNKNOWN_COMMAND_ERROR_CODE = 'commander.unknownCommand';
 export const UNKNOWN_COMMAND_NAME = /unknown command '([^']+)'/u;
 export const UNKNOWN_OPTION_ERROR_CODE = 'commander.unknownOption';
 
-// commands
+// list options
 export const NAME_LIST_SEPARATOR = ',';
+
+// pin check
 export const PIN_COMMANDS: ReadonlySet<string> = new Set([
     'add',
     'check',

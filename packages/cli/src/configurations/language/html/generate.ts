@@ -4,7 +4,7 @@ import {
     HTML_VALIDATE_EXTENDS,
     HTML_VALIDATE_RULES,
 } from '#cli/config/configurations/html.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';

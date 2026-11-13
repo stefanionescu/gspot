@@ -5,9 +5,9 @@ import { delimiter, join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { parse } from 'yaml';
 
-import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/files.ts';
-import { CI_NODE } from '#cli/config/repository/version-pin.ts';
-import { CI_PINS } from '#cli/config/settings/schema.ts';
+import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/builders.ts';
+import { CI_PINS } from '#cli/config/settings/tables.ts';
+import { CI_NODE } from '#cli/config/tools/installers.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/builders/ci.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { format } from 'prettier';
 
-import { COMMANDS_HEADING } from '#cli/config/generation/files.ts';
+import { COMMANDS_HEADING } from '#cli/config/generation/builders.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildAgentsBlock } from '#cli/generation/builders/agents.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

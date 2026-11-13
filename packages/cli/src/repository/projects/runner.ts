@@ -6,16 +6,14 @@ import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import {
     type FROZEN_INSTALLS,
-    PNPM_WORKSPACE_FILE,
-    YARN_BERRY_MAJOR,
-} from '#cli/config/repository/package-managers.ts';
-import {
     MISE_NODE_PIN_COMMAND,
-    NODE_TOOL,
     PACKAGE_MANAGER_LABELS,
+    PNPM_WORKSPACE_FILE,
     PNPM_WORKSPACE_INSTALL,
     START_RUNNERS,
-} from '#cli/config/repository/version-pin.ts';
+    YARN_BERRY_MAJOR,
+} from '#cli/config/repository/projects.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { buildFrozenInstallArguments, detectPackageManager } from '#cli/repository/projects/package-manager.ts';
@@ -55,7 +53,7 @@ system, which can be too old to run it.
 export function listPinPrerequisites(root: string, runner: StartRunner['name']): string[] {
     if (runner !== 'mise') return [];
     const { tools } = parseTomlFile(MISE_CONFIG_FILE, findText(root, MISE_CONFIG_FILE) ?? '', miseToolsSchema);
-    return tools[NODE_TOOL] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
+    return tools[NODE_PROGRAM] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
 export function buildSetupReference(): SetupReference[] {

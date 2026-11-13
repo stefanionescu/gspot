@@ -3,9 +3,8 @@ import type { z } from 'zod';
 
 import type { SERVICE_SECURITY_RULES } from '#cli/config/configurations/docker.ts';
 import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/github-actions.ts';
-import type { composeSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
+import type { composeSchema } from '#cli/schemas/configurations.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { NumberedLine } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 
 export type WorkflowShapeHit = { kind: keyof typeof WORKFLOW_SHAPE_RULES; node: Scalar };
@@ -33,13 +32,5 @@ export type ImageFinding = { rule: string; message: string };
 export type Mount = { path: string; source: string; target: string; text: string };
 
 export type NginxMounts = { configs: Array<Pick<Mount, 'source' | 'target'>>; certificate: string; key: string };
-
-export type HeaderBlock = { path: string; headers: Array<{ name: string; value: string }> };
-
-export type ParsedHeadersFile = { blocks: HeaderBlock[]; errors: NumberedLine[] };
-
-export type SupabaseProjectFile = z.infer<typeof supabaseProjectFileSchema>;
-
-export type FunctionEntrypoint = { path: string; importMap?: string | undefined };
 
 export type ComposeHit = { kind: keyof typeof SERVICE_SECURITY_RULES; node: Node };

@@ -1,24 +1,26 @@
 import { z } from 'zod';
 
-import { BOUND_REASON_DESCRIPTION, CASE_NAMES, REASON_DESCRIPTIONS } from '#cli/config/manifests.ts';
+import { CASE_NAMES } from '#cli/config/manifests.ts';
 import {
     ARROW_PARENS,
+    BOUND_REASON_DESCRIPTION,
     FORMAT_INDENT_STYLES,
     FORMAT_OVERRIDE_MIN_FIELDS,
     INDENT_DEFAULT,
     INDENT_MAX,
     MAX_PERCENTAGE,
-    NAMING_LANGUAGES,
     PRINT_WIDTH_DEFAULT,
     PRINT_WIDTH_MAX,
     PRINT_WIDTH_MIN,
     PROSE_WRAPS,
     QUOTE_STYLES,
+    REASON_DESCRIPTIONS,
     RELATIVE_PATH_PATTERN,
     REMOVAL_REASON_DESCRIPTION,
     SETTING_ORIGIN_KINDS,
     TRAILING_COMMAS,
-} from '#cli/config/settings/schema.ts';
+} from '#cli/config/settings/fields.ts';
+import { NAMING_LANGUAGES } from '#cli/config/settings/tables.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import type { ReasonedValue } from '#cli/types/settings.ts';

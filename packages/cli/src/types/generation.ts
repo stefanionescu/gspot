@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 
 import type { PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
-import type { FROZEN_INSTALLS } from '#cli/config/repository/package-managers.ts';
+import type { FROZEN_INSTALLS } from '#cli/config/repository/projects.ts';
 import type {
     carryoverRowSchema,
     generatedFilesSchema,

@@ -6,12 +6,12 @@ import semver from 'semver';
 import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import {
     FROZEN_INSTALLS,
-    NPM_TOOL,
     PACKAGE_MANAGER_HASH_SUFFIX,
     PACKAGE_MANAGERS,
     YARN_BERRY_INSTALL,
     YARN_BERRY_MAJOR,
-} from '#cli/config/repository/package-managers.ts';
+} from '#cli/config/repository/projects.ts';
+import { NPM_PROGRAM } from '#cli/config/system.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
@@ -64,7 +64,7 @@ function readFirstPackageManager(
         const name = lockfile?.packageManager;
         if (name !== undefined) return { name };
     }
-    return { name: NPM_TOOL, version: undefined };
+    return { name: NPM_PROGRAM, version: undefined };
 }
 
 export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
@@ -104,7 +104,7 @@ export function detectPackageManager(root: string, trackedPaths: string[]): Pack
 Select the package manager of the tool project. Yarn gives npm.
 */
 export function selectToolPackageManager(name: PackageManagerPin['name']): ToolPackageManagerName {
-    return name === 'yarn' ? NPM_TOOL : name;
+    return name === 'yarn' ? NPM_PROGRAM : name;
 }
 
 export function buildPackageManagerCommand(

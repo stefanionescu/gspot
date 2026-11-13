@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { createRunCache } from '#cli/system/cache.ts';

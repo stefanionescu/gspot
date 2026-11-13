@@ -1,12 +1,11 @@
 import { basename } from 'node:path/posix';
 
+import { PACKAGE_JSON_PATTERN, PRIVATE_PIN_OPTIONS } from '#cli/config/configurations/javascript/blocks.ts';
 import {
-    PACKAGE_JSON_PATTERN,
     PACKAGE_JSON_RULES,
     PIN_RANGES_RULE,
-    PRIVATE_PIN_OPTIONS,
     ROOT_PACKAGE_JSON_RULES,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+} from '#cli/config/configurations/javascript/rules.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';

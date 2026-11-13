@@ -2,8 +2,7 @@ import { join, relative } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { GSPOT_FOLDER, MISE_PROGRAM } from '#cli/config/system.ts';
 import {
     AVAILABLE_TOOL_STATES,
     INSTALL_HELP,
@@ -60,7 +59,7 @@ function buildSystemInstallHelp(tool: Tool, folders: ToolFolders | undefined): s
 function buildInstallHelp(tool: Tool, folders?: ToolFolders): string {
     const toolProjectPackage = findPackagePin(tool);
     if (toolProjectPackage === undefined && tool.system === true) return buildSystemInstallHelp(tool, folders);
-    return toolProjectPackage === undefined && findProgram(MISE_TOOL) === undefined
+    return toolProjectPackage === undefined && findProgram(MISE_PROGRAM) === undefined
         ? `Install mise (${MISE_INSTALL_URL}), or install ${tool.name} ${tool.version ?? ''} yourself.`
         : INSTALL_HELP;
 }
@@ -175,7 +174,7 @@ async function inspectExecutable(inspected: InspectedTool): Promise<ToolInspecti
 function formatMissingProgram(tool: Tool, inspection: ToolInspection): string {
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     const isMiseTool = tool.system !== true && findPackagePin(tool) === undefined;
-    return isMiseTool && inspection.state === 'missing' && findProgram(MISE_TOOL) === undefined
+    return isMiseTool && inspection.state === 'missing' && findProgram(MISE_PROGRAM) === undefined
         ? 'mise is not on PATH.'
         : `${tool.name}${version} is not installed.`;
 }

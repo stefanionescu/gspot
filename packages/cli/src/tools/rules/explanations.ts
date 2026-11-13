@@ -10,7 +10,7 @@ import {
     SWIFTLINT_RULE_ARGUMENTS,
     SWIFTLINT_RULE_IDENTIFIER,
     SWIFTLINT_UNKNOWN_RULE,
-} from '#cli/config/tools/programs.ts';
+} from '#cli/config/tools/rules.ts';
 import { VALE_PACKAGES_MESSAGE, VALE_RULE_IDENTIFIER, VALE_STYLES_PATH, VALE_TOOL } from '#cli/config/tools/vale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findTool } from '#cli/manifests/tools.ts';

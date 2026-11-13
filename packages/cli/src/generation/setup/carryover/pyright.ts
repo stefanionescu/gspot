@@ -1,6 +1,6 @@
 import { NEGATED_PATTERN } from '#cli/config/configurations/gspot.ts';
 import { BASEDPYRIGHT_CHECK } from '#cli/config/configurations/python.ts';
-import { PYRIGHT_CONFIG_FILE } from '#cli/config/generation/files.ts';
+import { PYRIGHT_CONFIG_FILE } from '#cli/config/generation/builders.ts';
 import {
     CARRYOVER_ROW_START,
     EMPTY_CARRYOVER,

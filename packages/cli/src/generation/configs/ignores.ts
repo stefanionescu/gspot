@@ -1,12 +1,8 @@
 import { basename, join } from 'node:path/posix';
 
 import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
-import {
-    BUILD_OUTPUT_FOLDERS,
-    BUILD_OUTPUT_PATTERNS,
-    CI_FILES,
-    GSPOT_FOLDER_PATTERNS,
-} from '#cli/config/generation/files.ts';
+import { CI_FILES } from '#cli/config/generation/builders.ts';
+import { BUILD_OUTPUT_FOLDERS, BUILD_OUTPUT_PATTERNS, GSPOT_FOLDER_PATTERNS } from '#cli/config/generation/files.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';

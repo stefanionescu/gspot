@@ -1,4 +1,4 @@
-import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/javascript/blocks.ts';
 import { SUPABASE_RULES } from '#cli/config/configurations/supabase.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';

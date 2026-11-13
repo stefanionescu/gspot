@@ -1,28 +1,3 @@
-// eslint base block
-
-export const CONSOLE_RULES = { 'no-console': 'error' } as const;
-export const JAVASCRIPT_RULES = {
-    'no-implied-eval': 'error',
-    'no-throw-literal': 'error',
-    'no-unused-expressions': 'error',
-    'no-unused-vars': [
-        'error',
-        {
-            args: 'all',
-            argsIgnorePattern: '^_',
-            varsIgnorePattern: '^_',
-            destructuredArrayIgnorePattern: '^_',
-        },
-    ],
-    'jsdoc/require-param-type': 'error',
-    'jsdoc/require-returns-type': 'error',
-    'jsdoc/check-types': 'error',
-    'jsdoc/no-undefined-types': 'error',
-    'jsdoc/valid-types': 'error',
-} as const;
-export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
-
-// eslint plan
 const ESLINT_RULES = {
     'array-callback-return': 'error',
     'block-scoped-var': 'error',
@@ -50,7 +25,6 @@ const ESLINT_RULES = {
     'no-duplicate-imports': 'off',
     eqeqeq: 'error',
     'prefer-const': 'error',
-
     'no-param-reassign': 'error',
     'no-implicit-coercion': 'error',
     'no-lonely-if': 'error',
@@ -59,7 +33,6 @@ const ESLINT_RULES = {
     'prefer-object-has-own': 'error',
     'prefer-template': 'error',
     radix: 'error',
-
     'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' }],
 } as const;
 const IMPORT_X_RULES = {
@@ -139,7 +112,6 @@ const SECURITY_RULES = {
     'security/detect-unsafe-regex': 'off',
     'security/detect-object-injection': 'off',
     'security/detect-non-literal-fs-filename': 'off',
-
     'security/detect-child-process': 'error',
     'security/detect-possible-timing-attacks': 'error',
 } as const;
@@ -175,7 +147,6 @@ const UNICORN_RULES = {
     'unicorn/prefer-export-from': 'off',
     'unicorn/no-unnecessary-array-flat-map': 'off',
     'unicorn/no-abusive-eslint-disable': 'off',
-
     'unicorn/prefer-ternary': 'off',
     'unicorn/prefer-await': 'off',
     'unicorn/no-negated-array-predicate': 'off',
@@ -213,4 +184,76 @@ export const BASE_RULES = {
     ...JSDOC_RULES,
     ...REGEXP_RULES,
     ...IMPORT_X_RULES,
+} as const;
+export const CONSOLE_RULES = { 'no-console': 'error' } as const;
+export const ENVIRONMENT_RULES = {
+    'n/no-process-env': ['error', { allowedVariables: ['NODE_ENV'] }],
+    'no-restricted-properties': ['error', { object: 'Bun', property: 'env' }, { object: 'Deno', property: 'env' }],
+} as const;
+export const IMPORT_LAYOUT_RULES = {
+    'import-x/first': 'error',
+    'import-x/newline-after-import': ['error', { count: 1, considerComments: true }],
+} as const;
+export const JAVASCRIPT_RULES = {
+    'no-implied-eval': 'error',
+    'no-throw-literal': 'error',
+    'no-unused-expressions': 'error',
+    'no-unused-vars': [
+        'error',
+        {
+            args: 'all',
+            argsIgnorePattern: '^_',
+            varsIgnorePattern: '^_',
+            destructuredArrayIgnorePattern: '^_',
+        },
+    ],
+    'jsdoc/require-param-type': 'error',
+    'jsdoc/require-returns-type': 'error',
+    'jsdoc/check-types': 'error',
+    'jsdoc/no-undefined-types': 'error',
+    'jsdoc/valid-types': 'error',
+} as const;
+export const NODE_RULES = {
+    'n/no-unsupported-features/node-builtins': ['error', { allowExperimental: true }],
+    'n/no-unsupported-features/es-builtins': 'error',
+    'n/no-deprecated-api': 'error',
+    'unicorn/no-process-exit': 'off',
+    'n/no-unsupported-features/es-syntax': 'off',
+    'n/no-sync': 'off',
+    'n/no-callback-literal': 'error',
+    'n/no-new-require': 'error',
+    'n/no-path-concat': 'error',
+    'n/no-missing-import': 'off',
+    'n/no-missing-require': 'off',
+    'n/no-unpublished-import': ['error', { ignoreTypeImport: true }],
+    'n/no-unpublished-require': 'error',
+    'n/hashbang': 'error',
+    'n/no-extraneous-import': 'error',
+    'n/no-extraneous-require': 'error',
+    'n/prefer-global/url-search-params': 'error',
+    'n/prefer-global/url': 'error',
+    'n/prefer-global/process': 'error',
+    'n/prefer-global/console': 'error',
+    'n/prefer-global/buffer': 'error',
+    'n/no-process-exit': 'error',
+    'n/prefer-promises/dns': 'error',
+    'n/prefer-promises/fs': 'error',
+} as const;
+// Only the Node.js floor has Iterator.prototype.toArray. Browsers and other runtimes may lack it.
+export const NON_NODE_RULES = { 'unicorn/prefer-iterator-to-array': 'off' } as const;
+export const PIN_RANGES_RULE = 'package-json/restrict-dependency-ranges';
+const PUBLISHED_PIN_OPTIONS = { forDependencyTypes: ['devDependencies'], rangeType: 'pin' } as const;
+const SCRIPT_NAMES_RULE = 'package-json/scripts-name-casing';
+export const PACKAGE_JSON_RULES = {
+    [PIN_RANGES_RULE]: ['error', PUBLISHED_PIN_OPTIONS],
+    [SCRIPT_NAMES_RULE]: 'error',
+    'package-json/valid-contributors': 'off',
+} as const;
+export const ROOT_PACKAGE_JSON_RULES = { 'package-json/require-packageManager': 'error' } as const;
+export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
+export const TEST_RULES = {
+    'n/no-unpublished-import': 'off',
+    'n/no-unpublished-require': 'off',
+    'no-template-curly-in-string': 'off',
+    'unicorn/no-incorrect-template-string-interpolation': 'off',
 } as const;

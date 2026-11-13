@@ -31,7 +31,8 @@ import {
 } from '#cli/config/engine.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES, PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { GIT_TOP_LEVEL_ARGUMENTS, GIT_WRITE_TREE_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { GIT_TOP_LEVEL_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/revisions.ts';
 import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';

@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { MARKERS } from '#cli/config/parsers/formats.ts';
+import { GITATTRIBUTES_FILE, MARKERS } from '#cli/config/parsers/formats.ts';
 import {
     BANNER_BYTES,
     BUILD_LAUNCHERS,
@@ -10,7 +10,6 @@ import {
     FILTER_ATTRIBUTE,
     GENERATED_ATTRIBUTE,
     GENERATOR_OUTPUT_BANNERS,
-    GITATTRIBUTES_FILE,
     KIND_ORIGINS,
     LFS_FILTER,
     LICENSE_FILE,

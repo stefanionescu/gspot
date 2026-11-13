@@ -1,6 +1,6 @@
 import { dirname, join, relative, resolve } from 'node:path';
 
-import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX } from '#cli/config/configurations/javascript/tools.ts';
+import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX } from '#cli/config/configurations/javascript/projects.ts';
 import { PATHS_BASE_OPTION } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';

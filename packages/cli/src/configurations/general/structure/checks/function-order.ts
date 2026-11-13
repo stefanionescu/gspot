@@ -11,7 +11,7 @@ import { selectGrammar } from '#cli/configurations/syntax.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
+import type { TopLevelFunction } from '#cli/types/configurations/structure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { GrammarName, SourceTree } from '#cli/types/parsers.ts';

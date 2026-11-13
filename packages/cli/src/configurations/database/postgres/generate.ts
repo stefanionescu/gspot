@@ -2,7 +2,7 @@ import { stringify } from '@decimalturn/toml-patch';
 
 import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/tables.ts';

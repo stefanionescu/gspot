@@ -2,7 +2,7 @@ import { formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/co
 import { IGNORE_CHECK_MESSAGE } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION, REASON_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
 import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
-import { RUFF_RULE_PREFIX } from '#cli/config/settings/schema.ts';
+import { RUFF_RULE_PREFIX } from '#cli/config/settings/tables.ts';
 import { findRuleCheck, readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { assertCheckExists, listCheckIds } from '#cli/manifests/checks.ts';

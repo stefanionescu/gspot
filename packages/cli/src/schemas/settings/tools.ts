@@ -8,7 +8,7 @@ import {
     RUFF_SELECTOR,
     SQLFLUFF_DIALECTS,
     TRIVY_SEVERITIES,
-} from '#cli/config/settings/schema.ts';
+} from '#cli/config/settings/tables.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { allowReasonedValue, nonemptyPathsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
 import {

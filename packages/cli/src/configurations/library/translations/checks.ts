@@ -24,7 +24,7 @@ import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
-import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/language.ts';
+import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/library.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

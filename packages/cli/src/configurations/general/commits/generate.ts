@@ -1,5 +1,5 @@
 import { COMMITLINT_ERROR_SEVERITY, COMMITLINT_PARSER_PRESET } from '#cli/config/configurations/general.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';

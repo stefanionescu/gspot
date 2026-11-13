@@ -1,9 +1,9 @@
 import type { Ignore } from 'ignore';
 import type { z } from 'zod';
 
-import type { CONFIGURATION_ORIGINS, FILE_KINDS } from '#cli/config/manifests.ts';
-import type { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { START_RUNNERS } from '#cli/config/repository/version-pin.ts';
+import type { FILE_KINDS } from '#cli/config/manifests.ts';
+import { type CONFIGURATION_ORIGINS, type SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { START_RUNNERS } from '#cli/config/repository/projects.ts';
 import type {
     gitFileSchema,
     gitIndexFileSchema,

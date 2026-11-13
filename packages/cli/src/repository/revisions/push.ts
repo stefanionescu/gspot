@@ -2,6 +2,7 @@ import { readFileSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { HASH_PATTERN } from '#cli/config/repository/git.ts';
 import {
     ABSENT_HASH,
     BRANCHES_PREFIX,
@@ -17,7 +18,6 @@ import {
     GIT_ROOT_COMMITS_ARGUMENTS,
     GIT_TREE_ARGUMENTS,
     GIT_TREE_NAMES_ARGUMENTS,
-    HASH_PATTERN,
     INVALID_PUSH_INPUT_MESSAGE,
     MISSING_PUSH_REVISION_MESSAGE,
     NO_CHANGES_REASON,
@@ -29,7 +29,7 @@ import {
     REMOTES_FLAG,
     TREE_SUFFIX,
     UNFETCHED_PUSH_MESSAGE,
-} from '#cli/config/repository/git.ts';
+} from '#cli/config/repository/revisions.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import {
     buildGitError,

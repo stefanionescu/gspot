@@ -1,9 +1,9 @@
 import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { GSPOT_PATHS, UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER, OWNER_WRITABLE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { PYPROJECT_TOML, UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
+import { GSPOT_FOLDER, OWNER_WRITABLE_FILE, PYTHON_ENVIRONMENT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
 import {
     NETWORK_ADVICE,
     PYTHON_TOOL_NOUN,
@@ -15,7 +15,6 @@ import {
     UV_PROJECT_INSTALL_ARGUMENTS,
     UV_SETTINGS_FILE,
     UV_STALE_LOCKFILE,
-    UV_TOOL,
 } from '#cli/config/tools/installers.ts';
 import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
@@ -57,8 +56,8 @@ async function runUv(
         step: `running uv ${commandArguments.join(' ')} for ${GSPOT_PATHS.pythonProject}`,
     });
     if (result.end === 'missing') {
-        const uv = getTool(readConfigurations().values(), UV_TOOL);
-        throw new GspotError('install', formatUnavailableNote(uv, { name: UV_TOOL, state: 'missing' }));
+        const uv = getTool(readConfigurations().values(), UV_PROGRAM);
+        throw new GspotError('install', formatUnavailableNote(uv, { name: UV_PROGRAM, state: 'missing' }));
     }
     if (result.code !== 0) {
         const output = redactInstallOutput(result, install.pythonSettings.credentials);

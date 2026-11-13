@@ -12,7 +12,7 @@ import {
     MISSING_KEY_RULE,
     ROOT_PLACEHOLDER,
     SECRET_KEY_NAME,
-} from '#cli/config/configurations/general.ts';
+} from '#cli/config/configurations/secrets.ts';
 import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
 import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';

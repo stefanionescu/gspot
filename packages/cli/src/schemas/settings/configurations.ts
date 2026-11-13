@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION, TABLE_DESCRIPTIONS } from '#cli/config/settings/schema.ts';
+import { TABLE_DESCRIPTIONS } from '#cli/config/settings/file.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/settings/tables.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import {

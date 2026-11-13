@@ -5,7 +5,8 @@ import { parse } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { GSPOT_MISE_TOOL, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
 import { findGspotPinMismatch, readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/projects/pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -47,7 +48,7 @@ test('the mise pin adds Node.js when mise.toml has none', async () => {
     const { tools } = parse(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')) as {
         tools: Record<string, unknown>;
     };
-    expect(Object.keys(tools)).toStrictEqual([NODE_TOOL, GSPOT_MISE_TOOL]);
+    expect(Object.keys(tools)).toStrictEqual([NODE_PROGRAM, GSPOT_MISE_TOOL]);
     expect(readGspotPin(sandbox.path)).toBe(cliPackage.version);
 });
 

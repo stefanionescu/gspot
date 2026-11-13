@@ -1,16 +1,18 @@
 // build check
-
 export const BUILD_RULE = 'build';
 export const BUILD_SCRIPT = ['run', 'build'] as const;
 export const UNBUILT_SITE_NOTE = 'The site did not build.';
 
-// pages check
-export const CSS_EXTENSION = '.css';
+// built pages
 export const HTML_EXTENSION = '.html';
+export const INDEX_PAGE = 'index.html';
+
+// html-validate check
 export const HTML_VALIDATE_FORMATTER_FLAG = '--formatter';
 export const HTML_VALIDATE_OUTPUT = 'html-validate.json';
 export const HTML_VALIDATE_TOOL = 'html-validate';
-export const INDEX_PAGE = 'index.html';
+
+// lychee check
 export const LYCHEE_ARGUMENTS = [
     '--offline',
     '--include-fragments',
@@ -23,26 +25,31 @@ export const LYCHEE_ARGUMENTS = [
     '--no-progress',
 ] as const;
 export const LYCHEE_TOOL = 'lychee';
+export const REMAP_FLAG = '--remap';
+export const ROOT_FOLDER_FLAG = '--root-dir';
+
+// purgecss check
+export const CSS_EXTENSION = '.css';
 export const PURGECSS_CONTENT = ['**/*.html', '**/*.js'] as const;
 export const PURGECSS_PROCESS = 'selector-process';
 export const PURGECSS_TOOL = 'purgecss';
-export const REMAP_FLAG = '--remap';
-export const ROOT_FOLDER_FLAG = '--root-dir';
-export const SITEMAP_FILE = /^sitemap.*\.xml$/u;
+export const STYLE_COMPONENTS = new Set(['.astro', '.vue', '.svelte']);
+export const STYLE_EXTENSIONS = new Set(['.css', '.scss', '.sass', '.less']);
+export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;
+
+// site rules
 export const SITE_RULES = {
     unusedSelector: 'unused-selector',
     missingPage: 'missing-page',
     unlistedPage: 'unlisted-page',
     invalidUrl: 'invalid-url',
 } as const;
-export const STYLE_COMPONENTS = new Set(['.astro', '.vue', '.svelte']);
-export const STYLE_EXTENSIONS = new Set(['.css', '.scss', '.sass', '.less']);
-export const STYLE_SCOPING = /:where\(\.astro-[a-z\d-]+\)|\[data-(?:astro-cid|v)-[a-z\d-]+\]|\.svelte-[a-z\d-]+/giu;
-export const UNLISTED_PAGE_MESSAGE = 'The build wrote this page, and the sitemap does not list it.';
 
 // sitemap check
 export const SITEMAP_EXTENSION = '.xml';
+export const SITEMAP_FILE = /^sitemap.*\.xml$/u;
 export const SITEMAP_LOCATION = /<loc>(?:\s*<!\[CDATA\[(?<cdata>[\s\S]*?)\]\]>\s*|(?<url>[^<]*))<\/loc>/gu;
+export const UNLISTED_PAGE_MESSAGE = 'The build wrote this page, and the sitemap does not list it.';
 
 // unused-assets check
 export const ALIAS_WILDCARD_SIDES = 2;

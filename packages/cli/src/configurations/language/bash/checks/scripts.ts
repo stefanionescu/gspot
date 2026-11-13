@@ -1,4 +1,4 @@
-import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';

@@ -1,4 +1,4 @@
-import { CLIENT_ENVIRONMENT_RULE } from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { CLIENT_ENVIRONMENT_RULE } from '#cli/config/configurations/javascript/blocks.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
 import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';

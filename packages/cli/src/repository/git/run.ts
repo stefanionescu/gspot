@@ -11,13 +11,13 @@ import {
     GIT_NONLOCAL_ENVIRONMENT_NAME,
     GIT_PATH_ARGUMENTS,
     GIT_PATH_VARIABLES,
-    GIT_PROGRAM,
     GIT_SETTING_ARGUMENTS,
     GIT_TOP_LEVEL_ARGUMENTS,
     GIT_VARIABLE_PREFIX,
     GIT_WORK_TREE_VARIABLE,
     TRAILING_NEWLINE,
 } from '#cli/config/repository/git.ts';
+import { GIT_PROGRAM } from '#cli/config/system.ts';
 import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';

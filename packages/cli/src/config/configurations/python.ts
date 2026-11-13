@@ -1,5 +1,4 @@
 // deptry check
-
 export const DEPTRY_COMMAND = ['deptry', '.', '--no-ansi'] as const;
 export const DEPTRY_EXCLUDE_FLAG = '--extend-exclude';
 export const DEPTRY_FIRST_PARTY_FLAG = '--known-first-party';
@@ -7,15 +6,6 @@ export const NO_PYPROJECT_NOTE = 'This scope has no pyproject.toml for deptry to
 export const PROJECT_NAME_SEPARATORS = /[-.]+/gu;
 export const PYTHON_SOURCE_FOLDER = 'src';
 export const UV_RUN_ARGUMENTS = ['run', '--no-sync'] as const;
-
-// function-size check
-export const PYTHON_RULES = {
-    functionLines: 'function-lines',
-    requirementsFile: 'requirements-file',
-    pipInstall: 'pip-install',
-    placeholderDocstring: 'placeholder-docstring',
-    unreachableCode: 'unreachable-code',
-} as const;
 
 // generated config
 export const BASEDPYRIGHT_ALL_LEVEL_OPTIONS = {
@@ -154,14 +144,14 @@ export const RAISES_MISMATCH_HELP =
     'Under `Raises:`, list each name that the finding prints for the body. pydoclint reads the name that follows `raise`, so for `raise build_error(...)` or `raise error` it expects the function or the variable, not the exception class.';
 export const RAISES_MISMATCH_RULE = 'DOC503';
 
-// pytest
-export const COVERAGE_INI_SECTION = /^[\t ]*\[coverage:run\][\t ]*\r?$/mu;
-export const NON_PYTHON_TEST_PATTERNS: ReadonlySet<string> = new Set([
-    '**/*.test.*',
-    '**/*.spec.*',
-    '**/*Tests.swift',
-    '**/__tests__/**',
-]);
+// python rules
+export const PYTHON_RULES = {
+    functionLines: 'function-lines',
+    requirementsFile: 'requirements-file',
+    pipInstall: 'pip-install',
+    placeholderDocstring: 'placeholder-docstring',
+    unreachableCode: 'unreachable-code',
+} as const;
 
 // vulture check
 export const VULTURE_COMMAND = [

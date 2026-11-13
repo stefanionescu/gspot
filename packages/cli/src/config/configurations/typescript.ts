@@ -1,5 +1,4 @@
 // checks
-
 export const MISSING_TSCONFIG_HELP = 'Add a tsconfig.json that includes these files.';
 export const MISSING_TSCONFIG_MESSAGE =
     'Add a tsconfig.json to this scope. ESLint reads the TypeScript files through it.';
@@ -35,7 +34,6 @@ export const TYPESCRIPT_RULES = {
     'jsdoc/valid-types': 'off',
     'jsdoc/no-types': 'error',
     'jsdoc/check-tag-names': ['error', { typed: true }],
-
     '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
     '@typescript-eslint/consistent-type-imports': 'error',
     '@typescript-eslint/no-import-type-side-effects': 'error',

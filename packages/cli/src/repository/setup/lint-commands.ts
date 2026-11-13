@@ -12,7 +12,6 @@ import {
     HOOK_ID_SEPARATOR,
     LINT_COMMAND_FIXES,
     LINT_STAGED_KEY,
-    MISE_RUNNER,
     MISE_TASK_FOLDER,
     MISE_TASKS_KEY,
     OTHER_FORMATTER_MESSAGE,
@@ -27,7 +26,7 @@ import {
     TASK_NAME_SEPARATOR,
     YAML_EXTENSIONS,
 } from '#cli/config/repository/setup.ts';
-import { LINE_BREAK } from '#cli/config/system.ts';
+import { LINE_BREAK, MISE_PROGRAM } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlDocuments, parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
@@ -55,7 +54,7 @@ function findCalledTool(command: string, search: CommandSearch, seen = new Set<s
         if (!RUNNER_NAMES.includes(word)) return [];
         const next = words[index + 1];
         const task = (next === RUN_WORD ? words[index + TASK_AFTER_RUN] : next) ?? '';
-        const body = (word === MISE_RUNNER ? search.miseTasks : search.scripts).get(task);
+        const body = (word === MISE_PROGRAM ? search.miseTasks : search.scripts).get(task);
         return body === undefined ? [] : [body];
     });
     return called

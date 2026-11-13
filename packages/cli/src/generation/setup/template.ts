@@ -4,7 +4,7 @@ import { resolve } from 'node:path';
 import { z } from 'zod';
 
 import { LOCAL_RECORDS, UNREAD_SETTING_NOTE } from '#cli/config/generation/setup.ts';
-import { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
+import { LEFT_OUT_NOTES } from '#cli/config/settings/file.ts';
 import { listAlwaysSelected, listUnknownConfigurations, selectConfigurations } from '#cli/manifests/select.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';

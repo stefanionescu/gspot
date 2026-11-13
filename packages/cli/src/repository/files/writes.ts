@@ -1,5 +1,6 @@
 import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
-import { EMPTY_JSON_TEXT, TOML_BARE_KEY, TOML_EXTENSION, TRAILING_BLANK_LINE } from '#cli/config/repository/setup.ts';
+import { EMPTY_JSON_TEXT, TOML_BARE_KEY, TRAILING_BLANK_LINE } from '#cli/config/repository/files.ts';
+import { TOML_EXTENSION } from '#cli/config/repository/setup.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';

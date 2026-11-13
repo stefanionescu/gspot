@@ -9,7 +9,7 @@ import {
     RUFF_FORMAT_KEYS,
     RUFF_STYLE_KEYS,
 } from '#cli/config/generation/setup.ts';
-import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
+import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/tables.ts';
 import { convertIgnorePattern } from '#cli/generation/setup/carryover/ignore-files.ts';
 import { readRuffOptions } from '#cli/generation/setup/format/overrides.ts';
 import type {

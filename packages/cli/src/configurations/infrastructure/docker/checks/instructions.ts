@@ -10,14 +10,13 @@ import {
     INSTRUCTION_RULES,
     LOCKED_INSTALLS,
     NGINX_IMAGE,
-    NPM_COMMAND,
     NPM_INSTALL_VERBS,
     PATCH_LEVEL_VERSION,
     SECOND_INDEX_FLAG,
 } from '#cli/config/configurations/docker.ts';
 import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
 import { LINE_CONTINUATION } from '#cli/config/parsers/projects.ts';
-import { WHITESPACE_RUN } from '#cli/config/system.ts';
+import { NPM_PROGRAM, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readText } from '#cli/system/files/reads.ts';
@@ -30,7 +29,7 @@ import type { Session } from '#cli/types/tools.ts';
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);
     const name = posix.basename(command.childForFieldName('name')?.text ?? '');
-    if (name === NPM_COMMAND) return NPM_INSTALL_VERBS.has(verb) && rest.every((word) => word.startsWith('-'));
+    if (name === NPM_PROGRAM) return NPM_INSTALL_VERBS.has(verb) && rest.every((word) => word.startsWith('-'));
     const locked = LOCKED_INSTALLS[name];
     return locked?.verbs.includes(verb) === true && rest.every((word) => !locked.flags.includes(word));
 }

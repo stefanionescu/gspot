@@ -9,7 +9,7 @@ import {
 } from '#cli/config/configurations/general.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { commentSectionTitle, keepFirstPatterns, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listPrettierPlugins } from '#cli/engine/plan/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';

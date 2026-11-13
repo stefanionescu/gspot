@@ -1,7 +1,7 @@
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 
 import { OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/dependencies.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 

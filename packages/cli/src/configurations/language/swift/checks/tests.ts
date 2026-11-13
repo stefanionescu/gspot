@@ -23,7 +23,7 @@ import {
     XCTEST_FAILURE_LINE,
 } from '#cli/config/configurations/swift.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
-import { MAX_PERCENTAGE } from '#cli/config/settings/schema.ts';
+import { MAX_PERCENTAGE } from '#cli/config/settings/fields.ts';
 import { runSwiftBuild, stripPrivatePrefix } from '#cli/configurations/language/swift/checks/build.ts';
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';

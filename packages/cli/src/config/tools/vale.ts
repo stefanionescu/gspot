@@ -5,6 +5,7 @@ import { BYTES_PER_MEGABYTE } from '#cli/config/system.ts';
 export const VALE_ARCHIVE_LIMIT = 8 * BYTES_PER_MEGABYTE;
 export const VALE_DOWNLOAD_NAME = 'the Vale package';
 export const VALE_INSTALL_ARGUMENTS = ['sync'] as const;
+export const VALE_INSTALL_PREFIX = 'vale-';
 export const VALE_INSTALL_STEP = 'Vale sync';
 export const VALE_PACKAGE_RELEASES = {
     Google: { version: 'v0.7.1', sha256: '4b67fca1f2a88595b2a578ab98bbf3017a23af677b04f93e862843f3ea1a9a0b' },
@@ -23,6 +24,10 @@ export const VALE_PACKAGE_URLS = Object.fromEntries(
         `${VALE_PACKAGE_REPOSITORY}${name}/releases/download/${VALE_PACKAGE_RELEASES[name].version}/${name}.zip`,
     ]),
 ) as Record<(typeof VALE_PACKAGES)[number], string>;
+export const VALE_TEMPORARY_NAME = new RegExp(
+    String.raw`^${VALE_INSTALL_PREFIX}(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$`,
+    'u',
+);
 export const VALE_TOOL = 'vale';
 
 // vale rules

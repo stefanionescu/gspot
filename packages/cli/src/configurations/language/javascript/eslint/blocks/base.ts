@@ -2,16 +2,20 @@ import { basename } from 'node:path/posix';
 
 import {
     BOUNDARIES_FILES_SETTING,
-    GSPOT_PRESET_LEVELS,
     GSPOT_RULE_PREFIX,
     IMPORT_BOUNDARIES_RULE,
-    IMPORT_LAYOUT_RULES,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
     RESTRICTED_SYNTAX_RULE,
+} from '#cli/config/configurations/javascript/blocks.ts';
+import { GSPOT_PRESET_LEVELS } from '#cli/config/configurations/javascript/eslint.ts';
+import {
+    CONSOLE_RULES,
+    IMPORT_LAYOUT_RULES,
+    JAVASCRIPT_RULES,
+    SCRIPT_RULES,
     TEST_RULES,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
+} from '#cli/config/configurations/javascript/rules.ts';
 import { DENO_CONFIG_FILES } from '#cli/config/configurations/shared.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {

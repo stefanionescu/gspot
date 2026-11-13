@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { stringify } from '@decimalturn/toml-patch';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { FIRST_TABLES, LAST_TABLES, ROOT_KEYS, TOML_FORMAT } from '#cli/config/settings/validation.ts';
+import { FIRST_TABLES, LAST_TABLES, ROOT_KEYS, TOML_FORMAT } from '#cli/config/settings/file.ts';
 import { buildPatchedToml } from '#cli/parsers/formats/toml/edit.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { getTomlRange, isTomlKind, parseTomlDocument, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';

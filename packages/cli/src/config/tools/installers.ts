@@ -1,4 +1,6 @@
+import { FENCE_GRAMMARS, type GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
+import { BYTES_PER_MEGABYTE, GIT_PROGRAM } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';
 
@@ -10,16 +12,61 @@ export const REDACTED = '[redacted]';
 export const URL_CREDENTIALS = /(https?:\/\/)[^\s/@]+@/giu;
 
 // downloads
-export const GRAMMAR_TOOL_NOUN = 'grammar';
 export const NETWORK_ADVICE = 'Check the network or proxy, then run again.';
 export const NODE_PROXY_ADVICE = 'This Node.js sets no proxy for downloads. Run again with NODE_USE_ENV_PROXY=1.';
 export const NOT_FOUND_STATUS = 404;
 export const PROXY_VARIABLES = ['HTTPS_PROXY', 'HTTP_PROXY', 'https_proxy', 'http_proxy'] as const;
 
-// generated configs
-export const CONFIG_FLAG = '--config';
-export const CONFIG_TOML_FORMAT = { inlineTableStart: Number.MAX_SAFE_INTEGER, bracketSpacing: false } as const;
-export const JSON_INDENT = 4;
+// grammar downloads
+export const CONFIGURATION_GRAMMARS: Readonly<Record<string, ReadonlyArray<(typeof GRAMMAR_NAMES)[number]>>> = {
+    bash: ['bash'],
+    css: ['css'],
+    'github-actions': ['bash'],
+    gspot: ['html'],
+    html: ['html'],
+    javascript: ['javascript', 'typescript', 'tsx', 'html'],
+    markdown: FENCE_GRAMMARS,
+    python: ['python'],
+    site: ['html'],
+    swift: ['swift'],
+    typescript: ['javascript', 'typescript', 'tsx', 'html'],
+};
+export const GRAMMAR_ARCHIVE_LIMIT = 32 * BYTES_PER_MEGABYTE;
+export const GRAMMAR_RELEASES: Readonly<Record<(typeof GRAMMAR_NAMES)[number], { sha256: string; url: string }>> = {
+    bash: {
+        sha256: '8292919c88a0f7d3fb31d0cd0253ca5a9531bc1ede82b0537f2c63dd8abe6a7a',
+        url: 'https://github.com/tree-sitter/tree-sitter-bash/releases/download/v0.25.1/tree-sitter-bash.wasm',
+    },
+    css: {
+        sha256: '8a23977fe271357cce6f254ef88c9bebf3854602d8046605aef6a45c02135c59',
+        url: 'https://github.com/tree-sitter/tree-sitter-css/releases/download/v0.25.0/tree-sitter-css.wasm',
+    },
+    html: {
+        sha256: 'c48fcd82c7ea8bf943180088ba7f28c48b2bb5287874179168bf9d31e394cf85',
+        url: 'https://github.com/tree-sitter/tree-sitter-html/releases/download/v0.23.2/tree-sitter-html.wasm',
+    },
+    javascript: {
+        sha256: '5fb488d0cabb4775a594bab85682de5ad6ce83c0d6ac997a9f82dd084d571240',
+        url: 'https://github.com/tree-sitter/tree-sitter-javascript/releases/download/v0.25.0/tree-sitter-javascript.wasm',
+    },
+    python: {
+        sha256: '16108b50df4ee9a30168794252ab55e7c93bfc5765d7fa0aa3e335752c515f47',
+        url: 'https://github.com/tree-sitter/tree-sitter-python/releases/download/v0.25.0/tree-sitter-python.wasm',
+    },
+    typescript: {
+        sha256: '778025db5a8be0e70f8ccc3671e486dfeddd048c25d9e8a70c26de2e1bf6f97d',
+        url: 'https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-typescript.wasm',
+    },
+    tsx: {
+        sha256: '79e5da75ea62855a0cd67177685f0164eac87d5f630b3cbe1e0a099751ad30f8',
+        url: 'https://github.com/tree-sitter/tree-sitter-typescript/releases/download/v0.23.2/tree-sitter-tsx.wasm',
+    },
+    swift: {
+        sha256: '0258a7ef17303a8079ffe0748b3583d59656b5c3e8653fca7b6451b3e6689eb2',
+        url: 'https://github.com/alex-pinkus/tree-sitter-swift/releases/download/0.7.3/tree-sitter-swift.wasm',
+    },
+};
+export const GRAMMAR_TOOL_NOUN = 'grammar';
 
 // hooks
 export const CHECK_HOOKS = ['pre-commit', 'pre-push', 'commit-msg'] as const;
@@ -31,37 +78,12 @@ export const HOOK_CHECKS = {
 export const HOOK_FOLDER_KINDS = new Set(['hooksPath', 'githooks', 'husky']);
 export const HOOK_PROGRAM = `${NPM_BIN_FOLDER}/gspot`;
 export const NOT_INSTALLED_STATUS = 'not installed; run gspot install';
-export const SET_HOOKS_PATH = ['git', 'config', HOOKS_PATH_SETTING] as const;
+export const SET_HOOKS_PATH = [GIT_PROGRAM, 'config', HOOKS_PATH_SETTING] as const;
 export const UNSET_HOOKS_NOTE = 'disabled hooks: unset core.hooksPath';
-export const UNSET_HOOKS_PATH = ['git', 'config', '--unset', HOOKS_PATH_SETTING] as const;
-
-// mise
-export const GITHUB_RATE_LIMIT = /rate limit|No lockfile URL found/iu;
-export const GITHUB_TOKEN_MESSAGE =
-    'GitHub limits the release lookups of mise without a token. Set GITHUB_TOKEN to a GitHub token, then run gspot install again.';
-export const MISE_TOOL = 'mise';
-export const MISE_BIN_PATHS_ARGUMENTS = [MISE_TOOL, 'bin-paths'] as const;
-export const MISE_CEILING_PATHS_VARIABLE = 'MISE_CEILING_PATHS';
-export const MISE_CHECKSUM_PATTERN = /^(?:sha256|blake3):[a-f0-9]{64}$/u;
-export const MISE_FORCE_FLAG = '--force';
-export const MISE_INSTALL_ARGUMENTS = [MISE_TOOL, 'install'] as const;
-export const MISE_LOCKED_ENVIRONMENT = { MISE_LOCKED: '1' } as const;
-const MISE_PLATFORMS = ['linux-x64', 'linux-arm64', 'macos-x64', 'macos-arm64', 'windows-x64'] as const;
-export const MISE_LOCK_ARGUMENTS = [MISE_TOOL, 'lock', '--platform', MISE_PLATFORMS.join(',')] as const;
-export const MISE_LOCK_ENVIRONMENT = { MISE_GITHUB_ATTESTATIONS: 'false', MISE_SLSA: 'false' } as const;
-export const MISE_PLATFORM_PREFIX = 'platforms.';
-export const MISE_PROJECT_MESSAGE =
-    'gspot runs mise in .gspot only when no other mise config sits beside .gspot/mise.toml. Delete the other mise files in .gspot, such as mise.local.toml, then run gspot install.';
-export const MISE_RELEASE_HOSTS = new Set(['github.com', 'api.github.com', 'dl.deno.land']);
-export const MISE_RELEASE_PROTOCOL = 'https:';
-export const MISE_STALE_PROJECT_MESSAGE =
-    'gspot runs mise in .gspot only while .gspot/mise.toml is the file that gspot generates. Run gspot install.';
-export const MISE_TOOL_NOUN = 'mise tool';
-export const MISE_TOOL_SOURCE_ARGUMENTS = ['ls', '--current', '--json'] as const;
-export const MISE_TRUSTED_PATHS_VARIABLE = 'MISE_TRUSTED_CONFIG_PATHS';
+export const UNSET_HOOKS_PATH = [GIT_PROGRAM, 'config', '--unset', HOOKS_PATH_SETTING] as const;
 
 // npm project
-export const BUN_LOCKFILE = 'bun.lock';
+export const CI_NODE = 'node@24.20.0';
 export const DELETED_LOCKFILE_MESSAGE =
     'npm wrote registry credentials into the lockfile of the tool project, so gspot deleted that lockfile. Remove the credentials from the registry URL, then run gspot install again.';
 export const INSTALL_FAILURE = 'installation failed';
@@ -178,6 +200,7 @@ export const INDEX_SETTINGS = new Set([
 export const PYTHON_DEFAULT_INDEX_ORIGIN = 'https://pypi.org';
 export const PYTHON_PACKAGE_ORIGINS = ['https://files.pythonhosted.org'] as const;
 export const PYTHON_TOOL_NOUN = 'Python tool';
+const PYTHON_VERSION = '3.13.16';
 export const REQUIREMENT_PACKAGE_NAME = /^[^=]+/u;
 export const URL_SCHEME = /^[a-z][a-z0-9+.-]*:/iu;
 export const UV_CHECK_FLAG = '--check';
@@ -188,7 +211,6 @@ export const UV_FLAGS = {
     config: '--config-file',
     python: '--python',
 } as const;
-const PYTHON_VERSION = '3.13.16';
 export const UV_INSTALL_ARGUMENTS = ['sync', '--locked', '--no-install-project', '--python', PYTHON_VERSION] as const;
 export const UV_LOCKFILE_ARGUMENTS = ['lock', '--python', PYTHON_VERSION] as const;
 export const UV_LOCKFILE_CREDENTIAL_MESSAGE =
@@ -198,7 +220,6 @@ export const UV_PROJECT_INSTALL_ARGUMENTS = ['sync', '--locked', '--inexact'] as
 export const UV_REINSTALL_FLAG = '--reinstall';
 export const UV_SETTINGS_FILE = 'uv.toml';
 export const UV_STALE_LOCKFILE = /lockfile at .* needs to be updated/u;
-export const UV_TOOL = 'uv';
 
 // tool projects
 export const NPM_TOOL_PROJECT = { name: 'tools', private: true } as const;

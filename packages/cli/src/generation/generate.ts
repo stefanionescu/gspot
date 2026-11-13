@@ -1,14 +1,14 @@
 import cliPackage from '#cli-package' with { type: 'json' };
+import { CI_SYSTEMS_SETTING } from '#cli/config/generation/builders.ts';
 import {
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
-    CI_SYSTEMS_SETTING,
     GIT_ATTRIBUTES_BLOCK,
     INSTALLED_TOOL_FOLDERS,
 } from '#cli/config/generation/files.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
-import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import { FILTER_ATTRIBUTE, LFS_FILTER } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/bunfig.ts';
 import { buildAgentsBlock, hasTopHeading } from '#cli/generation/builders/agents.ts';

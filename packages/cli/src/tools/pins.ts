@@ -2,9 +2,7 @@ import semver from 'semver';
 
 import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
-import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
-import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { UV_TOOL } from '#cli/config/tools/installers.ts';
+import { NODE_PROGRAM, OPERATING_SYSTEMS, UV_PROGRAM } from '#cli/config/system.ts';
 import { TYPESCRIPT_ESLINT_TOOL, TYPESCRIPT_PACKAGE } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findTool, getTool, listDistinctTools } from '#cli/manifests/tools.ts';
@@ -39,13 +37,16 @@ function readProjectTypescript(session: Pick<SessionBase, 'cache' | 'repository'
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
     const pins = tools.flatMap((tool) => findMisePin(tool) ?? []);
-    if (tools.some((tool) => findPackagePin(tool)?.kind === 'python') && tools.every((tool) => tool.name !== UV_TOOL))
+    if (
+        tools.some((tool) => findPackagePin(tool)?.kind === 'python') &&
+        tools.every((tool) => tool.name !== UV_PROGRAM)
+    )
         pins.push(getUvPin());
     return pins;
 }
 
 export function getUvPin(): MiseToolPin {
-    const pin = findMisePin(getTool(readConfigurations().values(), UV_TOOL));
+    const pin = findMisePin(getTool(readConfigurations().values(), UV_PROGRAM));
     if (pin === undefined) throw new Error('The uv manifest has no mise pin.');
     return pin;
 }
@@ -110,7 +111,7 @@ export function findPackagePin(tool: Tool): PackagePin | undefined {
         kind: 'npm',
         name: npm.name,
         version: npm.version,
-        requires: [[NODE_TOOL], tool.requires].flatMap((peers) => peers ?? []),
+        requires: [[NODE_PROGRAM], tool.requires].flatMap((peers) => peers ?? []),
     };
 }
 

@@ -1,5 +1,4 @@
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
-import { AT_TOP_LEVEL, UNDER_TABLE } from '#cli/config/settings/validation.ts';
+import { AT_TOP_LEVEL, TABLE_KEY_SEGMENTS, UNDER_TABLE } from '#cli/config/settings/validation.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
@@ -13,14 +12,14 @@ import {
 } from '#cli/settings/values/written.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text/messages.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import type {
-    AvailableSettings,
-    Settings,
-    SettingsError,
-    SettingsTable,
-    WrittenKeyLookup,
-    WrittenSetting,
+import {
+    type AvailableSettings,
+    type Setting,
+    type Settings,
+    type SettingsError,
+    type SettingsTable,
+    type WrittenKeyLookup,
+    type WrittenSetting,
 } from '#cli/types/settings.ts';
 
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {

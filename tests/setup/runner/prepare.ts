@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { MISE_BIN_PATHS_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
+import { MISE_BIN_PATHS_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/mise.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { findMisePin } from '#cli/tools/pins.ts';

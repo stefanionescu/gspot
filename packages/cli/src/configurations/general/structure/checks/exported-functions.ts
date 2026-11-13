@@ -26,7 +26,7 @@ import { joinScopeSelector } from '#cli/settings/values/paths.ts';
 import { listApplicableTables } from '#cli/settings/values/written.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ExportedFunction, ScriptUse } from '#cli/types/configurations/general.ts';
+import type { ExportedFunction, ScriptUse } from '#cli/types/configurations/structure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';

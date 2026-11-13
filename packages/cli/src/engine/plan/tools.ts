@@ -1,4 +1,4 @@
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/programs.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/rules.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan/coverage.ts';
 import { hasFilesToCheck } from '#cli/engine/plan/files.ts';
 import { findSystemSkip } from '#cli/engine/plan/skips.ts';

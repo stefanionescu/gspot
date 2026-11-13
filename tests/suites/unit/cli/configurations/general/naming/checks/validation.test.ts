@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
-import type { FileNaming, Identifier, NamingSettings } from '#cli/types/configurations/general.ts';
+import type { FileNaming, Identifier, NamingSettings } from '#cli/types/configurations/naming.ts';
 import {
     ALLOWED_NAME_TABLES,
     HANDLE_PREFIX_TABLES,

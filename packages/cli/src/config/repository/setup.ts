@@ -1,4 +1,6 @@
-import { PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
+import { AGENTS_FILE } from '#cli/config/parsers/formats.ts';
+import { PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
+import { MISE_PROGRAM } from '#cli/config/system.ts';
 
 // config conflicts
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);
@@ -6,25 +8,9 @@ export const JSON_EXTENSION = '.json';
 export const TOML_EXTENSION = '.toml';
 export const YAML_EXTENSIONS: readonly string[] = ['.yml', '.yaml'];
 
-// file writes
-export const AGENTS_FILE = 'AGENTS.md';
-export const EMPTY_JSON_TEXT = '{}\n';
-export const TOML_BARE_KEY = /^[\w-]+$/u;
-export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
-export const VALE_INSTALL_PREFIX = 'vale-';
-export const VALE_TEMPORARY_NAME = new RegExp(
-    String.raw`^${VALE_INSTALL_PREFIX}(?:(?<pid>[1-9]\d{0,8})-)?[a-zA-Z0-9]{6}$`,
-    'u',
-);
-
-// scopes
-export const ROOT_SCOPE_MARK = '.';
-
 // setup scan
-export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
-const ALL_FILES_GLOB = '**/*';
+export const AGENT_FILES = ['CLAUDE.md', AGENTS_FILE, 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
 export const CI_PROVIDERS = ['github', 'gitlab'] as const;
-export const EVERY_FILE_GLOBS = ['**', ALL_FILES_GLOB] as const;
 export const FOREIGN_CI_FILES = new Set([
     'Jenkinsfile',
     'bitbucket-pipelines.yml',
@@ -113,7 +99,6 @@ export const LINT_COMMAND_NAMES = {
 } as const;
 export const LINT_PACKAGE = /eslint|stylelint|prettier/u;
 export const LINT_STAGED_KEY = 'lint-staged';
-export const MISE_RUNNER = 'mise';
 export const MISE_TASKS_KEY = 'tasks';
 export const OTHER_FORMATTER_MESSAGE =
     'This script also formats these files. To keep it, run gspot ignore format/prettier --reason "<why>".';
@@ -153,7 +138,12 @@ export const OVERLAPPING_TOOLS = [
 export const PRE_COMMIT_TOOL = 'pre-commit';
 export const PYGREP_LANGUAGE = 'pygrep';
 export const QUOTE_MARK = /["'`,]/gu;
-export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, MISE_RUNNER];
+export const RUNNER_NAMES: readonly string[] = [...PACKAGE_MANAGERS, MISE_PROGRAM];
 export const RUN_WORD = 'run';
 export const TASK_AFTER_RUN = 2;
 export const TASK_NAME_SEPARATOR = ':';
+
+// scopes
+const ALL_FILES_GLOB = '**/*';
+export const EVERY_FILE_GLOBS = ['**', ALL_FILES_GLOB] as const;
+export const ROOT_SCOPE_MARK = '.';

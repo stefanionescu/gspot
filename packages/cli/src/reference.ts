@@ -1,9 +1,9 @@
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { GROUP_LABELS } from '#cli/config/commands/setup.ts';
-import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/files.ts';
+import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/builders.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/package-managers.ts';
-import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
+import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/projects.ts';
+import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/file.ts';
 import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { describeCheck } from '#cli/engine/reference.ts';
@@ -17,8 +17,8 @@ import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference
 import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import type { CliReference, CommandReference } from '#cli/types/main.ts';
-import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
+import { type CliReference, type CommandReference, type ConfigurationReference } from '#cli/types/main.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 
 // The docs site imports the CLI only through this file. package.json names it in `exports` under the condition
 // `gspot-source`, which only this repository sets, because the published package holds no source.

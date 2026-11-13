@@ -5,20 +5,18 @@ import picomatch from 'picomatch';
 import {
     EMPTY_LIST,
     ESLINT_INDENT,
-    GSPOT_PRESET_LEVELS,
-    IDENTIFIER_SEPARATOR,
-    SHARED_LIST_SUFFIX,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import {
     ESLINT_NAMED_IMPORTS,
     ESLINT_PACKAGE_IMPORTERS,
     ESLINT_RUNTIMES_CONSTANT,
+    GSPOT_PRESET_LEVELS,
+    IDENTIFIER_SEPARATOR,
     NAME_SEPARATOR,
     PACKAGE_SCOPE_MARK,
     SHARED_LIST_MARK,
     SHARED_LIST_REFERENCE,
-} from '#cli/config/configurations/javascript/eslint-config.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+    SHARED_LIST_SUFFIX,
+} from '#cli/config/configurations/javascript/eslint.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
     EslintBlockFields,

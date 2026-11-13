@@ -1,7 +1,7 @@
 import { TYPE_NODES } from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
+import { FOREIGN_HOOK_FOLDERS, KEPT_DOT_FILE } from '#cli/config/repository/setup.ts';
 import type { ParsedLanguage } from '#cli/types/parsers.ts';
 
 // bare-blocks check
@@ -12,7 +12,7 @@ export const BARE_BLOCK_RULE = 'bare-block';
 // empty-folders check
 export const EMPTY_FOLDER_RULE = 'empty-folder';
 export const NO_EMPTY_FOLDERS_FLAG = '--no-empty-directory';
-export const PLACEHOLDER_FILES: ReadonlySet<string> = new Set(['.gitkeep', '.keep']);
+export const PLACEHOLDER_FILES: ReadonlySet<string> = new Set([KEPT_DOT_FILE, '.keep']);
 // Git lists a folder with untracked files under both forms of this command, and an empty one only without the flag.
 export const UNTRACKED_FOLDERS_ARGUMENTS = ['ls-files', '--others', '--directory', '--exclude-standard', '-z'] as const;
 
@@ -68,7 +68,6 @@ export const NON_USE_PARENTS: ReadonlySet<string> = new Set([
     'value_argument_label',
 ]);
 export const OWN_FILES_ONLY = 'only its own files';
-export const PYTHON_EXTENSIONS = ['.py', '.pyi'] as const;
 export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
 export const UNCOVERED_FILE_MESSAGE =
     'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';

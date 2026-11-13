@@ -2,7 +2,7 @@
 import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
 
-import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
+import { GSPOT_PACKAGES } from '#cli/config/repository/projects.ts';
 import { MILLISECONDS_PER_DAY } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { generalTableSchemas } from '#cli/schemas/settings/general.ts';

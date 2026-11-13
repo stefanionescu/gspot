@@ -17,7 +17,7 @@ import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { extractBaseName, extractExtension, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import type { FolderChild } from '#cli/types/configurations/general.ts';
+import type { FolderChild } from '#cli/types/configurations/structure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

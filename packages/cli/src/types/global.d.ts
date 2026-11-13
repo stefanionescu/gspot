@@ -1,7 +1,7 @@
 import 'zod/v4/core';
-import type { PATH_ROLES } from '#cli/config/manifests.ts';
-import type { LEFT_OUT_NOTES } from '#cli/config/settings/schema.ts';
-import type { ReasonRequirement } from '#cli/types/manifests.ts';
+import type { PATH_ROLES } from '#cli/config/settings/fields.ts';
+import type { LEFT_OUT_NOTES } from '#cli/config/settings/file.ts';
+import type { ReasonRequirement } from '#cli/types/settings.ts';
 
 declare module 'zod/v4/core' {
     interface GlobalMeta {

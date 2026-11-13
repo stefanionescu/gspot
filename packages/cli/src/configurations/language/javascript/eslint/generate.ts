@@ -1,19 +1,20 @@
 import { basename, dirname, join, relative } from 'node:path/posix';
 
-import { ESLINT_CHECK, ESLINT_INDENT } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import {
     BOUNDARIES_PLUGIN_PACKAGE,
     CONFIGURATION_BLOCKS_SUFFIX,
+    ESLINT_CHECK,
     ESLINT_CONFIG_API,
     ESLINT_FIXES_FILE,
     ESLINT_FUNCTIONS_FILE,
+    ESLINT_INDENT,
     ESLINT_NAMED_IMPORTS,
     ESLINT_PLUGIN_PACKAGES,
     LEVEL_ALL_PLUGIN_PACKAGE,
     UNICORN_PLUGIN_PACKAGE,
-} from '#cli/config/configurations/javascript/eslint-config.ts';
+} from '#cli/config/configurations/javascript/eslint.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';

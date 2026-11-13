@@ -11,7 +11,7 @@ import {
     NAMING_LANGUAGE_CATEGORIES,
     NAMING_TABLE_CATEGORIES,
     NAMING_TERM,
-} from '#cli/config/settings/schema.ts';
+} from '#cli/config/settings/tables.ts';
 import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import { namingExceptionSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';

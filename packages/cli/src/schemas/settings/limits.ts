@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { BIOME_COMPLEXITY_MAX } from '#cli/config/settings/schema.ts';
+import { BIOME_COMPLEXITY_MAX } from '#cli/config/settings/tables.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { allowReasonedValue, nonnegativeIntegerSchema } from '#cli/schemas/settings/fields.ts';
 import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings.ts';

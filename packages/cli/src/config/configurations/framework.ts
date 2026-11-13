@@ -1,5 +1,4 @@
 // react-dom generated config
-
 const FOCUSABLE_ROLES = ['tabpanel', 'region'] as const;
 export const REACT_DOM_RULE_OPTIONS = { 'jsx-a11y-x/no-noninteractive-tabindex': { roles: [...FOCUSABLE_ROLES] } };
 
@@ -8,7 +7,6 @@ export const ASTRO_RULES = {
     'astro/no-set-html-directive': 'error',
     'astro/no-exports-from-components': 'error',
     'astro/no-prerender-export-outside-pages': 'error',
-
     'astro/no-unused-css-selector': 'error',
     'astro/prefer-class-list-directive': 'error',
     'astro/prefer-object-class-list': 'error',

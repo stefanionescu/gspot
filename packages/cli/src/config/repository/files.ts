@@ -1,42 +1,23 @@
+import { GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
 import { EXECUTABLE_FILE, NODE_MODULES, OWNER_WRITABLE_FILE, PERMISSION_BITS } from '#cli/config/system.ts';
 
-// detection evidence
+// configuration detection
+export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
 export const EVERY_REPOSITORY_EVIDENCE = 'every repository';
-export const HOOK_PACKAGES: ReadonlySet<string> = new Set(['husky', 'lefthook', 'lint-staged']);
-export const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
+
+// file selection
 export const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
 
 // listing
 export const FILE_PREFIX_BYTES = 4096;
 export const GITIGNORE_FILE = '.gitignore';
+export const GIT_CHECK_IGNORE_ARGUMENTS = ['check-ignore', '--no-index', '-z', '--stdin'] as const;
 export const GIT_INDEX_FILES_ARGUMENTS = ['ls-files', '--stage', '-z'] as const;
 export const GIT_UNTRACKED_FILES_ARGUMENTS = ['ls-files', '--others', '--exclude-standard', '-z'] as const;
 export const NEEDS_GIT_MESSAGE = 'gspot needs a Git repository. Run git init, then gspot init.';
 export const ROOT_SCOPE = { path: '', origin: 'root' } as const;
 export const SETTINGS_FILE = 'gspot.toml';
 export const SKIPPED_PATTERN_STARTS = ['#', '!'] as const;
-
-// git attributes
-export const DIFF_ATTRIBUTE = 'diff';
-export const FILTER_ATTRIBUTE = 'filter';
-export const GENERATED_ATTRIBUTE = 'linguist-generated';
-export const GITATTRIBUTES_FILE = '.gitattributes';
-export const TEXT_ATTRIBUTE = 'text';
-export const VENDORED_ATTRIBUTE = 'linguist-vendored';
-export const GIT_CHECK_ATTRIBUTES_ARGUMENTS = [
-    'check-attr',
-    '--stdin',
-    '-z',
-    GENERATED_ATTRIBUTE,
-    VENDORED_ATTRIBUTE,
-    TEXT_ATTRIBUTE,
-    DIFF_ATTRIBUTE,
-    FILTER_ATTRIBUTE,
-] as const;
-export const LFS_FILTER = 'lfs';
-export const SET_STATE = 'set';
-export const SET_VALUES: ReadonlySet<string> = new Set([SET_STATE, 'true']);
-export const UNSET_STATE = 'unset';
 
 // file tags and kinds
 export const BANNER_BYTES = 1024;
@@ -200,6 +181,7 @@ export const LICENSE_TAGS = new Set(['text', 'markdown']);
 export const MARKDOWN_EXTENSION = '.md';
 export const NOTICE_FILE = /^NOTICE(?:$|[.-])/iu;
 export const RUNTIME_TAG = 'runtime:';
+export const SCRIPT_TAG = 'shell';
 export const SHEBANG_INTERPRETERS: ReadonlyMap<string, string> = new Map<string, string>([
     ['bash', 'shell'],
     ['bats', 'shell'],
@@ -232,6 +214,32 @@ export const VENDORED_FOLDERS: ReadonlySet<string> = new Set([
     'Carthage',
     '.build',
 ]);
+
+// file writes
+export const EMPTY_JSON_TEXT = '{}\n';
+export const TOML_BARE_KEY = /^[\w-]+$/u;
+export const TRAILING_BLANK_LINE = /(\r?\n)\r?\n$/u;
+
+// git attributes
+export const DIFF_ATTRIBUTE = 'diff';
+export const FILTER_ATTRIBUTE = 'filter';
+export const GENERATED_ATTRIBUTE = 'linguist-generated';
+export const TEXT_ATTRIBUTE = 'text';
+export const VENDORED_ATTRIBUTE = 'linguist-vendored';
+export const GIT_CHECK_ATTRIBUTES_ARGUMENTS = [
+    'check-attr',
+    '--stdin',
+    '-z',
+    GENERATED_ATTRIBUTE,
+    VENDORED_ATTRIBUTE,
+    TEXT_ATTRIBUTE,
+    DIFF_ATTRIBUTE,
+    FILTER_ATTRIBUTE,
+] as const;
+export const LFS_FILTER = 'lfs';
+export const SET_STATE = 'set';
+export const SET_VALUES: ReadonlySet<string> = new Set([SET_STATE, 'true']);
+export const UNSET_STATE = 'unset';
 
 // git file modes
 export const GITLINK_MODE = '160000';

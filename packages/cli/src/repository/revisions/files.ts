@@ -2,6 +2,7 @@ import { copyFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import { GIT_INDEX_FILES_ARGUMENTS, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
+import { INDEX_LINE, TRAILING_NEWLINE, TREE_LINE } from '#cli/config/repository/git.ts';
 import {
     CRLF_INDEX_LINE,
     GIT_BLOBS_ARGUMENTS,
@@ -14,14 +15,11 @@ import {
     GIT_SHALLOW_ARGUMENTS,
     GIT_SYMBOLIC_HEAD_ARGUMENTS,
     GIT_WRITE_TREE_ARGUMENTS,
-    INDEX_LINE,
     PRIVATE_INDEX_FILE,
     READ_COMMITTED_MESSAGE,
     SETUP_PATHS,
-    TRAILING_NEWLINE,
-    TREE_LINE,
     UNREADABLE_HISTORY_MESSAGE,
-} from '#cli/config/repository/git.ts';
+} from '#cli/config/repository/revisions.ts';
 import { decodeGitPaths, parseGitBlobs, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
 import { readGitPath, readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
 import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/repository.ts';

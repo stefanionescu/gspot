@@ -1,13 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import {
-    CODE_LANGUAGES,
     ENVIRONMENT_LANGUAGES,
-    ENVIRONMENT_RULES,
     TRIVIAL_FILES_RULE,
     TRIVIAL_FUNCTIONS_RULE,
     TYPED_LANGUAGES,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+} from '#cli/config/configurations/javascript/blocks.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
+import { ENVIRONMENT_RULES } from '#cli/config/configurations/javascript/rules.ts';
 import { getRuleLimit } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import {
     buildExtensionGlob,

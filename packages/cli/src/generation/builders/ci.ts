@@ -25,12 +25,13 @@ import {
     GITLAB_RULES,
     GITLAB_VARIABLES,
     GITLAB_WORKFLOW,
-} from '#cli/config/generation/files.ts';
+} from '#cli/config/generation/builders.ts';
 import { GSPOT_INSTALL } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
-import { CI_NODE, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
-import { CI_PINS } from '#cli/config/settings/schema.ts';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
+import { CI_PINS } from '#cli/config/settings/tables.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
+import { CI_NODE } from '#cli/config/tools/installers.ts';
 import { formatHeader } from '#cli/generation/builders/header.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import {
@@ -159,8 +160,8 @@ Select the Node.js that CI runs gspot and the package managers with: the one tha
 developers run, or the one that gspot is tested with when mise.toml pins none.
 */
 export function readCiNode(root: string): string {
-    const version = readMisePin(root, NODE_TOOL);
-    return version === undefined ? CI_NODE : `${NODE_TOOL}@${version}`;
+    const version = readMisePin(root, NODE_PROGRAM);
+    return version === undefined ? CI_NODE : `${NODE_PROGRAM}@${version}`;
 }
 
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {

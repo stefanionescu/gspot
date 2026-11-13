@@ -2,16 +2,14 @@ import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { basename, dirname } from 'node:path';
 
+import { GRAMMAR_NAMES, SWIFT_EXTENSION, TAG_GRAMMARS } from '#cli/config/parsers/code.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import {
     CONFIGURATION_GRAMMARS,
     GRAMMAR_ARCHIVE_LIMIT,
-    GRAMMAR_NAMES,
     GRAMMAR_RELEASES,
-    SWIFT_EXTENSION,
-    TAG_GRAMMARS,
-} from '#cli/config/parsers/code.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import { GRAMMAR_TOOL_NOUN } from '#cli/config/tools/installers.ts';
+    GRAMMAR_TOOL_NOUN,
+} from '#cli/config/tools/installers.ts';
 import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
 import { replaceBoundedFile } from '#cli/system/files/bounded.ts';

@@ -1,10 +1,10 @@
 // json
-
 export const JSONC_OPTIONS = { allowTrailingComma: true } as const;
 
 // managed blocks
-export const BLOCK_STYLES = { 'AGENTS.md': 'markdown', '.gitattributes': 'hash' } as const;
-export const FIRST_BLOCK_FILE = '.gitattributes';
+export const AGENTS_FILE = 'AGENTS.md';
+export const GITATTRIBUTES_FILE = '.gitattributes';
+export const BLOCK_STYLES = { [AGENTS_FILE]: 'markdown', [GITATTRIBUTES_FILE]: 'hash' } as const;
 export const LEADING_NEWLINE = /^\r?\n/u;
 export const MARKERS = {
     markdown: { start: '<!-- >>> gspot managed >>> -->', end: '<!-- <<< gspot managed <<< -->', gap: '\n\n' },

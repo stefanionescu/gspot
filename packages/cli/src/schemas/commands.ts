@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-import { GROUPS, REASON_DESCRIPTIONS, SETTING_TYPES, TOOL_KINDS } from '#cli/config/manifests.ts';
+import { GROUPS, TOOL_KINDS } from '#cli/config/manifests.ts';
 import { CI_PROVIDERS } from '#cli/config/repository/setup.ts';
+import { REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/settings/fields.ts';
 import { checkStateSchema, findingSchema, reportedCheckSchema, runReportSchema } from '#cli/schemas/engine.ts';
 import { generatedFilesSchema, initPlanSchema } from '#cli/schemas/generation.ts';
 import { checkFieldsSchema, fileKindSchema } from '#cli/schemas/manifests/manifest.ts';

@@ -1,6 +1,6 @@
 import { posix } from 'node:path';
 
-import { BLOCK_STYLES, FIRST_BLOCK_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers/formats.ts';
+import { BLOCK_STYLES, GITATTRIBUTES_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers/formats.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { TextRange } from '#cli/types/system.ts';
 
@@ -50,7 +50,7 @@ export function replaceBlock(text: string, block: string, path: string): string 
     const newline = authored.includes('\r\n') && !authored.replaceAll('\r\n', '').includes('\n') ? '\r\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`.replaceAll('\r\n', '\n').replaceAll('\n', () => newline);
     if (span !== undefined) return text.slice(0, span.start) + body + text.slice(span.end);
-    return addBlock(text, body, { isFirst: posix.basename(path) === FIRST_BLOCK_FILE, newline });
+    return addBlock(text, body, { isFirst: posix.basename(path) === GITATTRIBUTES_FILE, newline });
 }
 
 export function findBlockBody(text: string, path: string): string | undefined {

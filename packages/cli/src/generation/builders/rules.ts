@@ -2,7 +2,7 @@ import { readFileSync } from 'node:fs';
 
 import { fromMarkdown } from 'mdast-util-from-markdown';
 
-import { ALL_LEVEL_MARKER, BLANK_LINE } from '#cli/config/generation/files.ts';
+import { ALL_LEVEL_MARKER, BLANK_LINE } from '#cli/config/generation/builders.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';

@@ -3,9 +3,9 @@ import { join } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { CI_NODE, NODE_TOOL } from '#cli/config/repository/version-pin.ts';
-import { GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import {
+    CI_NODE,
     DELETED_LOCKFILE_MESSAGE,
     INSTALL_FAILURE,
     LOCK_ONLY_FLAG,
@@ -46,7 +46,7 @@ async function createNpmLockfile(
     install: NpmToolInstall,
     { toolProjectFile, lockfileName }: { toolProjectFile: GeneratedFile; lockfileName: string },
 ): Promise<string> {
-    if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
+    if (findProgram(NODE_PROGRAM) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
     const packageManager = install.packageManager;
     using scratch = createTemporaryFolder();
     const runFolder = scratch.path;
@@ -141,7 +141,7 @@ starts with no lockfile and no node_modules folder, so npm resolves the tree as 
 writes the lockfile that later installs read. A lockfile that holds credentials is deleted, and the error stays.
 */
 export async function installUnlockedNpmTools(install: NpmToolInstall): Promise<string> {
-    if (findProgram(NODE_TOOL) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
+    if (findProgram(NODE_PROGRAM) === undefined) throw new GspotError('install', NODE_MISSING_MESSAGE);
     const { root } = install.session;
     const { packageManager, writer } = install;
     const path = `${GSPOT_FOLDER}/${selectLockfileName(packageManager.name)}`;

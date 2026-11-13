@@ -4,7 +4,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/files.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation/builders.ts';
 import { planChecks } from '#cli/engine/plan/checks.ts';
 import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
 import { buildCommandLaunch } from '#cli/engine/run/tool-runs/check.ts';

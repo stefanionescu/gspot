@@ -29,7 +29,7 @@ import { isDocstring } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ParsedSource, TrivialFunction } from '#cli/types/configurations/general.ts';
+import type { ParsedSource, TrivialFunction } from '#cli/types/configurations/structure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { ParsedLanguage } from '#cli/types/parsers.ts';

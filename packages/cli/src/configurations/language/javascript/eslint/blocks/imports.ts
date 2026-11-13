@@ -2,7 +2,6 @@ import picomatch from 'picomatch';
 
 import {
     ANY_DEPTH_PREFIX,
-    CODE_LANGUAGES,
     DENO_IMPORT_EXTENSION,
     EXTENSIONLESS_CODE,
     FILE_EXTENSION_RULE,
@@ -11,7 +10,8 @@ import {
     IMPORT_EXTENSIONS,
     NODE_SCRIPT_PATTERNS,
     TYPESCRIPT_EXTENSION_MAP,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+} from '#cli/config/configurations/javascript/blocks.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/language.ts';
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';

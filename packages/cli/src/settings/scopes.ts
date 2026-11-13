@@ -1,4 +1,4 @@
-import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
+import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/file.ts';
 import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
 import { compareScopeDepth, isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';

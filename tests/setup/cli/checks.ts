@@ -10,7 +10,7 @@ import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import * as environment from '#cli/system/environment.ts';
-import type { NamingSettings } from '#cli/types/configurations/general.ts';
+import type { NamingSettings } from '#cli/types/configurations/naming.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

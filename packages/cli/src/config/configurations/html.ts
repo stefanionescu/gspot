@@ -1,5 +1,4 @@
 // checks
-
 export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
 export const DOCUMENT_URL_ATTRIBUTES: ReadonlyMap<string, readonly string[]> = new Map([
     ['a', ['href', 'xlink:href']],

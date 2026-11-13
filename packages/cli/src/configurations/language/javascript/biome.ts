@@ -1,5 +1,5 @@
-import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript/tools.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript/projects.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { getLimit } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 

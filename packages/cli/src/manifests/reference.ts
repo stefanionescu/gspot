@@ -5,7 +5,7 @@ import { SWIFT_IMPORT_TAG, SWIFT_TEST_TAG, SWIFT_TEST_TARGET_TAG } from '#cli/co
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
-import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
+import type { Configuration, RuleFileReference } from '#cli/types/manifests.ts';
 
 function formatListCondition(kind: keyof typeof DETECTION_LABELS, patterns: readonly string[]): string | undefined {
     const names = patterns
@@ -70,7 +70,7 @@ export function formatDetectionConditions(detect: Configuration['detect']): {
     return { conditions, exclusions };
 }
 
-export function listRuleReferences(configuration: Configuration): ConfigurationReference['ruleFiles'] {
+export function listRuleReferences(configuration: Configuration): RuleFileReference[] {
     const files = listRuleFiles(configuration);
     return files.map(({ path }) => {
         const condition = configuration.rules[path];

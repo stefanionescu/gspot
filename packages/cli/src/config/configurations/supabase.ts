@@ -1,5 +1,4 @@
 // checks
-
 export const DENO_CHECK_COMMAND = ['deno', 'check', '--quiet'] as const;
 export const DENO_CHECK_FAILED_MESSAGE = 'The deno check command failed.';
 export const DENO_IMPORT_MAP_FLAG = '--import-map';

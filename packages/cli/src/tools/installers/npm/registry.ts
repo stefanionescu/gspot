@@ -1,9 +1,7 @@
 import { realpathSync, writeFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 
-import { NPM_TOOL } from '#cli/config/repository/package-managers.ts';
-import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { NODE_PROGRAM, NPM_PROGRAM, PRIVATE_FILE } from '#cli/config/system.ts';
 import {
     CERTIFICATE_KEYS,
     CONNECTION_KEYS,
@@ -33,7 +31,7 @@ async function readRegistrySettings(root: string): Promise<Record<string, unknow
     const npmPath = readNpmPath();
     const config = new npmConfig.default({
         npmPath,
-        execPath: realpathSync(findProgram(NODE_TOOL) ?? process.execPath),
+        execPath: realpathSync(findProgram(NODE_PROGRAM) ?? process.execPath),
         definitions: npmDefinitions.definitions,
         flatten: npmDefinitions.flatten,
         shorthands: npmDefinitions.shorthands,
@@ -71,7 +69,7 @@ function addEnvironmentReference(environment: Record<string, string>, value: str
 }
 
 function readNpmPath(): string {
-    const npm = findProgram(NPM_TOOL);
+    const npm = findProgram(NPM_PROGRAM);
     if (npm === undefined) return dirname(process.execPath);
     return process.platform === 'win32'
         ? join(dirname(npm), 'node_modules', 'npm')

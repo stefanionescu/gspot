@@ -6,7 +6,7 @@ import { format } from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';

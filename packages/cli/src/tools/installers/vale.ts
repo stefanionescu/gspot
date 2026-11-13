@@ -2,18 +2,19 @@ import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:
 import { dirname, join, posix } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { VALE_INSTALL_PREFIX, VALE_TEMPORARY_NAME } from '#cli/config/repository/setup.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { CONFIG_FLAG, JSON_INDENT } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG, JSON_INDENT } from '#cli/config/tools/programs.ts';
 import {
     VALE_ARCHIVE_LIMIT,
     VALE_DOWNLOAD_NAME,
     VALE_INSTALL_ARGUMENTS,
+    VALE_INSTALL_PREFIX,
     VALE_INSTALL_STEP,
     VALE_PACKAGE_FOLDERS,
     VALE_PACKAGE_RELEASES,
     VALE_PACKAGE_URLS,
     VALE_PACKAGES,
+    VALE_TEMPORARY_NAME,
     VALE_TOOL,
 } from '#cli/config/tools/vale.ts';
 import { getTool } from '#cli/manifests/tools.ts';

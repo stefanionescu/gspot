@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { CONFIGURATION_ORIGINS } from '#cli/config/manifests.ts';
+import { CONFIGURATION_ORIGINS } from '#cli/config/repository/files.ts';
 import { levelSchema } from '#cli/schemas/manifests/fields.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { lintCommandSchema } from '#cli/schemas/repository.ts';

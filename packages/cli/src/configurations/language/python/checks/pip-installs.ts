@@ -7,7 +7,7 @@ import {
     REQUIREMENTS_FILE_MESSAGE,
     REQUIREMENTS_FOLDER_FILE,
 } from '#cli/config/configurations/python.ts';
-import { REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
+import { REQUIREMENTS_FILE } from '#cli/config/repository/projects.ts';
 import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';

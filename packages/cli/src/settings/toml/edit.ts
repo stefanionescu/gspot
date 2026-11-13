@@ -1,6 +1,6 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { ESCAPED_GLOB_CHARACTERS, SETTINGS_PAGE_SENTENCE, SETTINGS_PREFACE } from '#cli/config/settings/validation.ts';
+import { ESCAPED_GLOB_CHARACTERS, SETTINGS_PAGE_SENTENCE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
 import { extractKeyName } from '#cli/settings/lookup.ts';
 import { safeParseSettings } from '#cli/settings/parse.ts';
 import { buildSettingsText } from '#cli/settings/toml/text.ts';
@@ -9,17 +9,17 @@ import { isReasonedValue, listWrittenKeys } from '#cli/settings/values/written.t
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
-import type { Setting } from '#cli/types/manifests.ts';
-import type {
-    AvailableSettings,
-    EditedSettings,
-    IgnoreRecord,
-    IgnoreRemoval,
-    ParsedSettingValue,
-    SettingKey,
-    SettingsFile,
-    SettingsTable,
-    TomlTable,
+import {
+    type AvailableSettings,
+    type EditedSettings,
+    type IgnoreRecord,
+    type IgnoreRemoval,
+    type ParsedSettingValue,
+    type Setting,
+    type SettingKey,
+    type SettingsFile,
+    type SettingsTable,
+    type TomlTable,
 } from '#cli/types/settings.ts';
 
 function splitKey(key: string): SettingKey {

@@ -4,7 +4,7 @@ import { dirname, join, relative } from 'node:path';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
 import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
@@ -40,7 +40,7 @@ export function readToolCommandPrefix(root: string, tool: Tool, path: string): s
     const script = typeof bin === 'object' ? bin[tool.name] : bin;
     if (script === undefined) return [path];
     const node =
-        process.versions['bun'] === undefined ? process.execPath : (findProgram(NODE_TOOL) ?? process.execPath);
+        process.versions['bun'] === undefined ? process.execPath : (findProgram(NODE_PROGRAM) ?? process.execPath);
     return [node, join(dirname(packagePath), script)];
 }
 

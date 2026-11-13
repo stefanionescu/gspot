@@ -1,4 +1,4 @@
-import { GITHUB_WORKFLOW } from '#cli/config/generation/files.ts';
+import { GITHUB_WORKFLOW } from '#cli/config/generation/builders.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
 

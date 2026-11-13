@@ -11,15 +11,17 @@ export const REQUIREMENT_NAME_END = /[\s<>=!~;[@]/u;
 export const RUNTIME_COMMAND = new RegExp(String.raw`^\s*(${JAVASCRIPT_RUNTIMES.join('|')})(?:\s|$)`, 'u');
 
 // lockfiles
+export const BUN_LOCKFILE = 'bun.lock';
 export const DEPENDENCY_SECTIONS = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+export const UV_LOCKFILE = 'uv.lock';
 export const LOCKFILES = [
-    { file: 'bun.lock', configuration: 'javascript', packageManager: 'bun', toolProject: true, copied: true },
+    { file: BUN_LOCKFILE, configuration: 'javascript', packageManager: 'bun', toolProject: true, copied: true },
     { file: 'bun.lockb', configuration: 'javascript', packageManager: 'bun', binary: true },
     { file: 'pnpm-lock.yaml', configuration: 'javascript', packageManager: 'pnpm', toolProject: true, copied: true },
     { file: 'yarn.lock', configuration: 'javascript', packageManager: 'yarn', copied: true },
     { file: 'package-lock.json', configuration: 'javascript', packageManager: 'npm', toolProject: true, copied: true },
     { file: 'npm-shrinkwrap.json', configuration: 'javascript', packageManager: 'npm' },
-    { file: 'uv.lock', configuration: 'python', packageManager: 'uv', copied: true },
+    { file: UV_LOCKFILE, configuration: 'python', packageManager: 'uv', copied: true },
     { file: 'poetry.lock', configuration: 'python', packageManager: 'poetry' },
     { file: 'pdm.lock', configuration: 'python', packageManager: 'pdm' },
     { file: 'Cargo.lock', packageManager: 'cargo' },

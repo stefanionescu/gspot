@@ -1,12 +1,8 @@
 import { stringify } from '@decimalturn/toml-patch';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    CONFIG_TOML_FORMAT,
-    JSON_INDENT,
-    NPM_TOOL_PROJECT,
-    PYTHON_TOOL_PROJECT,
-} from '#cli/config/tools/installers.ts';
+import { NPM_TOOL_PROJECT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { listMisePins, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
 import type { Configuration } from '#cli/types/manifests.ts';

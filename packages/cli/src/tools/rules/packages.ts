@@ -12,7 +12,7 @@ import {
     MARKDOWNLINT_RULE_SCHEMA,
     STYLELINT_MANIFEST_TOOL,
     UNDEFINED_NAME_FIX,
-} from '#cli/config/tools/programs.ts';
+} from '#cli/config/tools/rules.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';

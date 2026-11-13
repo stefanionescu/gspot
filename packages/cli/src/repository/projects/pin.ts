@@ -10,10 +10,9 @@ import {
     GSPOT_MISE_OPTIONS,
     GSPOT_MISE_TOOL,
     JSON_INDENT_PATTERN,
-    NODE_TOOL,
     SETUP_NODE_VERSION,
-} from '#cli/config/repository/version-pin.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+} from '#cli/config/repository/projects.ts';
+import { NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
@@ -60,7 +59,7 @@ export function writeMisePin(writer: Files): void {
     const text = tools?.bytes.toString('utf8') ?? '';
     const document = parseTomlFile(MISE_CONFIG_FILE, text, miseToolsSchema);
     const pin = { version: cliPackage.version, ...GSPOT_MISE_OPTIONS };
-    const node = document.tools[NODE_TOOL] === undefined ? { [NODE_TOOL]: SETUP_NODE_VERSION } : {};
+    const node = document.tools[NODE_PROGRAM] === undefined ? { [NODE_PROGRAM]: SETUP_NODE_VERSION } : {};
     const next = { ...document, tools: { ...node, ...document.tools, [GSPOT_MISE_TOOL]: pin } };
     const patched = patch(text, next);
     writer.write(MISE_CONFIG_FILE, {

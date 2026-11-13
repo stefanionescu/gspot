@@ -1,5 +1,4 @@
-import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import { MISE_TOOL } from '#cli/config/tools/installers.ts';
+import { MISE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { getRootScope } from '#cli/settings/scopes.ts';
@@ -121,7 +120,7 @@ export async function installTools(
     session: Session,
     input: Pick<ToolInstall, 'checkTools' | 'runsProjectInstall'>,
 ): Promise<InstallResult> {
-    const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_TOOL) });
+    const context = await buildToolInstall(session, { ...input, misePath: findProgram(MISE_PROGRAM) });
     const { steps } = context;
     await assertPackageManagerVersion(context);
     if (await isEveryToolInstalled(context)) {

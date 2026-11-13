@@ -17,7 +17,7 @@ import {
     SHIPPED_FILES_FOLDER,
 } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
-import { commandCheckFields, outputSchema } from '#cli/schemas/manifests/checks.ts';
+import { commandCheckFields, manifestToolSchema, outputSchema } from '#cli/schemas/manifests/checks.ts';
 import {
     conditionSchema,
     identifierCategorySchema,
@@ -27,7 +27,6 @@ import {
     regexSchema,
     writtenNamingExceptionSchema,
 } from '#cli/schemas/manifests/fields.ts';
-import { manifestToolSchema } from '#cli/schemas/manifests/tools.ts';
 
 const pathContainerSchema = z.strictObject({
     open: z.string().min(1),

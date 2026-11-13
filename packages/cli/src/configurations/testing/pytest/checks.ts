@@ -1,4 +1,4 @@
-import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
+import { COVERAGE_INI_SECTION } from '#cli/config/configurations/testing.ts';
 import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';

@@ -1,5 +1,4 @@
 // allowed-names check
-
 export const UNUSED_RECORD_RULE = 'unused-record';
 
 // identifier names
@@ -84,13 +83,13 @@ export const DECLARATIONS = [
     [['public_field_definition'], 'properties'],
     [['enum_assignment'], 'enum_cases'],
 ] as const;
+const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'] as const;
 export const PATTERN_FIELDS: Readonly<Record<string, string>> = {
     pair_pattern: 'value',
     object_assignment_pattern: 'left',
     assignment_pattern: 'left',
 };
 export const PATTERN_LISTS = new Set(['rest_pattern', 'object_pattern', 'array_pattern']);
-const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'] as const;
 export const TYPESCRIPT_CALLABLE_NODES = [...TYPESCRIPT_FUNCTION_NODES, ...METHOD_NODES, 'arrow_function'] as const;
 export const TYPESCRIPT_NAME_NODES = new Set([
     'identifier',

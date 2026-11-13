@@ -24,7 +24,7 @@ import {
     VERIFY_JWT_MESSAGE,
     VERIFY_JWT_OFF,
 } from '#cli/config/configurations/supabase.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import {
@@ -45,7 +45,7 @@ import { findText, readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { listMatchingLines } from '#cli/system/text/positions.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/infrastructure.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/platform.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';

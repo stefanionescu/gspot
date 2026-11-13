@@ -1,8 +1,5 @@
-import {
-    ESLINT_CHECK,
-    PACKAGE_JSON_PATTERN,
-    PACKAGE_JSON_RULE_PREFIX,
-} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import { PACKAGE_JSON_PATTERN, PACKAGE_JSON_RULE_PREFIX } from '#cli/config/configurations/javascript/blocks.ts';
+import { ESLINT_CHECK } from '#cli/config/configurations/javascript/eslint.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import { buildManifestRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/manifests.ts';
 import {

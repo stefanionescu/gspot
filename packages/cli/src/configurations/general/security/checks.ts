@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 
 import { SEMGREP_TOOL } from '#cli/config/configurations/general.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/installers.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
 import { listLocalRuleConfigs } from '#cli/engine/plan/skips.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';

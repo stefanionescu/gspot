@@ -1,14 +1,9 @@
 import { posix } from 'node:path';
 
-import {
-    COMPOSE_CHECK,
-    COMPOSE_FILE_FLAG,
-    COMPOSE_OVERRIDE,
-    COMPOSE_SUFFIXES,
-    DOCKERIGNORE,
-} from '#cli/config/configurations/docker.ts';
+import { COMPOSE_CHECK, COMPOSE_FILE_FLAG, COMPOSE_OVERRIDE, DOCKERIGNORE } from '#cli/config/configurations/docker.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
+import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
 import { listCheckFiles } from '#cli/engine/plan/files.ts';
@@ -32,7 +27,7 @@ function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
                 : files.find(
                       ({ path }) =>
                           posix.dirname(path) === posix.dirname(file.path) &&
-                          COMPOSE_SUFFIXES.map((suffix) => `${baseName}${suffix}`).includes(posix.basename(path)),
+                          YAML_EXTENSIONS.map((suffix) => `${baseName}${suffix}`).includes(posix.basename(path)),
                   );
         const project = base ?? file;
         const group = groups.get(project.path) ?? { last: project, before: [] };

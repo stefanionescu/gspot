@@ -9,7 +9,7 @@ import {
     LYCHEE_SITE_NOTE,
 } from '#cli/config/configurations/docs.ts';
 import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 

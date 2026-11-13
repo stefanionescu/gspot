@@ -6,8 +6,7 @@ import { mock, type Mock, spyOn } from 'bun:test';
 import executables from 'which';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
-import { EXECUTABLE_FILE } from '#cli/config/system.ts';
+import { EXECUTABLE_FILE, GIT_PROGRAM } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { listExecutableNames } from '#cli/system/processes/programs.ts';

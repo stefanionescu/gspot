@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { UV_TOOL } from '#cli/config/tools/installers.ts';
+import { UV_PROGRAM } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
@@ -33,7 +33,7 @@ async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUT
     };
     const pins = await readFile(join(REPOSITORY_ROOT, MISE_CONFIG_FILE), 'utf8');
     const runtimePins = runtimePinsSchema.parse(parse(pins)).tools;
-    const uvPin = String(getTool(readConfigurations().values(), UV_TOOL).version);
+    const uvPin = String(getTool(readConfigurations().values(), UV_PROGRAM).version);
     for (const command of [
         ['mise', 'use', `node@${runtimePins.node}`, `uv@${uvPin}`, `npm:@gspothq/cli@${cliPackage.version}`],
         ...tutorial.projectCommands,

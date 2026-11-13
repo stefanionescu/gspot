@@ -22,7 +22,7 @@ import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javas
 import { findText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
-import type { AssetGlobImport, AssetSource } from '#cli/types/configurations/language.ts';
+import type { AssetGlobImport, AssetSource } from '#cli/types/configurations/framework.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { ComponentScript } from '#cli/types/parsers.ts';

@@ -1,5 +1,4 @@
 // checks
-
 export const CAUSE_MARKS = ['Please install', 'FATAL', 'Error:', '⨯'] as const;
 export const CI_ENVIRONMENT = { CI: '1' } as const;
 export const MARKED_LINES = 2;

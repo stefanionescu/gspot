@@ -1,8 +1,8 @@
 import { basename, relative } from 'node:path/posix';
 
-import { CODE_LANGUAGES, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript/eslint-config.ts';
-import { BASE_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
+import { BOUNDARY_FOLDERS_CONSTANT, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/javascript/eslint.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
+import { BASE_RULES } from '#cli/config/configurations/javascript/rules.ts';
 import { NODE_SHEBANG_TAG } from '#cli/config/configurations/shared.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';

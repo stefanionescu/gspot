@@ -1,5 +1,5 @@
 import cliPackage from '#cli-package' with { type: 'json' };
-import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { PACKAGE_JSON, PYPROJECT_TOML, UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 // check output defaults
@@ -45,7 +45,6 @@ export const GSPOT_REMOVE = 'gspot remove';
 // gspot paths
 export const MISE_CONFIG_FILE = 'mise.toml';
 export const MISE_LOCKFILE = 'mise.lock';
-export const UV_LOCKFILE = 'uv.lock';
 export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     rules: `${GSPOT_FOLDER}/rules`,
@@ -98,7 +97,6 @@ export const CHECK_NEEDS = [
     'python-environment',
 ] as const;
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
-export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
 export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;
 export const GROUPS = [
     'language',
@@ -136,10 +134,8 @@ export const NAMED_CATEGORIES = [
     'packages',
     'path_parameters',
 ] as const;
-export const PATH_ROLES = ['source', 'destination', 'build'] as const;
 export const ROOT_RUNS = ['once', 'history'] as const;
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
-export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
 export const TOOL_KINDS = ['program', 'package'] as const;
 
@@ -150,13 +146,3 @@ export const MANIFEST_FILE = 'manifest.toml';
 export const RULES_FOLDER = 'rules';
 export const SHIPPED_FILES_FOLDER = 'files';
 export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
-
-// setting reasons
-export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
-export const BOUND_REASON_DESCRIPTION =
-    'Why this code needs a weaker bound than the default; required when you weaken it.';
-export const REASON_DESCRIPTIONS = {
-    raising: 'Why this code needs more than the default; required when you raise the value.',
-    lowering: 'Why this code needs less than the default; required when you lower the value.',
-    adding: 'Why these entries belong; required when you add an entry.',
-} as const;

@@ -1,5 +1,5 @@
 import { LINT_RULE_LABELS } from '#cli/config/commands/lookup.ts';
-import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
+import { WEAKENINGS_CHECK } from '#cli/config/settings/file.ts';
 import { findRuleCheck, readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import {

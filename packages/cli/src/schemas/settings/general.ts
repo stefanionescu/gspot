@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/schema.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import {
     allowReasonedValue,
