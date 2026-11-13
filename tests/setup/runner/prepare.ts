@@ -10,14 +10,18 @@ import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { findMisePin } from '#cli/tools/pins.ts';
 import { buildMiseInstall } from '#cli/tools/projects.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { GSPOT_LAUNCHER_PATH, MISE_TRUST, TOOL_PATHS_FILE } from '#tests/config/setup/sandboxes.ts';
+import {
+    GSPOT_LAUNCHER_PATH,
+    MISE_STATE_FOLDER,
+    MISE_TRUST,
+    TOOL_INSTALL_FOLDER,
+    TOOL_PATHS_FILE,
+} from '#tests/config/setup/runner.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
-import { writeLauncher } from '#tests/setup/system/fakes.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-
-const TOOL_INSTALL_FOLDER = 'tools';
+import { writeLauncher } from '#tests/setup/system/programs.ts';
 
 await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },
@@ -38,7 +42,7 @@ if (process.argv[2] !== 'e2e') {
 async function installTestTools(): Promise<string[]> {
     const folder = join(TEST_RUN_FOLDER, TOOL_INSTALL_FOLDER);
     const config = join(folder, MISE_CONFIG_FILE);
-    const env = { MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state') };
+    const env = { MISE_STATE_DIR: join(TEST_RUN_FOLDER, MISE_STATE_FOLDER) };
     const configurations = readConfigurations().values().toArray();
     const names = listDistinctTools(configurations)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))

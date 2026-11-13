@@ -15,7 +15,7 @@ import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/generate.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/configs.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

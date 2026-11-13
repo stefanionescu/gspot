@@ -10,7 +10,7 @@ import { addScopeTable, buildEditedSettings, removeKey, removeUnknownKeys, setKe
 import { readSettingsFile } from '#cli/settings/toml/file.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/text.ts';
+import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/parse.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {

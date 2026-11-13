@@ -10,7 +10,7 @@ import {
     GPL_PACKAGE,
     LICENSE_TABLES,
     MIT_PACKAGE,
-} from '#tests/config/configurations/licenses.ts';
+} from '#tests/config/configurations/general.ts';
 import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -19,8 +19,9 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands, fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 function buildNpmLockfile(packageManager: 'bun' | 'npm', pins: Record<string, string>): string {
     const entries = Object.entries(pins);

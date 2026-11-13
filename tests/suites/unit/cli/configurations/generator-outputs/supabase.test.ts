@@ -12,8 +12,9 @@ import * as processes from '#cli/system/processes/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 

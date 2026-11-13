@@ -14,7 +14,7 @@ import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
-    await cp(join(REPOSITORY_ROOT, 'tests/setup/programs/processes/eslint-plugin.ts'), join(consumer, 'consumer.ts'));
+    await cp(join(REPOSITORY_ROOT, 'tests/setup/programs/checks/eslint-plugin.ts'), join(consumer, 'consumer.ts'));
     await writeFile(join(consumer, 'consumer.mts'), PLUGIN_TYPES_SOURCE);
     const options = { cwd: consumer, env: isolatedEnvironment };
     const checked = await runCommand(['node', 'consumer.ts'], options);

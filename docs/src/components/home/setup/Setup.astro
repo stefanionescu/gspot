@@ -1,9 +1,10 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 
 import { COPIED_MESSAGE, COPY_FAILED_MESSAGE, URL_BREAK } from '#docs/config/home.ts';
 import { CURL_COMMAND } from '#docs/config/reference.ts';
-import { AGENT_PROMPT, LLMS_COMMAND, LLMS_URL, setup } from '#docs/reference/setup.ts';
+import { AGENT_PROMPT, LLMS_COMMAND, LLMS_URL } from '#docs/guides/setup.ts';
 
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
@@ -44,7 +45,7 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
             <label class="manager">
                 <span class="sr-only">Package manager</span>
                 <select>
-                    {setup.map(({ name }, index) => <option value={index}>{name}</option>)}
+                    {CLI_REFERENCE.setup.map(({ name }, index) => <option value={index}>{name}</option>)}
                 </select>
                 <Icon name="down-caret" size="1rem" class="icon-16" />
             </label>
@@ -68,7 +69,7 @@ const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);
     </div>
     <div class="setup-body">
         <div class="setup-panel" role="tabpanel" id="panel-human" aria-labelledby="mode-human" tabindex="0">
-            {setup.map(({ lines }, index) => <pre
+            {CLI_REFERENCE.setup.map(({ lines }, index) => <pre
                 class="commands"
                 data-manager={index}
                 hidden={index !== 0}

@@ -41,6 +41,70 @@ export const UNPARSED_CONFIGS = [
     'trivyignore',
 ] as const;
 
+// ignore files
+export const IGNORE_LIST_SETTINGS = {
+    level: 'all',
+    rules: true,
+    scopes: [
+        { path: 'apps/web', configurations: ['javascript', 'css'] },
+        { path: 'services/api', configurations: ['python'] },
+    ],
+} as const;
+export const LANGUAGE_IGNORES = [
+    {
+        name: 'Swift without JavaScript',
+        configurations: ['format', 'markdown', 'swift'],
+        scopes: [],
+        ignored: ['.build/', 'DerivedData/', 'Pods/'],
+        kept: ['node_modules/', 'package-lock.json', '.venv/', 'uv.lock'],
+    },
+    {
+        name: 'a JavaScript child of Python',
+        configurations: ['format', 'markdown', 'python'],
+        scopes: [{ path: 'web', configurations: ['javascript'] }],
+        ignored: ['.venv/', 'node_modules/'],
+        kept: ['.build/', 'Package.resolved'],
+    },
+] as const;
+export const PATH_IGNORE_CASES = [
+    {
+        configuration: 'spelling',
+        check: 'spelling/typos',
+        file: 'typos.toml',
+        nativePath: ['files', 'extend-exclude'],
+    },
+    {
+        configuration: 'structure',
+        check: 'structure/jscpd',
+        file: 'jscpd.json',
+        nativePath: ['ignore'],
+    },
+    {
+        configuration: 'javascript',
+        check: 'javascript/knip',
+        file: 'knip.json',
+        nativePath: ['ignore'],
+    },
+] as const;
+export const PRETTIER_IGNORE_CASES = [
+    { file: 'src/dist/source.ts', ignored: true },
+    { file: 'generated/source.ts', ignored: true },
+    { file: 'vendored/source.ts', ignored: true },
+    { file: 'authored/omitted.ts', ignored: true },
+    { file: 'authored/kept.ts', ignored: false },
+    { file: 'pnpm-lock.yaml', ignored: true },
+] as const;
+export const PRETTIER_IGNORE_SETTINGS = {
+    configurations: ['format', 'javascript'],
+    ignore: [
+        {
+            check: 'format/prettier',
+            paths: ['authored/omitted.ts'],
+            reason: 'This output retains its authored layout.',
+        },
+    ],
+} as const;
+
 // owned files
 const EDITORCONFIG_SETTINGS = `configurations = ["format"]
 [[ignore]]
@@ -145,29 +209,6 @@ export const XCTEST_LINK_FILE_CASES = [
             },
         },
     },
-] as const;
-
-// rule files
-export const PLAYWRIGHT_RULE_CASES = [
-    {
-        name: 'a scope that depends on playwright without the test runner gets no PLAYWRIGHT.md',
-        files: { 'package.json': '{"devDependencies":{"playwright":"1.0.0"}}' },
-        rules: [],
-    },
-    {
-        name: 'a scope that depends on @playwright/test gets PLAYWRIGHT.md',
-        files: { 'package.json': '{"devDependencies":{"@playwright/test":"1.0.0"}}' },
-        rules: ['PLAYWRIGHT.md'],
-    },
-    {
-        name: 'a scope with a Playwright config file gets PLAYWRIGHT.md',
-        files: { 'package.json': '{}', 'e2e/playwright.config.ts': 'export default {};\n' },
-        rules: ['PLAYWRIGHT.md'],
-    },
-] as const;
-export const RUNTIME_RULE_CASES = [
-    { name: 'a Deno script', runtime: 'deno', rules: ['DENO.md'] },
-    { name: 'a Node.js script', runtime: 'node', rules: [] },
 ] as const;
 
 // stale files

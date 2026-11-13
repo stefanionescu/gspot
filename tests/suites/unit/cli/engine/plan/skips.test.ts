@@ -5,7 +5,7 @@ import { listSettingReaders } from '#cli/engine/plan/skips.ts';
 import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { NEXT_INTL_PROJECTS } from '#tests/config/engine/run.ts';
+import { NEXT_INTL_PROJECTS } from '#tests/config/engine/plan.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

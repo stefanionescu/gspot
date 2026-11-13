@@ -1,5 +1,4 @@
 // environment readers
-// environment readers
 export const OS_VALUE_SOURCE = 'import os\nVALUE = os.environ["KEY"]\n';
 export const PYTHON_ENVIRONMENT_SOURCE = `import os as system
 from os import environ as values, getenv as read

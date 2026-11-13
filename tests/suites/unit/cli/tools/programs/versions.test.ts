@@ -7,10 +7,10 @@ import { executableLayout } from '#cli/system/processes/programs.ts';
 import { inspectTool } from '#cli/tools/programs/inspect.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools.ts';
-import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
-import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { buildProgramPin, buildToolSearch, fakeNpmPackage } from '#tests/setup/cli/tools.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([
     ['1.2.3', 'outdated'],

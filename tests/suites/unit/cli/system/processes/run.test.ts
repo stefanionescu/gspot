@@ -8,9 +8,8 @@ import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { listExecutableNames } from '#cli/system/processes/programs.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a program runs its sibling commands before unrelated PATH tools', async () => {
     await using sandbox = await testdir();

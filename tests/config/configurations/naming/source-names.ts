@@ -1,5 +1,4 @@
 // naming identifiers
-// naming identifiers
 export const PYTHON_TYPE_SOURCE = [
     'from typing import Literal, Optional, TypeAlias',
     'Mode = Literal["read", "write"]',

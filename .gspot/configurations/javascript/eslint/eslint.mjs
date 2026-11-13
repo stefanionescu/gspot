@@ -361,7 +361,7 @@ export default setRuleOptions(defineConfig([
         "eslint.config.mjs",
         "prettier.config.mjs",
         "packages/cli/README.md",
-        "tests/setup/sandboxes/test-tools.lock",
+        "tests/setup/runner/test-tools.lock",
         "docs/worker-configuration.d.ts",
         "docs/cloudflare-env.d.ts",
         "**/node_modules/**",

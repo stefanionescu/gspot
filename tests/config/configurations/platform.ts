@@ -1,5 +1,4 @@
 // cloudflare
-// cloudflare
 export const CLOUDFLARE_HEADERS = `  Header-before-path: value
 # Comment
 /*

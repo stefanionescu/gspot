@@ -2,14 +2,8 @@ import { statSync } from 'node:fs';
 import { parseArgs } from 'node:util';
 
 import { EXECUTABLE_BITS } from '#cli/config/system.ts';
+import { CHECK_STAGED_COPY_OPTIONS } from '#tests/config/setup/programs.ts';
 import { splitAssignment } from '#tests/setup/system/programs.ts';
-
-const CHECK_STAGED_COPY_OPTIONS = {
-    file: { type: 'string' },
-    bytes: { type: 'string' },
-    executable: { type: 'string' },
-    write: { type: 'string' },
-} as const;
 
 const { values } = parseArgs({ options: CHECK_STAGED_COPY_OPTIONS });
 await Bun.write(...splitAssignment(values.write ?? ''));

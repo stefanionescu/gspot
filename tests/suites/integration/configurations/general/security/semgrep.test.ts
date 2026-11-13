@@ -7,10 +7,10 @@ import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles, buildSandboxChanges, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import type { Sandbox, SandboxChanges } from '#tests/types/setup.ts';
 
 const REPOSITORY_RULE = `rules:

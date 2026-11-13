@@ -1,108 +1,53 @@
 import { SCOPE_PATH_MESSAGES } from '#cli/config/settings/file.ts';
 
 // key validation
-export const SETTING_RULE_OPTIONS = [
+export const INVALID_MARKDOWNLINT_NAMES = [
+    { name: 'no-hard-tabs', value: { spaces_per_tab: 4 } },
+    { name: 'default', value: false },
+    { name: 'whitespace', value: {} },
+];
+export const SCOPE_CONFIGURATION_SETTINGS = [
     {
-        tables: '[tools.eslint.rules]\ncomplexity = [40]\n',
-        rule: 'complexity',
-        setting: 'limits.max_cyclomatic_complexity',
-        start: 'gspot.toml:3: tools.eslint.rules.complexity:',
+        name: 'a sibling configuration does not expose its settings to another scope',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.sql]\ndialect = "sqlite"\n',
+        errors: ['gspot.toml:8: scope.1.sql.dialect:'],
     },
     {
-        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules = { max-lines = [{ max = 900 }] }\n',
-        rule: 'max-lines',
-        setting: 'limits.max_file_lines',
-        start: 'gspot.toml:4: tools.eslint.override.0.rules.max-lines:',
+        name: 'a selected scope exposes its own configuration settings',
+        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.sql]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
+        errors: [],
     },
     {
-        tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"gspot/no-identical-functions" = [50]\n',
-        rule: 'gspot/no-identical-functions',
-        setting: 'structure.min_duplicate_lines',
-        start: 'gspot.toml:5: scope.0.tools.eslint.rules.gspot/no-identical-functions:',
-    },
-] as const;
-
-// published schema
-export const PUBLISHED_SCHEMA_CASES = [
-    { name: 'escaped glob brackets', input: { test_files: [String.raw`src/\[draft\]/*.test.ts`] }, valid: true },
-    { name: 'a path with an ASCII control character', input: { test_files: ['src/\u{1}.test.ts'] }, valid: false },
-    { name: 'a path with a C1 control character', input: { test_files: ['src/\u{85}.test.ts'] }, valid: false },
-    { name: 'a path with an invalid escape', input: { test_files: [String.raw`src/\a.test.ts`] }, valid: false },
-    {
-        name: 'GitHub CI with systems',
-        input: { ci: { provider: 'github', operating_systems: ['linux'] } },
-        valid: true,
-    },
-    { name: 'GitLab CI without systems', input: { ci: { provider: 'gitlab' } }, valid: true },
-    { name: 'a shipped configuration name', input: { configurations: ['python'] }, valid: true },
-    { name: 'an unknown configuration name', input: { configurations: ['cobol'] }, valid: false },
-    {
-        name: 'an unknown configuration name in a scope',
-        input: { scope: [{ path: 'api', configurations: ['cobol'] }] },
-        valid: false,
-    },
-    {
-        name: 'GitLab CI with systems',
-        input: { ci: { provider: 'gitlab', operating_systems: ['linux'] } },
-        valid: false,
-    },
-    {
-        name: 'GitLab CI with an empty systems list',
-        input: { ci: { provider: 'gitlab', operating_systems: [] } },
-        valid: false,
-    },
-    {
-        name: 'an empty command',
-        input: { command_check: [{ id: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
-        valid: false,
-    },
-    {
-        name: 'an empty program',
-        input: { command_check: [{ id: 'project/lint', command: [''], paths: ['src/**'], stage: 'commit' }] },
-        valid: false,
-    },
-    {
-        name: 'an empty argument',
-        input: { command_check: [{ id: 'project/lint', command: ['lint', ''], paths: ['src/**'], stage: 'commit' }] },
-        valid: true,
-    },
-    {
-        name: 'a formatter override without a setting',
-        input: { format: { override: [{ paths: ['src/**'] }] } },
-        valid: false,
-    },
-    {
-        name: 'an allowed package with a version range',
-        input: {
-            configurations: ['licenses'],
-            licenses: {
-                allowed_package: [{ name: 'example', version: '^1.2.3', reason: 'Reviewed its MIT license.' }],
-            },
-        },
-        valid: true,
-    },
-    {
-        name: 'a SQLFluff dialect that injects a directive',
-        input: { tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } },
-        valid: false,
-    },
-    {
-        name: 'reasoned registry hosts',
-        input: {
-            dependencies: {
-                allowed_registries: { value: ['registry.example.test'], reason: 'Reviewed the package registry.' },
-            },
-        },
-        valid: true,
-    },
-    {
-        name: 'invalid registry host',
-        input: { dependencies: { allowed_registries: { value: [false], reason: 'Reviewed the package registry.' } } },
-        valid: false,
+        name: 'root settings remain available to a scope that selects their configuration',
+        text: 'configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
+        errors: [],
     },
 ] as const;
 
 // reason validation
+export const DUPLICATED_REASON_ERRORS = [
+    {
+        key: 'limits.max_file_lines',
+        text: '[limits]\nmax_file_lines = { value = 400, reason = "x" }\n',
+    },
+    {
+        key: 'docs.allowed_urls',
+        text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
+    },
+];
+export const EMPTY_REASONS = ['', 'because'] as const;
+export const REVIEWED_REASON = 'Reviewed in tests.';
+export const RULE_OPTION_REASON_TABLES = [
+    { name: 'root', tables: '[tools.eslint.rules]\nno-console = [{ allow = ["warn"], reason = true }]\n' },
+    {
+        name: 'override',
+        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules.no-console = [{ allow = ["warn"], reason = true }]\n',
+    },
+    {
+        name: 'plugin',
+        tables: '[[tools.eslint.plugins]]\nname = "local"\npath = "local.mjs"\nrules.custom = [{ reason = true }]\n',
+    },
+];
 export const SWIFT_TARGET_REASON_CASES = [
     {
         name: 'a lower limit without a reason',
@@ -121,6 +66,30 @@ export const SWIFT_TARGET_REASON_CASES = [
     { name: 'the shared limit without a reason', lines: 80, reason: '', errors: [] },
 ] as const;
 
+// rule file validation
+export const RULE_FILE_ERRORS = [
+    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs',
+    'gspot.toml:5: tools.stylelint.plugins.0.path: missing-root.mjs',
+    'gspot.toml:8: security.semgrep_rules.0: missing-root.yml',
+    'gspot.toml:12: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs',
+    'gspot.toml:13: scope.0.security.semgrep_rules.0: missing-scope.yml',
+] as const;
+export const RULE_FILE_SETTINGS = {
+    configurations: ['javascript', 'security', 'css'],
+    tools: {
+        eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] },
+        stylelint: { plugins: [{ path: 'missing-root.mjs', rules: {} }] },
+    },
+    security: { semgrep_rules: ['missing-root.yml', 'present.yml'] },
+    scope: [
+        {
+            path: 'app',
+            tools: { eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] } },
+            security: { semgrep_rules: ['missing-scope.yml', 'present.yml'] },
+        },
+    ],
+} as const;
+
 // schema validation
 export const BOUNDARY_IMPORT_RULES = `[[import_rule]]
 name = "storage"
@@ -131,6 +100,7 @@ name = "app"
 paths = ["app/**"]
 can_import = ["storage"]
 `;
+export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
 export const ORDERED_IMPORT_RULES = `[[import_rule]]
 name = "storage"
 paths = ["storage/**"]
@@ -195,6 +165,29 @@ export const REFUSED_SCOPE_PATHS = [
     ['apps//web', SCOPE_PATH_MESSAGES.portable],
     ['apps/a<b', SCOPE_PATH_MESSAGES.portable],
 ] as const;
+export const VALID_LICENSES = ['MIT', 'GPL-2.0-only WITH Classpath-exception-2.0'];
+
+// setting rules
+export const SETTING_RULE_OPTIONS = [
+    {
+        tables: '[tools.eslint.rules]\ncomplexity = [40]\n',
+        rule: 'complexity',
+        setting: 'limits.max_cyclomatic_complexity',
+        start: 'gspot.toml:3: tools.eslint.rules.complexity:',
+    },
+    {
+        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules = { max-lines = [{ max = 900 }] }\n',
+        rule: 'max-lines',
+        setting: 'limits.max_file_lines',
+        start: 'gspot.toml:4: tools.eslint.override.0.rules.max-lines:',
+    },
+    {
+        tables: '[[scope]]\npath = "app"\n[scope.tools.eslint.rules]\n"gspot/no-identical-functions" = [50]\n',
+        rule: 'gspot/no-identical-functions',
+        setting: 'structure.min_duplicate_lines',
+        start: 'gspot.toml:5: scope.0.tools.eslint.rules.gspot/no-identical-functions:',
+    },
+] as const;
 
 // validation messages
 export const INVALID_SETTING_LOCATIONS = [
@@ -232,5 +225,39 @@ export const INVALID_SETTING_LOCATIONS = [
         name: 'a wrong inline reasoned value',
         text: '[limits]\nmax_file_lines = { value = "large", reason = "The generated source has more lines." }\n',
         start: 'gspot.toml:2: limits.max_file_lines.value:',
+    },
+] as const;
+export const KEY_PATH_CASES = [
+    {
+        name: 'a package tag used as a license version',
+        configurations: ['licenses'],
+        options: {
+            tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
+        },
+        start: 'gspot.toml:4: licenses.allowed_package.0.version:',
+        correction: ['"latest"', '"^1.2.3"'],
+    },
+    {
+        name: 'an invalid naming exception regular expression',
+        configurations: ['naming'],
+        options: {
+            tables: '[[naming.exception]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
+        },
+        start: 'gspot.toml:4: naming.exception.0.ignored_names_pattern:',
+        correction: ['"("', '"^_"'],
+    },
+    {
+        name: 'empty override paths',
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
+        correction: ['paths = []', 'paths = ["src"]'],
+        start: 'gspot.toml:3: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths.',
+    },
+    {
+        name: 'numeric rule options',
+        configurations: ['javascript'],
+        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
+        correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
+        start: 'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq:',
     },
 ] as const;

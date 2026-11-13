@@ -185,9 +185,6 @@ path = "literal"
 configurations = ["typescript"]
 `;
 
-// imports
-export const HOST_MODULE = '../../scripts/app.js';
-
 // rule tables
 export const DUPLICATE_RULE_CASES = [
     {
@@ -209,9 +206,6 @@ export const DUPLICATE_RULE_CASES = [
         rules: ['gspot/require-test-assertions', 'jest/expect-expect'],
     },
 ] as const;
-
-// trivial rules
-export const INDEX_ONLY_REEXPORTS = '{ value = "index-only", reason = "The package exports its public index files." }';
 
 // typed rules
 const PORT_SOURCE =

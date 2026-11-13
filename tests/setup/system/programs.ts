@@ -1,7 +1,8 @@
-import { readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
+import { dirname, join } from 'node:path';
 
-import { executableLayout } from '#cli/system/processes/programs.ts';
+import { EXECUTABLE_FILE } from '#cli/config/system.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {
@@ -27,6 +28,21 @@ export function splitProgramArguments(): { own: string[]; call: string[] } {
     return separator === -1 ? { own: all, call: [] } : { own: all.slice(0, separator), call: all.slice(separator + 1) };
 }
 
-export function buildVenvExecutablePath(folder: string, name: string): string {
-    return join(folder, executableLayout.environmentFolder, name + executableLayout.environmentSuffix);
+export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
+    await mkdir(dirname(target), { recursive: true });
+    await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
+    const windowsCommand = command.map((word) => `"${word.replaceAll('"', '""').replaceAll('%', '%%')}"`);
+    await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
+    await chmod(target, EXECUTABLE_FILE);
+}
+
+export async function writeProgramCommand(
+    folder: string,
+    path: string,
+    program: ProgramName,
+    ...programArguments: string[]
+): Promise<string> {
+    const target = join(folder, path);
+    await writeLauncher(target, buildProgramCommand(program, ...programArguments));
+    return dirname(target);
 }

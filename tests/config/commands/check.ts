@@ -15,8 +15,8 @@ export const SIGNAL_EXITS = [
 
 // check refusals
 const INVALID_UTF8_BYTE = 0xff;
-const UTF16_MARKER_BYTE = 0xfe;
 const LINE_FEED_BYTE = 0x0a;
+const UTF16_MARKER_BYTE = 0xfe;
 export const PUSH_INPUT_REFUSALS = [
     {
         name: 'text that is no ref update',

@@ -9,9 +9,10 @@ import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#te
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeNpmTool } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<readonly Finding[]> {

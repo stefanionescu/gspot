@@ -9,6 +9,7 @@ import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Level } from '#cli/types/settings.ts';
+import { SANDBOX_GITIGNORE, SANDBOX_PACKAGE_JSON, SANDBOX_REMOVAL_REASON } from '#tests/config/setup/sandboxes.ts';
 import { runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -16,18 +17,6 @@ import { linkPackages } from '#tests/setup/sandboxes/node-modules.ts';
 import { commitAll, markExecutable } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { InstalledSandboxPlan, ProcessOutput, Sandbox, SandboxPlan } from '#tests/types/setup.ts';
-
-const SANDBOX_PACKAGE_JSON = {
-    name: 'example',
-    version: '1.0.0',
-    private: true,
-    description: 'A sandbox.',
-    type: 'module',
-} as const;
-
-const SANDBOX_GITIGNORE = 'node_modules\n';
-
-const SANDBOX_REMOVAL_REASON = 'The sandbox exercises selected checks without this configuration.';
 
 async function pinSandboxNpm(root: string): Promise<void> {
     const npm = await runCommand(['npm', '--version'], { cwd: root });

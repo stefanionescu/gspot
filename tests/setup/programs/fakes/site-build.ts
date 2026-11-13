@@ -4,13 +4,13 @@ import { dirname, join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { parseArgs } from 'node:util';
 
-const SITE_BUILD_OPTIONS = { copy: { type: 'string', multiple: true }, import: { type: 'string' } } as const;
+import { SITE_BUILD_OPTIONS } from '#tests/config/setup/programs.ts';
+import { splitAssignment } from '#tests/setup/system/programs.ts';
 
 const { values } = parseArgs({ options: SITE_BUILD_OPTIONS });
 const pairs = values.copy ?? [];
 for (const pair of pairs) {
-    const source = pair.slice(0, pair.indexOf('='));
-    const target = pair.slice(pair.indexOf('=') + 1);
+    const [source, target] = splitAssignment(pair);
     const files = statSync(source).isDirectory()
         ? readdirSync(source, { recursive: true, encoding: 'utf8' }).filter((path) =>
               statSync(join(source, path)).isFile(),
@@ -22,8 +22,7 @@ for (const pair of pairs) {
     }
 }
 if (values.import !== undefined) {
-    const target = values.import.slice(values.import.indexOf('=') + 1);
-    const name = values.import.slice(0, values.import.indexOf('='));
+    const [name, target] = splitAssignment(values.import);
     const path = createRequire(join(process.cwd(), 'package.json')).resolve(name);
     const { value } = (await import(pathToFileURL(path).href)) as { value: string };
     mkdirSync(dirname(target), { recursive: true });

@@ -10,7 +10,7 @@ import { findProgram } from '#cli/system/processes/programs.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 const COMMAND = ['check', '--only', 'sandbox/finding'];
 

@@ -1,5 +1,4 @@
 // bare blocks
-// bare blocks
 export const SWIFT_BARE_BLOCKS = `func report(_ value: Int) {
     do {
         print(value)
@@ -133,6 +132,17 @@ export const STATEMENT_COUNT_CASES = [
     ['swift', 'func example() { /* comment */ work(); work() }'],
     ['bash', 'example() { # comment\necho value; echo value\n}'],
 ] as const;
+const SWIFT_ACCESSORS = `struct A {
+    var x: Int { 1 }
+    var y = 0 {
+        willSet { save(newValue) }
+        didSet { save(oldValue) }
+    }
+    subscript(i: Int) -> Int {
+        get { 1 }
+        set { save(newValue) }
+    }
+}`;
 export const TRIVIAL_FILES = [
     {
         name: 'a Python file of imports and aliases',
@@ -197,17 +207,6 @@ def wrapper():
         expected: ['trivial-file'],
     },
 ] as const;
-const SWIFT_ACCESSORS = `struct A {
-    var x: Int { 1 }
-    var y = 0 {
-        willSet { save(newValue) }
-        didSet { save(oldValue) }
-    }
-    subscript(i: Int) -> Int {
-        get { 1 }
-        set { save(newValue) }
-    }
-}`;
 export const TRIVIAL_FUNCTION_CASES = [
     {
         name: 'switch expression',

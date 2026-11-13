@@ -1,7 +1,3 @@
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { readHost } from '#cli/system/environment.ts';
-import { findMissingBuild } from '#cli/tools/pins.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 export const isWindows = process.platform === 'win32';
@@ -9,12 +5,6 @@ export const isWindows = process.platform === 'win32';
 export const isLinux = process.platform === 'linux';
 
 export const isMacos = process.platform === 'darwin';
-
-export function hasToolBuild(name: string): boolean {
-    const operatingSystem = readHost().platform;
-    const pin = getTool(readConfigurations().values(), name);
-    return findMissingBuild(pin, { platform: operatingSystem, arch: process.arch }) === undefined;
-}
 
 /**
 Tell whether a Docker daemon that runs Linux containers answers. A Docker CLI without a daemon, as on the hosted macOS

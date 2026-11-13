@@ -9,9 +9,9 @@ import { createFileTree } from 'testdirs';
 import {
     CAST_SWIFT,
     CORRECTED_PARSER_SOURCE,
-    PARAMETER_LIMIT_CASE,
     PARSER_SOURCE,
     SWIFT_SANDBOX,
+    SWIFTLINT_PARAMETER_LIMIT_CASE,
     XCTEST_SCOPES,
 } from '#tests/config/integration/swift.ts';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
@@ -19,10 +19,10 @@ import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
@@ -161,14 +161,18 @@ test.skipIf(!hasToolBuild('swiftlint'))(
 );
 
 const PARAMETER_LIMITS = [
-    { limit: 7, code: PARAMETER_LIMIT_CASE.failureStatus, findings: [PARAMETER_LIMIT_CASE.finding] },
+    {
+        limit: 7,
+        code: SWIFTLINT_PARAMETER_LIMIT_CASE.failureStatus,
+        findings: [SWIFTLINT_PARAMETER_LIMIT_CASE.finding],
+    },
     { limit: 8, code: 0, findings: [] },
 ] as const;
 
 test.skipIf(!hasToolBuild('swiftlint')).each([...PARAMETER_LIMITS])(
     'SwiftLint with max_function_parameters $limit reports a function of eight parameters only past the limit',
     async ({ limit, code, findings: expected }) => {
-        const scenario = PARAMETER_LIMIT_CASE;
+        const scenario = SWIFTLINT_PARAMETER_LIMIT_CASE;
         await using sandbox = await createGitSandbox({
             'gspot.toml': buildSandboxSettings(['swift'], {
                 level: 'all',

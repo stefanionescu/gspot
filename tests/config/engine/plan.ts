@@ -1,5 +1,61 @@
-// copy dependencies
-export const VALUE_ONE_LINE = 'export const value = 1;';
+import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
+
+// check plan
+export const SCOPE_WIDE_IGNORE_CASES = [
+    { paths: ['api/**'], ignored: true },
+    { paths: ['api'], ignored: true },
+    { paths: ['api/**', '!api/app/**'], ignored: false },
+] as const;
+
+// check skips
+const NEXT_INTL_PACKAGE = '{"dependencies":{"next-intl":"4.8.3"}}';
+export const NEXT_INTL_PROJECTS = [
+    {
+        name: 'root project',
+        scope: '',
+        files: { 'package.json': NEXT_INTL_PACKAGE },
+        selected: true,
+    },
+    {
+        name: 'unrelated child project',
+        scope: '',
+        files: { 'app/package.json': NEXT_INTL_PACKAGE },
+        selected: false,
+    },
+] as const;
+
+// check tools
+const PYTHON_APP_FILES = {
+    'app.py': 'value = 1\n',
+    'pyproject.toml': `[project]
+name = "app"
+version = "1.0.0"
+`,
+} as const;
+export const NODE_REQUIREMENTS = [
+    {
+        name: 'Python with npm schema peers under mise',
+        tables: '',
+        configurations: ['python'],
+        files: PYTHON_APP_FILES,
+        needs: ['node', 'ruff'],
+        skips: [],
+    },
+    {
+        name: 'Python with only mise tools',
+        tables: `${NPM_CHECK_IGNORES}[[ignore]]
+check = "python/basedpyright"
+reason = "This sandbox exercises Python without the npm type checker."
+[[ignore]]
+check = "licenses/allowed"
+reason = "This sandbox exercises native tools without the license scanner."
+`,
+        configurations: ['python'],
+        files: PYTHON_APP_FILES,
+        needs: ['ruff'],
+        skips: ['node', 'eslint', 'typescript'],
+    },
+] as const;
 
 // file selection
 export const PROJECT_PATH_IGNORES = [
@@ -50,38 +106,6 @@ export const LAST_FILE_CHANGES = [
     ['delete', 'staged'],
     ['rename', 'changed'],
 ];
-
-// revision copies
-export const GIT_HOOK_REPORT = {
-    reports: [
-        {
-            kind: 'index',
-            source: 'selected\n',
-            tree: true,
-            ownMetadata: true,
-            toolMetadata: true,
-            paths: ['source.txt'],
-            configuration: 'inherited',
-            explicit: 'caller',
-            cancelled: true,
-        },
-        {
-            kind: 'commit',
-            source: 'committed\n',
-            tree: true,
-            ownMetadata: true,
-            toolMetadata: true,
-            paths: ['source.txt'],
-            configuration: 'inherited',
-            explicit: 'caller',
-            cancelled: true,
-        },
-    ],
-    headKept: true,
-    indexKept: true,
-    workingBytes: 'working\n',
-} as const;
-export const SELECTED_SOURCE = 'selected source';
 
 // typescript scopes
 export const TSC_PUSH_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc'] };

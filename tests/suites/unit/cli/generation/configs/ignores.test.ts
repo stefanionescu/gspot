@@ -20,7 +20,7 @@ import {
     PATH_IGNORE_CASES,
     PRETTIER_IGNORE_CASES,
     PRETTIER_IGNORE_SETTINGS,
-} from '#tests/config/generation/files.ts';
+} from '#tests/config/generation/configs.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

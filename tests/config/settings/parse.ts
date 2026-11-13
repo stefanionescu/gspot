@@ -1,3 +1,28 @@
+// field comments
+export const FIELD_COMMENT_CASES = [
+    {
+        name: 'first ignore',
+        source: '# Root owner\nlevel="all"\n',
+        target: 'level="all"\n[[ignore]]\ncheck="docs/links"\npaths=["docs/**"]\nreason="Private documentation"\n',
+        expected:
+            '# Root owner\nlevel="all"\n\n[[ignore]]\ncheck = "docs/links"\npaths = ["docs/**"]\nreason = "Private documentation"\n',
+    },
+    {
+        name: 'unowned prose before deleted key',
+        source: 'level="all"\n\n# Free regional note\n\n# Second regional note\n\ntool_timeout_seconds=600 # Deleted inline\n\n# Hooks owner\n[hooks]\nenabled=true\n',
+        target: 'level = "all"\n\n[hooks]\nenabled = true\n',
+        expected:
+            'level="all"\n\n# Free regional note\n\n# Second regional note\n\n\n# Hooks owner\n[hooks]\nenabled=true\n',
+    },
+    {
+        name: 'maps dotted and blank lines',
+        source: '# schema note\n# Root\nlevel="all" # Level inline\n# Dotted hook\nhooks.enabled=true\n\n# Z scope\n[[scope]]\npath="z/app"\n\n# A check\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Old task" # Summary inline\n\n# A scope\n[[scope]]\npath="a/app"\n',
+        target: 'level="all"\nhooks.enabled=true\n[[scope]]\npath="z/app"\n[[scope]]\npath="a/app"\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Changed task"\n',
+        expected:
+            '# schema note\n# Root\nlevel="all" # Level inline\n# Dotted hook\nhooks.enabled=true\n\n# Z scope\n[[scope]]\npath="z/app"\n\n# A check\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Changed task" # Summary inline\n\n# A scope\n[[scope]]\npath="a/app"\n',
+    },
+];
+
 // inherited defaults
 export const POSTGRES_ORIGIN = { kind: 'configuration', name: 'postgres' } as const;
 
@@ -15,82 +40,85 @@ path = "sibling"
 removed_configurations = { site = "This scope does not use the inherited site checks." }
 `;
 
-// key validation
-export const INVALID_MARKDOWNLINT_NAMES = [
-    { name: 'no-hard-tabs', value: { spaces_per_tab: 4 } },
-    { name: 'default', value: false },
-    { name: 'whitespace', value: {} },
-];
-export const SCOPE_CONFIGURATION_SETTINGS = [
+// published schema
+export const PUBLISHED_SCHEMA_CASES = [
+    { name: 'escaped glob brackets', input: { test_files: [String.raw`src/\[draft\]/*.test.ts`] }, valid: true },
+    { name: 'a path with an ASCII control character', input: { test_files: ['src/\u{1}.test.ts'] }, valid: false },
+    { name: 'a path with a C1 control character', input: { test_files: ['src/\u{85}.test.ts'] }, valid: false },
+    { name: 'a path with an invalid escape', input: { test_files: [String.raw`src/\a.test.ts`] }, valid: false },
     {
-        name: 'a sibling configuration does not expose its settings to another scope',
-        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n[scope.sql]\ndialect = "sqlite"\n',
-        errors: ['gspot.toml:8: scope.1.sql.dialect:'],
+        name: 'GitHub CI with systems',
+        input: { ci: { provider: 'github', operating_systems: ['linux'] } },
+        valid: true,
     },
+    { name: 'GitLab CI without systems', input: { ci: { provider: 'gitlab' } }, valid: true },
+    { name: 'a shipped configuration name', input: { configurations: ['python'] }, valid: true },
+    { name: 'an unknown configuration name', input: { configurations: ['cobol'] }, valid: false },
     {
-        name: 'a selected scope exposes its own configuration settings',
-        text: 'configurations = ["bash"]\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[scope.sql]\ndialect = "sqlite"\n[[scope]]\npath = "web"\n',
-        errors: [],
-    },
-    {
-        name: 'root settings remain available to a scope that selects their configuration',
-        text: 'configurations = ["bash"]\n[sql]\ndialect = "sqlite"\n[[scope]]\npath = "database"\nconfigurations = ["sql"]\n[[scope]]\npath = "web"\n',
-        errors: [],
-    },
-] as const;
-
-// reason validation
-export const DUPLICATED_REASON_ERRORS = [
-    {
-        key: 'limits.max_file_lines',
-        text: '[limits]\nmax_file_lines = { value = 400, reason = "x" }\n',
+        name: 'an unknown configuration name in a scope',
+        input: { scope: [{ path: 'api', configurations: ['cobol'] }] },
+        valid: false,
     },
     {
-        key: 'docs.allowed_urls',
-        text: '[docs]\nallowed_urls = { value = ["https://example.com/docs"], reason = "x" }\n',
-    },
-];
-export const EMPTY_REASONS = ['', 'because'] as const;
-export const REVIEWED_REASON = 'Reviewed in tests.';
-export const RULE_OPTION_REASON_TABLES = [
-    { name: 'root', tables: '[tools.eslint.rules]\nno-console = [{ allow = ["warn"], reason = true }]\n' },
-    {
-        name: 'override',
-        tables: '[[tools.eslint.override]]\npaths = ["src/**"]\nrules.no-console = [{ allow = ["warn"], reason = true }]\n',
+        name: 'GitLab CI with systems',
+        input: { ci: { provider: 'gitlab', operating_systems: ['linux'] } },
+        valid: false,
     },
     {
-        name: 'plugin',
-        tables: '[[tools.eslint.plugins]]\nname = "local"\npath = "local.mjs"\nrules.custom = [{ reason = true }]\n',
+        name: 'GitLab CI with an empty systems list',
+        input: { ci: { provider: 'gitlab', operating_systems: [] } },
+        valid: false,
     },
-];
-
-// rule file validation
-export const RULE_FILE_ERRORS = [
-    'gspot.toml:4: tools.eslint.plugins.0.path: missing-root.mjs',
-    'gspot.toml:5: tools.stylelint.plugins.0.path: missing-root.mjs',
-    'gspot.toml:8: security.semgrep_rules.0: missing-root.yml',
-    'gspot.toml:12: scope.0.tools.eslint.plugins.0.path: missing-scope.mjs',
-    'gspot.toml:13: scope.0.security.semgrep_rules.0: missing-scope.yml',
-] as const;
-export const RULE_FILE_SETTINGS = {
-    configurations: ['javascript', 'security', 'css'],
-    tools: {
-        eslint: { plugins: [{ name: 'root', path: 'missing-root.mjs', rules: {} }] },
-        stylelint: { plugins: [{ path: 'missing-root.mjs', rules: {} }] },
+    {
+        name: 'an empty command',
+        input: { command_check: [{ id: 'project/lint', command: [], paths: ['src/**'], stage: 'commit' }] },
+        valid: false,
     },
-    security: { semgrep_rules: ['missing-root.yml', 'present.yml'] },
-    scope: [
-        {
-            path: 'app',
-            tools: { eslint: { plugins: [{ name: 'local', path: 'missing-scope.mjs', rules: {} }] } },
-            security: { semgrep_rules: ['missing-scope.yml', 'present.yml'] },
+    {
+        name: 'an empty program',
+        input: { command_check: [{ id: 'project/lint', command: [''], paths: ['src/**'], stage: 'commit' }] },
+        valid: false,
+    },
+    {
+        name: 'an empty argument',
+        input: { command_check: [{ id: 'project/lint', command: ['lint', ''], paths: ['src/**'], stage: 'commit' }] },
+        valid: true,
+    },
+    {
+        name: 'a formatter override without a setting',
+        input: { format: { override: [{ paths: ['src/**'] }] } },
+        valid: false,
+    },
+    {
+        name: 'an allowed package with a version range',
+        input: {
+            configurations: ['licenses'],
+            licenses: {
+                allowed_package: [{ name: 'example', version: '^1.2.3', reason: 'Reviewed its MIT license.' }],
+            },
         },
-    ],
-} as const;
-
-// schema validation
-export const INVALID_LICENSES = ['MTI', 'MIT OR Apache-2.0'];
-export const VALID_LICENSES = ['MIT', 'GPL-2.0-only WITH Classpath-exception-2.0'];
+        valid: true,
+    },
+    {
+        name: 'a SQLFluff dialect that injects a directive',
+        input: { tools: { sqlfluff: { dialect: 'sqlite\nexclude_rules = ALL' } } },
+        valid: false,
+    },
+    {
+        name: 'reasoned registry hosts',
+        input: {
+            dependencies: {
+                allowed_registries: { value: ['registry.example.test'], reason: 'Reviewed the package registry.' },
+            },
+        },
+        valid: true,
+    },
+    {
+        name: 'invalid registry host',
+        input: { dependencies: { allowed_registries: { value: [false], reason: 'Reviewed the package registry.' } } },
+        valid: false,
+    },
+] as const;
 
 // scopes
 export const NESTED_SCOPE_SETTINGS = `configurations = ["bash", "swift", "structure"]
@@ -152,6 +180,19 @@ export const PROJECT_SCOPE_CASES = [
     { scope: 'required', name: 'javascript', selected: true },
 ] as const;
 
+// settings edits
+export const INITIAL_SETTINGS = 'configurations = ["bash", "naming", "format"]\n';
+export const SCOPE_SETTING_WRITES = [
+    ['a dotted key', 'limits.max_file_lines = 100'],
+    ['an inline table', 'limits = { max_file_lines = 100 }'],
+] as const;
+export const SEMGREP_IGNORE = {
+    check: 'security/semgrep',
+    rule: 'js/file-system-race',
+    paths: ['sample.js'],
+    reason: 'The sandbox owns its temporary files.',
+};
+
 // settings parse
 export const CONFIGURATION_CONFLICTS = [
     {
@@ -178,41 +219,5 @@ export const UNKNOWN_TABLE_FIELDS = [
         text: '[[tools.eslint.override]]\npaths = ["src/**"]\nlevel = true\n',
         path: ['tools', 'eslint', 'override', 0, 'level'],
         setting: 'tools.eslint.override.level',
-    },
-] as const;
-
-// validation messages
-export const KEY_PATH_CASES = [
-    {
-        name: 'a package tag used as a license version',
-        configurations: ['licenses'],
-        options: {
-            tables: '[[licenses.allowed_package]]\nname = "example"\nversion = "latest"\nreason = "Reviewed its MIT license."\n',
-        },
-        start: 'gspot.toml:4: licenses.allowed_package.0.version:',
-        correction: ['"latest"', '"^1.2.3"'],
-    },
-    {
-        name: 'an invalid naming exception regular expression',
-        configurations: ['naming'],
-        options: {
-            tables: '[[naming.exception]]\npaths = ["src/**"]\nignored_names_pattern = "("\nreason = "The library exports these reviewed names."\n',
-        },
-        start: 'gspot.toml:4: naming.exception.0.ignored_names_pattern:',
-        correction: ['"("', '"^_"'],
-    },
-    {
-        name: 'empty override paths',
-        configurations: ['javascript'],
-        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = []\nrules = {eqeqeq = ["always"]}\n' },
-        correction: ['paths = []', 'paths = ["src"]'],
-        start: 'gspot.toml:3: tools.eslint.override.0.paths: The value [] is not valid for tools.eslint.override.0.paths.',
-    },
-    {
-        name: 'numeric rule options',
-        configurations: ['javascript'],
-        options: { rules: true, tables: '[[tools.eslint.override]]\npaths = ["src"]\nrules = {eqeqeq = 0}\n' },
-        correction: ['eqeqeq = 0', 'eqeqeq = ["always"]'],
-        start: 'gspot.toml:4: tools.eslint.override.0.rules.eqeqeq:',
     },
 ] as const;

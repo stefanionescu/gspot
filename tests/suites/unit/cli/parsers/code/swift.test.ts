@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
-import { SWIFT_TAG_CASES } from '#tests/config/repository.ts';
+import { SWIFT_TAG_CASES } from '#tests/config/parsers/code.ts';
 
 test.each([...SWIFT_TAG_CASES])(
     'a Swift $name gives the $tag tag only outside comments and strings',

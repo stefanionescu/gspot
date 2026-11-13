@@ -87,6 +87,7 @@ export const STYLELINT_PACKAGE_JSON = `{
 
 // vale
 export const EMPTY_VALE_INI = 'Packages =\n';
+export const PREVIOUS_BYTES = 'previous bytes\n';
 export const VALE_INSTALLED_FILES = Object.fromEntries(
     VALE_PACKAGE_FOLDERS.map((folder) => [`${GSPOT_PATHS.valePackages}/${folder}/.keep`, '']),
 );

@@ -7,16 +7,11 @@ import { testdir } from 'testdirs';
 
 import { runProcess, streamProcess } from '#cli/system/processes/run.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
+import { CHILD_TIMEOUT_SECONDS } from '#tests/config/setup/programs.ts';
 import { STOPPED_CAPTURES, STREAM_FAILURE } from '#tests/config/system.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
-import {
-    CHILD_TIMEOUT_SECONDS,
-    limitCommand,
-    spawnCommand,
-    waitForExit,
-    waitForFile,
-} from '#tests/setup/system/processes.ts';
+import { limitCommand, spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function stopTool(root: string, script: string): Promise<Awaited<ReturnType<typeof runProcess>>> {

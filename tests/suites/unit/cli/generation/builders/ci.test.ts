@@ -15,13 +15,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
-import { LINUX_PIPELINE, MISE_EXEC, SETUP_CASES } from '#tests/config/generation/files.ts';
+import { LINUX_PIPELINE, MISE_EXEC, SETUP_CASES } from '#tests/config/generation/builders.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { readCallRecords } from '#tests/setup/system/programs.ts';
+import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
 import type { CallRecord, GithubWorkflow, GitlabPipeline, ProcessOutput } from '#tests/types/setup.ts';
 
 async function runPipelineScript(

@@ -1,4 +1,4 @@
-import type { PythonProject, ToolProjectFiles } from '#tests/types/setup.ts';
+import type { NpmRegistry, PythonProject, ToolProjectFiles } from '#tests/types/setup.ts';
 
 export type IndexedPythonProject = PythonProject & { files: ToolProjectFiles };
 
@@ -11,4 +11,12 @@ export type LinterJsonFinding = {
     rule_id?: string;
     line?: number;
     location?: { row: number };
+};
+
+export type NpmProject = {
+    root: string;
+    artifacts: string;
+    registry: NpmRegistry;
+    rootPackage: string;
+    [Symbol.asyncDispose](): Promise<void>;
 };

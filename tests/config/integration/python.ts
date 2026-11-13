@@ -29,7 +29,17 @@ def triple(value: int) -> int:
 `;
 
 // ruff
-export const PARAMETER_LIMIT_CASE = {
+export const PYTEST_SAMPLE = `"""Sample declarations."""
+
+import pytest
+
+
+@pytest.fixture()
+def example() -> int:
+    """Provide a reusable value."""
+    return 1
+`;
+export const RUFF_PARAMETER_LIMIT_CASE = {
     language: 'python',
     file: 'example.py',
     source: `"""Parameter-limit samples."""
@@ -53,16 +63,6 @@ def _eight(
 `,
     finding: { line: 8, rule: 'PLR0913' },
 } as const;
-export const PYTEST_SAMPLE = `"""Sample declarations."""
-
-import pytest
-
-
-@pytest.fixture()
-def example() -> int:
-    """Provide a reusable value."""
-    return 1
-`;
 export const RUFF_SANDBOX = {
     configurations: ['python', 'pytest'],
     level: 'all',

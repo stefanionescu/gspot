@@ -6,7 +6,12 @@ import { testdir } from 'testdirs';
 
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GSPOT_LAUNCHER_PATH, PACKED_PACKAGES_FILE, TOOL_PATHS_FILE } from '#tests/config/setup/sandboxes.ts';
+import {
+    GSPOT_LAUNCHER_PATH,
+    MISE_STATE_FOLDER,
+    PACKED_PACKAGES_FILE,
+    TOOL_PATHS_FILE,
+} from '#tests/config/setup/runner.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { prepareRunFolders, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { toolModules, workspaceModules } from '#tests/setup/sandboxes/node-modules.ts';
@@ -38,7 +43,7 @@ const launcherFolder = dirname(join(TEST_RUN_FOLDER, GSPOT_LAUNCHER_PATH));
 resources.use(
     overrideEnvironment({
         GITHUB_ACTIONS: undefined,
-        MISE_STATE_DIR: join(TEST_RUN_FOLDER, 'mise-state'),
+        MISE_STATE_DIR: join(TEST_RUN_FOLDER, MISE_STATE_FOLDER),
         MISE_CACHE_DIR: join(TEST_RUN_FOLDER, 'mise-cache'),
         BUN_INSTALL_CACHE_DIR: join(TEST_RUN_FOLDER, 'bun-cache'),
         NPM_CONFIG_USERCONFIG: registry.npmrc,

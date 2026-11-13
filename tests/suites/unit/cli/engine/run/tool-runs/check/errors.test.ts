@@ -10,17 +10,17 @@ import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
 import { runCommandBatches, runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE } from '#tests/config/engine/tool-runs.ts';
+import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE } from '#tests/config/engine/run.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildFixerSettings, buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeExecutableLookup, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {
     await using sandbox = await createGitSandbox({});

@@ -10,11 +10,7 @@ import { buildPointerFiles } from '#cli/generation/configs/pointers.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import type { SourcedConfig } from '#cli/types/configurations/shared.ts';
-import {
-    DEFAULT_EXPORT,
-    MARKDOWNLINT_SCOPE_TABLES,
-    XCTEST_LINK_FILE_CASES,
-} from '#tests/config/generation/generate.ts';
+import { DEFAULT_EXPORT, MARKDOWNLINT_SCOPE_TABLES, XCTEST_LINK_FILE_CASES } from '#tests/config/generation/configs.ts';
 import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

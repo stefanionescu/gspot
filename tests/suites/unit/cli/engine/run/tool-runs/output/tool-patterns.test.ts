@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
-import { TOOL_PATTERN_CASES } from '#tests/config/engine/tool-runs.ts';
+import { TOOL_PATTERN_CASES } from '#tests/config/engine/run.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 

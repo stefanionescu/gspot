@@ -3,12 +3,7 @@ import { testdir } from 'testdirs';
 
 import { BROKEN_TOOL_ADVICE } from '#cli/config/engine.ts';
 import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
-import {
-    ASTRO_CHECK_OUTPUT,
-    ASTRO_CHECK_SUMMARY,
-    BASE_CHECK,
-    TYPE_ERROR_MESSAGE,
-} from '#tests/config/engine/tool-runs.ts';
+import { ASTRO_CHECK_OUTPUT, ASTRO_CHECK_SUMMARY, BASE_CHECK, TYPE_ERROR_MESSAGE } from '#tests/config/engine/run.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 

@@ -1,11 +1,6 @@
 import { parseArgs } from 'node:util';
 
-const LARGE_OUTPUT_OPTIONS = {
-    text: { type: 'string' },
-    count: { type: 'string' },
-    exit: { type: 'string' },
-    'exit-now': { type: 'boolean' },
-} as const;
+import { LARGE_OUTPUT_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values } = parseArgs({ options: LARGE_OUTPUT_OPTIONS });
 const text = (values.text ?? '').repeat(Number(values.count ?? '0'));

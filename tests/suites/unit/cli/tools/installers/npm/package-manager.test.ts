@@ -10,8 +10,9 @@ import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 const PNPM_MINIMUM = RELEASE_AGE_VERSIONS.pnpm;
 

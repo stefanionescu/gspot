@@ -17,10 +17,10 @@ import {
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildPythonToolFiles, buildVenvExecutablePath, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles, fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 async function writePydoclintProject(
     root: string,

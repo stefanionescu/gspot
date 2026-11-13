@@ -8,20 +8,16 @@ import { strToU8, zipSync } from 'fflate';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    AUTHENTICATION_REQUIRED_MESSAGE,
-    PYTHON_PROJECT_IGNORES,
-    REGISTRY_HOST,
-} from '#tests/config/setup/sandboxes.ts';
+import { AUTHENTICATION_REQUIRED_MESSAGE, REGISTRY_HOST } from '#tests/config/setup/runner.ts';
+import { PYTHON_PROJECT_IGNORES } from '#tests/config/setup/sandboxes.ts';
 import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
+import { buildVenvExecutablePath, readToolProjectFiles } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 import type { IndexedPythonProject } from '#tests/types/integration.ts';
 
 const PYTHON_INDEX_CREDENTIALS = { user: 'gspot', password: 'synthetic-uv-password' } as const;

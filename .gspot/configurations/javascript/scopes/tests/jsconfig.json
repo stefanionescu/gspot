@@ -18,7 +18,7 @@
         "../../../../../tests/**/*.jsx"
     ],
     "exclude": [
-        "../../../../../tests/setup/sandboxes/test-tools.lock",
+        "../../../../../tests/setup/runner/test-tools.lock",
         "../../../../../tests/**/node_modules/**",
         "../../../../../tests/**/bower_components/**",
         "../../../../../tests/**/coverage/**",

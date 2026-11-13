@@ -1,9 +1,8 @@
 import { join } from 'node:path';
 import { parseArgs } from 'node:util';
 
+import { REPORT_SWIFT_COVERAGE_OPTIONS } from '#tests/config/setup/programs.ts';
 import { splitProgramArguments } from '#tests/setup/system/programs.ts';
-
-const REPORT_SWIFT_COVERAGE_OPTIONS = { report: { type: 'string' }, targets: { type: 'string' } } as const;
 
 const { own, call } = splitProgramArguments();
 const { values } = parseArgs({ args: own, options: REPORT_SWIFT_COVERAGE_OPTIONS });

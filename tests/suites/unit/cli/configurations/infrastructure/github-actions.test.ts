@@ -17,10 +17,11 @@ import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/configurati
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { readCallRecords } from '#tests/setup/system/programs.ts';
+import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 const ACTIONLINT_TOOLS = ['actionlint', 'shellcheck'];
 

@@ -11,10 +11,10 @@ import { openSession } from '#cli/engine/session.ts';
 import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { buildToolLockfiles, fakeNpmTool, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeExecutableLookup, fakeNpmTool, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function runBunInstall(root: string, installPackages: () => Promise<void>, damagedTool?: string) {

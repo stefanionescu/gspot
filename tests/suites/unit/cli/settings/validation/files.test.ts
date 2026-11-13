@@ -10,7 +10,7 @@ import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { RULE_FILE_ERRORS, RULE_FILE_SETTINGS } from '#tests/config/settings/parse.ts';
+import { RULE_FILE_ERRORS, RULE_FILE_SETTINGS } from '#tests/config/settings/validation.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';

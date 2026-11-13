@@ -12,13 +12,13 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { formatUnavailableNote, inspectTool } from '#cli/tools/programs/inspect.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import { buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
+import { buildProgramPin, buildToolSearch, buildVenvExecutablePath, fakeNpmPackage } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeExecutableLookup, fakeNpmPackage, writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
     await using sandbox = await testdir({

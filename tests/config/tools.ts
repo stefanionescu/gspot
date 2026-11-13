@@ -73,7 +73,7 @@ export const SYSTEM_PLUGIN_REPORTS = [
     },
 ] as const;
 
-// pypi installer
+// python installer
 export const INVALID_UV_SETTINGS = [
     { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
     {
@@ -89,25 +89,6 @@ name = "authored-project"
 index-url = "https://example.com/simple"
 find-links = ["wheels"]
 `;
-export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
-find-links = ["wheels", "https://example.com/wheels"]
-offline = true
-resolution = "lowest-direct"
-
-[[index]]
-name = "local"
-url = "packages"
-`;
-export const PYTHON_TOOL_PROJECT = `[project]
-name = "tools"
-version = "0.0.0"
-requires-python = "${PYTHON_PROJECT['requires-python']}"
-dependencies = ["Example.Package==1.2.3", "second-package==4.0.0"]
-
-[tool.uv]
-package = false
-constraint-dependencies = ["transitive.package>=2.0.0"]
-`;
 export const PYTHON_TOOL_LOCKFILE = `version = 1
 requires-python = "${PYTHON_PROJECT['requires-python']}"
 
@@ -119,6 +100,25 @@ name = "tools"
 version = "0.0.0"
 source = { virtual = "." }
 metadata = { requires-dist = [{ name = "second_package", specifier = "==4.0.0" }, { name = "example-package", specifier = "==1.2.3" }] }
+`;
+export const PYTHON_TOOL_PROJECT = `[project]
+name = "tools"
+version = "0.0.0"
+requires-python = "${PYTHON_PROJECT['requires-python']}"
+dependencies = ["Example.Package==1.2.3", "second-package==4.0.0"]
+
+[tool.uv]
+package = false
+constraint-dependencies = ["transitive.package>=2.0.0"]
+`;
+export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
+find-links = ["wheels", "https://example.com/wheels"]
+offline = true
+resolution = "lowest-direct"
+
+[[index]]
+name = "local"
+url = "packages"
 `;
 export const PYTHON_INSTALL_FILES = {
     'gspot.toml': 'configurations = []\n[rule_files]\nenabled = false\n',

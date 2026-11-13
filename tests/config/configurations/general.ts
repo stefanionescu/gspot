@@ -41,8 +41,90 @@ export const BUN_PROJECT_FILES = {
 // gitattributes
 export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
 
+// licenses
+export const ALLOWED_PACKAGE_CASES = [
+    {
+        name: 'with a version range covers a package',
+        record: 'name = "strict"\nversion = "^1.0.0"\n',
+        lockedName: 'strict',
+        ecosystem: 'npm',
+        findings: [],
+    },
+    {
+        name: 'with a name glob covers each platform build',
+        record: 'name = "@img/sharp-*"\nversion = "*"\n',
+        lockedName: '@img/sharp-linux',
+        ecosystem: 'npm',
+        findings: [],
+    },
+    {
+        name: 'normalizes a Python name',
+        record: 'name = "Licensed._Example"\nversion = "1.0.0"\n',
+        lockedName: 'licensed-example',
+        ecosystem: 'PyPI',
+        findings: [],
+    },
+    {
+        name: 'for another version covers nothing and is unused',
+        record: 'name = "strict"\nversion = "2.0.0"\n',
+        lockedName: 'strict',
+        ecosystem: 'npm',
+        findings: ['disallowed-license', 'unused-record'],
+    },
+] as const;
+export const GPL_PACKAGE = {
+    name: 'strict',
+    version: '1.0.0',
+    ecosystem: 'npm',
+    licenses: ['GPL-3.0-only'],
+} as const;
+export const LICENSE_TABLES = '[licenses]\nallowed = ["MIT", "Apache-2.0"]\n';
+export const MIT_PACKAGE = { name: 'ready', version: '1.0.0', ecosystem: 'npm', licenses: [] } as const;
+
 // prose checks
 export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
+
+// secrets
+export const COMPONENT_ENVIRONMENT_FINDINGS = [
+    { file: 'app.astro', line: 2, rule: 'missing-key' },
+    { file: 'app.svelte', line: 1, rule: 'missing-key' },
+    { file: 'app.vue', line: 1, rule: 'missing-key' },
+    { file: 'legacy.cjs', line: 1, rule: 'missing-key' },
+    { file: 'module.mts', line: 1, rule: 'missing-key' },
+    { file: 'worker.ts', line: 1, rule: 'missing-key' },
+] as const;
+export const ENVIRONMENT_FUNCTION_EXAMPLE = `KNOWN=example
+MISSING=example
+CUSTOM=example
+DOLLAR=example
+PYTHON=example
+OTHER=example
+`;
+export const ENVIRONMENT_FUNCTION_FINDINGS = [
+    { file: 'reader.py', line: 1, rule: 'missing-key', key: 'MISSING' },
+    { file: 'reader.py', line: 1, rule: 'missing-key', key: 'OTHER' },
+    { file: 'reader.py', line: 1, rule: 'missing-key', key: 'PYTHON' },
+    { file: 'source.ts', line: 1, rule: 'missing-key', key: 'MISSING' },
+    { file: 'source.ts', line: 2, rule: 'missing-key', key: 'CUSTOM' },
+    { file: 'source.ts', line: 3, rule: 'missing-key', key: 'DOLLAR' },
+] as const;
+export const ENVIRONMENT_SCOPE_RESULTS = [
+    { scope: '', status: 'failed', findings: [{ file: 'source.ts', line: 1, rule: 'missing-key' }] },
+    { scope: 'app', status: 'failed', findings: [{ file: 'app/source.ts', line: 1, rule: 'missing-key' }] },
+    {
+        scope: 'sibling',
+        status: 'failed',
+        findings: [{ file: 'sibling/source.ts', line: 1, rule: 'missing-key' }],
+    },
+] as const;
+export const ENV_ACCESSOR_EXAMPLE = `KNOWN=example
+VITE_API=example
+SVELTE_API=example
+VUE_API=example
+DENO_API=example
+MODULE_API=example
+LEGACY_API=example
+`;
 
 // unmatched paths
 export const UNMATCHED_PATH_CASES = [

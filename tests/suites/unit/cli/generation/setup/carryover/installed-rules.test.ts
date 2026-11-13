@@ -6,7 +6,7 @@ import { compareInstalledRules, readUserRules } from '#cli/generation/setup/carr
 import { convertRule } from '#cli/generation/setup/carryover/rules.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function writePrinter(root: string, rules: unknown): Promise<void> {
     const printed = Buffer.from(JSON.stringify({ rules })).toString('hex');

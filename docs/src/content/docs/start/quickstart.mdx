@@ -3,13 +3,8 @@ title: Quickstart
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
-import {
-    AGENT_PROMPT,
-    EVALUATION_PROMPT,
-    setup,
-    runtimeMinimums,
-    packageManagerMinimums,
-} from '#docs/reference/setup.ts';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
+import { AGENT_PROMPT, EVALUATION_PROMPT } from '#docs/guides/setup.ts';
 
 {import.meta.env.PUBLIC_GSPOT_README_OPENING}
 
@@ -21,8 +16,8 @@ gspot supports JavaScript, TypeScript, Python, Swift, shell scripts, CSS, HTML, 
 languages, such as Go, Rust, or Java, get only the checks that run in every repository, such as the secret scan. The
 [configuration reference](/reference/configurations/) lists every language, framework, and tool.
 
-You need Git, {`Node.js ${runtimeMinimums.node} or newer`},
-{`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
+You need Git, {`Node.js ${CLI_REFERENCE.runtimeMinimums.node} or newer`},
+{`npm ${CLI_REFERENCE.packageManagerMinimums.npm}, pnpm ${CLI_REFERENCE.packageManagerMinimums.pnpm}, or Bun ${CLI_REFERENCE.packageManagerMinimums.bun} or newer`},
 and [mise](https://mise.jdx.dev/). A Yarn project needs npm too. Node.js 22 comes with an npm that is too old, so run
 `npm install --global npm@latest`. Without mise, install each tool that `gspot init` names yourself, because a missing
 tool stops every commit. A `packageManager` field in `package.json` needs mise, because gspot runs that version through
@@ -60,7 +55,7 @@ and a reason on each suppression. For stricter rules, add `--level all` to the `
 Run these commands in the root folder of your repository:
 
 <Tabs syncKey="package-manager">
-    {setup.map(({ label, lines }) => (
+    {CLI_REFERENCE.setup.map(({ label, lines }) => (
         <TabItem label={label}>
             <Code code={lines.join('\n')} lang="shell" />
         </TabItem>

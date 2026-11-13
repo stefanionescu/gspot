@@ -1,5 +1,4 @@
 // naming languages
-// naming languages
 export const QUALIFIED_FUNCTION_DECLARATION = `CREATE FUNCTION same.same(integer, IN same integer DEFAULT same(1, 2), OUT "out" integer, VARIADIC "variadic" integer[])
 RETURNS integer LANGUAGE sql AS $$SELECT same$$;
 CREATE FUNCTION named.named() RETURNS TABLE (

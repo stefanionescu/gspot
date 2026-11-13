@@ -1,19 +1,30 @@
-import { open, readFile } from 'node:fs/promises';
-import { join } from 'node:path';
+import { mkdir, open, readFile, writeFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { basename, join } from 'node:path';
 
 import { stringify } from '@decimalturn/toml-patch';
+import { spyOn } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { readHost } from '#cli/system/environment.ts';
+import { executableLayout, listExecutableNames } from '#cli/system/processes/programs.ts';
 import { buildToolInstall } from '#cli/tools/installers/install.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import { findMissingBuild, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import * as mise from '#cli/tools/programs/mise.ts';
 import { buildPythonProjectTable } from '#cli/tools/projects.ts';
 import type { Configuration, Tool } from '#cli/types/manifests.ts';
 import type { NpmToolInstall, Session, ToolInstall, ToolPackageManager, ToolSearch } from '#cli/types/tools.ts';
+import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 import type { ToolProjectFiles } from '#tests/types/setup.ts';
 
 export async function readToolProjectFiles(
@@ -113,4 +124,77 @@ export function buildToolLockfiles(configurations: Configuration[]): Record<stri
             ],
         }),
     };
+}
+
+export function fakeToolExecutables(tools: Tool[]): DisposableStack {
+    const resources = new DisposableStack();
+    const folder = join(tmpdir(), 'test-tools');
+    resources.use(
+        fakeExecutableLookup((name) => {
+            if (name === 'mise') return null;
+            return tools.some((tool) => tool.name === name) ? join(folder, name) : undefined;
+        }),
+    );
+    resources.use(spyOn(mise, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
+    const findVersionPin = (command: readonly string[]): Tool | undefined => {
+        const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(command[0] ?? '')));
+        const versionCommand = pin?.version_command ?? ['--version'];
+        return command.slice(1).join(' ') === versionCommand.join(' ') ? pin : undefined;
+    };
+    resources.use(
+        fakeCommands(
+            (command) => findVersionPin(command) !== undefined,
+            (command) => {
+                const pin = findVersionPin(command);
+                const version = pin?.version ?? pin?.min_version;
+                return version === undefined
+                    ? Promise.reject(new Error(`The test has no declared version for ${String(command[0])}.`))
+                    : Promise.resolve(buildProcessResult({ stdout: version }));
+            },
+        ),
+    );
+    return resources;
+}
+
+export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
+    const declaration = getTool(readConfigurations().values(), tool);
+    const installer = declaration.installers['npm'];
+    if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
+    if (declaration.version === undefined) throw new Error(UNPINNED_NPM_MESSAGE);
+    await fakeNpmPackage(root, {
+        name: installer.name,
+        version: declaration.version,
+        bin: tool,
+        toolArguments: ['--line', declaration.version],
+    });
+    return declaration;
+}
+
+export function buildPythonToolFiles(tool: string): Record<string, string> {
+    const declaration = getTool(readConfigurations().values(), tool);
+    const name = declaration.installers.pypi?.name;
+    if (name === undefined) throw new Error(`The tool ${tool} has no PyPI installer.`);
+    const folder = `${name}-${String(declaration.version)}.dist-info`;
+    return { [`${GSPOT_PATHS.pythonEnvironment}/lib/python3/site-packages/${folder}/METADATA`]: '' };
+}
+
+export async function fakeNpmPackage(
+    root: string,
+    npmPackage: { name: string; version: string; toolArguments: string[]; bin?: string },
+): Promise<void> {
+    const { name, version, toolArguments, bin = name } = npmPackage;
+    const path = join(root, GSPOT_PATHS.nodeModules, name);
+    await mkdir(path, { recursive: true });
+    await writeFile(join(path, 'package.json'), JSON.stringify({ name, version }));
+    await writeProgramCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, 'fakes/tool', ...toolArguments);
+}
+
+export function hasToolBuild(name: string): boolean {
+    const operatingSystem = readHost().platform;
+    const pin = getTool(readConfigurations().values(), name);
+    return findMissingBuild(pin, { platform: operatingSystem, arch: process.arch }) === undefined;
+}
+
+export function buildVenvExecutablePath(folder: string, name: string): string {
+    return join(folder, executableLayout.environmentFolder, name + executableLayout.environmentSuffix);
 }

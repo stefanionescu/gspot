@@ -10,8 +10,8 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([false, true])(
     'doctor starts the Bun hook executable instead of its package script (installed: %s)',

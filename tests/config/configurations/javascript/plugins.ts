@@ -1,5 +1,5 @@
 // imports
-// imports
+export const HOST_MODULE = '../../scripts/app.js';
 export const IMPORT_CASES = [
     ['relative missing', 'import { value } from "./owner";\n', 'n/file-extension-in-import', 1],
     ['relative emitted suffix', 'import { value } from "./owner.js";\n', 'n/file-extension-in-import', 0],
@@ -89,6 +89,7 @@ configurations = ["javascript"]
 `;
 
 // trivial rules
+export const INDEX_ONLY_REEXPORTS = '{ value = "index-only", reason = "The package exports its public index files." }';
 export const LEVEL_REEXPORT_CASES = [
     ['basic', 'none'],
     ['all', 'none'],

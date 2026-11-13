@@ -11,8 +11,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
-import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
-import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
+import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
@@ -20,7 +19,7 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 const STRAY_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
 

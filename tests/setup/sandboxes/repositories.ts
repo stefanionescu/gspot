@@ -8,19 +8,14 @@ import {
     BASH_SYNTAX_PUSH_CHECK,
     CHANGED_CONTEXT,
     HOOKS_SETTINGS,
+    LFS_ATTRIBUTES,
+    NESTED_SCOPE_FILES,
     PUSH_CONTENT,
     TEAMS_MIGRATION_PATH,
     TEAMS_TABLE_SQL,
 } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-
-const LFS_ATTRIBUTES = '*.bin filter=lfs diff=lfs merge=lfs -text\n';
-
-const NESTED_SCOPE_FILES = {
-    'outside.txt': 'repository context',
-    'nested settings/source.txt': 'committed',
-} as const;
 
 export async function readPushWorkingTree(root: string): Promise<{ head: string; settings: string; changed: string }> {
     return {

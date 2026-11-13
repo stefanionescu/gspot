@@ -3,6 +3,6 @@
 set -euo pipefail
 
 bun install --frozen-lockfile
-bun tests/setup/sandboxes/test-tools.ts
+bun tests/setup/runner/test-tools.ts
 bun install --cwd node_modules/.test-tools --linker isolated --frozen-lockfile
 bun --cwd docs --bun astro sync

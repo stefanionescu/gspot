@@ -7,10 +7,10 @@ import { SWIFT_SANDBOX } from '#tests/config/integration/swift.ts';
 import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
 import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { applyGeneratedFiles, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 const INLINE_COMMENT_FINDINGS = [
     [4, 'blockComments'],

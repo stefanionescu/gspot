@@ -14,3 +14,18 @@ export function captureTerminal(): TerminalCapture {
         );
     return Object.assign(resources, output);
 }
+
+export function fakeTerminals(
+    terminals: ReadonlyArray<readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean]>,
+): Disposable {
+    using resources = new DisposableStack();
+    for (const [stream, isTerminal] of terminals) {
+        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
+        resources.defer(() => {
+            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
+            else Object.defineProperty(stream, 'isTTY', descriptor);
+        });
+        Object.defineProperty(stream, 'isTTY', { value: isTerminal, configurable: true });
+    }
+    return resources.move();
+}

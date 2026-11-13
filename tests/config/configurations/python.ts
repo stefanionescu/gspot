@@ -1,5 +1,4 @@
 // deptry
-// deptry
 export const DEPTRY_SCOPE_PATHS = {
     '': {
         excluded: ['.gspot/tool.py', 'app/main.py', 'app/nested/main.py', 'other/main.py'],

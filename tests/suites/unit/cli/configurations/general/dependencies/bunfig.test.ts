@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { BUN_SCANNER_KEYS } from '#tests/config/configurations/dependencies.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/languages.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

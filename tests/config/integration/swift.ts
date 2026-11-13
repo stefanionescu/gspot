@@ -20,7 +20,11 @@ public func parsed(_ value: String) -> Int {
     Int(value) ?? 0
 }
 `;
-export const PARAMETER_LIMIT_CASE = {
+export const PARSER_SOURCE = `public func parsed(_ value: String) -> Int {
+    Int(value)! + 42
+}
+`;
+export const SWIFTLINT_PARAMETER_LIMIT_CASE = {
     language: 'swift',
     file: 'example.swift',
     source: `internal func seven(
@@ -51,10 +55,6 @@ internal func eight(
     finding: { rule_id: 'function_parameter_count', line: 13 },
     failureStatus: 2,
 } as const;
-export const PARSER_SOURCE = `public func parsed(_ value: String) -> Int {
-    Int(value)! + 42
-}
-`;
 export const XCTEST_SCOPES = [
     { name: 'at the root', scope: '' },
     { name: 'in a scope whose path has a space and #', scope: 'ios # app' },

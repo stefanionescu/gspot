@@ -1,3 +1,4 @@
+// bash
 export const BASH_FUNCTIONS = [
     {
         name: '_one',
@@ -121,4 +122,78 @@ export const QUOTED_TRAP_CALLS = [
 export const TRAP_CALLS = [
     { name: '_cleanup', count: 0, line: 1, forwards: false },
     { name: '_quoted', count: 0, line: 2, forwards: false },
+] as const;
+
+// swift tags
+export const SWIFT_TAG_CASES = [
+    {
+        name: 'XCTest import',
+        path: 'Examples/Checks.swift',
+        source: 'import XCTest\n',
+        tag: 'swift-test',
+        tagged: true,
+    },
+    {
+        name: 'qualified Testing attribute',
+        path: 'Examples/Checks.swift',
+        source: '@Testing.Test func checks() {}\n',
+        tag: 'swift-test',
+        tagged: true,
+    },
+    {
+        name: 'comment and string examples',
+        path: 'Examples/Checks.swift',
+        source: '// import Testing\nlet example = "@Test"\n',
+        tag: 'swift-test',
+        tagged: false,
+    },
+    {
+        name: 'TestingSupport import',
+        path: 'Examples/Checks.swift',
+        source: 'import TestingSupport\n',
+        tag: 'swift-test',
+        tagged: false,
+    },
+    {
+        name: 'an executable test target',
+        path: 'Package.swift',
+        source: 'import PackageDescription\nlet package = Package(name: "App", targets: [.testTarget(name: "Checks")])\n',
+        tag: 'swift-test-target',
+        tagged: true,
+    },
+    {
+        name: 'a comment and a string',
+        path: 'Package.swift',
+        source: '// .testTarget(name: "Checks")\nlet example = ".testTarget"\n',
+        tag: 'swift-test-target',
+        tagged: false,
+    },
+    {
+        name: 'SwiftUI import',
+        path: 'View.swift',
+        source: 'import SwiftUI\n',
+        tag: 'swift-import:SwiftUI',
+        tagged: true,
+    },
+    {
+        name: 'import of one UIKit class',
+        path: 'View.swift',
+        source: 'import class UIKit.UIView\n',
+        tag: 'swift-import:UIKit',
+        tagged: true,
+    },
+    {
+        name: 'UIKit import in a comment',
+        path: 'View.swift',
+        source: '// import UIKit\n',
+        tag: 'swift-import:UIKit',
+        tagged: false,
+    },
+    {
+        name: 'SwiftUI import in a string',
+        path: 'View.swift',
+        source: 'let text = "import SwiftUI"\n',
+        tag: 'swift-import:SwiftUI',
+        tagged: false,
+    },
 ] as const;

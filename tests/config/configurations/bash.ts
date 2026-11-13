@@ -199,7 +199,6 @@ main "$@"
 ] as const;
 
 // unused functions
-export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
 const BASH_MAIN = `# main: runs the script.
 main() {
     echo "hello"
@@ -207,6 +206,7 @@ main() {
 
 main "$@"
 `;
+export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
 export const UNUSED_FUNCTION_SAMPLE = {
     check: 'bash/unused-functions',
     files: {

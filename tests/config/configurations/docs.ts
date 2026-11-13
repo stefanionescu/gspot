@@ -1,6 +1,4 @@
 // missing paths
-// missing paths
-// missing paths
 export const COVERAGE_CHECK_TABLES = `[[command_check]]
 id = "tests/coverage"
 command = ["true"]

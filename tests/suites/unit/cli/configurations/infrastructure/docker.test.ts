@@ -14,9 +14,10 @@ import {
 } from '#tests/config/configurations/docker.ts';
 import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function scanImages(root: string, stdout: string, resources: DisposableStack) {

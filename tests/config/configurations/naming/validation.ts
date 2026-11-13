@@ -1,5 +1,4 @@
 // naming allowed names
-// naming allowed names
 const ALLOWED_NAME_FILES = {
     'entry.sh': 'echo ready\n',
     'web/source.js': 'export const remoteRecord = 1;\n',

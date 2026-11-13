@@ -1,5 +1,5 @@
 packages/cli/README.md linguist-generated
-tests/setup/sandboxes/test-tools.lock linguist-generated
+tests/setup/runner/test-tools.lock linguist-generated
 
 # >>> gspot managed >>>
 * text=auto eol=lf

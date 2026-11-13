@@ -13,8 +13,12 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import * as processes from '#cli/system/processes/stop.ts';
 import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
-import { SWIFT_PACKAGE_HEADER, SWIFT_VALUE_SOURCE, XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
+import {
+    SWIFT_PACKAGE,
+    SWIFT_PACKAGE_HEADER,
+    SWIFT_VALUE_SOURCE,
+    XCTEST_SOURCE,
+} from '#tests/config/setup/languages.ts';
 import {
     getBuiltInCheck,
     planSandboxCheck,
@@ -24,9 +28,10 @@ import {
 } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { fakePlatform } from '#tests/setup/system/platform.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 

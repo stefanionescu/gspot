@@ -7,17 +7,16 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { GIT_HOOK_REPORT, SELECTED_SOURCE } from '#tests/config/engine/files.ts';
-import { LOWERCASE_SELECT_SQL } from '#tests/config/engine/tool-runs.ts';
+import { GIT_HOOK_REPORT, LOWERCASE_SELECT_SQL, SELECTED_SOURCE } from '#tests/config/engine/run.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();

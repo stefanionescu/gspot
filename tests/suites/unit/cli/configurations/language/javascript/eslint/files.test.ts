@@ -8,13 +8,13 @@ import { compareText } from '#cli/system/text/order.ts';
 import {
     EXTENSIONLESS_SCRIPT_CASES,
     EXTENSIONLESS_SCRIPT_RULES,
+    NESTED_ESLINT_RULES,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
     NODE_SCRIPT_TABLES,
     UNLINTED_FILES,
-} from '#tests/config/configurations/javascript/node.ts';
-import { NESTED_ESLINT_RULES } from '#tests/config/configurations/javascript/overrides.ts';
+} from '#tests/config/configurations/javascript/eslint-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import type { ScriptFindingCase } from '#tests/types/configurations.ts';

@@ -48,14 +48,6 @@ export type PackedPackage = Omit<RegistryPackage, 'source'> & { filename: string
 
 export type NpmRegistry = Disposable & { url: string; npmrc: string; requests: string[] };
 
-export type NpmProject = {
-    root: string;
-    artifacts: string;
-    registry: NpmRegistry;
-    rootPackage: string;
-    [Symbol.asyncDispose](): Promise<void>;
-};
-
 export type ToolProjectFiles = {
     projectFile: Buffer<ArrayBuffer>;
     lockfilePath: string;

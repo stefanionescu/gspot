@@ -1,33 +1,11 @@
-import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { basename, dirname, join, parse } from 'node:path';
+import { basename, parse } from 'node:path';
 
 import { mock, type Mock, spyOn } from 'bun:test';
 import executables from 'which';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { EXECUTABLE_FILE, GIT_PROGRAM } from '#cli/config/system.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { listExecutableNames } from '#cli/system/processes/programs.ts';
+import { GIT_PROGRAM } from '#cli/config/system.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import type { runProcess } from '#cli/system/processes/run.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import * as mise from '#cli/tools/programs/mise.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { ProgramName } from '#tests/types/setup.ts';
-
-const UNPINNED_NPM_MESSAGE = 'The npm package fake requires a pinned tool version.';
-
-export async function writeLauncher(target: string, command: readonly string[]): Promise<void> {
-    await mkdir(dirname(target), { recursive: true });
-    await writeFile(target, `#!/bin/sh\nexec ${command.map((word) => quoteArgument(word)).join(' ')} "$@"\n`);
-    const windowsCommand = command.map((word) => `"${word.replaceAll('"', '""').replaceAll('%', '%%')}"`);
-    await writeFile(`${target}.cmd`, `@echo off\r\n${windowsCommand.join(' ')} %*\r\n`);
-    await chmod(target, EXECUTABLE_FILE);
-}
 
 /**
 Replace the child commands that match: the command found by this path or program name, the commands that this test
@@ -56,80 +34,6 @@ export function fakeCommands(
     });
 }
 
-export function fakeToolExecutables(tools: Tool[]): DisposableStack {
-    const resources = new DisposableStack();
-    const folder = join(tmpdir(), 'test-tools');
-    resources.use(
-        fakeExecutableLookup((name) => {
-            if (name === 'mise') return null;
-            return tools.some((tool) => tool.name === name) ? join(folder, name) : undefined;
-        }),
-    );
-    resources.use(spyOn(mise, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
-    const findVersionPin = (command: readonly string[]): Tool | undefined => {
-        const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(command[0] ?? '')));
-        const versionCommand = pin?.version_command ?? ['--version'];
-        return command.slice(1).join(' ') === versionCommand.join(' ') ? pin : undefined;
-    };
-    resources.use(
-        fakeCommands(
-            (command) => findVersionPin(command) !== undefined,
-            (command) => {
-                const pin = findVersionPin(command);
-                const version = pin?.version ?? pin?.min_version;
-                return version === undefined
-                    ? Promise.reject(new Error(`The test has no declared version for ${String(command[0])}.`))
-                    : Promise.resolve(buildProcessResult({ stdout: version }));
-            },
-        ),
-    );
-    return resources;
-}
-
-export async function writeProgramCommand(
-    folder: string,
-    path: string,
-    program: ProgramName,
-    ...programArguments: string[]
-): Promise<string> {
-    const target = join(folder, path);
-    await writeLauncher(target, buildProgramCommand(program, ...programArguments));
-    return dirname(target);
-}
-
-export async function fakeNpmTool(root: string, tool: string): Promise<Tool> {
-    const declaration = getTool(readConfigurations().values(), tool);
-    const installer = declaration.installers['npm'];
-    if (installer === undefined) throw new Error(`The tool ${tool} has no npm installer.`);
-    if (declaration.version === undefined) throw new Error(UNPINNED_NPM_MESSAGE);
-    await fakeNpmPackage(root, {
-        name: installer.name,
-        version: declaration.version,
-        bin: tool,
-        toolArguments: ['--line', declaration.version],
-    });
-    return declaration;
-}
-
-export function buildPythonToolFiles(tool: string): Record<string, string> {
-    const declaration = getTool(readConfigurations().values(), tool);
-    const name = declaration.installers.pypi?.name;
-    if (name === undefined) throw new Error(`The tool ${tool} has no PyPI installer.`);
-    const folder = `${name}-${String(declaration.version)}.dist-info`;
-    return { [`${GSPOT_PATHS.pythonEnvironment}/lib/python3/site-packages/${folder}/METADATA`]: '' };
-}
-
-export async function fakeNpmPackage(
-    root: string,
-    npmPackage: { name: string; version: string; toolArguments: string[]; bin?: string },
-): Promise<void> {
-    const { name, version, toolArguments, bin = name } = npmPackage;
-    const path = join(root, GSPOT_PATHS.nodeModules, name);
-    await mkdir(path, { recursive: true });
-    await writeFile(join(path, 'package.json'), JSON.stringify({ name, version }));
-    await writeProgramCommand(root, `${GSPOT_PATHS.nodeModules}/.bin/${bin}`, 'fakes/tool', ...toolArguments);
-}
-
 export function fakeExecutableLookup(
     path: string | null | ((name: string) => string | null | undefined),
 ): Mock<typeof executables.sync> {
@@ -145,19 +49,4 @@ export function fakeExecutableLookup(
         return options?.all === true ? [found].filter((each) => each !== null) : found;
     };
     return spyOn(executables, 'sync').mockImplementation(lookUp as typeof executables.sync);
-}
-
-export function fakeTerminals(
-    terminals: ReadonlyArray<readonly [NodeJS.ReadStream | NodeJS.WriteStream, boolean]>,
-): Disposable {
-    using resources = new DisposableStack();
-    for (const [stream, isTerminal] of terminals) {
-        const descriptor = Object.getOwnPropertyDescriptor(stream, 'isTTY');
-        resources.defer(() => {
-            if (descriptor === undefined) Reflect.deleteProperty(stream, 'isTTY');
-            else Object.defineProperty(stream, 'isTTY', descriptor);
-        });
-        Object.defineProperty(stream, 'isTTY', { value: isTerminal, configurable: true });
-    }
-    return resources.move();
 }

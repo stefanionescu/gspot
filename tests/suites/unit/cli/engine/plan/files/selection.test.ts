@@ -8,7 +8,7 @@ import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
 import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { PROJECT_PATH_IGNORES, TSC_PUSH_OPTIONS, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
+import { PROJECT_PATH_IGNORES, TSC_PUSH_OPTIONS, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

@@ -11,8 +11,8 @@ import { DEPTRY_SCOPE_PATHS } from '#tests/config/configurations/python.ts';
 import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildPythonToolFiles } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function runFakeDeptry(root: string) {

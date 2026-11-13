@@ -3,13 +3,13 @@ title: Upgrade
 ---
 
 import { Tabs, TabItem, Code } from '@astrojs/starlight/components';
-import { setup } from '#docs/reference/setup.ts';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 
 Commit your work first, so that you can go back. Read the [changelog](/reference/changelog/), then take a version from the
 [releases page](https://github.com/stefanionescu/gspot/releases) and put it in place of `<version>`:
 
 <Tabs syncKey="package-manager">
-    {setup.map(({ label, start, add }) => (
+    {CLI_REFERENCE.setup.map(({ label, start, add }) => (
         <TabItem label={label}>
             <Code lang="shell" code={[`${add}@<version>`, `${start} install`, `${start} check`].join('\n')} />
         </TabItem>

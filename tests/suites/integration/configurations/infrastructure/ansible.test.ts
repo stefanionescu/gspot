@@ -6,9 +6,9 @@ import { describe, expect, test } from 'bun:test';
 import { COMMAND_PLAYBOOK } from '#tests/config/setup/configurations.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 
 const ANSIBLE_CONFIG = '[defaults]\ninventory = inventory\n';
 

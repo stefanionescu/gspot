@@ -37,13 +37,6 @@ version = "1.0.0"
 ${PYTHON_PROJECT_OPTIONS}`;
 export const GOOGLE_PYPROJECT = `${PYPROJECT}\n${PYDOCLINT_GOOGLE}`;
 
-// settings text
-export const APP_SCOPE_SETTINGS = `[[scope]]
-path = "app"
-configurations = ["typescript"]
-`;
-export const BUN_SCANNER_SETTINGS = 'dependencies.bun_scanner = "@socketsecurity/bun-security-scanner"\n';
-
 // swift sources
 export const CLEAN_SWIFT = String.raw`import Foundation
 
@@ -58,6 +51,8 @@ public func greeting(for name: String) -> String {
 `;
 export const SWIFT_PACKAGE_HEADER = '// swift-tools-version: 6.0\nimport PackageDescription\n';
 export const SWIFT_LANGUAGE_PACKAGE = `${SWIFT_PACKAGE_HEADER}let package = Package(name: "Example", targets: [.target(name: "Example")])
+`;
+export const SWIFT_PACKAGE = `${SWIFT_PACKAGE_HEADER}let package = Package(name: "Example", targets: [.target(name: "Example", path: ".")])
 `;
 export const SWIFT_VALUE_SOURCE = 'let value = 1\n';
 export const XCTEST_SOURCE = 'import XCTest\n';

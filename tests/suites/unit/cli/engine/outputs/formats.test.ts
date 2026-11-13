@@ -15,7 +15,7 @@ import {
     LINE_ENDING_CASES,
     WINDOWS_ROOT_CASES,
 } from '#tests/config/engine/outputs.ts';
-import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
+import { BASE_CHECK } from '#tests/config/engine/run.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isLinux } from '#tests/setup/system/platform.ts';

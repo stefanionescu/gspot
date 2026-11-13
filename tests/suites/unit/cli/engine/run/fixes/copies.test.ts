@@ -9,7 +9,8 @@ import { buildCheckSession } from '#cli/engine/run/checks.ts';
 import { runFixers } from '#cli/engine/run/fixes.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { buildFixerSettings, planFixer } from '#tests/setup/cli/run.ts';
+import { planFixer } from '#tests/setup/cli/checks.ts';
+import { buildFixerSettings } from '#tests/setup/cli/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
 

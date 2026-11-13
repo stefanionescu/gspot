@@ -4,8 +4,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { HOST_MODULE } from '#tests/config/configurations/javascript/blocks.ts';
-import { IMPORT_CASES, IMPORT_FILES } from '#tests/config/configurations/javascript/plugins.ts';
+import { HOST_MODULE, IMPORT_CASES, IMPORT_FILES } from '#tests/config/configurations/javascript/plugins.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 

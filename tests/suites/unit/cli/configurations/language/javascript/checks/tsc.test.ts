@@ -16,11 +16,11 @@ import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules, linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeNpmTool } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
 
 async function listTscResults(root: string): Promise<readonly CheckResult[]> {

@@ -13,14 +13,14 @@ import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/chan
 import { compareText } from '#cli/system/text/order.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
-import { BASE_CHECK } from '#tests/config/engine/tool-runs.ts';
+import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
+import { BASE_CHECK } from '#tests/config/engine/run.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (existsSync(join(session.root, '.git/info/exclude')))

@@ -12,8 +12,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([...PURGECSS_STYLE_CASES])('site/purgecss checks $name', async ({ source, css, expected }) => {
     const { version } = getTool(readConfigurations().values(), 'purgecss');

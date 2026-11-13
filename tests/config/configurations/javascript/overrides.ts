@@ -1,14 +1,5 @@
 // block calls
-// block calls
 export const ESCAPED_SCOPE_CONFIGURATIONS = ['javascript', 'react'] as const;
-
-// eslint files
-export const NESTED_ESLINT_RULES = [
-    'n/no-unpublished-import',
-    'n/no-process-exit',
-    'unicorn/no-process-exit',
-    'no-console',
-] as const;
 
 // rule options
 export const ESLINT_OVERRIDES_SETTINGS = `configurations = [ "javascript" ]

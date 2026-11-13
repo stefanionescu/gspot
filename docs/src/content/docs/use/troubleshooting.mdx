@@ -3,7 +3,7 @@ title: Troubleshooting
 ---
 
 import { Code } from '@astrojs/starlight/components';
-import { hookProgramMissing } from '#docs/reference/setup.ts';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 
 Start with `gspot doctor`, which lists missing tools, problems with the Git hooks, and a gspot version other than the
 one that your repository pins. `gspot check --only gspot/generated-files --verbose` lists each generated file that does
@@ -64,7 +64,7 @@ install command of your package manager, then `gspot install`. With mise, run `m
 Hooks in npm, pnpm, and Bun repositories need `node`, and those in Yarn and mise repositories need `yarn` or `mise`. The
 message names the program and the `PATH` that the Git client gave the hook:
 
-<Code code={hookProgramMissing.replaceAll('<program>', 'node').replace('$PATH', '/usr/bin:/bin')} lang="text" />
+<Code code={CLI_REFERENCE.hookProgramMissing.replaceAll('<program>', 'node').replace('$PATH', '/usr/bin:/bin')} lang="text" />
 
 A Git client in an editor can get a different `PATH` from your terminal. Start the client from a terminal, or add the
 folder of the program to the `PATH` of the client, then restart the client.

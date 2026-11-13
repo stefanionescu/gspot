@@ -67,6 +67,12 @@ export const EXTENSIONLESS_SCRIPT_RULES = [
     'n/no-unsupported-features/es-builtins',
     'n/file-extension-in-import',
 ] as const;
+export const NESTED_ESLINT_RULES = [
+    'n/no-unpublished-import',
+    'n/no-process-exit',
+    'unicorn/no-process-exit',
+    'no-console',
+] as const;
 export const NODE_SCRIPT_CASES = [
     {
         file: 'scripts/run[one]',

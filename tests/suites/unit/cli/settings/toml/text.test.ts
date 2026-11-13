@@ -8,7 +8,7 @@ import { addScopeTable, buildEditedSettings, setKey } from '#cli/settings/toml/e
 import { readSettingsFile } from '#cli/settings/toml/file.ts';
 import { buildSettingsText } from '#cli/settings/toml/text.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { FIELD_COMMENT_CASES } from '#tests/config/settings/text.ts';
+import { FIELD_COMMENT_CASES } from '#tests/config/settings/parse.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([...FIELD_COMMENT_CASES])(

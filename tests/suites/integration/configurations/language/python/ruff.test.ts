@@ -6,8 +6,8 @@ import { expect, test } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import {
-    PARAMETER_LIMIT_CASE,
     PYTEST_SAMPLE,
+    RUFF_PARAMETER_LIMIT_CASE,
     RUFF_SANDBOX,
     RUFF_SUPPRESSIONS,
     RUFF_VERSION_CASES,
@@ -16,6 +16,7 @@ import {
 } from '#tests/config/integration/python.ts';
 import { listFindingRows, parseCheckReport, readSuppressionResults, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
@@ -23,7 +24,6 @@ import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 
@@ -235,7 +235,7 @@ test('Ruff from the installed environment reports a staged Python finding while 
 });
 
 test('Ruff reports a function past the default parameter limit', async () => {
-    const { language, file, source, finding } = PARAMETER_LIMIT_CASE;
+    const { language, file, source, finding } = RUFF_PARAMETER_LIMIT_CASE;
     const { root } = installedSandbox();
     await using _sourceChange = await writeSandboxChanges(
         installedSandbox(),

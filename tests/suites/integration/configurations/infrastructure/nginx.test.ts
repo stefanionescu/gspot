@@ -8,9 +8,10 @@ import { compareText } from '#cli/system/text/order.ts';
 import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { hasLinuxDocker, hasToolBuild } from '#tests/setup/system/platform.ts';
+import { hasLinuxDocker } from '#tests/setup/system/platform.ts';
 
 const NGINX_SERVER = `server {
     listen 443 ssl;

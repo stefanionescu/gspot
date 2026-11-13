@@ -1,9 +1,5 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 
-export const JAVASCRIPT_PROJECT_FILES = {
-    'package.json': '{"private":true,"type":"module"}\n',
-    [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'declare const privateValue: number;\n',
-} as const;
 const ARGUMENT_TYPE_FINDING = {
     file: 'source.js',
     line: 2,
@@ -11,6 +7,10 @@ const ARGUMENT_TYPE_FINDING = {
     rule: 'TS2345',
 } as const;
 const FORMAT_SOURCE = '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n';
+export const JAVASCRIPT_PROJECT_FILES = {
+    'package.json': '{"private":true,"type":"module"}\n',
+    [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'declare const privateValue: number;\n',
+} as const;
 const JSCONFIG_SCOPE_TABLES = `[[scope]]
 path = "app"
 

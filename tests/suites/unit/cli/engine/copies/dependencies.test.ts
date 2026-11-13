@@ -10,7 +10,7 @@ import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { VALUE_ONE_LINE } from '#tests/config/engine/files.ts';
+import { VALUE_ONE_LINE } from '#tests/config/engine/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';

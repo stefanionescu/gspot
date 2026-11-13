@@ -11,7 +11,7 @@ import { buildCommandLaunch } from '#cli/engine/run/tool-runs/check.ts';
 import { expandCommand, replacePlaceholders } from '#cli/engine/run/tool-runs/placeholders.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { WORKSPACE_SCOPE_CASES } from '#tests/config/engine/tool-runs.ts';
+import { WORKSPACE_SCOPE_CASES } from '#tests/config/engine/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

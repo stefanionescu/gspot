@@ -9,7 +9,7 @@ import { getSettingValue } from '#cli/settings/values/inherit.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { AvailableSettings } from '#cli/types/settings.ts';
-import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/parse.ts';
+import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/validation.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;

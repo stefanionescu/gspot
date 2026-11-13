@@ -6,7 +6,7 @@ import type { z } from 'zod';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
-import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/validation.ts';
+import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/parse.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 const settings = buildSettingsReference(readConfigurations().values().toArray());

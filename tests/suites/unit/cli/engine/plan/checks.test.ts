@@ -8,7 +8,7 @@ import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
-import { SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/run.ts';
+import { SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

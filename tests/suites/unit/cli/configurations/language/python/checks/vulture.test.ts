@@ -10,8 +10,9 @@ import { compareText } from '#cli/system/text/order.ts';
 import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildPythonToolFiles, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles, fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {

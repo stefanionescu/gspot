@@ -19,7 +19,7 @@ import {
     TRPC_MODULES,
     TRPC_TYPES,
 } from '#tests/config/configurations/javascript/blocks.ts';
-import { APP_SCOPE_SETTINGS } from '#tests/config/setup/languages.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 

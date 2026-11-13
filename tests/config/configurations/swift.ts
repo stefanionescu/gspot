@@ -120,6 +120,7 @@ export const COVERAGE_LIMIT_CASES = [
         expected: [],
     },
 ] as const;
+const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nmin_line_percent = 80\n';
 export const SWIFT_PACKAGE_COVERAGE_FILES = [
     { filename: 'Custom/Core/First.swift', summary: { lines: { count: 3, covered: 1 } } },
     { filename: 'Custom/Core/Second.swift', summary: { lines: { count: 1, covered: 1 } } },
@@ -144,7 +145,6 @@ export const SWIFT_PACKAGE_COVERAGE_TARGETS = [
     },
     { name: 'Native', path: 'Sources/Native', type: 'library', module_type: 'ClangTarget', sources: ['native.c'] },
 ] as const;
-const EXAMPLE_TARGET_LIMIT = '[[coverage.swift_target]]\nname = "Example"\nmin_line_percent = 80\n';
 export const XCTEST_TABLES = `${EXAMPLE_TARGET_LIMIT}[swift]\nxcode_project = "Example.xcodeproj"\nxcode_scheme = "Example"\n`;
 
 // swiftlint analyze

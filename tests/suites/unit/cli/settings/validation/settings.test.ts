@@ -4,12 +4,14 @@ import { expect, test } from 'bun:test';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { INVALID_LICENSES, REVIEWED_REASON, VALID_LICENSES } from '#tests/config/settings/parse.ts';
 import {
     BOUNDARY_IMPORT_RULES,
+    INVALID_LICENSES,
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
     REFUSED_SCOPE_PATHS,
+    REVIEWED_REASON,
+    VALID_LICENSES,
 } from '#tests/config/settings/validation.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 

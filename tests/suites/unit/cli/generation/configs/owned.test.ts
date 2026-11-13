@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/generate.ts';
+import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/configs.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

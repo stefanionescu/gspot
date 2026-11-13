@@ -4,9 +4,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import { CURL_COMMAND, EVALUATION_HEADING, LEVEL_SUGGESTION, RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 import { SITE_TITLE } from '#docs/config/site.ts';
 
-export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, hookProgramMissing } =
-    CLI_REFERENCE;
-
 const { homepage } = cliPackage;
 
 export const LLMS_URL = `${homepage}/llms.txt`;
@@ -34,8 +31,8 @@ tool that it installs. It writes the config files of those tools from one settin
 tools before each commit and push, through Git hooks, and in CI. It also writes \`AGENTS.md\` and rule files that tell
 coding agents how to write code that passes the checks.
 
-These steps cover ${cliPackage.name} ${cliPackage.version}. gspot needs Git, Node.js ${runtimeMinimums.node} or newer,
-npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer, and mise. Node.js 22 comes with an older npm,
+These steps cover ${cliPackage.name} ${cliPackage.version}. gspot needs Git, Node.js ${CLI_REFERENCE.runtimeMinimums.node} or newer,
+npm ${CLI_REFERENCE.packageManagerMinimums.npm}, pnpm ${CLI_REFERENCE.packageManagerMinimums.pnpm}, or Bun ${CLI_REFERENCE.packageManagerMinimums.bun} or newer, and mise. Node.js 22 comes with an older npm,
 so run \`npm install --global npm@latest\` there.`;
 
 const SUPPORT = `## Supported languages and frameworks
@@ -85,11 +82,11 @@ ${formatNameList(RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => `${key} in
 
 1. Add gspot to the repository, pinned to one exact version. Use the package manager of the repository, or mise when
    the repository has no \`package.json\`:
-${setup.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
+${CLI_REFERENCE.setup.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
 
-${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `   With ${label}, run \`${command}\` first, so that gspot runs on a supported Node.js version.`)).join('\n')}
+${CLI_REFERENCE.setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `   With ${label}, run \`${command}\` first, so that gspot runs on a supported Node.js version.`)).join('\n')}
    Start every gspot command after this one with ${formatNameList(
-       setup.map(({ start }) => `\`${start}\``),
+       CLI_REFERENCE.setup.map(({ start }) => `\`${start}\``),
        'disjunction',
    )}.
 2. Skip this step when you followed "${EVALUATION_HEADING}". Otherwise run \`gspot scan\`. It changes nothing in the

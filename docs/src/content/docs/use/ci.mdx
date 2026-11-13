@@ -2,7 +2,7 @@
 title: CI
 ---
 
-import { cloneInstalls } from '#docs/reference/setup.ts';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 
 gspot can write a CI workflow that runs the checks on each pull request and on each push to the default branch, in one
 file beside your other workflows. A pull request that changes `gspot.toml` or a file in `.gspot/` checks every file, so
@@ -95,7 +95,7 @@ Before `gspot install`, the job installs the dependencies from the lockfiles of 
         </tr>
     </thead>
     <tbody>
-        {cloneInstalls.map(({ lockfile, note, command }) => (
+        {CLI_REFERENCE.cloneInstalls.map(({ lockfile, note, command }) => (
             <tr>
                 <td>
                     <code>{lockfile}</code>

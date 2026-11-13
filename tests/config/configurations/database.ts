@@ -1,6 +1,4 @@
 // definer search path
-// definer search path
-// definer search path
 export const DEFINER_FUNCTION_SQL =
     'CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n';
 export const DEFINER_REPAIRS = [

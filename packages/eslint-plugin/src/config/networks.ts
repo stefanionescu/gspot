@@ -2,7 +2,9 @@ import { REQUIRE_SELECTOR } from './plugin.ts';
 
 // no-clear-text-protocols rule
 export const ADDRESS_LITERAL_SELECTOR = 'Literal:not(NewExpression[callee.name="URL"] > :nth-child(2))';
+const APPLICATION_HTTP = ['aws_cdk_lib.aws_elasticloadbalancingv2.ApplicationProtocol.HTTP'];
 export const AUTHORITY_END = /[\s#/?]/u;
+const CERTIFICATES_CHECK = { path: ['certificates'], required: true };
 export const CLEAR_TEXT_CALL_CHECKS = {
     'aws_cdk_lib.aws_elasticloadbalancing.LoadBalancer.addListener': [
         {
@@ -45,8 +47,6 @@ export const CLEAR_TEXT_CONSTRUCT_CHECKS = {
         { path: ['protocol'], required: false, invalid: ['HTTP', 'TCP', 'UDP', 'TCP_UDP'] },
     ],
 } as const;
-const APPLICATION_HTTP = ['aws_cdk_lib.aws_elasticloadbalancingv2.ApplicationProtocol.HTTP'];
-const CERTIFICATES_CHECK = { path: ['certificates'], required: true };
 const SENSITIVE_PORT_CHECK = { path: ['port'], required: false, invalid: [80, 8080, 8000, 8008] };
 export const CLEAR_TEXT_LISTENERS = {
     'aws_cdk_lib.aws_elasticloadbalancingv2.ApplicationLoadBalancer.addListener': {

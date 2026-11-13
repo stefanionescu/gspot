@@ -1,3 +1,20 @@
+const ESLINT_SUPPRESSIONS = [
+    ['// Example eslint-disable-next-line no-console', false],
+    ['// eslint-disable no-console', false],
+    ['/** Documentation\n * eslint-disable no-console\n */', false],
+    ['// eslint-disable-next-line no-console', true],
+    ['/*\n eslint-disable no-console\n */', true],
+    ['/*eslint-disable no-console*/', true],
+    ['// eslint-disable-next-line*/', false],
+    ['/*eslint-disable-unknown*/', false],
+] as const;
+const HTML_VALIDATE_SUPPRESSIONS = [
+    ['<!-- Example html-validate-disable wcag/h37 -->', false],
+    ['<!-- html-validate-disable-unknown wcag/h37 -->', false],
+    ['<!--html-validate-disable wcag/h37-->', true],
+    ['<!--\nhtml-validate-disable wcag/h37\n-->', true],
+    ['<!-- [html-validate-disable wcag/h37] -->', true],
+] as const;
 export const JSX_COMMENTS = [
     'const element = <div title="// eslint-disable no-alert">',
     '// eslint-disable no-console',
@@ -71,6 +88,14 @@ export const QUOTED_ESLINT_COMMENTS = [
     '// marker: Required external interface.',
     'const active = 1;',
 ].join('\n');
+const STYLELINT_SUPPRESSIONS = [
+    ['/*stylelint-disable*/', true],
+    ['/* Example stylelint-disable color-no-invalid-hex */', false],
+    ['/* stylelint-disable-unknown color-no-invalid-hex */', false],
+    ['/*\n stylelint-disable color-no-invalid-hex\n*/', true],
+    ['/**\n * stylelint-disable color-no-invalid-hex\n */', false],
+    ['/* STYLELINT-DISABLE color-no-invalid-hex */', false],
+] as const;
 export const SUPPRESSION_REASONS = [
     {
         configuration: 'sql',
@@ -208,31 +233,6 @@ export const SUPPRESSION_REASON_CASES = [
             },
         ],
     },
-] as const;
-const ESLINT_SUPPRESSIONS = [
-    ['// Example eslint-disable-next-line no-console', false],
-    ['// eslint-disable no-console', false],
-    ['/** Documentation\n * eslint-disable no-console\n */', false],
-    ['// eslint-disable-next-line no-console', true],
-    ['/*\n eslint-disable no-console\n */', true],
-    ['/*eslint-disable no-console*/', true],
-    ['// eslint-disable-next-line*/', false],
-    ['/*eslint-disable-unknown*/', false],
-] as const;
-const HTML_VALIDATE_SUPPRESSIONS = [
-    ['<!-- Example html-validate-disable wcag/h37 -->', false],
-    ['<!-- html-validate-disable-unknown wcag/h37 -->', false],
-    ['<!--html-validate-disable wcag/h37-->', true],
-    ['<!--\nhtml-validate-disable wcag/h37\n-->', true],
-    ['<!-- [html-validate-disable wcag/h37] -->', true],
-] as const;
-const STYLELINT_SUPPRESSIONS = [
-    ['/*stylelint-disable*/', true],
-    ['/* Example stylelint-disable color-no-invalid-hex */', false],
-    ['/* stylelint-disable-unknown color-no-invalid-hex */', false],
-    ['/*\n stylelint-disable color-no-invalid-hex\n*/', true],
-    ['/**\n * stylelint-disable color-no-invalid-hex\n */', false],
-    ['/* STYLELINT-DISABLE color-no-invalid-hex */', false],
 ] as const;
 export const SUPPRESSION_SYNTAX_CASES = [
     {

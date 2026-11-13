@@ -7,7 +7,7 @@ import {
     MKTEMP_CLEANUP_CASES,
     QUOTED_TRAP_CALLS,
     TRAP_CALLS,
-} from '#tests/config/parsers/bash.ts';
+} from '#tests/config/parsers/code.ts';
 
 const CONTINUED_TRAP_SOURCE = String.raw`tmp=$(mktemp -d)
 trap "\

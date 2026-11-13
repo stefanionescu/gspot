@@ -14,7 +14,7 @@ import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { listChecksById } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { BASE_CHECK, FILE_LINE_PATTERN, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/tool-runs.ts';
+import { BASE_CHECK, FILE_LINE_PATTERN, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/run.ts';
 import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

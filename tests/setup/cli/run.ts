@@ -1,9 +1,6 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
@@ -16,12 +13,6 @@ export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {
         generation: CHECK_GENERATION,
         ...overrides,
     };
-}
-
-export function planFixer(session: Session, fix: readonly string[]): PlannedCheck {
-    const [planned] = planChecks(session, { stage: 'all', only: ['sandbox/fixer'] });
-    if (planned === undefined) throw new Error('The sandbox has no planned fixer.');
-    return { ...planned, check: { ...planned.check, fix: [...fix] } };
 }
 
 export function buildFixerSettings(paths: string[] = ['source.txt']): string {

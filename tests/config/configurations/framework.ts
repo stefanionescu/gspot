@@ -1,6 +1,4 @@
 // expo doctor
-// expo doctor
-// expo doctor
 export const FAILED_DOCTOR_OUTPUT = `Running 15 checks on your project...
 \u{1B}[32m✔\u{1B}[39m Check package.json for common issues
 \u{1B}[31m✖\u{1B}[39m Check that packages match versions required by installed Expo SDK

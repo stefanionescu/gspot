@@ -8,8 +8,8 @@ import {
     EMPTY_REASONS,
     REVIEWED_REASON,
     RULE_OPTION_REASON_TABLES,
-} from '#tests/config/settings/parse.ts';
-import { SWIFT_TARGET_REASON_CASES } from '#tests/config/settings/validation.ts';
+    SWIFT_TARGET_REASON_CASES,
+} from '#tests/config/settings/validation.ts';
 import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';

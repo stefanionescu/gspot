@@ -15,7 +15,7 @@ import {
     REPLACED_PYPROJECT_TABLES,
     SHARED_SETUP_CONFIG,
     STYLELINT_REPLACEMENT_CASES,
-} from '#tests/config/generation/plan.ts';
+} from '#tests/config/generation/setup.ts';
 import { CLEAN_BASH_SCRIPT, GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
 import { applySandboxInit, planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';

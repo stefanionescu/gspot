@@ -1,6 +1,6 @@
 import { isDeepStrictEqual, parseArgs } from 'node:util';
 
-const EXPECT_ARGUMENTS_OPTIONS = { includes: { type: 'string' }, equals: { type: 'string' } } as const;
+import { EXPECT_ARGUMENTS_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: EXPECT_ARGUMENTS_OPTIONS, allowPositionals: true });
 const isIncluded = values.includes === undefined || positionals.includes(values.includes);

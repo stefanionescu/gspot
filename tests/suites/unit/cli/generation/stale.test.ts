@@ -11,7 +11,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/generate.ts';
+import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/configs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

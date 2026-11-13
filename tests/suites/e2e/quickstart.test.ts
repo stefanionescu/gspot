@@ -13,9 +13,9 @@ import { getTool } from '#cli/manifests/tools.ts';
 import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
 import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { hasToolBuild } from '#tests/setup/system/platform.ts';
 import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {

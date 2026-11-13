@@ -9,7 +9,7 @@ import {
     ENVIRONMENT_FUNCTION_EXAMPLE,
     ENVIRONMENT_FUNCTION_FINDINGS,
     ENVIRONMENT_SCOPE_RESULTS,
-} from '#tests/config/configurations/secrets.ts';
+} from '#tests/config/configurations/general.ts';
 import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

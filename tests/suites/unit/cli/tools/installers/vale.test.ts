@@ -12,13 +12,12 @@ import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
 import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
-import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
-import { PREVIOUS_BYTES } from '#tests/config/setup/programs.ts';
+import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function writeValeProgram(root: string): Promise<string> {
     const tool = getTool(readConfigurations().values(), 'vale');

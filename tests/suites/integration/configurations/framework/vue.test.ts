@@ -1,6 +1,6 @@
 import { test } from 'bun:test';
 
-import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/framework.ts';
+import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/general.ts';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';

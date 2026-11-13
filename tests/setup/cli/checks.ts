@@ -14,13 +14,14 @@ import type { NamingSettings } from '#cli/types/configurations/naming.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { ROOT_LABEL, SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/languages.ts';
+import { ROOT_LABEL } from '#tests/config/setup/programs.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();
@@ -42,6 +43,11 @@ export function planSandboxCheck(
     if (selected === undefined)
         throw new Error(`The sandbox selects no check called ${checkId} at ${path || ROOT_LABEL}.`);
     return selected;
+}
+
+export function planFixer(session: Session, fix: readonly string[]): PlannedCheck {
+    const planned = planSandboxCheck(session, 'sandbox/fixer');
+    return { ...planned, check: { ...planned.check, fix: [...fix] } };
 }
 
 export async function prepareSwiftCheck(

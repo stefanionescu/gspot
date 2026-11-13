@@ -3,7 +3,7 @@ import { pathToFileURL } from 'node:url';
 
 import type { LinterResult } from 'stylelint';
 
-const STYLELINT_MODULE_PATH = '.gspot/node_modules/stylelint/lib/index.mjs';
+import { STYLELINT_MODULE_PATH } from '#tests/config/setup/programs.ts';
 
 const [stylesheet = ''] = process.argv.slice(2);
 const stylelint = (await import(pathToFileURL(join(process.cwd(), STYLELINT_MODULE_PATH)).href)) as {

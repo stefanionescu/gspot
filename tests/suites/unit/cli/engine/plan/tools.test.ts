@@ -8,7 +8,7 @@ import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/eng
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { buildMiseInstall } from '#cli/tools/projects.ts';
-import { NODE_REQUIREMENTS } from '#tests/config/engine/run.ts';
+import { NODE_REQUIREMENTS } from '#tests/config/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

@@ -5,10 +5,9 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildPythonToolFiles, buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildPythonToolFiles } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { buildVenvExecutablePath } from '#tests/setup/system/programs.ts';
 
 test('each Ansible project lints its own files and not those of a nested project', async () => {
     await using sandbox = await createGitSandbox({

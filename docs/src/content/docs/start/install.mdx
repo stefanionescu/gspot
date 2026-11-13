@@ -3,18 +3,13 @@ title: Install
 ---
 
 import { Code, Tabs, TabItem } from '@astrojs/starlight/components';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 import { RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
-import {
-    setup,
-    runtimeMinimums,
-    packageManagerMinimums,
-    yarnClassicInstall,
-} from '#docs/reference/setup.ts';
 
 ## What you need
 
-gspot runs on macOS, Linux, and Windows. It needs Git, {`Node.js ${runtimeMinimums.node} or newer`},
-{`npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer`},
+gspot runs on macOS, Linux, and Windows. It needs Git, {`Node.js ${CLI_REFERENCE.runtimeMinimums.node} or newer`},
+{`npm ${CLI_REFERENCE.packageManagerMinimums.npm}, pnpm ${CLI_REFERENCE.packageManagerMinimums.pnpm}, or Bun ${CLI_REFERENCE.packageManagerMinimums.bun} or newer`},
 and [mise](https://mise.jdx.dev/). With an older Node.js, gspot stops with exit code 2, and with an older package manager,
 `gspot init` and `gspot install` stop. Node.js 22 comes with an older npm, so run `npm install --global npm@latest` there.
 Without mise, install each tool at its pinned version yourself, because a missing tool stops every commit. A
@@ -58,7 +53,7 @@ records the gspot version in `mise.toml`.
         </tr>
     </thead>
     <tbody>
-        {setup.map(({ label, start, add }) => (
+        {CLI_REFERENCE.setup.map(({ label, start, add }) => (
             <tr>
                 <td>{label}</td>
                 <td>
@@ -82,12 +77,12 @@ Without a `package.json`, `mise.toml` sets it. Then run `gspot install`, because
 `gspot.toml` exists.
 
 <Tabs syncKey="package-manager">
-    {setup.map(({ label, clone }) => (
+    {CLI_REFERENCE.setup.map(({ label, clone }) => (
         <TabItem label={label}>
             <Code lang="shell" code={clone.join('\n')} />
             {label === 'Yarn' && (
                 <p>
-                    Yarn Classic installs with <code>{yarnClassicInstall}</code>.
+                    Yarn Classic installs with <code>{CLI_REFERENCE.yarnClassicInstall}</code>.
                 </p>
             )}
         </TabItem>

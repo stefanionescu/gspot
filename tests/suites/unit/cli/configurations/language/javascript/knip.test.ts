@@ -15,7 +15,7 @@ import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generate
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules, toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeLauncher } from '#tests/setup/system/fakes.ts';
+import { writeLauncher } from '#tests/setup/system/programs.ts';
 import type { KnipConfig } from '#tests/types/configurations.ts';
 
 /**

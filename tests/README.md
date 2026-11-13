@@ -8,11 +8,11 @@ mise install
 mise run setup
 ```
 
-When an npm pin of a manifest changes, the setup stops at `tests/setup/sandboxes/test-tools.lock`, so update that lockfile:
+When an npm pin of a manifest changes, the setup stops at `tests/setup/runner/test-tools.lock`, so update that lockfile:
 
 ```bash
 bun install --cwd node_modules/.test-tools --linker isolated
-cp node_modules/.test-tools/bun.lock tests/setup/sandboxes/test-tools.lock
+cp node_modules/.test-tools/bun.lock tests/setup/runner/test-tools.lock
 ```
 
 | Command                     | Coverage                                                                                                          |

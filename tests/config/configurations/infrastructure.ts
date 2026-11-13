@@ -1,6 +1,4 @@
 // github actions
-// github actions
-// github actions
 export const ACTIONLINT_EXITS = [
     { code: 0, status: 'passed', findings: [] },
     {
@@ -39,6 +37,12 @@ export const WORKFLOW_TEXT_CASES = [
 ];
 
 // nginx
+const DYNAMIC_TARGET_CASE = {
+    name: 'dynamic and local targets',
+    source: 'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }',
+    hosts: [],
+    certificates: ['/etc/nginx/key.pem', '/etc/nginx/cert.pem'],
+} as const;
 const NGINX_EMERGENCY_CASES = [
     {
         stderr: 'nginx: [emerg] unknown directive "invalid" in /etc/nginx/conf.d/site.conf:7',
@@ -74,12 +78,6 @@ export const NGINX_FAILURE_CASES = [
         findings: [],
     },
 ] as const;
-const DYNAMIC_TARGET_CASE = {
-    name: 'dynamic and local targets',
-    source: 'events {} http { server { server localhost; server unix:/tmp/socket; server ${upstream}; proxy_pass $url; unrelated api; ssl_certificate $cert; ssl_certificate_key /etc/nginx/key.pem; ssl_trusted_certificate /etc/nginx/cert.pem; ssl_certificate /etc/nginx/cert.pem; } }',
-    hosts: [],
-    certificates: ['/etc/nginx/key.pem', '/etc/nginx/cert.pem'],
-} as const;
 export const NGINX_UPSTREAM_CONFIG = `events {}
 http {
     upstream backend {
