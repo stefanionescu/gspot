@@ -15,7 +15,7 @@ import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { findInstalledDependency } from '#cli/tools/packages.ts';
+import { findInstalledDependency } from '#cli/tools/programs/packages.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

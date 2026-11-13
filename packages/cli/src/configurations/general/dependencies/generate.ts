@@ -5,7 +5,7 @@ import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { BUNFIG_FILE, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import { getTable, listIgnores } from '#cli/settings/tables.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { ManagedKeys } from '#cli/types/repository.ts';

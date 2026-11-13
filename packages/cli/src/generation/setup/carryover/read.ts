@@ -45,7 +45,8 @@ import {
     readPrettierOptions,
     readRuffOptions,
 } from '#cli/generation/setup/format.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';

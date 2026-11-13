@@ -1,41 +1,17 @@
-import semver from 'semver';
-
-import { TYPESCRIPT_ESLINT_TOOL, TYPESCRIPT_PACKAGE } from '#cli/config/engine.ts';
-import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/programs.ts';
 import { hasFilesToCheck } from '#cli/engine/files.ts';
 import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan.ts';
-import { findSystemSkip, isSettingEmpty } from '#cli/engine/skips.ts';
-import { findTool, getTool, listToolNames, readConfigurations } from '#cli/manifests/read.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
+import { findSystemSkip } from '#cli/engine/skips.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, getTool, listToolNames } from '#cli/manifests/tools.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import { isSettingEmpty } from '#cli/settings/values/written.ts';
 import { readHost } from '#cli/system/environment.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
 import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
-
-/**
-Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every
-clone reads the same version.
-*/
-function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
-    const { cache, repository } = session;
-    const tracked = new Set(listTrackedPaths(repository));
-    const lockfile = JAVASCRIPT_LOCKFILES.find((name) => findText(cache, name) !== undefined);
-    if (lockfile === undefined || !tracked.has(lockfile)) return undefined;
-    return semver.valid(readLockedVersions(cache, '')?.get(TYPESCRIPT_PACKAGE)) ?? undefined;
-}
-
-function readProjectTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
-    const root = session.repository.dependencyFiles.find(({ path }) => path === PACKAGE_JSON);
-    const specifier = root?.installed[TYPESCRIPT_PACKAGE];
-    if (specifier === undefined) return undefined;
-    return semver.valid(specifier) ?? readLockedTypescript(session);
-}
 
 function isToolUsed(scopes: Scope[], conditions: Tool['when']): boolean {
     return (
@@ -136,29 +112,6 @@ export function selectToolConfigurations(session: SessionBase, checks: ScopeChec
         tools: configuration.tools
             .filter(({ when: conditions }) => isToolUsed(session.scopes, conditions))
             .filter((tool) => toolNames.has(tool.name)),
-    }));
-}
-
-/**
-Pin the TypeScript of the tool project to the version that the root package.json declares, when typescript-eslint
-supports that version, so that type-aware ESLint reads the project with the compiler that builds it. Otherwise the
-shipped pin stays. The tool project, its lockfile, doctor, and the TypeScript checks all read this pin.
-*/
-export function pinProjectTypescript(
-    configurations: Configuration[],
-    session: Pick<SessionBase, 'cache' | 'repository'>,
-): Configuration[] {
-    const range = findTool(configurations, TYPESCRIPT_ESLINT_TOOL)?.peers?.[TYPESCRIPT_PACKAGE];
-    const version = range === undefined ? undefined : readProjectTypescript(session);
-    if (range === undefined || version === undefined || !semver.satisfies(version, range)) return configurations;
-    return configurations.map((configuration) => ({
-        ...configuration,
-        tools: configuration.tools.map((tool) => {
-            const npm = tool.installers['npm'];
-            return npm?.name === TYPESCRIPT_PACKAGE
-                ? { ...tool, version, installers: { ...tool.installers, npm: { ...npm, version } } }
-                : tool;
-        }),
     }));
 }
 

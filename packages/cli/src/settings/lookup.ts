@@ -7,10 +7,8 @@ import { formatSchema } from '#cli/schemas/settings/fields.ts';
 import { commandCheckSchema, ignoreSchema, scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema, namingSchema } from '#cli/schemas/settings/tables.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { isTable } from '#cli/system/tables.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
-import type { ReasonedValue } from '#cli/types/settings.ts';
 
 export const RECORD_FIELDS: Readonly<Record<string, readonly string[]>> = Object.fromEntries(
     Object.entries({
@@ -104,6 +102,9 @@ export function getSettingType(schema: z.ZodType): Pick<Setting, 'type' | 'path_
     };
 }
 
-export function isReasonedValue(value: unknown): value is ReasonedValue<unknown> {
-    return isTable(value) && Object.hasOwn(value, 'value') && Object.hasOwn(value, 'reason');
+/**
+Get the last segment of a dotted setting key.
+*/
+export function extractKeyName(key: string): string {
+    return key.slice(key.lastIndexOf('.') + 1);
 }

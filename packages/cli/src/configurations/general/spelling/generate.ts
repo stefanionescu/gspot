@@ -19,7 +19,7 @@ import {
     keepFirstPatterns,
     listPlannedIgnoreSections,
 } from '#cli/configurations/ignores.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { ConfigBuilder, IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';

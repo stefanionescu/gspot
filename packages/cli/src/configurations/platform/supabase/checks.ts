@@ -39,7 +39,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';

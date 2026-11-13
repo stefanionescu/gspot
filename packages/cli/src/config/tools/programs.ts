@@ -1,6 +1,12 @@
 import { MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
 import { NODE_MODULES } from '#cli/config/system.ts';
 
+// check needs
+export const CANCELED_CHECK_NOTE = 'The check was canceled.';
+export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
+export const DOCKER_MISSING_MESSAGE = 'Docker is not installed. Install Docker to run this check.';
+export const DOCKER_TOOL = 'docker';
+
 // mise lookup
 export const MISE_CONFIG_NAMES: ReadonlySet<string> = new Set(['.tool-versions', '.config']);
 export const MISE_CONFIG_PREFIXES = ['mise', '.mise', '.rtx'] as const;
@@ -45,6 +51,10 @@ export const PROJECT_DEPENDENCIES_MESSAGE =
     'Install the project dependencies first: node_modules is missing in {folder}.';
 export const ROOT_FOLDER_NAME = 'the repository root';
 export const TOOL_STATES = ['ok', 'outdated', 'newer', 'missing', 'system', 'error'] as const;
+
+// typescript version
+export const TYPESCRIPT_ESLINT_TOOL = 'typescript-eslint';
+export const TYPESCRIPT_PACKAGE = 'typescript';
 
 // versions
 export const DISTRIBUTION_SUFFIX = '.dist-info';

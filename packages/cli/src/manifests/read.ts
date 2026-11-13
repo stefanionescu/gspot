@@ -2,25 +2,16 @@ import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 
 import { CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT, MANIFEST_FILE, RULES_FOLDER } from '#cli/config/manifests.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { formatZodIssue } from '#cli/parsers/validation.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { buildAssetPath, listAssets } from '#cli/system/package/assets.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { formatSimilarNames } from '#cli/system/text/messages.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type {
-    Check,
-    Configuration,
-    ConfigurationCheck,
-    ManifestSource,
-    ParsedManifest,
-    ShippedRule,
-    Tool,
-} from '#cli/types/manifests.ts';
+import type { Configuration, ManifestSource, ParsedManifest, ShippedRule } from '#cli/types/manifests.ts';
 
-const shipped: { configurations?: Map<string, Configuration>; checks?: Map<string, ConfigurationCheck> } = {};
+const shipped: { configurations?: Map<string, Configuration> } = {};
 
 function buildConfigurations(manifests: ParsedManifest[]): Map<string, Configuration> {
     const toolsByName = new Map(
@@ -95,26 +86,6 @@ export function readConfigurations(): ReadonlyMap<string, Configuration> {
     return configurations;
 }
 
-export function listChecksById(configurations: Iterable<Configuration>): Map<string, ConfigurationCheck> {
-    const checks = new Map<string, ConfigurationCheck>();
-    for (const configuration of configurations) {
-        for (const check of configuration.checks) {
-            checks.set(check.id, { check, configuration });
-        }
-    }
-    return checks;
-}
-
-export function readShippedChecks(): ReadonlyMap<string, ConfigurationCheck> {
-    shipped.checks ??= listChecksById(readConfigurations().values());
-    return shipped.checks;
-}
-
-export function listCheckIds(checks: ReadonlyArray<Pick<Check, 'id'>>): string[] {
-    const authored = checks.map((check) => check.id);
-    return [...readShippedChecks().keys(), ...authored];
-}
-
 export function listRuleFiles(configuration: Configuration): ShippedRule[] {
     const { group } = configuration;
     const sources = listAssets(`${configuration.folder}/${RULES_FOLDER}/`);
@@ -123,69 +94,6 @@ export function listRuleFiles(configuration: Configuration): ShippedRule[] {
         group,
         path: posix.basename(source),
     }));
-}
-
-export function listToolNames(configurations: Configuration[]): Set<string> {
-    return new Set(configurations.flatMap((configuration) => configuration.tools.map((tool) => tool.name)));
-}
-
-export function listDistinctTools(configurations: Configuration[]): Tool[] {
-    const tools = new Map<string, Tool>();
-    for (const configuration of configurations)
-        for (const tool of configuration.tools) {
-            if (!tools.has(tool.name)) tools.set(tool.name, tool);
-        }
-    return tools
-        .values()
-        .toArray()
-        .toSorted((first, second) => compareText(first.name, second.name));
-}
-
-export function findTool(configurations: Iterable<Configuration>, name: string): Tool | undefined {
-    for (const configuration of configurations) {
-        const tool = configuration.tools.find((declaration) => declaration.name === name);
-        if (tool !== undefined) return tool;
-    }
-    return undefined;
-}
-
-/**
-Get a tool that gspot ships by its name.
-
-@throws Error when no configuration declares it.
-*/
-export function getTool(configurations: Iterable<Configuration>, name: string): Tool {
-    const tool = findTool(configurations, name);
-    if (tool === undefined) throw new Error(`No configuration declares the tool ${name}.`);
-    return tool;
-}
-
-export function findToolName(check: Pick<Check, 'tool' | 'command'>): string | undefined {
-    return check.tool ?? check.command?.[0];
-}
-
-export function assertCheckExists(checkId: string, commandChecks: ReadonlyArray<Pick<Check, 'id'>>): void {
-    const checkIds = listCheckIds(commandChecks);
-    if (!checkIds.includes(checkId))
-        throw new GspotError(
-            'arguments',
-            `There is no check called ${checkId}.${formatSimilarNames(checkId, checkIds)}`,
-        );
-}
-
-/**
-Find a check by its id among the command checks of the user's repository, then among the checks that gspot ships.
-
-@param commandChecks undefined when the user's repository has no settings file.
-@returns the check, with the configuration that ships it when one does.
-*/
-export function findCheck(
-    checkId: string,
-    commandChecks: Readonly<Record<string, Check>> | undefined,
-): { check: Check; configuration: Configuration | undefined } | undefined {
-    const commandCheck = commandChecks?.[checkId];
-    if (commandCheck !== undefined) return { check: commandCheck, configuration: undefined };
-    return readShippedChecks().get(checkId);
 }
 
 export function readNamingDefaults(): NonNullable<Configuration['naming']> {

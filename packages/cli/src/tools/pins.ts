@@ -1,30 +1,40 @@
-import { stringify } from '@decimalturn/toml-patch';
+import semver from 'semver';
 
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
 import { NODE_TOOL } from '#cli/config/repository/version-pin.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import {
-    CONFIG_TOML_FORMAT,
-    JSON_INDENT,
-    NPM_TOOL_PROJECT,
-    PYTHON_TOOL_PROJECT,
-    UV_TOOL,
-} from '#cli/config/tools/installers.ts';
-import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
+import { UV_TOOL } from '#cli/config/tools/installers.ts';
+import { TYPESCRIPT_ESLINT_TOOL, TYPESCRIPT_PACKAGE } from '#cli/config/tools/programs.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findTool, getTool, listDistinctTools } from '#cli/manifests/tools.ts';
+import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { Configuration, Tool } from '#cli/types/manifests.ts';
 import type { LintCommandSearch } from '#cli/types/repository.ts';
-import type {
-    GeneratedFile,
-    Host,
-    MiseToolPin,
-    PackagePin,
-    PackagePins,
-    PythonToolProject,
-    Session,
-} from '#cli/types/tools.ts';
+import type { Host, MiseToolPin, PackagePin, PackagePins, Session, SessionBase } from '#cli/types/tools.ts';
+
+/**
+Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every
+clone reads the same version.
+*/
+function readLockedTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
+    const { cache, repository } = session;
+    const tracked = new Set(listTrackedPaths(repository));
+    const lockfile = JAVASCRIPT_LOCKFILES.find((name) => findText(cache, name) !== undefined);
+    if (lockfile === undefined || !tracked.has(lockfile)) return undefined;
+    return semver.valid(readLockedVersions(cache, '')?.get(TYPESCRIPT_PACKAGE)) ?? undefined;
+}
+
+function readProjectTypescript(session: Pick<SessionBase, 'cache' | 'repository'>): string | undefined {
+    const root = session.repository.dependencyFiles.find(({ path }) => path === PACKAGE_JSON);
+    const specifier = root?.installed[TYPESCRIPT_PACKAGE];
+    if (specifier === undefined) return undefined;
+    return semver.valid(specifier) ?? readLockedTypescript(session);
+}
 
 export function listMisePins(configurations: Configuration[]): MiseToolPin[] {
     const tools = listDistinctTools(configurations);
@@ -38,21 +48,6 @@ export function getUvPin(): MiseToolPin {
     const pin = findMisePin(getTool(readConfigurations().values(), UV_TOOL));
     if (pin === undefined) throw new Error('The uv manifest has no mise pin.');
     return pin;
-}
-
-export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
-    const tools = Object.fromEntries(
-        listMisePins(configurations)
-            .toSorted((left, right) => compareText(left.name, right.name))
-            .map((pin) => [
-                pin.name,
-                pin.options === undefined ? pin.version : { version: pin.version, ...pin.options },
-            ]),
-    );
-    return {
-        path: GSPOT_PATHS.miseProject,
-        content: stringify({ tools }, { ...CONFIG_TOML_FORMAT, inlineTableStart: 1 }),
-    };
 }
 
 export function findMisePin(tool: Tool): MiseToolPin | undefined {
@@ -105,25 +100,6 @@ export function listReplacedTools(configurations: Configuration[]): Pick<LintCom
     return { tools: new Set([...names, ...covered]), pins: listPackagePins(stack).npm };
 }
 
-export function buildPythonProjectTable(configurations: Configuration[]): PythonToolProject {
-    return { ...PYTHON_TOOL_PROJECT, dependencies: listPackagePins(configurations).python };
-}
-
-export function buildToolProjects(
-    session: Pick<Session, 'packageManager' | 'scopes' | 'toolConfigurations'>,
-): GeneratedFile[] {
-    const { packageManager, toolConfigurations } = session;
-    const project = { ...NPM_TOOL_PROJECT, devDependencies: listNpmProjectPins(session) };
-    const npmProject = { path: GSPOT_PATHS.npmProject, content: `${JSON.stringify(project, null, JSON_INDENT)}\n` };
-    const python = buildPythonProjectTable(toolConfigurations);
-    const pythonContent = stringify({ project: python }, CONFIG_TOML_FORMAT);
-    return [
-        ...(packageManager === undefined ? [] : [npmProject]),
-        ...(python.dependencies.length === 0 ? [] : [{ path: GSPOT_PATHS.pythonProject, content: pythonContent }]),
-        buildMiseInstall(toolConfigurations),
-    ];
-}
-
 export function findPackagePin(tool: Tool): PackagePin | undefined {
     const python = tool.installers.pypi;
     if (python !== undefined && tool.system !== true)
@@ -145,4 +121,27 @@ export function findMissingBuild(tool: Tool, host: Host): string | undefined {
     return named.includes(platform)
         ? undefined
         : (OPERATING_SYSTEMS.find((system) => system.name === platform)?.label ?? platform);
+}
+
+/**
+Pin the TypeScript of the tool project to the version that the root package.json declares, when typescript-eslint
+supports that version, so that type-aware ESLint reads the project with the compiler that builds it. Otherwise the
+shipped pin stays. The tool project, its lockfile, doctor, and the TypeScript checks all read this pin.
+*/
+export function pinProjectTypescript(
+    configurations: Configuration[],
+    session: Pick<SessionBase, 'cache' | 'repository'>,
+): Configuration[] {
+    const range = findTool(configurations, TYPESCRIPT_ESLINT_TOOL)?.peers?.[TYPESCRIPT_PACKAGE];
+    const version = range === undefined ? undefined : readProjectTypescript(session);
+    if (range === undefined || version === undefined || !semver.satisfies(version, range)) return configurations;
+    return configurations.map((configuration) => ({
+        ...configuration,
+        tools: configuration.tools.map((tool) => {
+            const npm = tool.installers['npm'];
+            return npm?.name === TYPESCRIPT_PACKAGE
+                ? { ...tool, version, installers: { ...tool.installers, npm: { ...npm, version } } }
+                : tool;
+        }),
+    }));
 }

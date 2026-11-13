@@ -1,32 +1,20 @@
 import { statSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PYTHON_ENVIRONMENT_FOLDER, PYTHON_EXECUTABLE } from '#cli/config/system.ts';
 import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { ACTIVE_ENVIRONMENT_VARIABLE, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { ACTIVE_ENVIRONMENT_VARIABLE } from '#cli/config/tools/programs.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { openFiles } from '#cli/system/files/open.ts';
 import { executableLayout } from '#cli/system/processes/programs.ts';
 import type { Tool } from '#cli/types/manifests.ts';
-import type { ProcessFailure, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 /**
 Find the Python environment that the shell activated. Poetry, pip-tools, and conda keep it outside the project folder.
 */
-function findActiveEnvironment(): string | undefined {
+export function findActiveEnvironment(): string | undefined {
     const active = readEnvironmentVariable(ACTIVE_ENVIRONMENT_VARIABLE);
     if (active === undefined || active === '') return undefined;
     return statSync(active, { throwIfNoEntry: false })?.isDirectory() === true ? active : undefined;
-}
-
-function findProjectEnvironment(toolsRoot: string, scopePath: string): string | undefined {
-    const active = findActiveEnvironment();
-    if (active !== undefined) return active;
-    const folder = joinScope(scopePath, PYTHON_ENVIRONMENT_FOLDER);
-    const environment = openFiles(toolsRoot).findStats(folder);
-    return environment?.isDirectory() === true || environment?.isSymbolicLink() === true ? folder : undefined;
 }
 
 export function listCopyPythonArguments(tool: Tool, environment: Record<string, string>): string[] {
@@ -59,17 +47,4 @@ export function buildCopyPythonEnvironment(
     return statSync(environment, { throwIfNoEntry: false })?.isDirectory() === true
         ? { [UV_PROJECT_ENVIRONMENT]: environment }
         : {};
-}
-
-export function findMissingEnvironment(
-    session: Pick<Session, 'repository' | 'toolsRoot'>,
-    planned: Pick<ScopeCheck, 'check' | 'scope'>,
-): ProcessFailure | undefined {
-    if (planned.check.needs?.includes('python-environment') !== true) return undefined;
-    const scopePath = planned.scope.path;
-    const project = joinScope(scopePath, PYPROJECT_TOML);
-    if (session.repository.files.every((file) => file.path !== project)) return undefined;
-    return findProjectEnvironment(session.toolsRoot, scopePath) === undefined
-        ? { status: 'missing', note: PROJECT_ENVIRONMENT_MESSAGE }
-        : undefined;
 }

@@ -26,7 +26,7 @@ import { visitQueriedSources } from '#cli/configurations/general/structure/check
 import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { isDocstring } from '#cli/parsers/code/python.ts';
-import { getLimit } from '#cli/settings/scopes.ts';
+import { getLimit } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { ParsedLanguage, ParsedSource, TrivialFunction } from '#cli/types/configurations/general.ts';

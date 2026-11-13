@@ -1,4 +1,4 @@
-import { listIgnores } from '#cli/settings/scopes.ts';
+import { listIgnores } from '#cli/settings/tables.ts';
 import type { IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';

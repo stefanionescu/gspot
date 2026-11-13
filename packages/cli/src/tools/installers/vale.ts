@@ -1,4 +1,3 @@
-import { createHash } from 'node:crypto';
 import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, posix } from 'node:path';
 
@@ -17,13 +16,14 @@ import {
     VALE_PACKAGES,
     VALE_TOOL,
 } from '#cli/config/tools/vale.ts';
-import { getTool } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildToolAvailability, inspectTool } from '#cli/tools/inspect.ts';
-import { downloadArchive, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
+import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { buildToolAvailability, inspectTool } from '#cli/tools/programs/inspect.ts';
 import type { ToolInstall } from '#cli/types/tools.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
@@ -35,13 +35,9 @@ async function downloadValePackages(install: ToolInstall, folder: string): Promi
             url,
             name: VALE_DOWNLOAD_NAME,
             limit: VALE_ARCHIVE_LIMIT,
+            sha256: release.sha256,
+            refusal: `The Vale package ${name} failed SHA-256 verification. gspot kept the installed packages. Run gspot install again, and check that no proxy rewrites the download.`,
         });
-        const sha256 = createHash('sha256').update(bytes).digest('hex');
-        if (sha256 !== release.sha256)
-            throw new GspotError(
-                'install',
-                `The Vale package ${name} failed SHA-256 verification. gspot kept the installed packages. Run gspot install again, and check that no proxy rewrites the download.`,
-            );
         const path = join(folder, `${name}.zip`);
         writeFileSync(path, bytes);
         packages.push(convertToPosixPath(path));

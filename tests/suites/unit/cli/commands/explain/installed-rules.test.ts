@@ -9,7 +9,7 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildMiseInstall } from '#cli/tools/pins.ts';
+import { buildMiseInstall } from '#cli/tools/projects.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/setup/configurations.ts';

@@ -32,7 +32,7 @@ import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
-import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
+import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/tables.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Pyproject } from '#cli/types/parsers.ts';

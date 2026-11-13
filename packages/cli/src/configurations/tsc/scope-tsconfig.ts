@@ -15,7 +15,7 @@ import { NESTJS_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { listIgnoredRules } from '#cli/settings/tables.ts';
 import { requireTypescript } from '#cli/system/package/typescript.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';

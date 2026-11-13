@@ -8,12 +8,13 @@ import executables from 'which';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GIT_PROGRAM } from '#cli/config/repository/git.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { listExecutableNames } from '#cli/system/processes/programs.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import type { runProcess } from '#cli/system/processes/run.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import * as locate from '#cli/tools/locate.ts';
+import * as mise from '#cli/tools/programs/mise.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
@@ -65,7 +66,7 @@ export function fakeToolExecutables(tools: Tool[]): DisposableStack {
             return tools.some((tool) => tool.name === name) ? join(folder, name) : undefined;
         }),
     );
-    resources.use(spyOn(locate, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
+    resources.use(spyOn(mise, 'readToolBinPaths').mockResolvedValue({ folders: [folder] }));
     const findVersionPin = (command: readonly string[]): Tool | undefined => {
         const pin = tools.find((tool) => listExecutableNames(tool.name).includes(basename(command[0] ?? '')));
         const versionCommand = pin?.version_command ?? ['--version'];

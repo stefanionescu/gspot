@@ -1,11 +1,12 @@
 import { FIX_CANCELED_MESSAGE, FIX_ROUNDS } from '#cli/config/engine.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
-import { findCommandTool, isActive } from '#cli/engine/plan.ts';
+import { isActive } from '#cli/engine/plan.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { findCommandTool } from '#cli/manifests/tools.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
 import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
@@ -13,7 +14,7 @@ import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { findToolPath } from '#cli/tools/inspect.ts';
+import { findToolPath } from '#cli/tools/programs/inspect.ts';
 import type { FixerPlannedCheck, PlannedCheck } from '#cli/types/engine/plan.ts';
 import type {
     BuiltInFix,

@@ -1,10 +1,10 @@
 import { BRACKET_HELP, GSPOT_RULES, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { readSettingsText } from '#cli/settings/file.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { joinScopeSelector, mapSettingPaths } from '#cli/settings/paths.ts';
-import { findSettingLine } from '#cli/settings/text.ts';
+import { readSettingsText } from '#cli/settings/toml/file.ts';
+import { findSettingLine } from '#cli/settings/toml/text.ts';
+import { joinScopeSelector, mapSettingPaths } from '#cli/settings/values/paths.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';

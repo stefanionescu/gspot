@@ -6,7 +6,7 @@ import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';

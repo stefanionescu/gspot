@@ -35,7 +35,7 @@ import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xco
 import { parseBuildTargets } from '#cli/parsers/projects/xcode/targets.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { assetContentsSchema, stringsFileSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';

@@ -6,7 +6,8 @@ import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import type { Level } from '#cli/types/settings.ts';
 import {
     GOOGLE_DOCSTRING_MODULE,

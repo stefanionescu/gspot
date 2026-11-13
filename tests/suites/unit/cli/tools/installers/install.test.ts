@@ -8,7 +8,7 @@ import { createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
-import { getTool, listDistinctTools } from '#cli/manifests/read.ts';
+import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';

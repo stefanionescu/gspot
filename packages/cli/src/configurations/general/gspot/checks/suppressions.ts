@@ -6,7 +6,7 @@ import {
     SUPPRESSION_KIND_MESSAGES,
 } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { findToolName } from '#cli/manifests/read.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';

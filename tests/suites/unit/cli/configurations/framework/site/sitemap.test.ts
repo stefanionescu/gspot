@@ -4,7 +4,8 @@ import { pathToFileURL } from 'node:url';
 
 import { expect, test } from 'bun:test';
 
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';
 import { INVALID_SITEMAP_URLS } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

@@ -1,5 +1,5 @@
 import { DRIZZLE_RULES } from '#cli/config/configurations/library.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildDrizzleBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'settings'>): ConfigurationBlocks {

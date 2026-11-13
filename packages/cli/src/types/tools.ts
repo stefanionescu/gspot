@@ -131,6 +131,8 @@ export type ArchiveDownload = {
     url: string;
     name: string;
     limit: number;
+    sha256: string;
+    refusal: string;
 };
 
 export type HookStatus = { ready: boolean; text: string; tool?: string | undefined; lines?: string[] | undefined };

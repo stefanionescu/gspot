@@ -12,12 +12,11 @@ import {
 } from '#cli/config/parsers/code.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { GRAMMAR_TOOL_NOUN } from '#cli/config/tools/installers.ts';
-import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
 import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
-import { downloadArchive } from '#cli/tools/installers/steps.ts';
+import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
 import type { DownloadSession, ToolInstall } from '#cli/types/tools.ts';
@@ -42,12 +41,13 @@ export async function downloadGrammar(grammar: GrammarName, session: DownloadSes
     const { url, sha256 } = GRAMMAR_RELEASES[grammar];
     const path = buildGrammarPath(grammar);
     if (existsSync(path) && createHash('sha256').update(readFileSync(path)).digest('hex') === sha256) return false;
-    const bytes = await downloadArchive(session, { url, name: grammar, limit: GRAMMAR_ARCHIVE_LIMIT });
-    if (createHash('sha256').update(bytes).digest('hex') !== sha256)
-        throw new GspotError(
-            'install',
-            `The ${grammar} grammar failed SHA-256 verification, so gspot kept no copy. Run gspot install again, and check that no proxy rewrites the download.`,
-        );
+    const bytes = await downloadArchive(session, {
+        url,
+        name: grammar,
+        limit: GRAMMAR_ARCHIVE_LIMIT,
+        sha256,
+        refusal: `The ${grammar} grammar failed SHA-256 verification, so gspot kept no copy. Run gspot install again, and check that no proxy rewrites the download.`,
+    });
     mkdirSync(dirname(path), { recursive: true });
     replaceBoundedFile(dirname(path), basename(path), { bytes, mode: OWNER_WRITABLE_FILE });
     return true;

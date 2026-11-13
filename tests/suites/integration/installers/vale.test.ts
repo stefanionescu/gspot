@@ -7,7 +7,8 @@ import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
 import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
 import { VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';

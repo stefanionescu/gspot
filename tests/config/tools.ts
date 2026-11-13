@@ -191,6 +191,9 @@ export const UV_LOCKFILE_ORIGINS = [
 ] satisfies Array<{ name: string; registry: string; url: string; expected: boolean; indexes: Record<string, unknown> }>;
 
 // tool pins
+const PNPM_TYPESCRIPT_LOCK =
+    "lockfileVersion: '9.0'\n\nimporters:\n\n  .:\n    devDependencies:\n      typescript:\n        specifier: ^6.0.3\n        version: 6.0.3\n";
+const RANGE_PACKAGE = '{"name":"example","private":true,"devDependencies":{"typescript":"^6.0.3"}}\n';
 export const TOOL_PROJECT_PACKAGES = [
     {
         name: 'npm',
@@ -218,6 +221,32 @@ export const TOOL_PROJECT_PACKAGES = [
         system: true,
         installers: { pypi: { name: 'checker', version: '5.0.0' } },
         expected: undefined,
+    },
+] as const;
+export const TYPESCRIPT_PIN_CASES = [
+    {
+        name: 'an exact version',
+        files: { 'package.json': '{"name":"example","private":true,"devDependencies":{"typescript":"6.0.3"}}\n' },
+        untracked: [],
+        isProjectPin: true,
+    },
+    {
+        name: 'a range that the tracked lockfile resolves',
+        files: { 'package.json': RANGE_PACKAGE, 'pnpm-lock.yaml': PNPM_TYPESCRIPT_LOCK },
+        untracked: [],
+        isProjectPin: true,
+    },
+    {
+        name: 'a range with an untracked lockfile',
+        files: { 'package.json': RANGE_PACKAGE, 'pnpm-lock.yaml': PNPM_TYPESCRIPT_LOCK },
+        untracked: ['pnpm-lock.yaml'],
+        isProjectPin: false,
+    },
+    {
+        name: 'a version that typescript-eslint does not support',
+        files: { 'package.json': '{"name":"example","private":true,"devDependencies":{"typescript":"3.9.10"}}\n' },
+        untracked: [],
+        isProjectPin: false,
     },
 ] as const;
 

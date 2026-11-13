@@ -3,8 +3,8 @@ import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/
 import { CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
 import { splitWords } from '#cli/configurations/general/naming/words.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { listApplicableTables } from '#cli/settings/inherit.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import { listApplicableTables } from '#cli/settings/values/written.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type {
     BannedWord,

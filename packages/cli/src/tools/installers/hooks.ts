@@ -1,6 +1,7 @@
 import { readFileSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { join, resolve } from 'node:path';
 
+import cliPackage from '#cli-package' with { type: 'json' };
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { COMMENT_LINE, PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
 import { EXECUTABLE_BITS, LINE_BREAK } from '#cli/config/system.ts';
@@ -8,14 +9,17 @@ import {
     CHECK_HOOKS,
     HOOK_CHECKS,
     HOOK_FOLDER_KINDS,
+    HOOK_PROGRAM,
     NOT_INSTALLED_STATUS,
     SET_HOOKS_PATH,
     UNSET_HOOKS_NOTE,
     UNSET_HOOKS_PATH,
 } from '#cli/config/tools/installers.ts';
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
 import { runGit } from '#cli/repository/git/run.ts';
 import { readHooks } from '#cli/repository/setup.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
 import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
@@ -148,6 +152,28 @@ export async function readHookStatus(session: Session, repository: Pick<Reposito
         return { ready: isReady, tool, lines, text: `not installed; ${text}` };
     }
     return { ready: false, text: NOT_INSTALLED_STATUS };
+}
+
+export async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
+    const hooks = await readHookStatus(session, session.repository);
+    if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
+    const { command, hasBinFolder, installCommand } = session.startRunner;
+    // A hook starts gspot from the bin folder, so a package manager that puts another Node.js first changes nothing.
+    const versionCommand = hasBinFolder ? [HOOK_PROGRAM, VERSION_FLAG] : [...command.split(' '), VERSION_FLAG];
+    const started = hasBinFolder ? [join(session.root, HOOK_PROGRAM), VERSION_FLAG] : versionCommand;
+    const result = await runProcess(started, {
+        cwd: session.root,
+        timeoutSeconds: session.settings.tool_timeout_seconds,
+    });
+    if (result.code === 0) return hooks;
+    const cause = result.stderr
+        .split('\n')
+        .map((line) => line.trim())
+        .find((line) => line !== '');
+    const install = installCommand.replace('<version>', () => cliPackage.version);
+    const reason = cause === undefined ? '' : `: ${cause.replace(/\.$/u, '')}`;
+    const failure = `${versionCommand.join(' ')} fails${reason}. Install gspot with: ${install}`;
+    return { ...hooks, ready: false, lines: [failure], text: `${hooks.text}, but ${failure}` };
 }
 
 export function listHookNames(checks: ScopeCheck[]): HookName[] {

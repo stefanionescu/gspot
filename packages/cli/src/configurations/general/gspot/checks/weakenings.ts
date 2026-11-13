@@ -1,7 +1,5 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import type { z } from 'zod';
-
 import {
     EVERY_CHECK,
     SHIPPED_ESLINT_RULES,
@@ -12,19 +10,18 @@ import {
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
-import { buildSettings, buildSettingsFromTable } from '#cli/settings/parse.ts';
+import { parseAcceptedSettings } from '#cli/settings/parse.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
+import { listSettingsTables, listWrittenKeys } from '#cli/settings/values/written.ts';
+import { isTable } from '#cli/system/tables.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import type { BuiltInCheckResult, CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { IgnoreRecord, Settings, SettingsTable, TomlTable } from '#cli/types/settings.ts';
+import type { IgnoreRecord, Settings, SettingsTable } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
     return head.flatMap((record) => {
@@ -196,51 +193,26 @@ function listRuleOptionWeakenings(base: Settings, head: Settings): Weakening[] {
     });
 }
 
-/**
-Reads a base file that the schema refuses without the paths that the schema issues name, so one unknown or renamed
-key costs that key and the rest still compares. Issues of one list arrive in index order, so the removal runs from
-the last issue to the first and no index moves before its turn.
-*/
-function parseWithoutRefusedPaths(written: TomlTable, issues: readonly z.core.$ZodIssue[]) {
-    const refused = issues.flatMap((issue) =>
-        issue.code === 'unrecognized_keys' ? issue.keys.map((key) => [...issue.path, key]) : [issue.path],
-    );
-    for (const path of refused.toReversed()) {
-        const parent = findValueAt(
-            written,
-            path.slice(0, -1).filter((segment) => typeof segment !== 'symbol'),
-        );
-        const key = path.at(-1);
-        if (Array.isArray(parent) && typeof key === 'number') parent.splice(key, 1);
-        else if (isTable(parent) && typeof key === 'string') Reflect.deleteProperty(parent, key);
-    }
-    return settingsSchema.safeParse(written);
-}
-
-function listSettingsWeakenings(text: string, head: Settings, tracked: string[]): Weakening[] {
-    const written = parseTomlFile(SETTINGS_FILE, text);
-    const strict = settingsSchema.safeParse(written);
-    const parsed = strict.success ? strict : parseWithoutRefusedPaths(written, strict.error.issues);
-    // A base that gspot still refuses compares as the shipped defaults, so each weakening of the current file needs a
-    // reason.
-    const base = parsed.success ? buildSettings(parsed.data, written) : buildSettingsFromTable({});
-    return [
-        ...listIgnoreWeakenings(base.ignore, head.ignore),
-        ...listConfigurationWeakenings(base, head, tracked),
-        ...listSwitchWeakenings(base, head),
-        ...listSettingMoves(base, head),
-        ...listImportRuleWeakenings(base, head),
-        ...listRuleOptionWeakenings(base, head),
-    ];
-}
-
 async function checkWeakenings(session: CheckSession): Promise<BuiltInCheckResult> {
     const { root, settings, cancelSignal, repository, selection } = session;
     const paths = [SETTINGS_FILE];
     const texts = await readCommittedTexts(root, paths, selection?.base ?? 'HEAD', cancelSignal);
     const settingsText = texts.get(SETTINGS_FILE);
     const tracked = repository.files.map(({ path }) => path);
-    const weakenings = settingsText === undefined ? [] : listSettingsWeakenings(settingsText, settings, tracked);
+    // A base that gspot still refuses compares as the shipped defaults, so each weakening of the current file needs a
+    // reason.
+    const base = settingsText === undefined ? undefined : parseAcceptedSettings(settingsText);
+    const weakenings =
+        base === undefined
+            ? []
+            : [
+                  ...listIgnoreWeakenings(base.ignore, settings.ignore),
+                  ...listConfigurationWeakenings(base, settings, tracked),
+                  ...listSwitchWeakenings(base, settings),
+                  ...listSettingMoves(base, settings),
+                  ...listImportRuleWeakenings(base, settings),
+                  ...listRuleOptionWeakenings(base, settings),
+              ];
     return {
         files: paths.filter((path) => tracked.includes(path)),
         findings: weakenings

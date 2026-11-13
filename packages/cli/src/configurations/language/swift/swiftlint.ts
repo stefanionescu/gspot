@@ -9,7 +9,7 @@ import {
     SWIFTLINT_OPT_IN,
 } from '#cli/config/configurations/swift.ts';
 import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
-import { getLimit, getTable, selectFormat } from '#cli/settings/scopes.ts';
+import { getLimit, getTable, selectFormat } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSeverityLimit(planned: PlannedConfig, name: string): { warning: number; error: number } {

@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { DOCKER_DAEMON_NOTE } from '#cli/config/engine.ts';
+import { DOCKER_DAEMON_NOTE } from '#cli/config/tools/programs.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { openFakeToolSession } from '#tests/setup/cli/checks.ts';

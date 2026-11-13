@@ -1,7 +1,7 @@
 import { PYTHON_RULES } from '#cli/config/configurations/python.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
-import { getLimit } from '#cli/settings/scopes.ts';
+import { getLimit } from '#cli/settings/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

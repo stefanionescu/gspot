@@ -16,14 +16,14 @@ import {
     RULE_PRINT_FLAG,
 } from '#cli/config/generation/setup.ts';
 import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/schema.ts';
-import { listToolNames } from '#cli/manifests/read.ts';
+import { listToolNames } from '#cli/manifests/tools.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
+import { listRepositoryExecutablePaths } from '#cli/tools/programs/locate.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type {
     CarryoverRow,

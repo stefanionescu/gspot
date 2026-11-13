@@ -1,18 +1,16 @@
 import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/schema.ts';
-import { AT_TOP_LEVEL, SETTING_RULES, UNDER_TABLE } from '#cli/config/settings/validation.ts';
-import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
+import { AT_TOP_LEVEL, UNDER_TABLE } from '#cli/config/settings/validation.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { findSetting, findSettingDefault } from '#cli/settings/values/inherit.ts';
+import { joinSettingPaths } from '#cli/settings/values/paths.ts';
 import {
-    findSetting,
-    findSettingDefault,
     findWrittenSetting,
     listApplicableTables,
     listSettingsTables,
     listWrittenKeys,
-} from '#cli/settings/inherit.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { joinSettingPaths } from '#cli/settings/paths.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
+} from '#cli/settings/values/written.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text/messages.ts';
 import type { Setting } from '#cli/types/manifests.ts';
@@ -22,7 +20,6 @@ import type {
     SettingsError,
     SettingsTable,
     WrittenKeyLookup,
-    WrittenScopeTable,
     WrittenSetting,
 } from '#cli/types/settings.ts';
 
@@ -145,24 +142,6 @@ function formatUnknownField(key: string, availableKeys: string[]): string {
     }`;
 }
 
-function listRuleTables({ table, path }: WrittenScopeTable) {
-    const eslint = table.tools?.eslint;
-    const overrides = eslint !== undefined && 'override' in eslint ? eslint.override : undefined;
-    return [
-        { tool: 'eslint', rules: eslint?.rules, path: [...path, 'tools', 'eslint', 'rules'] },
-        {
-            tool: 'markdownlint',
-            rules: table.tools?.markdownlint?.rules,
-            path: [...path, 'tools', 'markdownlint', 'rules'],
-        },
-        ...(overrides ?? []).map((override, index) => ({
-            tool: 'eslint',
-            rules: override.rules,
-            path: [...path, 'tools', 'eslint', 'override', index, 'rules'],
-        })),
-    ];
-}
-
 export function formatUnknownSetting(
     key: string,
     { available: availableKeys, offered }: { available: string[]; offered: ReadonlySet<string> },
@@ -213,23 +192,4 @@ export function validateKeys(
         errors.push(...found.map((error) => ({ ...error, path: [...path, ...error.path] })));
     }
     return errors;
-}
-
-export function findRuleSetting(tool: string, rule: string): string | undefined {
-    const owned = { ...LIMIT_SETTING_RULES[tool], ...SETTING_RULES[tool] };
-    return Object.hasOwn(owned, rule) ? owned[rule] : undefined;
-}
-
-export function validateSettingRules(settings: Settings): SettingsError[] {
-    return listSettingsTables(settings)
-        .flatMap((written) => listRuleTables(written))
-        .flatMap(({ tool, rules, path }) => {
-            if (rules === undefined) return [];
-            return Object.keys(rules).flatMap((rule) => {
-                const setting = findRuleSetting(tool, rule);
-                if (setting === undefined) return [];
-                const message = `gspot writes the options of ${rule} from ${setting}. Change that setting instead: gspot set ${setting} <value>, with --reason when you raise it.`;
-                return [{ path: [...path, rule], message }];
-            });
-        });
 }

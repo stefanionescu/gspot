@@ -15,7 +15,7 @@ import {
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
 import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
 import type { Migration } from '#cli/types/configurations/database.ts';

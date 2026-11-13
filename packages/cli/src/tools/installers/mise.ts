@@ -36,8 +36,8 @@ import { getRequired, isTable } from '#cli/system/tables.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { findMisePin, findMissingBuild, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/programs/mise.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
 import type { GeneratedFile, MiseInstall, MiseLockfile, MiseToolPin, ToolInstall } from '#cli/types/tools.ts';
 

@@ -45,23 +45,6 @@ export function listSourceConfigurations(configurations: Configuration[]): Confi
     );
 }
 
-export function listSelectedConfigurations(
-    scopes: ReadonlyArray<{ configurations: Configuration[] }>,
-): Configuration[] {
-    const seen = new Map<string, Configuration>();
-    for (const scope of scopes)
-        for (const configuration of scope.configurations)
-            if (!seen.has(configuration.name)) seen.set(configuration.name, configuration);
-    return seen.values().toArray();
-}
-
-export function isConfigurationSelected(
-    scopes: ReadonlyArray<{ configurations: Configuration[] }>,
-    name: string,
-): boolean {
-    return scopes.some((scope) => scope.configurations.some((configuration) => configuration.name === name));
-}
-
 export function listUnknownConfigurations<Written extends Pick<WrittenConfiguration, 'name'>>(
     written: readonly Written[],
 ): Array<Written & { message: string }> {

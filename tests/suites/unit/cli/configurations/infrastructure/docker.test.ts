@@ -1,7 +1,8 @@
 import { expect, test } from 'bun:test';
 
 import { DOCKERIGNORE_PATTERNS } from '#cli/config/configurations/docker.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import {
     COMPOSE_SOURCES,

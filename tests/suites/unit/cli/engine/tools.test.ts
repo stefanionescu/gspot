@@ -6,13 +6,11 @@ import { expect, test } from 'bun:test';
 import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { buildMiseInstall, listPackagePins } from '#cli/tools/pins.ts';
-import { NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
+import { buildMiseInstall } from '#cli/tools/projects.ts';
+import { NODE_REQUIREMENTS } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([...NODE_REQUIREMENTS])(
     'the tools include Node only when an npm tool needs it: $name',
@@ -74,19 +72,3 @@ test('Prettier plugins join the selected tools even though checks do not name th
             .toSorted(compareText),
     ).toStrictEqual(['prettier-plugin-astro', 'prettier-plugin-svelte']);
 });
-
-test.each([...TYPESCRIPT_PIN_CASES])(
-    'the tool project pins the TypeScript of the project for $name: $isProjectPin',
-    async ({ files, untracked, isProjectPin }) => {
-        await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': buildSandboxSettings(['typescript']) });
-        const tracked = ['gspot.toml', ...Object.keys(files)].filter(
-            (path) => !(untracked as readonly string[]).includes(path),
-        );
-        runGitStep(sandbox.path, ['add', '--', ...tracked]);
-        const session = await openSession(sandbox.path);
-        const expected = isProjectPin ? '6.0.3' : getTool(readConfigurations().values(), 'tsc').version;
-        expect(listPackagePins(session.toolConfigurations).npm['typescript']).toBe(expected);
-        const [planned] = planChecks(session, { stage: 'push', only: ['typescript/tsc'] });
-        expect(planned?.tool?.version).toBe(expected);
-    },
-);

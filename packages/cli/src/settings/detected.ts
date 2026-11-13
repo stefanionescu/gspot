@@ -23,7 +23,7 @@ import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { isInScope, joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
-import { setKey } from '#cli/settings/edit.ts';
+import { setKey } from '#cli/settings/toml/edit.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { requireTypescript } from '#cli/system/package/typescript.ts';

@@ -20,7 +20,8 @@ import { BYTES_PER_MEGABYTE, GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND }
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
-import { findToolName, listDistinctTools, readShippedChecks } from '#cli/manifests/read.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
 import { listPinPrerequisites } from '#cli/repository/version-pin.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
 import { compareText } from '#cli/system/text/order.ts';

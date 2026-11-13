@@ -9,7 +9,7 @@ import {
     listPythonEnvironmentReads,
     listSwiftEnvironmentReads,
 } from '#cli/parsers/code/environment.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { ParsedLanguage, ReaderNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

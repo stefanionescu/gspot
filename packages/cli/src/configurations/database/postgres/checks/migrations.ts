@@ -13,7 +13,7 @@ import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';

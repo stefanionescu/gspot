@@ -1,9 +1,8 @@
 import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/validation.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { findCommandTool } from '#cli/engine/plan.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
-import { findToolName } from '#cli/manifests/read.ts';
+import { findCommandTool, findToolName } from '#cli/manifests/tools.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';

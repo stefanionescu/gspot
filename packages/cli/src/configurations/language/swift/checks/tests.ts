@@ -32,7 +32,7 @@ import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { packageDescriptionSchema, swiftCoverageSchema, xccovSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';

@@ -147,6 +147,16 @@ export type WrittenSettings = z.input<typeof settingsSchema>;
 
 export type IgnoreRecord = NonNullable<ParsedSettings['ignore']>[number];
 
+export type IgnoreRemoval = {
+    kept: unknown[];
+    deleted: number;
+    changedIgnores: number;
+    removedPaths: number;
+    everywhere: IgnoreRecord[];
+};
+
+export type ParsedSettingValue = { type: 'list'; value: unknown[] } | { type: 'scalar'; value: unknown };
+
 export type SettingsError = { path: KeyPath; message: string };
 
 export type WrittenKeyLookup = {

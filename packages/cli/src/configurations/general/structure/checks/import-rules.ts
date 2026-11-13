@@ -21,7 +21,7 @@ import { listScriptFiles } from '#cli/configurations/language/javascript/eslint/
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listPythonImports } from '#cli/parsers/code/python.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { ImportOwners, RuleLookup } from '#cli/types/configurations/general.ts';

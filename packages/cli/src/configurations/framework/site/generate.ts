@@ -1,6 +1,6 @@
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { buildHtmlValidateFile } from '#cli/configurations/language/html/generate.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder } from '#cli/types/configurations/shared.ts';
 
 export const SITE_CONFIG_BUILDERS: Readonly<Record<string, ConfigBuilder>> = {

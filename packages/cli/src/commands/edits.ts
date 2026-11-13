@@ -18,12 +18,12 @@ import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/ma
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { selectScope } from '#cli/repository/scopes.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';
-import { addScopeTable, buildEditedSettings } from '#cli/settings/edit.ts';
-import { readSettingsFile, writeSettings } from '#cli/settings/file.ts';
-import { findSetting } from '#cli/settings/inherit.ts';
 import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
+import { addScopeTable, buildEditedSettings } from '#cli/settings/toml/edit.ts';
+import { readSettingsFile, writeSettings } from '#cli/settings/toml/file.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { findSetting } from '#cli/settings/values/inherit.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';

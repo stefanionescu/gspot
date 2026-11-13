@@ -1,4 +1,5 @@
-import { findToolName, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import type { LimitCheck } from '#cli/types/manifests.ts';
 
 const checks = readConfigurations()

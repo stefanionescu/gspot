@@ -4,13 +4,16 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { buildToolProjects, findMissingBuild, findPackagePin, listNpmProjectPins } from '#cli/tools/pins.ts';
+import { findMissingBuild, findPackagePin, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
+import { buildToolProjects } from '#cli/tools/projects.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { TOOL_PROJECT_PACKAGES } from '#tests/config/tools.ts';
+import { TOOL_PROJECT_PACKAGES, TYPESCRIPT_PIN_CASES } from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
@@ -89,3 +92,19 @@ test('Next ESLint plugin keeps its shipped pin when two folders declare differen
         getTool(readConfigurations().values(), '@next/eslint-plugin-next').version,
     );
 });
+
+test.each([...TYPESCRIPT_PIN_CASES])(
+    'the tool project pins the TypeScript of the project for $name: $isProjectPin',
+    async ({ files, untracked, isProjectPin }) => {
+        await using sandbox = await createGitSandbox({ ...files, 'gspot.toml': buildSandboxSettings(['typescript']) });
+        const tracked = ['gspot.toml', ...Object.keys(files)].filter(
+            (path) => !(untracked as readonly string[]).includes(path),
+        );
+        runGitStep(sandbox.path, ['add', '--', ...tracked]);
+        const session = await openSession(sandbox.path);
+        const expected = isProjectPin ? '6.0.3' : getTool(readConfigurations().values(), 'tsc').version;
+        expect(listPackagePins(session.toolConfigurations).npm['typescript']).toBe(expected);
+        const [planned] = planChecks(session, { stage: 'push', only: ['typescript/tsc'] });
+        expect(planned?.tool?.version).toBe(expected);
+    },
+);

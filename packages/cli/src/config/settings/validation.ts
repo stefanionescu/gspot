@@ -53,6 +53,9 @@ export const TOML_FORMAT = { inlineTableStart: 1, bracketSpacing: false, trailin
 export const NO_SETTINGS_MESSAGE = 'There is no gspot.toml here. Run gspot init to create one.';
 export const SETTINGS_ENCODING_MESSAGE = 'gspot.toml must contain valid UTF-8 text.';
 
+// ignore paths
+export const ESCAPED_GLOB_CHARACTERS = /\\([()[\]{}*?!+@])/gu;
+
 // keys
 export const AT_TOP_LEVEL = 'at the top level';
 export const OVERRIDING_GROUPS = new Set<string>(['framework', 'platform', 'library', 'database']);
@@ -111,3 +114,9 @@ export const RECORD_PATHS_KEY = 'paths';
 
 // settings page
 export const SETTINGS_PAGE_SENTENCE = `${DOCS_PATHS.settings} lists every setting.`;
+
+// value words
+export const BOOLEAN_WORDS: ReadonlySet<string> = new Set(['true', 'false']);
+export const NUMBER_TEXT = /^-?\d+(?:\.\d+)?$/u;
+export const TOML_COMPOUND_START = /^[[{]/u;
+export const TOML_QUOTES = /^(["'])(.*)\1$/su;

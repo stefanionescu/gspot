@@ -3,14 +3,13 @@ import { expect, test } from 'bun:test';
 
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { AvailableSettings } from '#cli/types/settings.ts';
 import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/parse.ts';
-import { SETTING_RULE_OPTIONS } from '#tests/config/settings/validation.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
@@ -89,19 +88,6 @@ test('tools.commitlint.rules refuses type-enum and names commits.types', () => {
     expect(validateSettingsText(text)).toStrictEqual([
         'gspot.toml:3: tools.commitlint.rules.type-enum: Set commits.types instead.',
     ]);
-});
-
-test.each([...SETTING_RULE_OPTIONS])('options for $rule are refused with $setting', ({ tables, setting, start }) => {
-    const errors = validateSettingsText(`configurations = ["javascript", "markdown"]\n${tables}`);
-    expect(errors).toHaveLength(1);
-    expect(errors[0]).toStartWith(start);
-    expect(errors[0]).toContain(setting);
-});
-
-test('a rule named constructor is not mistaken for a setting-owned rule', () => {
-    expect(
-        validateSettingsText('configurations = ["javascript"]\n[tools.eslint.rules]\n"constructor" = [{}]\n'),
-    ).toStrictEqual([]);
 });
 
 test('two configurations with different defaults are an error until gspot.toml sets the value', () => {

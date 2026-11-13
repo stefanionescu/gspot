@@ -24,7 +24,7 @@ import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { readPushedRange } from '#cli/repository/revisions/push.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';

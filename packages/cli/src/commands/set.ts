@@ -1,100 +1,35 @@
-import { parse } from '@decimalturn/toml-patch';
-
 import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
 import {
-    BOOLEAN_WORDS,
     ENTRY_REASON_MESSAGE,
-    NUMBER_TEXT,
     PREVIOUS_VALUE_LENGTH,
     REASON_IGNORE_RULES,
-    TOML_COMPOUND_START,
-    TOML_QUOTES,
     TOOL_RULES_KEY,
 } from '#cli/config/commands/edits.ts';
 import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
-import { isSettingEmpty, isSettingUnread } from '#cli/engine/skips.ts';
-import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
-import { setKey } from '#cli/settings/edit.ts';
-import { findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/inherit.ts';
-import { findNamingParent, findSettingSchema, isReasonedValue } from '#cli/settings/lookup.ts';
-import { joinSettingPaths } from '#cli/settings/paths.ts';
-import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
+import { isSettingUnread } from '#cli/engine/skips.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
+import { findNamingParent } from '#cli/settings/lookup.ts';
+import { parseSettingValue } from '#cli/settings/parse.ts';
+import { setSetting } from '#cli/settings/toml/edit.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/values/inherit.ts';
+import { joinSettingPaths } from '#cli/settings/values/paths.ts';
+import { isSettingEmpty } from '#cli/settings/values/written.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
 import type {
     CommandDefinition,
-    ParsedSettingValue,
     ReasonFlags,
     SetOptions,
     SettingReasonContext,
     SettingsEditContext,
 } from '#cli/types/commands.ts';
 import type { Check, Setting } from '#cli/types/manifests.ts';
-import type { InheritedSetting, TomlTable } from '#cli/types/settings.ts';
+import type { InheritedSetting, ParsedSettingValue, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-function parseInlineValue(text: string): unknown {
-    try {
-        return (parse(`value = ${text}`) as TomlTable)['value'];
-    } catch (error) {
-        throw new GspotError(
-            'arguments',
-            `The value ${text} is not a TOML inline value. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.`,
-            { cause: error },
-        );
-    }
-}
-
-function parseScalarWord(word: string, setting: Setting): unknown {
-    if (setting.type === 'boolean' && BOOLEAN_WORDS.has(word)) return word === 'true';
-    return setting.type === 'number' && NUMBER_TEXT.test(word) ? Number(word) : word;
-}
-
-function parseWords(values: string[], setting: Setting): ParsedSettingValue {
-    const [first, ...rest] = values as [string, ...string[]];
-    const isCompound = rest.length === 0 && TOML_COMPOUND_START.test(first);
-    if (setting.type === 'list') {
-        const value = isCompound ? parseInlineValue(first) : values.map((word) => word.replace(TOML_QUOTES, '$2'));
-        return { type: 'list', value: value as unknown[] };
-    }
-    if (rest.length > 0)
-        throw new GspotError('arguments', `${setting.name} takes one value. Quote a value with spaces.`);
-    return {
-        type: 'scalar',
-        value: isCompound && setting.type === 'table' ? parseInlineValue(first) : parseScalarWord(first, setting),
-    };
-}
-
-function parseSettingValue(values: string[], setting: Setting): ParsedSettingValue {
-    const parsed = parseWords(values, setting);
-    const schema = findSettingSchema(setting.name);
-    const validation = schema?.safeParse(parsed.value);
-    if (schema === undefined || validation?.success !== false) return parsed;
-    throw new GspotError(
-        'arguments',
-        formatSettingValueError(values.join(' '), setting, { schema, error: validation.error }),
-    );
-}
-
-function setSettingValue(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, key: string): void {
-    if (change.type === 'list') setKey(scopeTable, key, change.value);
-    else if (setting.type === 'table' && isTable(change.value)) {
-        const written = findValueAt(scopeTable, key.split('.'));
-        const writtenValue = isReasonedValue(written) ? written.value : written;
-        setKey(scopeTable, key, { ...(isTable(writtenValue) && writtenValue), ...change.value });
-    } else setKey(scopeTable, key, change.value);
-}
-
-function setSetting(scopeTable: TomlTable, change: ParsedSettingValue, setting: Setting, options: SetOptions): void {
-    setSettingValue(scopeTable, change, setting, options.key);
-    if (options.reason === undefined || setting.reason_values === true) return;
-    const written = findValueAt(scopeTable, options.key.split('.'));
-    const value = isReasonedValue(written) ? written.value : written;
-    setKey(scopeTable, options.key, { value, reason: options.reason });
-}
 
 function formatMissingReason({ options, change, previous }: SettingReasonContext): string {
     const { key } = options;

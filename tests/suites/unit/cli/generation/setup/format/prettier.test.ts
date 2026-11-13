@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation/setup.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import type { FormatSettings } from '#cli/types/configurations/general.ts';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';

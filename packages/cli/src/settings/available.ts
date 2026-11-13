@@ -10,8 +10,8 @@ import { configurationTableSchemas, tableSettingSchemas } from '#cli/schemas/set
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { mergeValue } from '#cli/settings/inherit.ts';
-import { getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { extractKeyName, getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { mergeValue } from '#cli/settings/values/inherit.ts';
 import type { Configuration, Setting } from '#cli/types/manifests.ts';
 import type { AvailableSettings, Level } from '#cli/types/settings.ts';
 
@@ -76,7 +76,7 @@ function addConfigurationSettings(
 
 function getBoundReason(name: string, definition: z.GlobalMeta | undefined): Pick<Setting, 'reason_for'> | undefined {
     if (definition?.reasoned !== true) return undefined;
-    const field = name.slice(name.lastIndexOf('.') + 1);
+    const field = extractKeyName(name);
     const direction = Object.entries(BOUND_PREFIXES).find(([prefix]) => field.startsWith(prefix))?.[1];
     return direction === undefined ? undefined : { reason_for: direction };
 }

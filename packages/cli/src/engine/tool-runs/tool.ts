@@ -1,14 +1,14 @@
 import { basename, delimiter, dirname } from 'node:path';
 
 import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
-import { findCommandTool } from '#cli/engine/plan.ts';
 import { formatCommandFailure, formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findCommandTool, getTool } from '#cli/manifests/tools.ts';
 import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
-import { readToolCommandPrefix } from '#cli/tools/packages.ts';
+import { findToolPath, lookUpTool } from '#cli/tools/programs/inspect.ts';
+import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';

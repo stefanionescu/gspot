@@ -2,7 +2,7 @@ import { FILE_LINES_RULE } from '#cli/config/configurations/structure.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { countCodeLines } from '#cli/parsers/code/comments.ts';
-import { getLimit } from '#cli/settings/scopes.ts';
+import { getLimit } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

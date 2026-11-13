@@ -11,11 +11,11 @@ import { findRequirementChain, formatRequiredRemoval } from '#cli/manifests/sele
 import { listDetectedAdditions } from '#cli/repository/detection/proposals.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { addScopeTable, removeUnknownKeys } from '#cli/settings/edit.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { addScopeTable, removeUnknownKeys } from '#cli/settings/toml/edit.ts';
 import { validateReason } from '#cli/settings/validation/reasons.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { formatNameState } from '#cli/system/text/messages.ts';

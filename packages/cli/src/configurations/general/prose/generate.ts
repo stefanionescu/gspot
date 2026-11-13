@@ -33,7 +33,7 @@ import {
 } from '#cli/config/configurations/prose.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { VALE_PACKAGE_URLS, VALE_PACKAGES, VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Session } from '#cli/types/tools.ts';

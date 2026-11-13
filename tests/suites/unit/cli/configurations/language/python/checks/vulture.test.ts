@@ -3,7 +3,8 @@ import { join, sep } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { executableLayout } from '#cli/system/processes/programs.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';

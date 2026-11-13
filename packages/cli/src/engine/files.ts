@@ -7,7 +7,7 @@ import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
 import { isInScope, isOutsideChildScopes, joinScope, listNestedScopes, selectScope } from '#cli/repository/scopes.ts';
-import { getTable, listIgnores } from '#cli/settings/scopes.ts';
+import { getTable, listIgnores } from '#cli/settings/tables.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { PlanInventory, PlannedCheck, PlannedScope, RunSelection } from '#cli/types/engine/plan.ts';

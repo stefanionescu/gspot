@@ -20,7 +20,7 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes, readText } from '#cli/system/files/reads.ts';

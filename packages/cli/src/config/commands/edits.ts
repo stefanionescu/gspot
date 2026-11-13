@@ -12,10 +12,8 @@ export const UNCHANGED_SETTINGS_MESSAGE = 'No change: gspot.toml already says th
 export const IGNORE_CHECK_MESSAGE = 'Run gspot ignore <check> --reason "<why>".';
 
 // set values
-export const BOOLEAN_WORDS: ReadonlySet<string> = new Set(['true', 'false']);
 export const ENTRY_REASON_MESSAGE =
     '{key} keeps a reason for each entry. Add --reason "<why>" with why each one belongs.';
-export const NUMBER_TEXT = /^-?\d+(?:\.\d+)?$/u;
 export const PREVIOUS_VALUE_LENGTH = 80;
 // These keys hold no reason, so the record of why they changed is an ignore of the weakening that the change reports.
 export const REASON_IGNORE_RULES: Readonly<Record<string, string>> = {
@@ -24,14 +22,11 @@ export const REASON_IGNORE_RULES: Readonly<Record<string, string>> = {
     'rule_files.enabled': WEAKENING_RULES.ruleFiles,
     'rule_files.exclude': WEAKENING_RULES.ruleFiles,
 };
-export const TOML_COMPOUND_START = /^[[{]/u;
-export const TOML_QUOTES = /^(["'])(.*)\1$/su;
 export const TOOL_RULES_KEY = /^tools\.(?<tool>[^.]+)\.rules$/u;
 
 // unignore
 export const BARE_UNIGNORE_MESSAGE =
     'Name what to remove: run gspot unignore <check>, or gspot unignore --paths <path>.';
-export const ESCAPED_GLOB_CHARACTERS = /\\([()[\]{}*?!+@])/gu;
 export const NO_CHECK_IGNORE_TEXTS = {
     unmatched: 'no ignore without a check matches',
     removed: 'without a check',

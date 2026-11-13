@@ -35,7 +35,7 @@ import {
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';

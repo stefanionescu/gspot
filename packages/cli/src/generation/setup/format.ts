@@ -22,7 +22,7 @@ import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { FORMAT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { detectScriptIndent, SCRIPT_FILES } from '#cli/generation/setup/script-indent.ts';
-import { getTool } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
@@ -34,7 +34,7 @@ import {
     ruffOptionsSchema,
     ruffProjectSchema,
 } from '#cli/schemas/generation.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
+import { joinScopeSelector } from '#cli/settings/values/paths.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { isTable } from '#cli/system/tables.ts';

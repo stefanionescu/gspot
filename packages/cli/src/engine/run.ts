@@ -5,10 +5,6 @@ import { setImmediate } from 'node:timers/promises';
 import pLimit from 'p-limit';
 
 import {
-    CANCELED_CHECK_NOTE,
-    DOCKER_DAEMON_NOTE,
-    DOCKER_MISSING_MESSAGE,
-    DOCKER_TOOL,
     FAILED_STATUSES,
     FIX_FLAG,
     GSPOT_CHECK_PREFIX,
@@ -17,6 +13,7 @@ import {
     RAN_STATUSES,
 } from '#cli/config/engine.ts';
 import { GSPOT_CHECK } from '#cli/config/manifests.ts';
+import { CANCELED_CHECK_NOTE } from '#cli/config/tools/programs.ts';
 import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { listConflictedPaths, runFixers } from '#cli/engine/fixes.ts';
 import { assertShippedCheck, isActive, planChecks } from '#cli/engine/plan.ts';
@@ -25,17 +22,14 @@ import { buildBaseResult, formatReproduceCommand, normalizeResultPaths, runBuilt
 import { openSession } from '#cli/engine/session.ts';
 import { buildDashSafePath } from '#cli/engine/tool-runs/batches.ts';
 import { lookUpCommandTools, runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
 import { buildArgumentPath, convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import { findMissingDependencies, findToolPath } from '#cli/tools/inspect.ts';
-import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
+import { findMissingDependencies, findMissingDocker, findMissingEnvironment } from '#cli/tools/missing.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type {
     CheckCode,
@@ -50,27 +44,7 @@ import type {
 } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
-const DOCKER_AVAILABILITY = Symbol('docker availability');
-
 const WRITTEN_FILES = Symbol('written files');
-
-async function findMissingDocker(
-    session: CheckSession,
-    planned: PlannedCheck,
-): Promise<Pick<CheckResult, 'status' | 'note'> | undefined> {
-    if (planned.check.needs?.includes('docker') !== true) return undefined;
-    const docker = await findToolPath(session, getTool(readConfigurations().values(), DOCKER_TOOL), session.root);
-    if ('status' in docker) return { status: 'missing', note: DOCKER_MISSING_MESSAGE };
-    const result = await remember(session.cache, DOCKER_AVAILABILITY, session.root, () =>
-        runProcess([docker.path, 'info'], {
-            cwd: session.root,
-            timeoutSeconds: session.settings.tool_timeout_seconds,
-            cancelSignal: session.cancelSignal,
-        }),
-    );
-    if (result.end === 'canceled') return { status: 'canceled', note: CANCELED_CHECK_NOTE };
-    return result.code === 0 ? undefined : { status: 'missing', note: DOCKER_DAEMON_NOTE };
-}
 
 async function findUnrunnableResult(
     session: CheckSession,

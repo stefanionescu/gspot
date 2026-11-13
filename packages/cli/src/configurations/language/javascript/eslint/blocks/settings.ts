@@ -25,9 +25,9 @@ import {
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
-import { listSettingsTables } from '#cli/settings/inherit.ts';
-import { joinScopeSelector } from '#cli/settings/paths.ts';
-import { getLimit, getTable } from '#cli/settings/scopes.ts';
+import { getLimit, getTable } from '#cli/settings/tables.ts';
+import { joinScopeSelector } from '#cli/settings/values/paths.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type {

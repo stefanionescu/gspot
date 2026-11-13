@@ -4,7 +4,8 @@ import { dirname, join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';

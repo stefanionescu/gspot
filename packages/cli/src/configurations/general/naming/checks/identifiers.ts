@@ -4,7 +4,7 @@ import { readNamingSettings } from '#cli/configurations/general/naming/checks/se
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import { IDENTIFIER_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

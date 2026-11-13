@@ -7,7 +7,7 @@ import {
 import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
-import { overlayTable } from '#cli/settings/edit.ts';
+import { overlayTable } from '#cli/settings/toml/edit.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
 import { formatNameState } from '#cli/system/text/messages.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands.ts';

@@ -1,9 +1,11 @@
 import { CONFIG_BOUND_RUNNERS, COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import { buildPlanInventory, isRepositoryRun, isRootOnlyCheck, selectCheckFiles } from '#cli/engine/files.ts';
 import { findFirstSkip, findSettingsSkip } from '#cli/engine/skips.ts';
-import { findTool, findToolName, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findCommandTool, findToolName } from '#cli/manifests/tools.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import { getRootScope, getTable } from '#cli/settings/scopes.ts';
+import { getRootScope } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
@@ -15,7 +17,7 @@ import type {
     RunSelection,
     ShippedPlannedCheck,
 } from '#cli/types/engine/plan.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
@@ -193,14 +195,6 @@ export function buildCheckState(planned: PlannedCheck | undefined): CheckState {
     if (planned === undefined) return { status: 'skipped', cause: 'replaced' };
     if (planned.skip !== undefined) return { status: 'skipped', cause: planned.skip.cause };
     return isActive(planned) ? { status: 'on' } : { status: 'skipped', cause: 'no-files' };
-}
-
-/**
-Find the tool that runs the program of a written command, such as a [[command_check]] or its fix: the tool that a
-configuration declares under that name, or else the program on the PATH.
-*/
-export function findCommandTool(configurations: Iterable<Configuration>, name: string): Tool {
-    return findTool(configurations, name) ?? { name, kind: 'program', system: true, installers: {} };
 }
 
 /**

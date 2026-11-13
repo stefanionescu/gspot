@@ -10,7 +10,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import * as locate from '#cli/tools/locate.ts';
+import * as mise from '#cli/tools/programs/mise.ts';
 import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
@@ -89,7 +89,7 @@ test('a run canceled during its tool lookups reports the check canceled', async 
     const controller = new AbortController();
     const session = await openSession(sandbox.path);
     session.cancelSignal = controller.signal;
-    using _binPaths = spyOn(locate, 'readToolBinPaths').mockImplementation(() => {
+    using _binPaths = spyOn(mise, 'readToolBinPaths').mockImplementation(() => {
         controller.abort(130);
         return Promise.resolve({ folders: [] });
     });

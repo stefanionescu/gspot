@@ -21,14 +21,15 @@ import {
 } from '#cli/engine/tool-runs/placeholders.ts';
 import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { listSecondaryTools } from '#cli/engine/tools.ts';
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
-import { readToolCommandPrefix } from '#cli/tools/packages.ts';
+import { findToolPath, lookUpTool } from '#cli/tools/programs/inspect.ts';
+import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
 import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/python-environment.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';

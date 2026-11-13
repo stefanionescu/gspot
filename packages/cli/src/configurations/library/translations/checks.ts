@@ -20,7 +20,7 @@ import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translatio
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { messagesSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { getPosition } from '#cli/system/text/positions.ts';

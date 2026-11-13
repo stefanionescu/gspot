@@ -1,4 +1,5 @@
 import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';
 
 // credentials
@@ -28,6 +29,7 @@ export const HOOK_CHECKS = {
     'commit-msg': { arguments: 'check --hook commit-msg -- "$1"', stages: ['message'] },
 } as const satisfies Record<(typeof CHECK_HOOKS)[number], { arguments: string; stages: readonly string[] }>;
 export const HOOK_FOLDER_KINDS = new Set(['hooksPath', 'githooks', 'husky']);
+export const HOOK_PROGRAM = `${NPM_BIN_FOLDER}/gspot`;
 export const NOT_INSTALLED_STATUS = 'not installed; run gspot install';
 export const SET_HOOKS_PATH = ['git', 'config', HOOKS_PATH_SETTING] as const;
 export const UNSET_HOOKS_NOTE = 'disabled hooks: unset core.hooksPath';

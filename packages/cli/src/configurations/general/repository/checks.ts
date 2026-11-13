@@ -9,7 +9,7 @@ import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurati
 import { getMaxFileBytes } from '#cli/engine/files.ts';
 import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';

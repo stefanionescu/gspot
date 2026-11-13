@@ -14,7 +14,7 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';

@@ -1,4 +1,5 @@
-import { getTool, readConfigurations } from '#cli/manifests/read.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';

@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

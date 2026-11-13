@@ -6,7 +6,7 @@ import {
     listJavascriptScopes,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import type { EslintBlockFields, EslintPlugins } from '#cli/types/configurations/javascript.ts';

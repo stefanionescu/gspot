@@ -15,7 +15,7 @@ import { splitWords } from '#cli/configurations/general/naming/words.ts';
 import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
 import { isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { extractBaseName, extractExtension, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';

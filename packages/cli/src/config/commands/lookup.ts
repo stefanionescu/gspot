@@ -1,5 +1,4 @@
 import type { CI_PROVIDERS } from '#cli/config/settings/schema.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 
 // doctor
 export const CI_FILE_SUFFIXES = {
@@ -10,7 +9,6 @@ export const CI_OFF_NOTES = {
     github: 'off; gspot set ci.enabled true writes the check workflow',
     gitlab: 'off; gspot set ci.enabled true and gspot set ci.provider gitlab write the check workflow',
 } as const satisfies Record<(typeof CI_PROVIDERS)[number], string>;
-export const HOOK_PROGRAM = `${NPM_BIN_FOLDER}/gspot`;
 export const LABEL_WIDTH = 9;
 export const ORIGIN_URL_SETTING = 'remote.origin.url';
 export const REMOTE_URL_SCHEME = /^(?:https?|ssh):\/\//u;

@@ -5,7 +5,7 @@ import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
 import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSquawkFile(planned: PlannedConfig): string {

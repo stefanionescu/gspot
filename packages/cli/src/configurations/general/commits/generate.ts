@@ -1,7 +1,7 @@
 import { COMMITLINT_ERROR_SEVERITY, COMMITLINT_PARSER_PRESET } from '#cli/config/configurations/general.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildCommitlintFile(planned: PlannedConfig): string {

@@ -5,7 +5,6 @@ import cliPackage from '#cli-package' with { type: 'json' };
 import {
     CI_FILE_SUFFIXES,
     CI_OFF_NOTES,
-    HOOK_PROGRAM,
     LABEL_WIDTH,
     ORIGIN_URL_SETTING,
     REMOTE_URL_SCHEME,
@@ -17,29 +16,22 @@ import { CI_FILES } from '#cli/config/generation/files.ts';
 import { GITHUB_WORKFLOWS_FOLDER, GITLAB_CI_FILE } from '#cli/config/repository/setup.ts';
 import { EXIT_FINDINGS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { MISE_TOOL } from '#cli/config/tools/installers.ts';
-import {
-    AVAILABLE_TOOL_STATES,
-    MISE_INSTALL_URL,
-    PROJECT_ENVIRONMENT_MESSAGE,
-    VERSION_FLAG,
-} from '#cli/config/tools/programs.ts';
-import { findCommandTool } from '#cli/engine/plan.ts';
+import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { selectRuleFiles } from '#cli/generation/rules.ts';
-import { findToolName, listDistinctTools, listToolNames } from '#cli/manifests/read.ts';
+import { findCommandTool, findToolName, listDistinctTools, listToolNames } from '#cli/manifests/tools.ts';
 import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
 import { readGitSetting } from '#cli/repository/git/run.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findGspotPinMismatch, readGspotPin } from '#cli/repository/version-pin.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { lookUpTool } from '#cli/tools/inspect.ts';
-import { readHookStatus } from '#cli/tools/installers/hooks.ts';
+import { readHookRunnerStatus } from '#cli/tools/installers/hooks.ts';
+import { findMissingEnvironment } from '#cli/tools/missing.ts';
 import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
-import { findMissingEnvironment } from '#cli/tools/python-environment.ts';
+import { lookUpTool } from '#cli/tools/programs/inspect.ts';
 import type {
     CiState,
     CommandDefinition,
@@ -49,7 +41,7 @@ import type {
     DoctorTool,
 } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-import type { HookStatus, Session, ToolInspection } from '#cli/types/tools.ts';
+import type { Session, ToolInspection } from '#cli/types/tools.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';
@@ -148,28 +140,6 @@ async function readCiState(session: Session): Promise<CiState & { text: string }
         session.repository.files.map((file) => file.path),
     );
     return { enabled: false, provider, file: null, text: provider === null ? 'none' : CI_OFF_NOTES[provider] };
-}
-
-async function readHookRunnerStatus(session: Session): Promise<HookStatus> {
-    const hooks = await readHookStatus(session, session.repository);
-    if (!hooks.ready || !session.settings.hooks.enabled) return hooks;
-    const { command, hasBinFolder, installCommand } = session.startRunner;
-    // A hook starts gspot from the bin folder, so a package manager that puts another Node.js first changes nothing.
-    const versionCommand = hasBinFolder ? [HOOK_PROGRAM, VERSION_FLAG] : [...command.split(' '), VERSION_FLAG];
-    const started = hasBinFolder ? [join(session.root, HOOK_PROGRAM), VERSION_FLAG] : versionCommand;
-    const result = await runProcess(started, {
-        cwd: session.root,
-        timeoutSeconds: session.settings.tool_timeout_seconds,
-    });
-    if (result.code === 0) return hooks;
-    const cause = result.stderr
-        .split('\n')
-        .map((line) => line.trim())
-        .find((line) => line !== '');
-    const install = installCommand.replace('<version>', () => cliPackage.version);
-    const reason = cause === undefined ? '' : `: ${cause.replace(/\.$/u, '')}`;
-    const failure = `${versionCommand.join(' ')} fails${reason}. Install gspot with: ${install}`;
-    return { ...hooks, ready: false, lines: [failure], text: `${hooks.text}, but ${failure}` };
 }
 
 function listMissingEnvironments(session: Session): string[] {

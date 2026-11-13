@@ -1,10 +1,10 @@
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildUnknownRuleError, findRuleTool, hasRuleExplanations } from '#cli/engine/results.ts';
-import { readShippedChecks } from '#cli/manifests/read.ts';
-import { isConfigurationSelected } from '#cli/manifests/select.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { isConfigurationSelected } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { readToolBinPaths } from '#cli/tools/locate.ts';
-import { readLintRuleExplanation } from '#cli/tools/rule-explanations.ts';
+import { readToolBinPaths } from '#cli/tools/programs/mise.ts';
+import { readLintRuleExplanation } from '#cli/tools/rules/explanations.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
 

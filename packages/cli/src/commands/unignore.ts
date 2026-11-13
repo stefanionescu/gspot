@@ -1,56 +1,19 @@
 import { buildUnchangedResult, formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
 import {
     BARE_UNIGNORE_MESSAGE,
-    ESCAPED_GLOB_CHARACTERS,
     NO_CHECK_IGNORE_TEXTS,
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
 import { PATHS_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
-import { assertCheckExists } from '#cli/manifests/read.ts';
-import { removeRecordPaths } from '#cli/settings/edit.ts';
-import { buildArgumentPaths } from '#cli/settings/paths.ts';
+import { assertCheckExists } from '#cli/manifests/checks.ts';
+import { removeIgnores } from '#cli/settings/toml/edit.ts';
+import { buildArgumentPaths } from '#cli/settings/values/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { formatCount, formatNameList } from '#cli/system/text/messages.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type {
-    CommandDefinition,
-    IgnoreFlags,
-    IgnoreOptions,
-    IgnoreRemoval,
-    IgnoreTarget,
-} from '#cli/types/commands.ts';
-import type { IgnoreRecord, TomlTable } from '#cli/types/settings.ts';
+import type { CommandDefinition, IgnoreFlags, IgnoreOptions, IgnoreTarget } from '#cli/types/commands.ts';
+import type { IgnoreRecord } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
-
-function removeIgnores(table: TomlTable, options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreRemoval {
-    const { check, rule, paths } = options;
-    const ignores = (table['ignore'] as IgnoreRecord[] | undefined) ?? [];
-    const matching = new Set(
-        ignores.filter((ignore) => ignore.check === check && (rule === undefined || ignore.rule === rule)),
-    );
-    const kept = ignores.flatMap((ignore) => {
-        if (!matching.has(ignore)) return [ignore];
-        if (paths === undefined) return [];
-        return removeRecordPaths(
-            [ignore],
-            paths,
-            (recordPath, path) =>
-                recordPath.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1') === path.replaceAll(ESCAPED_GLOB_CHARACTERS, '$1'),
-        ) as IgnoreRecord[];
-    });
-    const changed = kept.filter((ignore) => !ignores.includes(ignore));
-    const narrowed = ignores.filter((ignore) => matching.has(ignore) && !kept.includes(ignore));
-    const everyPath = [...matching].filter((ignore) => ignore.paths === undefined);
-    return {
-        kept,
-        deleted: ignores.length - kept.length,
-        changedIgnores: changed.length,
-        removedPaths:
-            narrowed.flatMap((ignore) => ignore.paths ?? []).length -
-            changed.flatMap((ignore) => ignore.paths ?? []).length,
-        everywhere: paths === undefined ? [] : everyPath,
-    };
-}
 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {
     if (options.check === undefined) return NO_CHECK_IGNORE_TEXTS;

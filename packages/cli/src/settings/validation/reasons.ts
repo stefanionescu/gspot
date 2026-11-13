@@ -12,8 +12,8 @@ import {
     SWIFT_TARGET_MESSAGE,
 } from '#cli/config/settings/validation.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
-import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findChildSchema } from '#cli/settings/lookup.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { ReasonRequirement, Setting } from '#cli/types/manifests.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';

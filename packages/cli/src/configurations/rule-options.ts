@@ -1,5 +1,6 @@
-import { findToolName, getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { listIgnoredRules } from '#cli/settings/scopes.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findToolName, getTool } from '#cli/manifests/tools.ts';
+import { listIgnoredRules } from '#cli/settings/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { PlannedConfig, RuleOptionsRun } from '#cli/types/configurations/shared.ts';
 

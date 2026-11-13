@@ -1,5 +1,5 @@
 import { listCheckTools } from '#cli/engine/tools.ts';
-import { listToolNames } from '#cli/manifests/read.ts';
+import { listToolNames } from '#cli/manifests/tools.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';

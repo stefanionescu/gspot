@@ -89,10 +89,6 @@ export const LOCAL_RULE_EXTENSION = '.yml';
 export const ROOT_RUNS = ['once', 'history'] as const;
 
 // run notes
-export const CANCELED_CHECK_NOTE = 'The check was canceled.';
-export const DOCKER_DAEMON_NOTE = 'Start Docker, then run the check again.';
-export const DOCKER_MISSING_MESSAGE = 'Docker is not installed. Install Docker to run this check.';
-export const DOCKER_TOOL = 'docker';
 export const GSPOT_CHECK_PREFIX = 'gspot/';
 export const MISSING_GENERATED_FILE_MESSAGE = 'The generated file <path> is missing. Run gspot install.';
 
@@ -175,7 +171,3 @@ export const TAPLO_OUTPUTS = [
     },
 ] satisfies CheckOutput[];
 export const UNSAFE_FIXES: ReadonlySet<unknown> = new Set(['unsafe', 'display-only']);
-
-// typescript version
-export const TYPESCRIPT_ESLINT_TOOL = 'typescript-eslint';
-export const TYPESCRIPT_PACKAGE = 'typescript';

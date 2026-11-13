@@ -26,7 +26,14 @@ import type { RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
-import type { IgnoreRecord, InheritedSetting, Level, Settings, SettingsFile, TomlTable } from '#cli/types/settings.ts';
+import type {
+    InheritedSetting,
+    Level,
+    ParsedSettingValue,
+    Settings,
+    SettingsFile,
+    TomlTable,
+} from '#cli/types/settings.ts';
 import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
@@ -81,8 +88,6 @@ export type SetOptions = CommandLocation & {
     scopePath?: string | undefined;
 };
 
-export type ParsedSettingValue = { type: 'list'; value: unknown[] } | { type: 'scalar'; value: unknown };
-
 export type SettingReasonContext = {
     options: SetOptions;
     setting: Setting;
@@ -90,14 +95,6 @@ export type SettingReasonContext = {
     joined: unknown;
     previous: InheritedSetting | undefined;
     shippedDefault: unknown;
-};
-
-export type IgnoreRemoval = {
-    kept: unknown[];
-    deleted: number;
-    changedIgnores: number;
-    removedPaths: number;
-    everywhere: IgnoreRecord[];
 };
 
 export type IgnoreTarget = { unmatched: string; removed: string };

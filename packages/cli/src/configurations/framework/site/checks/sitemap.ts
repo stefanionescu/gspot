@@ -12,7 +12,7 @@ import {
 import { LEADING_SLASH } from '#cli/config/system.ts';
 import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
-import { getTable } from '#cli/settings/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { getPosition } from '#cli/system/text/positions.ts';

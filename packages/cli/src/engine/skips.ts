@@ -3,7 +3,8 @@ import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
-import { listIgnores } from '#cli/settings/scopes.ts';
+import { listIgnores } from '#cli/settings/tables.ts';
+import { isSettingEmpty } from '#cli/settings/values/written.ts';
 import { buildFilenameMatcher } from '#cli/system/patterns.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
@@ -99,12 +100,6 @@ export function listLocalRuleConfigs(scope: Scope, level: Level, tool: string): 
                 (file.level !== 'all' || level === 'all'),
         ),
     );
-}
-
-export function isSettingEmpty(value: unknown): boolean {
-    if (typeof value === 'object' && value !== null) return Object.values(value).flat().length === 0;
-    const empty: unknown[] = [undefined, false, ''];
-    return empty.includes(value);
 }
 
 export function findSystemSkip(check: Check, tool: Tool | undefined, host: Host): Skip | undefined {

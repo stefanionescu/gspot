@@ -22,22 +22,17 @@ import {
     planNpmLockfile,
 } from '#cli/tools/installers/npm/project.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
+import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
 import {
     installPythonProjects,
     installPythonTools,
-    isPythonLockfileFresh,
     listLockedPythonProjects,
     planPythonLockfile,
-} from '#cli/tools/installers/pypi.ts';
+} from '#cli/tools/installers/python/project.ts';
 import { runInstallStep } from '#cli/tools/installers/steps.ts';
-import { listExecutablePaths } from '#cli/tools/locate.ts';
-import {
-    buildPythonProjectTable,
-    findPackagePin,
-    listMisePins,
-    listNpmProjectPins,
-    listPackagePins,
-} from '#cli/tools/pins.ts';
+import { findPackagePin, listMisePins, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
+import { listExecutablePaths } from '#cli/tools/programs/locate.ts';
+import { buildPythonProjectTable } from '#cli/tools/projects.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';

@@ -5,7 +5,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { findSettingsSkip } from '#cli/engine/skips.ts';
 import { CHECK_GENERATION } from '#cli/generation/check-generation.ts';
-import { assertCheckExists, listCheckIds, readShippedChecks } from '#cli/manifests/read.ts';
+import { assertCheckExists, listCheckIds, readShippedChecks } from '#cli/manifests/checks.ts';
 import { readChangedPaths } from '#cli/repository/revisions/changes.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
