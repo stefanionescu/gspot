@@ -17,14 +17,15 @@ import {
     TEMPLATE_NAME,
     TRIVIAL_FUNCTION_RULES,
 } from '#cli/config/configurations/structure.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
 import { listCheckFiles } from '#cli/engine/files.ts';
-import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getLimit } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { isInScope } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { ExportedFunction, ScriptUse } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';

@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { parseYamlFile, parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 
@@ -20,4 +20,13 @@ test('YAML syntax errors name the file and keep the parser failure', () => {
             cause: expect.any(Error),
         }),
     );
+});
+
+test('YAML positions keep each document, its syntax errors, and the line and column of an offset', () => {
+    const text = 'first: 1\n---\nsecond:\n  - [\n';
+    const { documents, findPosition } = parseYamlPositions(text);
+    expect(documents.map((document) => document.errors.length > 0)).toStrictEqual([false, true]);
+    expect(findPosition(text.indexOf('second'))).toStrictEqual({ line: 3, col: 1 });
+    expect(findPosition(text.indexOf('['))).toStrictEqual({ line: 4, col: 5 });
+    expect(findPosition(undefined)).toStrictEqual({ line: 1, col: 1 });
 });

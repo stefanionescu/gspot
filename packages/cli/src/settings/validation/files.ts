@@ -6,7 +6,7 @@ import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { isRuleFileExcluded, joinScopeSelector } from '#cli/settings/paths.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { formatCodeList, formatSimilarNames } from '#cli/system/text.ts';
+import { formatCodeList, formatSimilarNames } from '#cli/system/text/messages.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
 import type { Settings, SettingsError } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';

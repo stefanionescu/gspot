@@ -5,7 +5,7 @@ import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { buildToolAvailability, inspectTool, lookUpTool } from '#cli/tools/inspect.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
 import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';

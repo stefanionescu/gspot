@@ -9,6 +9,9 @@ import {
     ATTRIBUTE_FIELDS,
     ATTRIBUTE_LINE,
     BLOB_HEADER,
+    CONFLICT_END,
+    CONFLICT_SEPARATOR,
+    CONFLICT_START,
     FIRST_NON_PRINTABLE_BYTE,
     FIRST_PRINTABLE_BYTE,
     IGNORED_ATTRIBUTE_LINE,
@@ -28,7 +31,7 @@ import {
 import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type { AttributePattern, GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
 
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
@@ -210,4 +213,23 @@ export async function* parseGitBlobs(
         yield [hash, bytes];
     }
     if ((await readNextChunk(stream)) !== undefined) throw new GspotError('git', INVALID_GIT_STREAM_MESSAGE);
+}
+
+/**
+List the merge-conflict marker lines of a text. A `=======` line counts only between a `<<<<<<<` line and a later
+`>>>>>>>` line, because Markdown and reStructuredText underline a seven-letter title with it. Line numbers start at 1.
+*/
+export function listConflictMarkerLines(text: string): number[] {
+    const markers: number[] = [];
+    let separators: number[] | undefined;
+    for (const [index, line] of text.split('\n').entries()) {
+        if (CONFLICT_START.test(line)) {
+            markers.push(index + 1);
+            separators = [];
+        } else if (CONFLICT_END.test(line)) {
+            markers.push(...(separators ?? []), index + 1);
+            separators = undefined;
+        } else if (CONFLICT_SEPARATOR.test(line)) separators?.push(index + 1);
+    }
+    return markers;
 }

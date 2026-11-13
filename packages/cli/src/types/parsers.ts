@@ -2,6 +2,7 @@ import type { parseDocument } from '@decimalturn/toml-patch';
 import type { Node as SqlNode } from '@pgsql/types';
 import type ts from 'typescript';
 import type { Node, Parser, Tree } from 'web-tree-sitter';
+import type { Document } from 'yaml';
 import type { z } from 'zod';
 
 import type { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
@@ -123,6 +124,10 @@ export type PythonFunction = { path: string; name: string; node: Node; body: Nod
 
 export type PythonFiles = { modules: PythonModule[]; functions: PythonFunction[] };
 
+export type LocatedImport = { module: string; path: string; node: Node };
+
+export type PythonSearch = { files: ReadonlySet<string>; roots: string[]; externals: ReadonlySet<string> };
+
 export type SourceFiles = Required<ParseCache> & { files: Array<{ path: string; kind: string }> };
 
 export type SqlToken = {
@@ -156,7 +161,16 @@ export type EditableFile = {
     getText(): string;
 };
 
+export type SwiftModule = { name: string; files: string[] };
+
 export type CodeFence = { language: string; attributes: string; body: string; startLine: number; endLine: number };
+
+export type PositionedYaml = {
+    documents: Document.Parsed[];
+    findPosition: (offset: number | undefined) => { line: number; col: number };
+};
+
+export type DirectiveScan = { token: string | undefined; end: number };
 
 type TomlComment = { raw: string; start: number };
 
@@ -272,3 +286,5 @@ export type Parsed<Value, Failure> = { value: Value } | { error: Failure };
 export type NumberedLine = { text: string; number: number };
 
 export type SourcePosition = { start: { offset: number }; end: { offset: number } };
+
+export type ProseLine = NumberedLine & { command: boolean };

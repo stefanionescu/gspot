@@ -6,7 +6,7 @@ import { testdir } from 'testdirs';
 
 import { openSession, readSelectedCommits } from '#cli/engine/session.ts';
 import { listAlwaysSelected } from '#cli/manifests/select.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

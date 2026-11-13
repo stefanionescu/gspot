@@ -12,7 +12,7 @@ import {
 import { joinScope } from '#cli/repository/scopes.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import {

@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { WORKSPACE_FILE_CASES } from '#tests/config/repository.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

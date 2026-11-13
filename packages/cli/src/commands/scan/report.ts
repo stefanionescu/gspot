@@ -22,7 +22,9 @@ import { canIgnoreRule } from '#cli/engine/results.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/file-plan.ts';
 import { findToolName, listDistinctTools, readShippedChecks } from '#cli/manifests/read.ts';
 import { listPinPrerequisites } from '#cli/repository/version-pin.ts';
-import { compareText, formatCount, quoteArgument } from '#cli/system/text.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands.ts';
 import type { Finding, RunReport } from '#cli/types/engine/run.ts';
 

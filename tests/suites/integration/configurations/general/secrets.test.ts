@@ -5,7 +5,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { API_TOKEN } from '#tests/config/integration/general.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';

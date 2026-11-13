@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import type { GspotError } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { LINKED_GLOBS, OUTSIDE_PATTERNS } from '#tests/config/system.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

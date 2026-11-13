@@ -3,7 +3,7 @@ import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import { OSV_SCANNER_CHECK, OSV_SCANNER_NOTES, SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import { BUNFIG_FILE, CONFIG_TOML_FORMAT } from '#cli/config/tools/installers.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { getTable, listIgnores } from '#cli/settings/scopes.ts';
 import { findValueAt } from '#cli/system/tables.ts';

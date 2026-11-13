@@ -3,7 +3,7 @@ import { testdir } from 'testdirs';
 
 import { PLUGIN_SOURCE_REFUSAL } from '#cli/config/settings/schema.ts';
 import { parseSettings, safeParseSettings } from '#cli/settings/parse.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import { CONFIGURATION_CONFLICTS, UNKNOWN_TABLE_FIELDS } from '#tests/config/settings/parse.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

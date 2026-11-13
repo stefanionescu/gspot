@@ -10,7 +10,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Check } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
 import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';

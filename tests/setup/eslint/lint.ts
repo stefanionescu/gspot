@@ -5,7 +5,7 @@ import { ESLint } from 'eslint';
 import { extractConfigName } from '#cli/engine/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';

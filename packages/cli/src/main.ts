@@ -53,7 +53,7 @@ import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { assertGspotPin } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type { AnyCommandDefinition, ArgumentDefinition, OptionDefinition } from '#cli/types/commands.ts';
 import type { CommandHelp, InvalidValue } from '#cli/types/main.ts';
 

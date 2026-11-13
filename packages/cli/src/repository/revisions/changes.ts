@@ -36,7 +36,7 @@ import {
 import { isShallowClone } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { ChangedPaths, MergeBase, TreeStatus } from '#cli/types/repository.ts';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {

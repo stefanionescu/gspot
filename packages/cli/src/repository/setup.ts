@@ -30,12 +30,12 @@ import {
 } from '#cli/config/repository/setup.ts';
 import { EXECUTABLE_BITS, LINE_BREAK } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { listConflictingConfigs } from '#cli/repository/conflicts.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { readGitPath, readGitSetting } from '#cli/repository/git/run.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Repository, RepositoryHooks, RepositorySetup } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 

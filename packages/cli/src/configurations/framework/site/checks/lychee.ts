@@ -15,7 +15,7 @@ import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { assertToolFindings, clearOutsideLinkExit } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

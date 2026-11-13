@@ -7,7 +7,7 @@ import { expect, test } from 'bun:test';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { isActive, planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { PROJECT_PATH_IGNORES, TSC_PUSH_OPTIONS, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

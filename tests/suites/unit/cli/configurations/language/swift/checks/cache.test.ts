@@ -11,7 +11,7 @@ import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/stop.ts';
 import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
 import { SWIFT_PACKAGE_HEADER, SWIFT_VALUE_SOURCE, XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
 import { SWIFT_PACKAGE } from '#tests/config/setup/programs.ts';

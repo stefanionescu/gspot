@@ -48,11 +48,11 @@ import {
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/dependencies.ts';
 import { listUnparsedCiFiles } from '#cli/repository/lint-commands.ts';
 import { configTableSchema } from '#cli/schemas/parsers.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type {

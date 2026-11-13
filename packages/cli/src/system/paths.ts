@@ -1,17 +1,15 @@
+import { realpathSync } from 'node:fs';
 import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
 
 import {
     DECLARATION_EXTENSIONS,
-    EXECUTABLE_LAYOUTS,
-    GLOB_SPECIAL_CHARACTERS,
     INSTALLED_DEPENDENCY_FOLDERS,
+    MISSING_PATH_CODES,
     PATH_SEPARATORS,
     RESERVED_SEGMENTS,
     UNSAFE_PATH_MESSAGE,
 } from '#cli/config/system.ts';
-import { GspotError } from '#cli/system/errors.ts';
-
-export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 
 export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');
@@ -71,10 +69,6 @@ export function includeParentFolders(paths: readonly string[]): Set<string> {
     return covered;
 }
 
-export function listExecutableNames(name: string): string[] {
-    return executableLayout.executableSuffixes.map((suffix) => name + suffix);
-}
-
 export function listEnclosingFolders(folder: string): string[] {
     let walked = folder === '.' ? '' : folder;
     const folders = [walked];
@@ -103,14 +97,6 @@ export function isInInstalledFolder(path: string): boolean {
     return path.split('/').some((segment) => INSTALLED_DEPENDENCY_FOLDERS.has(segment));
 }
 
-export function escapeGlob(path: string): string {
-    return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
-}
-
-export function isInScope(path: string, scopePath: string): boolean {
-    return scopePath === '' || path === scopePath || path.startsWith(`${scopePath}/`);
-}
-
 export function splitSystemPath(path: string): string[] {
     const segments = path.split('/');
     const systemSegments = process.platform === 'win32' ? path.split(PATH_SEPARATORS) : segments;
@@ -122,6 +108,11 @@ export function splitSystemPath(path: string): string[] {
     return segments;
 }
 
-export function buildDashSafePath(path: string): string {
-    return path.startsWith('-') ? `./${path}` : path;
+export function findCanonicalPath(path: string): string | undefined {
+    try {
+        return convertToPosixPath(realpathSync.native(path));
+    } catch (error) {
+        if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
+        throw error;
+    }
 }

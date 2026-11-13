@@ -4,7 +4,7 @@ import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
 import { findCommandTool } from '#cli/engine/plan.ts';
 import { canIgnoreRule } from '#cli/engine/results.ts';
 import { findToolName } from '#cli/manifests/read.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
 import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';

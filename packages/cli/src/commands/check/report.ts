@@ -26,9 +26,11 @@ import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 import { formatCheckedContent } from '#cli/engine/report.ts';
+import { formatScopePrefix } from '#cli/repository/scopes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { print, printWarning } from '#cli/system/terminal.ts';
-import { formatCount, formatScopePrefix, formatSeconds, quoteArgument } from '#cli/system/text.ts';
+import { formatCount, formatSeconds } from '#cli/system/text/messages.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CheckCommandJson } from '#cli/types/commands.ts';
 import type { CheckResult, CheckStatus, Finding, FixReport, RunReport } from '#cli/types/engine/run.ts';
 

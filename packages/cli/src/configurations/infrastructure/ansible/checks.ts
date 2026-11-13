@@ -7,10 +7,11 @@ import { buildCommandSubstitutions } from '#cli/engine/tool-runs/check.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { expandCommand } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { findProjectFolder, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
-import { isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
+import { isInScope, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
+import { isInInstalledFolder } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

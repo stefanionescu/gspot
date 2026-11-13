@@ -12,7 +12,7 @@ import {
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { runCommandBatches } from '#cli/engine/tool-runs/check.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { docstringStyleSchema } from '#cli/schemas/configurations.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';

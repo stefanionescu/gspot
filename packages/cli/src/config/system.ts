@@ -61,6 +61,7 @@ export const EXECUTABLE_LAYOUTS = {
 } as const;
 export const LEADING_SLASH = /^\//u;
 export const LINK_REFUSAL = 'is a link. gspot does not write through links.';
+export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR']);
 export const MISSING_TRACKED_FILE_MESSAGE = '{path} is tracked but missing. Restore it or commit its deletion.';
 export const PATH_SEPARATORS = /[\\/]/u;
 export const RESERVED_SEGMENTS: ReadonlySet<string> = new Set(['', '.', '..']);
@@ -126,50 +127,14 @@ export const TERMINAL_COLOR_SEQUENCE = new RegExp(
 export const TERMINAL_CONTROL_CHARACTERS = /[^\P{Cc}\t\n]|\p{Cf}/gu;
 
 // text
-export const CONFLICT_END = /^>{7}(?: |$)/u;
-export const CONFLICT_SEPARATOR = /^={7}(?: |$)/u;
-export const CONFLICT_START = /^<{7}(?: |$)/u;
-export const DIGIT_BOUNDARY = /(?<=\D)(?=\d)|(?<=\d)(?=\D)/u;
 export const HEXADECIMAL_RADIX = 16;
 export const LINE_BREAK = /\r?\n/u;
 export const LIST_LIMIT = 8;
 export const NOT_LINE_BREAK = /[^\r\n]/gu;
-export const NUMERIC_WORDS = new Set([
-    'base64',
-    'utf8',
-    'utf16',
-    'sha1',
-    'sha256',
-    'sha512',
-    'md5',
-    'oauth2',
-    'http2',
-    'http3',
-    'ipv4',
-    'ipv6',
-    's3',
-    'k8s',
-    'e2e',
-    'i18n',
-    'l10n',
-    'a11y',
-    'int8',
-    'int16',
-    'int32',
-    'int64',
-    'uint8',
-    'uint16',
-    'uint32',
-    'uint64',
-    'float32',
-    'float64',
-]);
 export const OCTAL_RADIX = 8;
 export const REGEXP_SYNTAX_CHARACTERS = /[$()*+.?[\\\]^{|}]/gu;
-export const ROOT_SCOPE_MARK = '.';
 export const SIMILAR_NAME_LIMIT = 3;
 export const TYPO_FRACTION = 3;
 export const TYPO_MIN = 1;
 export const UNQUOTED_ARGUMENT = /^[\w@:./-]+$/u;
 export const WHITESPACE_RUN = /\s+/gu;
-export const WORD_SEPARATORS = /[^A-Za-z0-9]+/u;

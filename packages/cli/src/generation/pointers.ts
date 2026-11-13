@@ -15,21 +15,15 @@ import { formatHeader } from '#cli/generation/header.ts';
 import { selectScopeChecks } from '#cli/generation/owned.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { isOutsideChildScopes, joinScope, listNestedScopes, listOwnFiles } from '#cli/repository/scopes.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
+import { isInScope, isOutsideChildScopes, joinScope, listNestedScopes, listOwnFiles } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import {
-    buildModuleSpecifier,
-    escapeGlob,
-    extractParentFolder,
-    isInScope,
-    listEnclosingFolders,
-} from '#cli/system/paths.ts';
+import { buildModuleSpecifier, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { ConfigOwner } from '#cli/types/configurations/shared.ts';
 import type { PlannedPointerField } from '#cli/types/generation.ts';
 import type { Config } from '#cli/types/manifests.ts';

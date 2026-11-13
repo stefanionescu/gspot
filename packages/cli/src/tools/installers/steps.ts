@@ -9,11 +9,12 @@ import {
     PYTHON_DEFAULT_INDEX_ORIGIN,
 } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GspotError, tryParseFile } from '#cli/system/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { writeProgress } from '#cli/system/terminal.ts';
-import { formatSeconds } from '#cli/system/text.ts';
+import { formatSeconds } from '#cli/system/text/messages.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type { SpawnResult } from '#cli/types/system.ts';

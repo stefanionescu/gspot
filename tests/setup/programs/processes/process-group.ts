@@ -1,4 +1,4 @@
-import { streamProcess } from '#cli/system/processes.ts';
+import { streamProcess } from '#cli/system/processes/run.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const [exitCode = '0'] = process.argv.slice(2);

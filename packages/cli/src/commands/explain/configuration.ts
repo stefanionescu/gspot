@@ -14,7 +14,7 @@ import { formatDetectionConditions } from '#cli/manifests/reference.ts';
 import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { ConfigurationExplanation, Explanation } from '#cli/types/commands.ts';
 import type { Session } from '#cli/types/tools.ts';
 

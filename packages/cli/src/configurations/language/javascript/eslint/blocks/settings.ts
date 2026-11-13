@@ -28,7 +28,7 @@ import { compareScopeDepth } from '#cli/repository/scopes.ts';
 import { listSettingsTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getLimit, getTable } from '#cli/settings/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type {
     EslintBlockFields,

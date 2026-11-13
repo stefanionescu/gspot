@@ -2,7 +2,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/run.ts';
 import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

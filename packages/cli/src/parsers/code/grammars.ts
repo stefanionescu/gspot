@@ -6,7 +6,6 @@ import { setFlagsFromString } from 'node:v8';
 import { Language, Parser, type Tree } from 'web-tree-sitter';
 
 import {
-    GRAMMAR_CONFIGURATIONS,
     GRAMMAR_EXTENSIONS,
     GRAMMAR_FILE_EXTENSION,
     GRAMMARS_FOLDER,
@@ -18,6 +17,7 @@ import { remember } from '#cli/system/cache.ts';
 import { readCacheFolder } from '#cli/system/environment.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { extractExtension } from '#cli/system/paths.ts';
 import type { GrammarName, GrammarSourceFiles, ParseCache, ParserGrammars, SourceTree } from '#cli/types/parsers.ts';
 
 const PARSED_TREES = Symbol('parsed trees');
@@ -77,7 +77,7 @@ export function buildGrammarPath(grammar: GrammarName): string {
 }
 
 export function findGrammarByExtension(path: string): GrammarName | undefined {
-    if (DECLARATION_EXTENSIONS.some((extension) => path.endsWith(extension))) return undefined;
+    if (DECLARATION_EXTENSIONS.includes(extractExtension(path))) return undefined;
     const extension = posix.extname(path);
     if (extension === '') return undefined;
     return Object.entries(GRAMMAR_EXTENSIONS).find(([, extensions]) => extensions.includes(extension))?.[0] as
@@ -125,11 +125,4 @@ export async function visitParsedSources<Grammar extends GrammarName>(
         using tree = await parseSource(file.grammar, text, sources);
         visit({ path: file.path, grammar: file.grammar, text, rootNode: tree.rootNode });
     }
-}
-
-export function selectGrammar(path: string, language: string): GrammarName | undefined {
-    if (!GRAMMAR_CONFIGURATIONS.has(language)) return undefined;
-    if (language === 'bash' && posix.extname(path) === '') return 'bash';
-    const found = findGrammarByExtension(path);
-    return found === language || (language === 'typescript' && found === 'tsx') ? found : undefined;
 }

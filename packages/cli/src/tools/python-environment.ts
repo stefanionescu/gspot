@@ -8,7 +8,7 @@ import { ACTIVE_ENVIRONMENT_VARIABLE, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/c
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { ProcessFailure, ScopeCheck, Session } from '#cli/types/tools.ts';
 

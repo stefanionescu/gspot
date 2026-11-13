@@ -5,9 +5,8 @@ import {
     listAlwaysSelected,
     selectConfigurations,
 } from '#cli/manifests/select.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
-import { listOwnFiles } from '#cli/repository/scopes.ts';
-import { isInScope } from '#cli/system/paths.ts';
+import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
+import { isInScope, listOwnFiles } from '#cli/repository/scopes.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type {

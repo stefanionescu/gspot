@@ -20,9 +20,8 @@ import { readScopeAliases } from '#cli/configurations/language/javascript/aliase
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
 import type { AssetGlobImport, AssetSource } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

@@ -10,7 +10,7 @@ import {
 } from '#cli/config/configurations/swift.ts';
 import { PACKAGE_SWIFT, PBXPROJ_FILE } from '#cli/config/parsers/projects.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode.ts';
+import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
 import { getTable, selectFormat } from '#cli/settings/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';

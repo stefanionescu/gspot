@@ -69,11 +69,7 @@ export const NON_USE_PARENTS: ReadonlySet<string> = new Set([
 ]);
 export const OWN_FILES_ONLY = 'only its own files';
 export const PYTHON_EXTENSIONS = ['.py', '.pyi'] as const;
-export const PYTHON_FROM_STATEMENT = 'import_from_statement';
-export const PYTHON_IMPORT_STATEMENT = 'import_statement';
-export const PYTHON_MODULE_SUFFIXES = ['.py', '.pyi', '/__init__.py', '/__init__.pyi'] as const;
 export const PYTHON_SOURCE_ROOTS = ['', 'src'] as const;
-export const RELATIVE_IMPORT = 'relative_import';
 export const UNCOVERED_FILE_MESSAGE =
     'No [[import_rule]] covers this file. Add a path that matches it to an import rule, or record an [[ignore]] for structure/import-rules with its paths and a reason.';
 export const USE_NODES = ['type_identifier', 'simple_identifier'];
@@ -122,13 +118,6 @@ export const TYPE_FILE_CASE = 'pascal';
 
 // swift-modules check
 export const NON_WORD_CHARACTERS = /\W/gu;
-export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {
-    target: ['Sources', 'Source', 'src', 'srcs'],
-    executableTarget: ['Sources', 'Source', 'src', 'srcs'],
-    macro: ['Sources', 'Source', 'src', 'srcs'],
-    testTarget: ['Tests', 'Sources', 'Source', 'src', 'srcs'],
-    plugin: ['Plugins'],
-};
 
 // trivial-functions check
 export const BARE_NAME_NODES = new Set(['identifier', 'simple_identifier', 'attribute', 'navigation_expression']);

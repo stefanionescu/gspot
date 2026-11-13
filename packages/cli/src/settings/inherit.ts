@@ -8,13 +8,12 @@ import {
     SHIPPED_DEFAULT_OWNER,
 } from '#cli/config/settings/schema.ts';
 import { CATEGORY_KEY_SEGMENTS, CATEGORY_PARENTS } from '#cli/config/settings/validation.ts';
-import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { compareScopeDepth, isInScope } from '#cli/repository/scopes.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
 import { findSettingSchema, isReasonedValue, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
-import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type {
     AvailableSettings,

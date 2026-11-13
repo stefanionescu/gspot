@@ -10,7 +10,8 @@ import { assertCheckExists } from '#cli/manifests/read.ts';
 import { removeRecordPaths } from '#cli/settings/edit.ts';
 import { buildArgumentPaths } from '#cli/settings/paths.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { formatCount, formatNameList, quoteArgument } from '#cli/system/text.ts';
+import { formatCount, formatNameList } from '#cli/system/text/messages.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type {
     CommandDefinition,
     IgnoreFlags,

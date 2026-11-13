@@ -4,8 +4,8 @@ import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { executableLayout } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

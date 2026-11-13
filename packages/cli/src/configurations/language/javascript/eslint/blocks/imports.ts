@@ -22,8 +22,7 @@ import {
     listNestedScopeGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { joinScope, joinScopeGlob } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { escapeGlob, escapeRegExp } from '#cli/system/patterns.ts';
 import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 

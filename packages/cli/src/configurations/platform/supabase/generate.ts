@@ -1,7 +1,7 @@
 import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { SUPABASE_RULES } from '#cli/config/configurations/supabase.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
 import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {

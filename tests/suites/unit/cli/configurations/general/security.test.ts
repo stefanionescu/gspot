@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';

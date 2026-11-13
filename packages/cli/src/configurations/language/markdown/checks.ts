@@ -20,7 +20,7 @@ import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type {
     FenceParser,
     FenceSyntaxError,

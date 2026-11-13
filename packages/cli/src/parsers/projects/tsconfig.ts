@@ -15,8 +15,8 @@ import { tsconfigSchema } from '#cli/schemas/parsers.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { findText, readContainedPath } from '#cli/system/files/reads.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
 import { convertToPosixPath, isInside, listEnclosingFolders } from '#cli/system/paths.ts';
-import { requireTypescript } from '#cli/system/typescript.ts';
 import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
 import type { RunCache } from '#cli/types/system.ts';
 

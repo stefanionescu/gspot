@@ -1,13 +1,13 @@
 import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/schema.ts';
 import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/validation.ts';
 import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
-import { compareScopeDepth, isScopeCovered, selectScopePath } from '#cli/repository/scopes.ts';
+import { compareScopeDepth, isInScope, isScopeCovered, selectScopePath } from '#cli/repository/scopes.ts';
 import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/inherit.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { extractParentFolder, isInScope } from '#cli/system/paths.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { addTable, findValueAt } from '#cli/system/tables.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type {

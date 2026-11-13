@@ -7,7 +7,7 @@ import {
     UNSAFE_FIXES,
 } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import type { Finding } from '#cli/types/engine/run.ts';

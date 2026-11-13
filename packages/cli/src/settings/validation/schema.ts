@@ -23,7 +23,7 @@ import { formatUnknownSetting, validateKeys, validateSettingRules } from '#cli/s
 import { formatFileValueError } from '#cli/settings/validation/messages.ts';
 import { validateSettingReasons, validateSwiftTargets } from '#cli/settings/validation/reasons.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import { formatSimilarNames } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text/messages.ts';
 import type { WrittenConfiguration } from '#cli/types/manifests.ts';
 import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
 import type { Settings, SettingsError } from '#cli/types/settings.ts';

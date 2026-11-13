@@ -2,7 +2,7 @@ import { COVERAGE_INI_SECTION } from '#cli/config/configurations/python.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';

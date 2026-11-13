@@ -26,14 +26,14 @@ import {
     PACKAGE_MANAGER_PIN_EXPLANATIONS,
 } from '#cli/configurations/general/dependencies/explanations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import {
     findNearestLockfile,
     listLockfileUrls,
     listSpecifiers,
     SPECIFIER_PARSERS,
 } from '#cli/parsers/projects/lockfiles.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { miseToolsSchema } from '#cli/schemas/repository.ts';
@@ -41,7 +41,7 @@ import { getTable } from '#cli/settings/scopes.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

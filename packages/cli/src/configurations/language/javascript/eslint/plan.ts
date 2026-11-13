@@ -16,8 +16,8 @@ import {
 import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/runtimes.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';

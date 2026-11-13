@@ -1,51 +1,13 @@
 import { posix } from 'node:path';
 
-import type { Node } from 'web-tree-sitter';
-
-import { NON_WORD_CHARACTERS, SWIFTPM_TARGET_FOLDERS } from '#cli/config/configurations/structure.ts';
+import { NON_WORD_CHARACTERS } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
-import { isInTargetFolder } from '#cli/configurations/infrastructure/xcode/checks.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { parseProjectSources } from '#cli/parsers/projects/xcode.ts';
+import { listPackageModules } from '#cli/parsers/projects/swift-package.ts';
+import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
-import type { SwiftModule } from '#cli/types/configurations/general.ts';
+import type { SwiftModule } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-function findStringArgument(call: Node, label: string): string | undefined {
-    const argument = call
-        .descendantsOfType('value_argument')
-        .find((node) => node.childForFieldName('name')?.text === label && node.parent?.parent?.parent?.id === call.id);
-    const value = argument?.childForFieldName('value');
-    return value?.type === 'line_string_literal' ? (value.childForFieldName('text')?.text ?? '') : undefined;
-}
-
-function selectDefaultFolder(folders: readonly string[], packageFolder: string, swiftFiles: string[]): string {
-    const present = folders.find((folder) =>
-        swiftFiles.some((file) => file.startsWith(`${posix.join(packageFolder, folder)}/`)),
-    );
-    return present ?? folders[0] ?? '';
-}
-
-async function listPackageModules(session: Session, path: string, swiftFiles: string[]): Promise<SwiftModule[]> {
-    using tree = await parseSource('swift', readText(session.cache, path), session);
-    const packageFolder = extractParentFolder(path);
-    return tree.rootNode.descendantsOfType('call_expression').flatMap((call) => {
-        const callee = call.namedChildren[0];
-        const kind = callee?.type === 'prefix_expression' ? callee.childForFieldName('target')?.text : undefined;
-        const folders = SWIFTPM_TARGET_FOLDERS[kind ?? ''];
-        if (folders === undefined) return [];
-        const name = findStringArgument(call, 'name');
-        if (name === undefined) return [];
-        const folder = posix.join(
-            packageFolder,
-            findStringArgument(call, 'path') ??
-                posix.join(selectDefaultFolder(folders, packageFolder, swiftFiles), name),
-        );
-        return [{ name, files: swiftFiles.filter((file) => file.startsWith(`${folder}/`)) }];
-    });
-}
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
     const project = parseProjectSources(readText(session.cache, path), path);

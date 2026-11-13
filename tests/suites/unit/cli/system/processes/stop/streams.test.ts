@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { streamProcess } from '#cli/system/processes.ts';
+import { streamProcess } from '#cli/system/processes/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { CHILD_TIMEOUT_SECONDS, waitForExit } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

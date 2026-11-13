@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import { NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

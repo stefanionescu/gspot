@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 
 import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/run.ts';
 import { ANALYZER_EXIT_CASES } from '#tests/config/configurations/swift.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

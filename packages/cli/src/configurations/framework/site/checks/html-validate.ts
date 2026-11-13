@@ -13,8 +13,8 @@ import { splitFileArguments } from '#cli/engine/tool-runs/batches.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 

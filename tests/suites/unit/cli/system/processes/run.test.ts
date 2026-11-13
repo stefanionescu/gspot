@@ -5,8 +5,8 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { listExecutableNames } from '#cli/system/paths.ts';
-import { runProcess } from '#cli/system/processes.ts';
+import { listExecutableNames } from '#cli/system/processes/programs.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';

@@ -8,6 +8,7 @@ import { LOCKFILES, NPM_PACKAGE_FOLDER, PNPM_PEER_START, PNPM_ROOT_IMPORTER } fr
 import { BUN_LOCKFILE, INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parsePnpmProjectLock, splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
+import { parseFileFields, tryParseFile } from '#cli/parsers/validation.ts';
 import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
 import {
     bunPackageSchema,
@@ -15,7 +16,6 @@ import {
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
-import { parseFileFields, tryParseFile } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Dependencies } from '#cli/types/parsers.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';

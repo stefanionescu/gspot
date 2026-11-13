@@ -11,7 +11,7 @@ import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 const PACKAGE_FOLDER = 'workspace % café';
 
 async function writePackageFolder(folder: string): Promise<string> {
-    const root = join(import.meta.dir, '../../../../..');
+    const root = join(import.meta.dir, '../../../../../..');
     await createFileTree(folder, {
         [`${PACKAGE_FOLDER}/tsconfig.json`]: JSON.stringify({
             compilerOptions: {

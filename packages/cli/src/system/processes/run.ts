@@ -1,5 +1,4 @@
-import { closeSync, createWriteStream, mkdtempSync, openSync, readFileSync, rmSync, statSync } from 'node:fs';
-import { tmpdir } from 'node:os';
+import { closeSync, createWriteStream, openSync, readFileSync, statSync } from 'node:fs';
 import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path';
 import { clearInterval, setInterval } from 'node:timers';
 
@@ -15,15 +14,13 @@ import {
     OVER_LIMIT_COMPLETION,
     PATH_SEPARATORS,
     PATHEXT_DEFAULT,
-    TEMPORARY_FILE_PREFIX,
-    TEMPORARY_REMOVAL_OPTIONS,
     UNSTARTED_COMPLETION,
     UNSTOPPED,
 } from '#cli/config/system.ts';
 import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { trackProcessTree } from '#cli/system/process-trees.ts';
-import { findProgramCommand } from '#cli/system/programs.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { findProgramCommand } from '#cli/system/processes/programs.ts';
+import { trackProcessTree } from '#cli/system/processes/stop.ts';
 import type {
     CancelableSpawnOptions,
     ProcessEnd,
@@ -197,20 +194,6 @@ async function readOutputFiles(
 }
 
 /**
-Check a process without signaling it. A permission refusal still means that the process exists.
-*/
-export function isProcessRunning(pid: number): boolean {
-    try {
-        process.kill(pid, 0);
-        return true;
-    } catch (error) {
-        if (hasErrorCode(error, 'ESRCH')) return false;
-        if (hasErrorCode(error, 'EPERM')) return true;
-        throw error;
-    }
-}
-
-/**
 Run a command and return its whole output. The command writes to two files, not to pipes, because Node.js and Bun
 drop the output that a pipe has not yet taken when a program calls `process.exit`.
 */
@@ -218,8 +201,8 @@ export async function runProcess(command: readonly string[], options: Cancelable
     const started = performance.now();
     const unstarted = findUnstartedProcess(command, options, started);
     if (unstarted !== undefined) return unstarted;
-    const folder = mkdtempSync(join(tmpdir(), TEMPORARY_FILE_PREFIX));
-    const paths = [join(folder, 'stdout'), join(folder, 'stderr')] as const;
+    using folder = createTemporaryFolder();
+    const paths = [join(folder.path, 'stdout'), join(folder.path, 'stderr')] as const;
     // Not append mode: a handle that may only append is not writable to an MSYS program, such as the `sh` and `bash`
     // of Git for Windows, and its output is lost.
     const descriptors = paths.map((path) => openSync(path, 'w'));
@@ -247,7 +230,6 @@ export async function runProcess(command: readonly string[], options: Cancelable
         return await finishProcess(child, supervision, started, readOutputFiles(child, supervision, paths));
     } finally {
         for (const descriptor of descriptors) closeSync(descriptor);
-        rmSync(folder, TEMPORARY_REMOVAL_OPTIONS);
     }
 }
 

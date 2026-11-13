@@ -7,7 +7,7 @@ import { planChecks } from '#cli/engine/plan.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/tools.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { buildMiseInstall, listPackagePins } from '#cli/tools/pins.ts';
 import { NODE_REQUIREMENTS, TYPESCRIPT_PIN_CASES } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

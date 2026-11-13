@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { findInstalledDependency, readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
 

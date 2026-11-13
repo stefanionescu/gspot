@@ -6,14 +6,10 @@ import { z } from 'zod';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GLOB_BRACKETS, REASONED_VALUE_KEY, RECORD_PATHS_KEY } from '#cli/config/settings/validation.ts';
 import { GLOB_EXCLUDE } from '#cli/config/system.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { findSettingSchema, isReasonedValue } from '#cli/settings/lookup.ts';
-import {
-    buildArgumentPath,
-    convertToPosixPath,
-    escapeGlob,
-    isInScope,
-    stripTrailingSlashes,
-} from '#cli/system/paths.ts';
+import { buildArgumentPath, convertToPosixPath, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
 

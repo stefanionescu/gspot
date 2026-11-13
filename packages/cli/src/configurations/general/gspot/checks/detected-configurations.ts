@@ -1,8 +1,8 @@
 import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { stripIgnoredFiles } from '#cli/engine/files.ts';
-import { listDetectedAdditions } from '#cli/repository/proposals.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { listDetectedAdditions } from '#cli/repository/detection/proposals.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Configuration } from '#cli/types/manifests.ts';

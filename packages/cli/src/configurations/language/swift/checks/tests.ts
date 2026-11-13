@@ -29,14 +29,14 @@ import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.
 import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { packageDescriptionSchema, swiftCoverageSchema, xccovSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { CoverageOutput, CoverageRun, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';

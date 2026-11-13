@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { inspectTool } from '#cli/tools/inspect.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools.ts';

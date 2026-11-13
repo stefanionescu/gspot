@@ -12,7 +12,7 @@ import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/ex
 import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { listMatchingLines } from '#cli/system/text.ts';
+import { listMatchingLines } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

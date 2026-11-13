@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 
 import { openSession } from '#cli/engine/session.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { buildSettingsText } from '#cli/settings/text.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

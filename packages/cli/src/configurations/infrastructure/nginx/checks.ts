@@ -30,13 +30,13 @@ import {
 } from '#cli/config/configurations/nginx.ts';
 import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { DOCKER_DAEMON_NOTE, DOCKER_TOOL } from '#cli/config/engine.ts';
-import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
+import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { Mount, NginxMounts } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { BuiltInCheckResult, CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';

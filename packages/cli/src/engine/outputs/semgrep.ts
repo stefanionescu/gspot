@@ -4,7 +4,7 @@ import {
     SEMGREP_PARSE_RULE,
     SEMGREP_UNMATCHED_SUPPRESSION,
 } from '#cli/config/engine.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/engine/run.ts';

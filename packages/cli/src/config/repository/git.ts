@@ -34,6 +34,11 @@ export const STATUS_PATH_START = 3;
 export const UNCHANGED_STATUS = ' ';
 export const UNTRACKED_STATUS = '?';
 
+// conflict markers
+export const CONFLICT_END = /^>{7}(?: |$)/u;
+export const CONFLICT_SEPARATOR = /^={7}(?: |$)/u;
+export const CONFLICT_START = /^<{7}(?: |$)/u;
+
 // push revisions
 export const ABSENT_HASH = /^0+$/u;
 export const BRANCHES_PREFIX = 'refs/heads/';

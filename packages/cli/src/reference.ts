@@ -13,8 +13,8 @@ import { formatDetectionConditions, listRuleReferences } from '#cli/manifests/re
 import { buildSetupReference } from '#cli/repository/version-pin.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
-import { MINIMUM_NODE_VERSION } from '#cli/system/runtime.ts';
-import { compareText } from '#cli/system/text.ts';
+import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { CliReference, CommandReference } from '#cli/types/main.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
@@ -22,7 +22,8 @@ import type { Configuration, ConfigurationReference } from '#cli/types/manifests
 // The docs site imports the CLI only through this file. package.json names it in `exports` under the condition
 // `gspot-source`, which only this repository sets, because the published package holds no source.
 export { DOCS_PATHS } from '#cli/config/manifests.ts';
-export { compareText, formatNameList } from '#cli/system/text.ts';
+export { compareText } from '#cli/system/text/order.ts';
+export { formatNameList } from '#cli/system/text/messages.ts';
 export type { CliReference, CommandReference } from '#cli/types/main.ts';
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {

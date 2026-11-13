@@ -6,7 +6,7 @@ import { listNestedScopes } from '#cli/repository/scopes.ts';
 import { getRootScope, getTable } from '#cli/settings/scopes.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type {
     CheckState,
     PlannedCheck,

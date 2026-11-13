@@ -47,9 +47,10 @@ import {
 } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { extractExtension, isInScope } from '#cli/system/paths.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
 import type {
     FileClassification,

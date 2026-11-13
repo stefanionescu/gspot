@@ -8,7 +8,7 @@ import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
 import workspacePackage from '#root-package' with { type: 'json' };

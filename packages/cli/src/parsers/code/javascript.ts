@@ -8,7 +8,7 @@ import {
     TSX_LANGUAGES,
 } from '#cli/config/parsers/code.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
-import { blankText, replaceRanges } from '#cli/system/text.ts';
+import { blankText, replaceRanges } from '#cli/system/text/positions.ts';
 import type { ComponentScript } from '#cli/types/parsers.ts';
 
 function listComponentScripts(element: Node, text: string, masked: string): ComponentScript[] {

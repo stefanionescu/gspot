@@ -28,7 +28,7 @@ import { ciFields } from '#cli/schemas/settings/tables.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { listHookNames } from '#cli/tools/installers/hooks.ts';
 import { buildToolProjects } from '#cli/tools/pins.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';

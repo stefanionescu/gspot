@@ -23,8 +23,8 @@ import {
     planReplacements,
     writePlans,
 } from '#cli/repository/writer.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
-import { formatCount } from '#cli/system/text.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
 import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';

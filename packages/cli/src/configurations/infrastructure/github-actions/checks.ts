@@ -1,17 +1,7 @@
 import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
-import {
-    type Document,
-    isAlias,
-    isMap,
-    isScalar,
-    isSeq,
-    LineCounter,
-    parseDocument,
-    type Scalar,
-    type YAMLMap,
-} from 'yaml';
+import { type Document, isAlias, isMap, isScalar, isSeq, parseDocument, type Scalar, type YAMLMap } from 'yaml';
 
 import {
     ACTION_FILES,
@@ -33,10 +23,12 @@ import { createCopy } from '#cli/engine/copies/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import type { PositionedYaml } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
@@ -167,11 +159,15 @@ function listRunScripts(jobs: unknown): Scalar[] {
 Report each `run:` script that pipes a download into a shell, with the Bash parser of bash/safety. A block scalar starts
 its script on the line after `run:`.
 */
-async function listDownloadRuns(path: string, runs: Scalar[], lines: LineCounter): Promise<CheckFinding[]> {
+async function listDownloadRuns(
+    path: string,
+    runs: Scalar[],
+    findPosition: PositionedYaml['findPosition'],
+): Promise<CheckFinding[]> {
     const found = await Promise.all(
         runs.map(async (run) => {
             const { forms } = await parseBashScript(String(run.value));
-            const { line } = lines.linePos(run.range?.[0] ?? 0);
+            const { line } = findPosition(run.range?.[0]);
             const isBlock = run.type === 'BLOCK_LITERAL' || run.type === 'BLOCK_FOLDED';
             return forms
                 .filter(({ form }) => form === 'curl-pipe-shell')
@@ -231,19 +227,19 @@ async function checkWorkflowShape(session: Session, planned: PlannedCheck): Prom
     const findings = await Promise.all(
         planned.files.map(async ({ path }) => {
             const text = readText(session.cache, path);
-            const lines = new LineCounter();
-            const document = parseDocument(text, { lineCounter: lines });
-            if (document.errors.length > 0 || !isMap(document.contents)) return [];
+            const { documents, findPosition } = parseYamlPositions(text);
+            const document = documents.length === 1 ? documents[0] : undefined;
+            if (document?.errors.length !== 0 || !isMap(document.contents)) return [];
             const source = text.split('\n');
             const jobs = document.get('jobs', true);
             const jobHits = isMap(jobs)
                 ? jobs.items.flatMap(({ key, value }) => (isScalar(key) && isMap(value) ? listJobHits(key, value) : []))
                 : [];
             const workflow = document as Document & { contents: YAMLMap };
-            const downloadRuns = await listDownloadRuns(path, listRunScripts(jobs), lines);
+            const downloadRuns = await listDownloadRuns(path, listRunScripts(jobs), findPosition);
             const shapeFindings = [...listConcurrencyHits(workflow), ...listSecretHits(workflow), ...jobHits].flatMap(
                 ({ kind, node }) => {
-                    const { line } = lines.linePos(node.range?.[0] ?? 0);
+                    const { line } = findPosition(node.range?.[0]);
                     const previous = source.slice(0, line - 1).at(-1);
                     if (kind === 'continueOnError' && previous?.trimStart().startsWith('#') === true) return [];
                     return [

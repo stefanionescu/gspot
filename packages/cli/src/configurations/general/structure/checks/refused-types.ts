@@ -16,7 +16,7 @@ import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 import { formatRefusedImport } from '#cli/configurations/general/structure/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { RuleLookup, SwiftDeclarations } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';

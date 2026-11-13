@@ -3,15 +3,13 @@ import { posix } from 'node:path';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_PACKAGES } from '#cli/config/repository/version-pin.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { DEPENDENCY_FILE_PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { DependencyFile, PackageJson } from '#cli/types/parsers.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 
@@ -61,11 +59,6 @@ export function listUnparsedDependencyFiles(files: TrackedFile[], dependencyFile
                 !parsed.has(file.path),
         )
         .map(({ path }) => path);
-}
-
-export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
-    const text = findText(source, path);
-    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
 export function listToolOnlyPackages(

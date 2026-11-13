@@ -12,7 +12,7 @@ import {
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import { listNodeFields } from '#cli/parsers/code/sql.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { SqlStatement } from '#cli/types/parsers.ts';

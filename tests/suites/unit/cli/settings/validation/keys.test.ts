@@ -6,7 +6,7 @@ import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue } from '#cli/settings/inherit.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { AvailableSettings } from '#cli/types/settings.ts';
 import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/parse.ts';

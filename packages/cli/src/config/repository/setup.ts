@@ -29,6 +29,9 @@ export const VALE_TEMPORARY_NAME = new RegExp(
     'u',
 );
 
+// scopes
+export const ROOT_SCOPE_MARK = '.';
+
 // setup scan
 export const AGENT_FILES = ['CLAUDE.md', 'AGENTS.md', 'GEMINI.md', '.cursorrules', 'CONVENTIONS.md'] as const;
 const ALL_FILES_GLOB = '**/*';

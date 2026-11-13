@@ -10,11 +10,11 @@ import {
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { TRAILING_SLASH } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { pyrightProjectSchema, pyrightScopeSchema } from '#cli/schemas/generation.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
 
 function readPyrightOptions(

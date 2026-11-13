@@ -10,7 +10,7 @@ import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/
 import { formatOutputTail } from '#cli/engine/tool-runs/output.ts';
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { ImageFinding } from '#cli/types/configurations/infrastructure.ts';

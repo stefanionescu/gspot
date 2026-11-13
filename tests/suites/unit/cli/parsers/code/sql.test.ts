@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/config/parsers/comments.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 

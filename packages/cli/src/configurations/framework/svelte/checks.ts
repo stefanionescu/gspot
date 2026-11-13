@@ -10,11 +10,11 @@ import {
 import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
 import { assertToolFindings } from '#cli/engine/tool-runs/output.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { failureMessageSchema, svelteFindingSchema } from '#cli/schemas/configurations.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';

@@ -44,9 +44,10 @@ import {
     listNestedScopeGlobs,
     listScriptFiles,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
-import { escapeGlob, extractParentFolder } from '#cli/system/paths.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
 import type {
     ConfigurationBlocks,
     EslintBlock,

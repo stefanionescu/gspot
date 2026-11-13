@@ -1,5 +1,5 @@
 import { isUtf8 } from 'node:buffer';
-import { closeSync, lstatSync, openSync, readdirSync, readFileSync, readSync, realpathSync, statSync } from 'node:fs';
+import { closeSync, lstatSync, openSync, readFileSync, readSync, realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
 import { MISSING_TRACKED_FILE_MESSAGE } from '#cli/config/system.ts';
@@ -99,10 +99,4 @@ export function decodeUtf8File(path: string, bytes: Buffer): string {
     if (text === undefined)
         throw new GspotError('filesystem', `${path} is not UTF-8 text. Save it as UTF-8, then run the command again.`);
     return text;
-}
-
-export function measureFolder(path: string): number {
-    const listed = readdirSync(path, { recursive: true, withFileTypes: true });
-    const files = listed.filter((file) => file.isFile());
-    return files.reduce((total, file) => total + statSync(join(file.parentPath, file.name)).size, 0);
 }

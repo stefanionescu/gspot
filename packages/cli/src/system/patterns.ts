@@ -2,7 +2,14 @@ import { posix } from 'node:path';
 
 import picomatch from 'picomatch';
 
-import { FOLDER_CONTENTS, GLOB_EXCLUDE, GLOB_EXCLUSION, TRAILING_SLASH } from '#cli/config/system.ts';
+import {
+    FOLDER_CONTENTS,
+    GLOB_EXCLUDE,
+    GLOB_EXCLUSION,
+    GLOB_SPECIAL_CHARACTERS,
+    REGEXP_SYNTAX_CHARACTERS,
+    TRAILING_SLASH,
+} from '#cli/config/system.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -39,4 +46,12 @@ export function buildFilenameMatcher(names: string[]): (path: string) => boolean
         const base = posix.basename(path);
         return literals.has(base) || literals.has(path) || isGlobMatch(base) || isGlobMatch(path);
     };
+}
+
+export function escapeGlob(path: string): string {
+    return path.replaceAll(GLOB_SPECIAL_CHARACTERS, (match) => `\\${match}`);
+}
+
+export function escapeRegExp(text: string): string {
+    return text.replaceAll(REGEXP_SYNTAX_CHARACTERS, String.raw`\$&`);
 }

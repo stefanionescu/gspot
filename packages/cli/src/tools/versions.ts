@@ -17,12 +17,11 @@ import {
     TOOL_ENVIRONMENT,
     VERSION_FLAG,
 } from '#cli/config/tools/programs.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { normalizePythonName, readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
 import { readToolProjectPackage } from '#cli/tools/packages.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { Files, SpawnResult } from '#cli/types/system.ts';

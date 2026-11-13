@@ -35,8 +35,9 @@ import { writeIndexTree } from '#cli/repository/revisions/files.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { rewriteProgress, runCancelableCommand } from '#cli/system/terminal.ts';
-import { formatNameList, formatNameState } from '#cli/system/text.ts';
+import { runCancelableCommand } from '#cli/system/processes/signals.ts';
+import { rewriteProgress } from '#cli/system/terminal.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
 import type {
     CheckCommandJson,
     CheckFlags,

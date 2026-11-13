@@ -12,11 +12,12 @@ import {
     YARN_BERRY_INSTALL,
     YARN_BERRY_MAJOR,
 } from '#cli/config/repository/package-managers.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { packageManagerPinSchema } from '#cli/schemas/repository.ts';
-import { GspotError, tryParseFile } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
 import type {
     PackageManagerCommand,

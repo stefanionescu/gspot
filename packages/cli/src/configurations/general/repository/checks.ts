@@ -7,13 +7,13 @@ import { FILTER_ATTRIBUTE, LFS_FILTER, SYMLINK_MODE } from '#cli/config/reposito
 import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
 import { getMaxFileBytes } from '#cli/engine/files.ts';
+import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
 import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInside } from '#cli/system/paths.ts';
-import { listConflictMarkerLines } from '#cli/system/text.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

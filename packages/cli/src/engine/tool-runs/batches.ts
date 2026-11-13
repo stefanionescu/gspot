@@ -19,6 +19,10 @@ function selectCommandLimit(platform: NodeJS.Platform, { isBatchFile }: { isBatc
     return isBatchFile ? WINDOWS_COMMAND_LIMIT : WINDOWS_PROCESS_LIMIT;
 }
 
+export function buildDashSafePath(path: string): string {
+    return path.startsWith('-') ? `./${path}` : path;
+}
+
 export function buildCommandLines(
     planned: PlannedCheck,
     expansion: { session: CheckSession; command: string[]; substitutions: Substitutions },

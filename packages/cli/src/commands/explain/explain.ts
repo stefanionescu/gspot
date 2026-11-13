@@ -10,7 +10,7 @@ import { listInheritedSettings } from '#cli/settings/inherit.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { formatSimilarNames } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text/messages.ts';
 import type { CommandDefinition, Explanation } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';

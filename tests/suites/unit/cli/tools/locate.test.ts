@@ -7,7 +7,7 @@ import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/installers.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/run.ts';
 import { listExecutablePaths, readMiseBinPaths } from '#cli/tools/locate.ts';
 import type { SpawnOptions } from '#cli/types/system.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';

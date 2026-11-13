@@ -1,7 +1,8 @@
 import { basename, dirname } from 'node:path';
 
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
-import { findLockedPackageLine, normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
+import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
 import { osvScannerReportSchema } from '#cli/schemas/engine.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/engine/run.ts';

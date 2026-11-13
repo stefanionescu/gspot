@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/run.ts';
 import { findMissingDependencies, inspectTool } from '#cli/tools/inspect.ts';
 import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

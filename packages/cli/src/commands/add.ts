@@ -9,7 +9,7 @@ import { selectConfigurations } from '#cli/manifests/select.ts';
 import { buildDetectedTables } from '#cli/settings/detected.ts';
 import { overlayTable } from '#cli/settings/edit.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
-import { formatNameState } from '#cli/system/text.ts';
+import { formatNameState } from '#cli/system/text/messages.ts';
 import type { CommandDefinition, ConfigurationsOptions, ScopeFlags } from '#cli/types/commands.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';

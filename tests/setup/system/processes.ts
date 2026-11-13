@@ -3,7 +3,7 @@ import { stat } from 'node:fs/promises';
 import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { runProcess } from '#cli/system/processes.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
 import { POLL_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 import { CHILD_WAIT_MILLISECONDS } from '#tests/config/setup/sandboxes.ts';

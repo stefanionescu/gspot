@@ -4,7 +4,7 @@ import { FILES_PLACEHOLDER, MISSING_GENERATED_FILE_MESSAGE, RAN_STATUSES } from 
 import { createCopy } from '#cli/engine/copies/files.ts';
 import { selectCheckCommand } from '#cli/engine/plan.ts';
 import { buildBaseResult, measureSpan, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
-import { buildCommandLines } from '#cli/engine/tool-runs/batches.ts';
+import { buildCommandLines, buildDashSafePath } from '#cli/engine/tool-runs/batches.ts';
 import {
     addCommandLine,
     buildCheckResult,
@@ -26,7 +26,7 @@ import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildDashSafePath, convertToPosixPath } from '#cli/system/paths.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { findToolPath, lookUpTool } from '#cli/tools/inspect.ts';
 import { readToolCommandPrefix } from '#cli/tools/packages.ts';
 import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/python-environment.ts';

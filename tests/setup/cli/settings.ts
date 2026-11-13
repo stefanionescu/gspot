@@ -2,7 +2,7 @@ import { stringify } from '@decimalturn/toml-patch';
 
 import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import type { Level, WrittenSettings } from '#cli/types/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 

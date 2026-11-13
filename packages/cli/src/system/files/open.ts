@@ -1,9 +1,10 @@
 import { chmodSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, rmSync, unlinkSync } from 'node:fs';
 
 import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import { buildWriteError, GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import {
     buildContainedPath,
+    buildWriteError,
     preparePath,
     readBoundedFile,
     readBoundedKeepingLinks,
@@ -11,7 +12,7 @@ import {
 } from '#cli/system/files/bounded.ts';
 import { readContainedPath } from '#cli/system/files/reads.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Files } from '#cli/types/system.ts';
 
 function createBoundedFolder(root: string, path: string): void {

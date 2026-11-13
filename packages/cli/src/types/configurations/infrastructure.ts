@@ -43,5 +43,3 @@ export type SupabaseProjectFile = z.infer<typeof supabaseProjectFileSchema>;
 export type FunctionEntrypoint = { path: string; importMap?: string | undefined };
 
 export type ComposeHit = { kind: keyof typeof SERVICE_SECURITY_RULES; node: Node };
-
-export type DirectiveScan = { token: string | undefined; end: number };

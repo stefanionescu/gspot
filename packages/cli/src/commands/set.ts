@@ -23,7 +23,7 @@ import { formatSettingValueError } from '#cli/settings/validation/messages.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type {
     CommandDefinition,
     ParsedSettingValue,

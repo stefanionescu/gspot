@@ -1,7 +1,7 @@
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
 
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {

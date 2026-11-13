@@ -5,8 +5,8 @@ import {
     listCodeFiles,
     listSourceExtensions,
 } from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
 import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

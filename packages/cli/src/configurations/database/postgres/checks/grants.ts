@@ -5,7 +5,7 @@ import {
     listUnfrozenMigrations,
     readParsedMigrations,
 } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

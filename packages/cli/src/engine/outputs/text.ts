@@ -1,11 +1,9 @@
-import { realpathSync } from 'node:fs';
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { FILE_LINK, LEADING_DOT_SLASH, MISSING_PATH_CODES } from '#cli/config/engine.ts';
+import { FILE_LINK, LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
-import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import { findCanonicalPath, isInside } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
 import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 import type { CheckOutput } from '#cli/types/manifests.ts';
@@ -25,15 +23,6 @@ function isLinkInRoot(message: string, root: string): boolean {
     if (link === undefined) return true;
     const target = fileURLToPath(link);
     return isInside(relative(root, target)) || isInside(relative(findCanonicalPath(root) ?? root, target));
-}
-
-export function findCanonicalPath(path: string): string | undefined {
-    try {
-        return convertToPosixPath(realpathSync.native(path));
-    } catch (error) {
-        if ([...MISSING_PATH_CODES].some((code) => hasErrorCode(error, code))) return undefined;
-        throw error;
-    }
 }
 
 export function parseRegexFindings(output: ToolOutput): Finding[] {

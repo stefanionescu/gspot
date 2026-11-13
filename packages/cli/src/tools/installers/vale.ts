@@ -19,8 +19,8 @@ import {
 } from '#cli/config/tools/vale.ts';
 import { getTool } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/folders.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildToolAvailability, inspectTool } from '#cli/tools/inspect.ts';
 import { downloadArchive, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';

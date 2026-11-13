@@ -24,8 +24,9 @@ import {
     TEMPORARY_FILE_PREFIX,
     TEMPORARY_FILE_SUFFIX,
     WRITABLE_FILE,
+    WRITE_FAILURE_CODES,
 } from '#cli/config/system.ts';
-import { buildWriteError, GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { splitSystemPath } from '#cli/system/paths.ts';
 import type { FileContents } from '#cli/types/system.ts';
 
@@ -65,6 +66,16 @@ function writeStagedFile(path: string, contents: FileContents): void {
 /**
 Build the absolute path of a file after a check that every parent names a real folder, not a link.
 */
+export function buildWriteError(path: string, error: unknown): unknown {
+    if (WRITE_FAILURE_CODES.some((code) => hasErrorCode(error, code)))
+        return new GspotError(
+            'filesystem',
+            `Cannot write ${path}. Check its permissions and whether the filesystem is read-only, then run the command again.`,
+            { cause: error },
+        );
+    return error;
+}
+
 export function buildContainedPath(
     root: string,
     path: string,

@@ -5,7 +5,7 @@ import {
     listSourceExtensions,
 } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 import { extractParentFolder, isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

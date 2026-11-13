@@ -16,9 +16,10 @@ import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
 import { parseComponentSources } from '#cli/parsers/code/javascript.ts';
 import { listSqlTokens } from '#cli/parsers/code/sql.ts';
-import { getTomlRange, parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { blankText, getPosition, replaceRanges } from '#cli/system/text.ts';
+import { blankText, getPosition, replaceRanges } from '#cli/system/text/positions.ts';
 import type { CommentParser, GrammarName, ParseCache, SourceComment, SourcePosition } from '#cli/types/parsers.ts';
 import type { TextRange } from '#cli/types/system.ts';
 
@@ -173,7 +174,7 @@ export async function parseComments(
     cache?: ParseCache,
 ): Promise<SourceComment[]> {
     const lowerPath = path.toLowerCase();
-    if (DECLARATION_EXTENSIONS.some((extension) => lowerPath.endsWith(extension)))
+    if (DECLARATION_EXTENSIONS.includes(extractExtension(lowerPath)))
         return parseGrammarComments('typescript', text, { cache });
     const grammar =
         findGrammarByExtension(lowerPath) ?? Object.entries(TAG_GRAMMARS).find(([tag]) => tags.includes(tag))?.[1];

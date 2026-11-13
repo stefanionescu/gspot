@@ -1,9 +1,6 @@
 import { readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
 
-import { fromMarkdown } from 'mdast-util-from-markdown';
-import { visit } from 'unist-util-visit';
-
 import {
     BUN_RUN,
     CHANGELOG_FILE,
@@ -32,20 +29,23 @@ import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
 import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 import { getScalarSetting } from '#cli/engine/tool-runs/placeholders.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { extractProseLines } from '#cli/parsers/formats/markdown.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { miseTasksSchema } from '#cli/schemas/configurations.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeGlob, includeParentFolders, listEnclosingFolders, listExecutableNames } from '#cli/system/paths.ts';
+import { includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
+import { buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';
+import { listExecutableNames } from '#cli/system/processes/programs.ts';
 import { isTable } from '#cli/system/tables.ts';
-import type { PathIndex, ProseLine, TaskNames } from '#cli/types/configurations/general.ts';
+import type { PathIndex, TaskNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import type { ProseLine } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
@@ -204,27 +204,6 @@ function isCommandFence(language: string | null | undefined, written: string | n
     );
 }
 
-function extractProseLines(text: string): ProseLine[] {
-    const lines: ProseLine[] = [];
-    const addLines = (
-        value: string,
-        position: { start: { line: number } } | undefined,
-        { isFenced }: { isFenced: boolean },
-    ): void => {
-        const first = (position?.start.line ?? 1) + (isFenced ? 1 : 0);
-        for (const [index, line] of value.split('\n').entries())
-            lines.push({ number: first + index, text: line, command: isFenced });
-    };
-    visit(fromMarkdown(text), (node) => {
-        if (node.type === 'code' && isCommandFence(node.lang, node.meta))
-            addLines(node.value, node.position, { isFenced: true });
-        else if (node.type === 'definition') addLines(node.url, node.position, { isFenced: false });
-        else if (node.type === 'text' || node.type === 'inlineCode')
-            addLines(node.value, node.position, { isFenced: false });
-    });
-    return lines;
-}
-
 function extractPathTokens(line: string): string[] {
     let text = line;
     for (const pattern of REMOTE_ARGUMENTS) text = text.replaceAll(pattern, '');
@@ -268,7 +247,9 @@ function checkMissingPaths(session: CheckSession, planned: PlannedCheck): CheckF
         const index: PathIndex = { paths: repositoryPaths, isIgnored, tasks: readTaskNames(session, scopePath) };
         return sources.flatMap((file) => {
             const text = readText(session.cache, file.path);
-            return extractProseLines(text).flatMap((prose) => validateProseLine(file.path, prose, index));
+            return extractProseLines(text, isCommandFence).flatMap((prose) =>
+                validateProseLine(file.path, prose, index),
+            );
         });
     });
     const narrowed = session.selection?.paths;

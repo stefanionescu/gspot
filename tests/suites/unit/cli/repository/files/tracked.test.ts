@@ -6,7 +6,7 @@ import { testdir } from 'testdirs';
 
 import { listRepositoryFiles } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';

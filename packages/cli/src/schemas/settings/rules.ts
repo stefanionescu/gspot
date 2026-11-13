@@ -16,7 +16,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
 import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {

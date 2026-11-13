@@ -3,12 +3,14 @@ import { dirname, join, relative } from 'node:path';
 
 import which from 'which';
 
-import { GIT_METADATA_NAME, OUTSIDE_PROGRAMS } from '#cli/config/system.ts';
+import { EXECUTABLE_LAYOUTS, GIT_METADATA_NAME, OUTSIDE_PROGRAMS } from '#cli/config/system.ts';
 import { buildSpawnEnvironment, foldVariableName } from '#cli/system/environment.ts';
 import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
 import type { SpawnOptions } from '#cli/types/system.ts';
 
 const programPaths = new Map<string, string>();
+
+export const executableLayout = process.platform === 'win32' ? EXECUTABLE_LAYOUTS.windows : EXECUTABLE_LAYOUTS.posix;
 
 function findRepositoryRoot(): string | undefined {
     for (let folder = process.cwd(); ; folder = dirname(folder)) {
@@ -28,6 +30,10 @@ export function filterOutsidePaths(paths: readonly string[], keptFolder?: string
         const local = convertToPosixPath(relative(root, path));
         return !isInside(local) || (keptFolder !== undefined && local.startsWith(`${keptFolder}/`));
     });
+}
+
+export function listExecutableNames(name: string): string[] {
+    return executableLayout.executableSuffixes.map((suffix) => name + suffix);
 }
 
 export function findProgram(name: string, searchPath?: string): string | undefined {

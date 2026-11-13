@@ -30,10 +30,10 @@ import {
 import { LINE_BREAK } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlDocuments, parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { hasToolSection, parseSharedFile } from '#cli/repository/conflicts.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { lintCommandPackageSchema, preCommitConfigSchema } from '#cli/schemas/repository.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type {

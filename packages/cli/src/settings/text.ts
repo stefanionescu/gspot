@@ -4,17 +4,12 @@ import { stringify } from '@decimalturn/toml-patch';
 
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { FIRST_TABLES, LAST_TABLES, ROOT_KEYS, TOML_FORMAT } from '#cli/config/settings/validation.ts';
-import {
-    buildPatchedToml,
-    getTomlRange,
-    isTomlKind,
-    parseTomlDocument,
-    parseTomlFile,
-    parseTomlSyntax,
-} from '#cli/parsers/formats/toml.ts';
+import { buildPatchedToml } from '#cli/parsers/formats/toml/edit.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { getTomlRange, isTomlKind, parseTomlDocument, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { findValueAt, normalizeTables } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { KeyPath, TomlBlock, TomlValue } from '#cli/types/parsers.ts';
 import type { Settings, TaploLayout, TomlTable } from '#cli/types/settings.ts';
 

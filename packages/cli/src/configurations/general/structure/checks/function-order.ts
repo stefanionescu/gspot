@@ -7,9 +7,10 @@ import {
     SCRIPT_FUNCTION_VALUES,
     TEST_CALL_NAMES,
 } from '#cli/config/configurations/structure.ts';
-import { selectGrammar, visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { TopLevelFunction } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

@@ -12,7 +12,7 @@ import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

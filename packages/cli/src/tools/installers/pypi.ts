@@ -27,14 +27,16 @@ import {
 } from '#cli/config/tools/installers.ts';
 import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { uvLockfileSchema, uvProjectSettingsSchema, uvSettingsSchema } from '#cli/schemas/tools.ts';
-import { GspotError, tryParseFile } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { compareText, formatCount } from '#cli/system/text.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { formatUnavailableNote } from '#cli/tools/inspect.ts';
 import {
     assertCredentialFreeLockfile,

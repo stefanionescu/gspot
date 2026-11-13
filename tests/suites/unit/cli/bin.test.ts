@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { validateRuntimeVersion } from '#cli/system/runtime.ts';
+import { validateRuntimeVersion } from '#cli/system/package/runtime.ts';
 import { CLI_BIN } from '#tests/setup/cli/commands.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';

@@ -2,7 +2,7 @@ import type { Node, ParseResult } from '@pgsql/types';
 
 import { DOLLAR_TAG_BLOCKER, IDENTIFIER_START, WORD_CHARACTER } from '#cli/config/parsers/code.ts';
 import { remember } from '#cli/system/cache.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type {
     BlankedSql,
     MatchedToken,

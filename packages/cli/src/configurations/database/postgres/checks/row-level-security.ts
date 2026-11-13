@@ -17,7 +17,7 @@ import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres
 import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { Migration } from '#cli/types/configurations/database.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

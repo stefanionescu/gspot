@@ -12,14 +12,15 @@ import {
     PROJECT_DEPENDENCIES_MESSAGE,
     ROOT_FOLDER_NAME,
 } from '#cli/config/tools/programs.ts';
-import { listProjectDependencyNames, readPackageJson } from '#cli/repository/dependencies.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { selectInstallCommand } from '#cli/repository/version-pin.ts';
 import { remember } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { isInside, listEnclosingFolders } from '#cli/system/paths.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { listExecutablePaths, listRepositoryExecutablePaths, readToolBinPaths } from '#cli/tools/locate.ts';
 import { findInstalledDependency, readToolProjectPackage } from '#cli/tools/packages.ts';
 import { findMisePin, findPackagePin } from '#cli/tools/pins.ts';

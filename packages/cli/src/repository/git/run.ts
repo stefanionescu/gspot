@@ -22,7 +22,7 @@ import { decodeGitPaths } from '#cli/repository/git/output.ts';
 import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isInside } from '#cli/system/paths.ts';
-import { runProcess, streamProcess } from '#cli/system/processes.ts';
+import { runProcess, streamProcess } from '#cli/system/processes/run.ts';
 import type { GitEnvironment, GitLookup } from '#cli/types/repository.ts';
 import type { CancelableSpawnOptions, SpawnResult, StdoutReader } from '#cli/types/system.ts';
 

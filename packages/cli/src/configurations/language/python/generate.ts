@@ -28,13 +28,12 @@ import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts
 import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/scopes.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { isInScope } from '#cli/system/paths.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Pyproject } from '#cli/types/parsers.ts';
 

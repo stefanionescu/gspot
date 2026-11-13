@@ -1,7 +1,7 @@
 import { relative, resolve } from 'node:path';
 
 import { LINE_FEED } from '#cli/config/repository/git.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { reportedTypoSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';

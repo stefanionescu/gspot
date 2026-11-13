@@ -1,18 +1,6 @@
 import { posix } from 'node:path';
 
-import {
-    type Alias,
-    CST,
-    type Document,
-    isAlias,
-    isNode,
-    isScalar,
-    LineCounter,
-    type Node,
-    parseAllDocuments,
-    type Scalar,
-    visit,
-} from 'yaml';
+import { type Alias, CST, type Document, isAlias, isNode, isScalar, type Node, type Scalar, visit } from 'yaml';
 
 import {
     YAML_COMMIT_USE,
@@ -26,6 +14,7 @@ import {
     YAML_VERSION_COMMENT,
 } from '#cli/config/configurations/language.ts';
 import { YAML_EXPLANATIONS } from '#cli/configurations/language/yaml/explanations.ts';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { YamlAnchorToken, YamlFinding } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -148,8 +137,7 @@ function listDocumentFindings(text: string, document: Document.Parsed): YamlFind
 function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path: file }) => {
         const text = readText(session.cache, file);
-        const lines = new LineCounter();
-        const documents = parseAllDocuments(text, { lineCounter: lines, keepSourceTokens: true, prettyErrors: false });
+        const { documents, findPosition } = parseYamlPositions(text);
         const findings = documents.flatMap((document) => listDocumentFindings(text, document));
         if (documents.length > 1)
             findings.push({
@@ -160,7 +148,7 @@ function checkYaml(session: CheckSession, planned: PlannedCheck): CheckFinding[]
         if (file.endsWith('.yaml') && !YAML_REQUIRED_NAMES.has(posix.basename(file)))
             findings.push({ offset: 0, rule: YAML_RULES.extension, message: YAML_MESSAGES.extension });
         return findings.map(({ offset, rule, message }) => {
-            const { line, col } = lines.linePos(offset);
+            const { line, col } = findPosition(offset);
             return { file, line, column: col, rule, message };
         });
     });

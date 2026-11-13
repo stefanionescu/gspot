@@ -23,8 +23,8 @@ import { listApplicableTables } from '#cli/settings/inherit.ts';
 import { joinScopeSelector } from '#cli/settings/paths.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { compareText } from '#cli/system/text.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Scope, Settings } from '#cli/types/settings.ts';
 

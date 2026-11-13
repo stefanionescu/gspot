@@ -2,7 +2,7 @@ import { posix } from 'node:path';
 
 import { listOwnTestScopes, selectCheckCommand } from '#cli/engine/plan.ts';
 import { runCommandCheck } from '#cli/engine/tool-runs/check.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
 

@@ -5,12 +5,12 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
-import { detectConfigurations } from '#cli/repository/detect.ts';
+import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
 import { classifyFile, hasGeneratedHeader } from '#cli/repository/files/classify.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { compareText } from '#cli/system/text.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { GENERATED_HEADERS, GENERATED_PATH_CASES, NOT_GENERATED, SHEBANGS } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

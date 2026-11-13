@@ -16,8 +16,8 @@ import { listDockerInstructions } from '#cli/configurations/infrastructure/docke
 import { DOCKERIGNORE_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { selectScope } from '#cli/repository/scopes.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type { DockerIgnoredSource } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

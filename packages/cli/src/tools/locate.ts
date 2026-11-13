@@ -24,15 +24,20 @@ import {
     TOOL_ENVIRONMENT,
 } from '#cli/config/tools/programs.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
 import { remember } from '#cli/system/cache.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { convertToPosixPath, executableLayout, isInside, listExecutableNames } from '#cli/system/paths.ts';
-import { runProcess } from '#cli/system/processes.ts';
-import { filterOutsidePaths, findProgram } from '#cli/system/programs.ts';
+import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import {
+    executableLayout,
+    filterOutsidePaths,
+    findProgram,
+    listExecutableNames,
+} from '#cli/system/processes/programs.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
 import { buildMiseInstall, listMisePins } from '#cli/tools/pins.ts';
 import type { Files, SpawnResult } from '#cli/types/system.ts';
 import type { ExecutableList, ExecutableSearch, MiseBinPaths, MiseTrust, ToolLookupSession } from '#cli/types/tools.ts';

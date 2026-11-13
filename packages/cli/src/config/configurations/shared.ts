@@ -1,5 +1,6 @@
 import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import type { GrammarName } from '#cli/types/parsers.ts';
 
 // bash scripts
 export const BASH_SOURCE_COMMANDS = new Set(['source', '.']);
@@ -19,6 +20,15 @@ export const REACT_FILES = ['**/*.{js,jsx,ts,tsx}'] as const;
 // generator outputs
 export const GENERATOR_IGNORED_FOLDERS = [NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER] as const;
 export const GENERATOR_OUTPUT_RULES = { stale: 'stale', missing: 'missing', untracked: 'untracked' } as const;
+
+// grammar selection
+export const GRAMMAR_CONFIGURATIONS: ReadonlySet<string> = new Set([
+    'bash',
+    'swift',
+    'python',
+    'javascript',
+    'typescript',
+] satisfies readonly GrammarName[]);
 
 // ignore sections
 export const IGNORE_SECTION_TITLES = {

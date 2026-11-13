@@ -24,15 +24,16 @@ import {
     NETWORK_ADVICE,
     UV_TOOL,
 } from '#cli/config/tools/installers.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { miseLockfileSchema } from '#cli/schemas/tools.ts';
 import { readHost } from '#cli/system/environment.ts';
-import { GspotError, tryParseFile } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { getRequired, isTable } from '#cli/system/tables.ts';
-import { formatCount } from '#cli/system/text.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 import { buildMiseTrust, readMiseBinPaths, readToolBinPaths } from '#cli/tools/locate.ts';

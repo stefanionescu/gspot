@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { INVALID_LICENSES, REVIEWED_REASON, VALID_LICENSES } from '#tests/config/settings/parse.ts';
 import {
     BOUNDARY_IMPORT_RULES,

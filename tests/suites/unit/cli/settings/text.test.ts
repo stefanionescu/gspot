@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 
 import { buildInitSettings } from '#cli/generation/setup/settings.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { addScopeTable, buildEditedSettings, setKey } from '#cli/settings/edit.ts';
 import { readSettingsFile } from '#cli/settings/file.ts';

@@ -12,7 +12,7 @@ import {
     TABLE_PARAMETERS,
 } from '#cli/config/configurations/naming.ts';
 import { listNodeFields, listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { Identifier, IdentifierRead, SqlName } from '#cli/types/configurations/general.ts';
 import type { SqlStatementVisitors } from '#cli/types/configurations/shared.ts';
 import type { SqlFile, SqlStatement } from '#cli/types/parsers.ts';

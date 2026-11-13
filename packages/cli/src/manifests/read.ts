@@ -2,12 +2,14 @@ import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
 
 import { CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT, MANIFEST_FILE, RULES_FOLDER } from '#cli/config/manifests.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { formatZodIssue } from '#cli/parsers/validation.ts';
 import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import { buildAssetPath, listAssets } from '#cli/system/assets.ts';
-import { formatZodIssue, GspotError } from '#cli/system/errors.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { buildAssetPath, listAssets } from '#cli/system/package/assets.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { compareText, formatSimilarNames } from '#cli/system/text.ts';
+import { formatSimilarNames } from '#cli/system/text/messages.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type {
     Check,
     Configuration,

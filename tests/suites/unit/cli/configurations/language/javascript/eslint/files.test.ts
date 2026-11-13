@@ -5,7 +5,7 @@ import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
 import { listCodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import {
     EXTENSIONLESS_SCRIPT_CASES,
     EXTENSIONLESS_SCRIPT_RULES,

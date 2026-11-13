@@ -151,7 +151,6 @@ export const KNIP_ISSUE_MESSAGES = {
     unresolved: 'Unresolved import',
 } as const;
 export const LEADING_DOT_SLASH = /^\.\//u;
-export const MISSING_PATH_CODES: ReadonlySet<string> = new Set(['ENOENT', 'ENOTDIR']);
 export const MISSING_RULE_HELP = 'This comment names a rule of a plugin that gspot does not run. Delete the comment.';
 export const MISSING_RULE_MESSAGE = /^Definition for rule '.+' was not found\.$/u;
 export const NO_OUTPUT_MESSAGE = 'The command printed nothing; it should print a JSON report.';

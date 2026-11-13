@@ -1,8 +1,7 @@
 import { DOCS_RULES, LICENSE_PATH, MISSING_LICENSE_MESSAGE, README_FILE } from '#cli/config/configurations/docs.ts';
 import { LICENSE_FILE } from '#cli/config/repository/files.ts';
 import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { formatScope } from '#cli/system/text.ts';
+import { formatScope, joinScope } from '#cli/repository/scopes.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

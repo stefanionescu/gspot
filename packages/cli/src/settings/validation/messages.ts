@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { SETTINGS_PAGE_SENTENCE, TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import { getSettingType, unwrapSettingInput } from '#cli/settings/lookup.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
 import type { SettingsError } from '#cli/types/settings.ts';

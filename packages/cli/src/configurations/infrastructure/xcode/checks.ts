@@ -31,16 +31,17 @@ import {
 } from '#cli/configurations/infrastructure/xcode/explanations.ts';
 import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseBuildTargets, parseProjectSources } from '#cli/parsers/projects/xcode.ts';
+import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
+import { parseBuildTargets } from '#cli/parsers/projects/xcode/targets.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
 import { assetContentsSchema, stringsFileSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { escapeRegExp, getPosition } from '#cli/system/text.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { TargetFolder } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 function extractAssetSetName(path: string): string {
@@ -222,10 +223,6 @@ function checkBuildSettings(session: Session, planned: PlannedCheck): CheckFindi
                 .map(({ rule, message }) => ({ file: path, line: 1, rule, message })),
         );
     });
-}
-
-export function isInTargetFolder(file: string, folders: TargetFolder[]): boolean {
-    return folders.some(({ path, excluded }) => file.startsWith(path) && !excluded.has(file));
 }
 
 export const XCODE_CHECKS: Readonly<Record<string, CheckCode>> = {

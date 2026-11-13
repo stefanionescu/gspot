@@ -12,10 +12,11 @@ import {
 import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { listRootPrefixes, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import { buildDashSafePath } from '#cli/engine/tool-runs/batches.ts';
 import { findToolName, readShippedChecks } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildDashSafePath, convertToPosixPath } from '#cli/system/paths.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import { canReadRuleExplanations } from '#cli/tools/rule-explanations.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
 import type {

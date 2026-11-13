@@ -1,4 +1,4 @@
-import { isMap, isScalar, isSeq, LineCounter, parseDocument, type YAMLMap } from 'yaml';
+import { isMap, isScalar, isSeq, type YAMLMap } from 'yaml';
 
 import {
     DOCKER_SOCKET,
@@ -7,6 +7,7 @@ import {
     UNCONFINED_OPTION,
 } from '#cli/config/configurations/docker.ts';
 import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { ComposeHit } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -47,15 +48,15 @@ that does not parse gets no finding here, and docker/compose reports it.
 */
 function checkServiceSecurity(session: Session, planned: PlannedCheck): CheckFinding[] {
     return planned.files.flatMap(({ path }) => {
-        const lines = new LineCounter();
-        const document = parseDocument(readText(session.cache, path), { lineCounter: lines });
-        const services = document.errors.length > 0 ? undefined : document.get('services', true);
+        const { documents, findPosition } = parseYamlPositions(readText(session.cache, path));
+        const document = documents.length === 1 ? documents[0] : undefined;
+        const services = document?.errors.length === 0 ? document.get('services', true) : undefined;
         if (!isMap(services)) return [];
         return services.items
             .flatMap(({ value }) => (isMap(value) ? listServiceHits(value) : []))
             .map(({ kind, node }) => ({
                 file: path,
-                line: lines.linePos(node.range?.[0] ?? 0).line,
+                line: findPosition(node.range?.[0]).line,
                 rule: SERVICE_SECURITY_RULES[kind],
                 message: SERVICE_SECURITY_MESSAGES[kind],
             }));

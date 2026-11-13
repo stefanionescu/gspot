@@ -11,8 +11,9 @@ import {
     readToolDisabledRules,
 } from '#cli/configurations/rule-options.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { buildModuleSpecifier, isInScope } from '#cli/system/paths.ts';
+import { buildModuleSpecifier } from '#cli/system/paths.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildFunctionValueRule(functions: readonly string[]): unknown {

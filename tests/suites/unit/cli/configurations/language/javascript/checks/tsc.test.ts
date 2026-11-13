@@ -8,7 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
 import { JAVASCRIPT_PROJECT_FILES, JSCONFIG_CASES } from '#tests/config/configurations/javascript/checks.ts';

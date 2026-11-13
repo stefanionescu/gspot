@@ -10,6 +10,7 @@ import {
     PIPFILE,
     PYPROJECT_TOML,
     PYTEST_TABLE,
+    PYTHON_NAME_SEPARATORS,
     REQUIREMENT_NAME,
     REQUIREMENT_NAME_END,
     REQUIREMENTS_TXT,
@@ -19,10 +20,10 @@ import { LINE_BREAK } from '#cli/config/system.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
-import { normalizePythonName } from '#cli/parsers/projects/lockfiles.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { packageJsonSchema, pipfileSchema, pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import type {
     Dependencies,
     DependencyFile,
@@ -31,6 +32,7 @@ import type {
     Pyproject,
     PythonDependency,
 } from '#cli/types/parsers.ts';
+import type { RunCache } from '#cli/types/system.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();
@@ -165,6 +167,10 @@ async function parseSwiftPackage(path: string, text: string): Promise<Dependency
     };
 }
 
+export function normalizePythonName(name: string): string {
+    return name.toLowerCase().replaceAll(PYTHON_NAME_SEPARATORS, '-');
+}
+
 export function parseRequirements(path: string, text: string): DependencyFile {
     const dependencies: Dependencies = {};
     for (const line of text.replaceAll(LINE_CONTINUATION, '').split(LINE_BREAK)) {
@@ -179,6 +185,11 @@ export function parseRequirements(path: string, text: string): DependencyFile {
         dependencies,
         installed: dependencies,
     };
+}
+
+export function readPackageJson(source: string | RunCache, path: string): PackageJson | undefined {
+    const text = findText(source, path);
+    return text === undefined ? undefined : parseJsonFile(path, text, packageJsonSchema);
 }
 
 export const DEPENDENCY_FILE_PARSERS: ReadonlyMap<string, DependencyFileParser> = new Map<string, DependencyFileParser>(

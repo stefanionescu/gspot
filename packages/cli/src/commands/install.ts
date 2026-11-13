@@ -10,7 +10,7 @@ import { openSession } from '#cli/engine/session.ts';
 import { listHostCheckTools } from '#cli/engine/tools.ts';
 import { listGeneratedChangeLines, writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { runCancelableCommand } from '#cli/system/terminal.ts';
+import { runCancelableCommand } from '#cli/system/processes/signals.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';

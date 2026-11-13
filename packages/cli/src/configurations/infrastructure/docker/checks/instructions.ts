@@ -21,7 +21,7 @@ import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

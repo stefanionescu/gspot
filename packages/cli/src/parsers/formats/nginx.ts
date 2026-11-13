@@ -7,8 +7,8 @@ import {
     WHITESPACE_CHARACTER,
     WORD_START_STOPS,
     WORD_STOPS,
-} from '#cli/config/configurations/nginx.ts';
-import type { DirectiveScan } from '#cli/types/configurations/infrastructure.ts';
+} from '#cli/config/parsers/formats.ts';
+import type { DirectiveScan } from '#cli/types/parsers.ts';
 
 function findQuotedEnd(text: string, start: number): number {
     const quote = text.charAt(start);

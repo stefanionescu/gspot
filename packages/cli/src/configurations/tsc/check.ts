@@ -6,12 +6,12 @@ import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configur
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles } from '#cli/engine/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { selectScopePath } from '#cli/repository/scopes.ts';
 import { listWorkspaceFolders } from '#cli/repository/workspaces.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';

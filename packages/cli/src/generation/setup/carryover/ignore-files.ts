@@ -10,7 +10,7 @@ import { LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts
 import { isGspotPath } from '#cli/repository/files/classify.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
 
 function convertIgnoreFile(path: string, text: string, tracked: string[]): { paths: string[]; dropped: string[] } {

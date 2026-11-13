@@ -20,8 +20,8 @@ import {
     listPlannedIgnoreSections,
 } from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import { escapeGlob } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { ConfigBuilder, IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 // typos reads every file as English. The section comes first, so that a later path that you ignore still wins.

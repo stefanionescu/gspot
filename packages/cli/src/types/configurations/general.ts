@@ -7,7 +7,7 @@ import type { namingExceptionSchema } from '#cli/schemas/manifests/fields.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { CheckFinding, Finding } from '#cli/types/engine/run.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { NumberedLine, SqlFile } from '#cli/types/parsers.ts';
+import type { SqlFile } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Defined, ImportRule, ParsedSettings, TableSettings } from '#cli/types/settings.ts';
 
@@ -18,8 +18,6 @@ export type PathIndex = {
     isIgnored: (path: string) => boolean;
     tasks: TaskNames;
 };
-
-export type ProseLine = NumberedLine & { command: boolean };
 
 export type SuppressionSyntax = {
     covered: ReadonlySet<string>;
@@ -120,13 +118,7 @@ export type FolderChild = { name: string; kind: 'file' | 'folder' };
 
 export type ParsedSource = { path: string; language: ParsedLanguage; rootNode: Node; captures: Map<string, Node[]> };
 
-export type LocatedImport = { module: string; path: string; node: Node };
-
 export type ImportOwners = { node: Node; module: string; owners: Array<number | undefined> };
-
-export type PythonSearch = { files: ReadonlySet<string>; roots: string[]; externals: ReadonlySet<string> };
-
-export type SwiftModule = { name: string; files: string[] };
 
 export type RuleLookup = { rules: ImportRule[]; findOwner: (path: string) => number | undefined; allowed: string[][] };
 

@@ -15,7 +15,7 @@ import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/fra
 import { getConfigPath } from '#cli/engine/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/tool-runs/tool.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { parseToolOutput } from '#cli/parsers/formats/json.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
 import { readText } from '#cli/system/files/reads.ts';

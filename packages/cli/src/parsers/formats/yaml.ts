@@ -1,8 +1,10 @@
-import { parse, parseAllDocuments } from 'yaml';
+import { LineCounter, parse, parseAllDocuments } from 'yaml';
 import type { z } from 'zod';
 
-import { MESSAGE_END, YAML_OPTIONS } from '#cli/config/parsers/formats.ts';
-import { GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { MESSAGE_END, YAML_OPTIONS, YAML_POSITION_OPTIONS } from '#cli/config/parsers/formats.ts';
+import { parseFileFields } from '#cli/parsers/validation.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { PositionedYaml } from '#cli/types/parsers.ts';
 
 export function parseYamlFile(path: string, text: string): unknown;
 
@@ -30,4 +32,14 @@ export function parseYamlDocuments(path: string, text: string): unknown[] {
             });
         return document.toJS() as unknown;
     });
+}
+
+/**
+Parse every document of a YAML text and keep its line starts. The documents keep their syntax errors, and
+`findPosition` gives the line and column of an offset, or of the start of the text when a node has no range.
+*/
+export function parseYamlPositions(text: string): PositionedYaml {
+    const lines = new LineCounter();
+    const documents = parseAllDocuments(text, { ...YAML_POSITION_OPTIONS, lineCounter: lines });
+    return { documents, findPosition: (offset = 0) => lines.linePos(offset) };
 }

@@ -21,7 +21,8 @@ import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { printedRulesSchema } from '#cli/schemas/generation.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { escapeRegExp, quoteArgument } from '#cli/system/text.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/locate.ts';
 import { runTool } from '#cli/tools/run.ts';
 import type {

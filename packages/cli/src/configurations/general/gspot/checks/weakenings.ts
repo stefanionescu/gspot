@@ -12,15 +12,15 @@ import {
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { getSettingValue, listSettingsTables, listWrittenKeys } from '#cli/settings/inherit.ts';
 import { buildSettings, buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { isInScope } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type { Weakening } from '#cli/types/configurations/general.ts';
 import type { BuiltInCheckResult, CheckCode, CheckSession } from '#cli/types/engine/run.ts';

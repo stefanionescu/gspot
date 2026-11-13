@@ -12,10 +12,10 @@ import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/set
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { listToolNames } from '#cli/manifests/read.ts';
 import { listSelectedConfigurations } from '#cli/manifests/select.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { selectProposedConfigurations } from '#cli/repository/detection/proposals.ts';
 import { listLintCommands, listOtherFormatScripts } from '#cli/repository/lint-commands.ts';
 import { detectPackageManager } from '#cli/repository/package-manager.ts';
-import { selectProposedConfigurations } from '#cli/repository/proposals.ts';
 import { readRepository } from '#cli/repository/read.ts';
 import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
 import { readRepositorySetup } from '#cli/repository/setup.ts';
@@ -26,7 +26,7 @@ import { parseSettings } from '#cli/settings/parse.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { includeParentFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type {

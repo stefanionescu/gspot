@@ -1,6 +1,6 @@
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';

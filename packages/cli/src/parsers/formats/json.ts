@@ -1,12 +1,13 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import { applyEdits, modify, parse, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
-import { z } from 'zod';
+import type { z } from 'zod';
 
 import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
-import { CheckStop, GspotError, parseFileFields } from '#cli/system/errors.ts';
+import { parseFileFields } from '#cli/parsers/validation.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
@@ -44,21 +45,4 @@ export function openJsonFile(path: string, text: string): EditableFile {
         },
         getText: () => editedText,
     };
-}
-
-export function parseToolOutput(tool: string, text: string): unknown;
-
-export function parseToolOutput<Value>(tool: string, text: string, schema: z.ZodType<Value>): Value;
-
-/**
-Parse and validate the output of a tool, and keep its untrusted contents out of errors.
-*/
-export function parseToolOutput(tool: string, text: string, schema?: z.ZodType): unknown {
-    try {
-        const parsed: unknown = JSON.parse(text);
-        return schema === undefined ? parsed : schema.parse(parsed);
-    } catch (error) {
-        if (!(error instanceof SyntaxError) && !(error instanceof z.ZodError)) throw error;
-        throw new CheckStop('error', `${tool} printed output that gspot cannot read.`, { cause: error });
-    }
 }

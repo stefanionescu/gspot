@@ -2,12 +2,11 @@ import { LOCAL_RULE_EXTENSION, LOCAL_RULES_SETTING } from '#cli/config/engine.ts
 import { isRepositoryRun } from '#cli/engine/files.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
 import { listProjectDependencyNames } from '#cli/repository/dependencies.ts';
-import { isScopeCovered } from '#cli/repository/scopes.ts';
+import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
 import { listIgnores } from '#cli/settings/scopes.ts';
-import { buildFilenameMatcher } from '#cli/system/matchers.ts';
-import { isInScope } from '#cli/system/paths.ts';
+import { buildFilenameMatcher } from '#cli/system/patterns.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import { findMissingBuild } from '#cli/tools/pins.ts';
 import type { PlannedCheck, PlannedScope, SettingReader, Skip } from '#cli/types/engine/plan.ts';
 import type { Check, Config, Tool } from '#cli/types/manifests.ts';

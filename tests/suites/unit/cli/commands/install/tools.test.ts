@@ -10,7 +10,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import * as processes from '#cli/system/processes.ts';
+import * as processes from '#cli/system/processes/run.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';

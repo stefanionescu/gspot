@@ -4,12 +4,13 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/files.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listToolOnlyPackages } from '#cli/repository/dependencies.ts';
+import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { findProjectFolder, joinScopeGlob } from '#cli/repository/scopes.ts';
+import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
-import { extractExtension, isInScope } from '#cli/system/paths.ts';
-import { formatCount } from '#cli/system/text.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/patterns.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type {

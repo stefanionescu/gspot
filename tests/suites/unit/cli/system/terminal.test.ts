@@ -1,32 +1,10 @@
 import { expect, test } from 'bun:test';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import {
-    printError,
-    printResult,
-    printUnexpectedError,
-    printWarning,
-    runCancelableCommand,
-    setOutputOptions,
-} from '#cli/system/terminal.ts';
+import { printError, printResult, printUnexpectedError, printWarning, setOutputOptions } from '#cli/system/terminal.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { fakeTerminals } from '#tests/setup/system/fakes.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
-
-test('an aborted command returns its cancellation status and removes its signal listeners', async () => {
-    const listeners = process.listenerCount('SIGINT');
-    const result = await runCancelableCommand((signal) => {
-        process.emit('SIGINT');
-        expect(signal.aborted).toBe(true);
-        return Promise.reject(new Error('The command stopped.'));
-    }, 'The command was canceled.');
-    expect(result).toStrictEqual({
-        exitCode: 130,
-        text: 'The command was canceled.\n',
-        json: { error: 'canceled', message: 'The command was canceled.' },
-    });
-    expect(process.listenerCount('SIGINT')).toBe(listeners);
-});
 
 test('a printed result removes escape sequences and format characters but keeps the gspot colors', () => {
     using output = captureTerminal();

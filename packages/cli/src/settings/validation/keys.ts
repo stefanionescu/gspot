@@ -14,7 +14,7 @@ import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
 import { joinSettingPaths } from '#cli/settings/paths.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text.ts';
+import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text/messages.ts';
 import type { Setting } from '#cli/types/manifests.ts';
 import type {
     AvailableSettings,

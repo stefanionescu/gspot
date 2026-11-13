@@ -6,7 +6,7 @@ import { planGeneratedWrites } from '#cli/generation/write.ts';
 import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import type { StaleFile } from '#cli/types/engine/run.ts';
 import type { WritePlan } from '#cli/types/repository.ts';

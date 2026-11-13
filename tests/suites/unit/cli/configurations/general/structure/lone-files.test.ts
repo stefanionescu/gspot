@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { runChecks } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
 import { ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';

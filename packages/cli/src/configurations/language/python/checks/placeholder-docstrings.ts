@@ -4,8 +4,8 @@ import {
     PLACEHOLDERS,
     PYTHON_RULES,
 } from '#cli/config/configurations/python.ts';
+import { splitWords } from '#cli/configurations/general/naming/words.ts';
 import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
-import { splitWords } from '#cli/system/text.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

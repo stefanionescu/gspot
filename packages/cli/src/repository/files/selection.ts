@@ -1,8 +1,9 @@
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listSourceConfigurations } from '#cli/manifests/select.ts';
 import { listPathTags } from '#cli/repository/files/classify.ts';
-import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/matchers.ts';
-import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { buildFilenameMatcher, buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { CoverageScope, TrackedFile } from '#cli/types/repository.ts';
 

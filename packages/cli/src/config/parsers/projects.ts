@@ -53,6 +53,15 @@ export const PYPROJECT_TOML = 'pyproject.toml';
 export const REQUIREMENTS_TXT = 'requirements.txt';
 export const TSCONFIG_FILE = 'tsconfig.json';
 
+// swift package
+export const SWIFTPM_TARGET_FOLDERS: Readonly<Record<string, readonly string[]>> = {
+    target: ['Sources', 'Source', 'src', 'srcs'],
+    executableTarget: ['Sources', 'Source', 'src', 'srcs'],
+    macro: ['Sources', 'Source', 'src', 'srcs'],
+    testTarget: ['Tests', 'Sources', 'Source', 'src', 'srcs'],
+    plugin: ['Plugins'],
+};
+
 // tsconfig
 export const MISSING_EXTENDED_CONFIG = /^File '([^']+)' not found\.$/u;
 export const TS_EMPTY_FILES_CODE = 18_002;

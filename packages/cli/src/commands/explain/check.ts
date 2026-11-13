@@ -17,7 +17,7 @@ import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatArgumentSelector } from '#cli/settings/paths.ts';
 import { findRuleSetting } from '#cli/settings/validation/keys.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
+import { quoteArgument, quoteCommand } from '#cli/system/text/quoting.ts';
 import type { CheckExplanation, CheckIgnore, Explanation, LintRuleExplanation } from '#cli/types/commands.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
 import type { RuleExplanation, ScopeCheck, Session } from '#cli/types/tools.ts';

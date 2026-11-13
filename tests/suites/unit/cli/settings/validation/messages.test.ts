@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 
 import { parseSettings } from '#cli/settings/parse.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { KEY_PATH_CASES } from '#tests/config/settings/parse.ts';
 import { INVALID_SETTING_LOCATIONS } from '#tests/config/settings/validation.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';

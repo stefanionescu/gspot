@@ -11,7 +11,7 @@ import {
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
 import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import { quoteArgument } from '#cli/system/text.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { StartRunner } from '#cli/types/repository.ts';
 import type { GeneratedFile, HookName } from '#cli/types/tools.ts';
 

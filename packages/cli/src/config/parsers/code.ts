@@ -128,13 +128,6 @@ export const CONFIGURATION_GRAMMARS: Readonly<Record<string, ReadonlyArray<(type
 };
 export const GRAMMARS_FOLDER = 'grammars';
 export const GRAMMAR_ARCHIVE_LIMIT = 32 * BYTES_PER_MEGABYTE;
-export const GRAMMAR_CONFIGURATIONS: ReadonlySet<string> = new Set([
-    'bash',
-    'swift',
-    'python',
-    'javascript',
-    'typescript',
-] satisfies ReadonlyArray<(typeof GRAMMAR_NAMES)[number]>);
 export const GRAMMAR_EXTENSIONS: Readonly<Record<string, readonly string[]>> = {
     javascript: ['.js', '.mjs', '.cjs', '.jsx'],
     typescript: ['.ts', '.mts', '.cts'],
@@ -189,7 +182,11 @@ export const TAG_GRAMMARS: Readonly<Record<string, (typeof GRAMMAR_NAMES)[number
 // python
 export const DOCSTRING_PREFIXES = /^[RU]*[BFT][BFRTU]*["']/iu;
 export const PYTHON_EXTENSION = '.py';
+export const PYTHON_FROM_STATEMENT = 'import_from_statement';
 export const PYTHON_FUNCTION_NODES = ['function_definition', 'lambda'] as const;
+export const PYTHON_IMPORT_STATEMENT = 'import_statement';
+export const PYTHON_MODULE_SUFFIXES = ['.py', '.pyi', '/__init__.py', '/__init__.pyi'] as const;
+export const RELATIVE_IMPORT = 'relative_import';
 
 // sql
 export const DOLLAR_TAG_BLOCKER = /[\p{L}\p{N}_$]/u;

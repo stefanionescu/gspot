@@ -9,7 +9,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { getTool, listDistinctTools, readConfigurations } from '#cli/manifests/read.ts';
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import * as locate from '#cli/tools/locate.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { Tool } from '#cli/types/manifests.ts';

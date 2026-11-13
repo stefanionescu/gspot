@@ -4,7 +4,7 @@ import { removeFromList, removeKey } from '#cli/settings/edit.ts';
 import { isReasonedValue } from '#cli/settings/lookup.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import { formatNameList, formatNameState } from '#cli/system/text.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
 import type { CommandDefinition, ScopeFlags, SettingsEditOptions, UnsetOptions } from '#cli/types/commands.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';

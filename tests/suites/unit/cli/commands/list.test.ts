@@ -2,7 +2,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { LIST_SCOPE_SETTINGS } from '#tests/config/commands/lookup.ts';
 import { configurationsListOutputSchema, settingsListOutputSchema } from '#tests/schemas/setup.ts';
 import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';

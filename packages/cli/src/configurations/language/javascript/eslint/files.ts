@@ -5,10 +5,10 @@ import { COMPONENT_CONFIGURATIONS, MISE_TASKS_GLOB } from '#cli/config/configura
 import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { compareScopeDepth, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
+import { compareScopeDepth, isInScope, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
-import { buildPathMatcher, includeFolderContents } from '#cli/system/matchers.ts';
-import { escapeGlob, extractExtension, isInScope } from '#cli/system/paths.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { buildPathMatcher, escapeGlob, includeFolderContents } from '#cli/system/patterns.ts';
 import type {
     EslintBlockFields,
     EslintFileGroups,

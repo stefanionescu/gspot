@@ -10,7 +10,7 @@ import { listCheckIds, readConfigurations } from '#cli/manifests/read.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { ROOT_SETTINGS, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { AcceptedSettingValues, SettingReference, SettingVariant } from '#cli/types/settings.ts';
 

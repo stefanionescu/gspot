@@ -41,7 +41,7 @@ import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { isProcessRunning } from '#cli/system/processes.ts';
+import { isProcessRunning } from '#cli/system/processes/stop.ts';
 import type { SwiftBuildPlan, SwiftBuildSetup } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';

@@ -28,7 +28,8 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';
-import { formatNameList, formatNameState, quoteArgument } from '#cli/system/text.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type {
     CommandLocation,
     ConfigurationChange,

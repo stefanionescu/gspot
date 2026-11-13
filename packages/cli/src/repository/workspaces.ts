@@ -10,16 +10,16 @@ import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/reposito
 import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { workspaceGlobsSchema } from '#cli/schemas/repository.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { listMatchingPaths } from '#cli/system/files/folders.ts';
 import { findContainedPath, readText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath, extractParentFolder, isInScope, listEnclosingFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { RunCache } from '#cli/types/system.ts';
 

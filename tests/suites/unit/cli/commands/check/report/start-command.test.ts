@@ -6,7 +6,7 @@ import { testdir } from 'testdirs';
 
 import cliPackage from '#cli-package' with { type: 'json' };
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

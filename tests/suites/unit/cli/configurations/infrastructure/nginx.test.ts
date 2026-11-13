@@ -3,7 +3,6 @@ import { readFile } from 'node:fs/promises';
 
 import { expect, test } from 'bun:test';
 
-import { parseNginxDirectives } from '#cli/configurations/infrastructure/nginx/directives.ts';
 import { runChecks } from '#cli/engine/run.ts';
 import { getTool, readConfigurations } from '#cli/manifests/read.ts';
 import {
@@ -18,36 +17,6 @@ import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeToolExecutables } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-
-const NGINX_DIRECTIVE_CASES: Array<{ source: string; expected: Array<[string, ...string[]]> }> = [
-    {
-        source: 'location / { proxy_pass "https://api:3000"; add_header X-Value "two  spaces # text"; }',
-        expected: [
-            ['location', '/'],
-            ['proxy_pass', 'https://api:3000'],
-            ['add_header', 'X-Value', 'two  spaces # text'],
-        ],
-    },
-    {
-        source: 'set $empty ""; set $value ${upstream}; include /etc/tls#local.conf; # include /ignored;\n',
-        expected: [
-            ['set', '$empty', ''],
-            ['set', '$value', '${upstream}'],
-            ['include', '/etc/tls#local.conf'],
-        ],
-    },
-    {
-        source: String.raw`set $value "tab\tnewline\nreturn\rquote\"slash\\";`,
-        expected: [['set', '$value', 'tab\tnewline\nreturn\rquote"slash\\']],
-    },
-];
-
-test.each([...NGINX_DIRECTIVE_CASES])(
-    'parseNginxDirectives splits $source into directives and arguments',
-    ({ source, expected }) => {
-        expect(parseNginxDirectives(source)).toStrictEqual(expected);
-    },
-);
 
 test.each([...NGINX_MOUNT_CASES])(
     'nginx/syntax mounts the nginx.conf and its certificates and maps upstream hosts: $name',

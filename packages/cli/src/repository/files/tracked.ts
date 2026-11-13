@@ -3,10 +3,11 @@ import { join, posix } from 'node:path';
 
 import { GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { EXECUTABLE_BITS, EXECUTABLE_FILE, INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { findContainedPath } from '#cli/system/files/reads.ts';
-import { extractParentFolder, isInInstalledFolder, isInScope } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { GitIndexFile, ListedFile, Repository } from '#cli/types/repository.ts';
 
 function readSymlinkFile(root: string, path: string, { isTracked }: { isTracked: boolean }): ListedFile | undefined {

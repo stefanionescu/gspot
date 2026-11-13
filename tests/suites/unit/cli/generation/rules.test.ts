@@ -12,7 +12,7 @@ import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildAgentsBlock, selectRuleFiles } from '#cli/generation/rules.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 import { findSettingSchema } from '#cli/settings/lookup.ts';
-import * as assets from '#cli/system/assets.ts';
+import * as assets from '#cli/system/package/assets.ts';
 import type { Level } from '#cli/types/settings.ts';
 import { PLAYWRIGHT_RULE_CASES, RUNTIME_RULE_CASES } from '#tests/config/generation/generate.ts';
 import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';

@@ -8,11 +8,7 @@ import {
     IMPORT_RULE_CHECK_RULES,
     IMPORT_RULE_EXTENSIONS,
     PYTHON_EXTENSIONS,
-    PYTHON_FROM_STATEMENT,
-    PYTHON_IMPORT_STATEMENT,
-    PYTHON_MODULE_SUFFIXES,
     PYTHON_SOURCE_ROOTS,
-    RELATIVE_IMPORT,
     UNCOVERED_FILE_MESSAGE,
 } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
@@ -23,19 +19,15 @@ import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/expla
 import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
 import { listScriptFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listPythonImports } from '#cli/parsers/code/python.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
 import { getTable } from '#cli/settings/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
-import type {
-    ImportOwners,
-    LocatedImport,
-    PythonSearch,
-    RuleLookup,
-    SwiftModule,
-} from '#cli/types/configurations/general.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import type { ImportOwners, RuleLookup } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { PythonSearch, SwiftModule } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -181,79 +173,6 @@ async function validateSwiftImports(
         ),
     );
     return [...findings.flat(), ...(await listRefusedSwiftTypes(session, planned, lookup))];
-}
-
-function findModuleFile(folder: string, dotted: string, files: ReadonlySet<string>): string | undefined {
-    const base = posix.join(folder, ...dotted.split('.').filter((segment) => segment !== ''));
-    return PYTHON_MODULE_SUFFIXES.map((suffix) => `${base}${suffix}`).find((path) => files.has(path));
-}
-
-function findAbsoluteModule(dotted: string, search: PythonSearch): string | undefined {
-    for (const root of search.roots) {
-        const found = findModuleFile(root, dotted, search.files);
-        if (found !== undefined) return found;
-    }
-    return undefined;
-}
-
-function listImportedNames(node: Node): Array<string | undefined> {
-    const names = node
-        .childrenForFieldName('name')
-        .map((nameNode) =>
-            nameNode.type === 'aliased_import' ? (nameNode.childForFieldName('name')?.text ?? '') : nameNode.text,
-        );
-    return names.length === 0 ? [undefined] : names;
-}
-
-function listAbsoluteImports(node: Node, module: string, search: PythonSearch): LocatedImport[] {
-    return listImportedNames(node).flatMap((name) => {
-        if (name !== undefined) {
-            const inner = [module, name].join('.');
-            const innerPath = findAbsoluteModule(inner, search);
-            if (innerPath !== undefined) return [{ node, module: inner, path: innerPath }];
-        }
-        const path = findAbsoluteModule(module, search);
-        return path === undefined ? [] : [{ node, module, path }];
-    });
-}
-
-function listRelativeImports(node: Node, prefix: Node, file: string, search: PythonSearch): LocatedImport[] {
-    const dots = prefix.namedChildren.find((child) => child.type === 'import_prefix')?.text.length ?? 1;
-    const dotted = prefix.namedChildren.find((child) => child.type === 'dotted_name')?.text ?? '';
-    const folder = posix.join(posix.dirname(file), ...Array.from({ length: dots - 1 }, () => '..'));
-    const packagePath = findModuleFile(folder, dotted, search.files);
-    const packageImports = packagePath === undefined ? [] : [{ node, module: prefix.text, path: packagePath }];
-    return listImportedNames(node).flatMap((name) => {
-        if (name === undefined) return packageImports;
-        const innerPath = findModuleFile(folder, [dotted, name].filter(Boolean).join('.'), search.files);
-        if (innerPath === undefined) return packageImports;
-        const module = prefix.text.endsWith('.') ? prefix.text + name : [prefix.text, name].join('.');
-        return [{ node, module, path: innerPath }];
-    });
-}
-
-function listModuleImports(node: Node, search: PythonSearch): LocatedImport[] {
-    return listImportedNames(node).flatMap((module) => {
-        if (module === undefined || search.externals.has(module.split('.', 1)[0] ?? '')) return [];
-        const path = findAbsoluteModule(module, search);
-        return path === undefined ? [] : [{ node, module, path }];
-    });
-}
-
-function listFromImports(node: Node, file: string, search: PythonSearch): LocatedImport[] {
-    const source = node.childForFieldName('module_name');
-    if (source === null) return [];
-    if (source.type === RELATIVE_IMPORT) return listRelativeImports(node, source, file, search);
-    return search.externals.has(source.text.split('.', 1)[0] ?? '')
-        ? []
-        : listAbsoluteImports(node, source.text, search);
-}
-
-function listPythonImports(syntaxRoot: Node, file: string, search: PythonSearch): LocatedImport[] {
-    const statements = syntaxRoot.descendantsOfType([PYTHON_IMPORT_STATEMENT, PYTHON_FROM_STATEMENT]);
-    return statements.flatMap((node) =>
-        node.type === PYTHON_IMPORT_STATEMENT ? listModuleImports(node, search) : listFromImports(node, file, search),
-    );
 }
 
 /**

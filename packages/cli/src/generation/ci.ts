@@ -31,7 +31,7 @@ import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/package-managers.ts';
 import { CI_PINS } from '#cli/config/settings/schema.ts';
 import { formatHeader } from '#cli/generation/header.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import {
     buildFrozenInstallArguments,
     buildPackageManagerCommand,
@@ -40,7 +40,7 @@ import {
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readCiNode } from '#cli/repository/version-pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument, quoteCommand } from '#cli/system/text.ts';
+import { quoteArgument, quoteCommand } from '#cli/system/text/quoting.ts';
 import { getUvPin } from '#cli/tools/pins.ts';
 import type { ActionPin, FrozenLockfile, Pipeline } from '#cli/types/generation.ts';
 import type { PackageManagerPin } from '#cli/types/repository.ts';

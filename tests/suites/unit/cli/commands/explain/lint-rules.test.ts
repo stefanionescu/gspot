@@ -8,7 +8,7 @@ import { stringify } from '@decimalturn/toml-patch';
 import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
 
-import { executableLayout } from '#cli/system/paths.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import plugin from '#eslint-plugin/plugin.ts';
 import { RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';

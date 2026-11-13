@@ -13,7 +13,7 @@ import { buildIgnoreSections } from '#cli/generation/ignores.ts';
 import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import {
     IGNORE_LIST_SETTINGS,
     LANGUAGE_IGNORES,

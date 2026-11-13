@@ -1,7 +1,10 @@
-import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { posix } from 'node:path';
+
+import { GRAMMAR_CONFIGURATIONS, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { Parsed } from '#cli/types/parsers.ts';
+import type { GrammarName, Parsed } from '#cli/types/parsers.ts';
 
 export function parseCheckedFile<Value>(path: string, parse: () => Value): Parsed<Value, CheckFinding> {
     try {
@@ -17,4 +20,11 @@ export function parseCheckedFile<Value>(path: string, parse: () => Value): Parse
             },
         };
     }
+}
+
+export function selectGrammar(path: string, language: string): GrammarName | undefined {
+    if (!GRAMMAR_CONFIGURATIONS.has(language)) return undefined;
+    if (language === 'bash' && posix.extname(path) === '') return 'bash';
+    const found = findGrammarByExtension(path);
+    return found === language || (language === 'typescript' && found === 'tsx') ? found : undefined;
 }

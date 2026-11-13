@@ -7,7 +7,7 @@ import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
 import { OWNER_WRITABLE_FILE, TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { isProcessRunning } from '#cli/system/processes.ts';
+import { isProcessRunning } from '#cli/system/processes/stop.ts';
 import { printWarning } from '#cli/system/terminal.ts';
 import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 

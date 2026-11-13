@@ -4,15 +4,14 @@ import picomatch from 'picomatch';
 
 import { INI_EXTENSIONS, JSON_EXTENSION, TOML_EXTENSION, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { listProjectFolders } from '#cli/repository/detection/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/classify.ts';
-import { listProjectFolders } from '#cli/repository/scopes.ts';
-import { tryParseFile } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/matchers.ts';
+import { buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
 import { isTable } from '#cli/system/tables.ts';
-import { escapeRegExp } from '#cli/system/text.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 import type { ConflictingConfig, ManagedKeys, TrackedFile } from '#cli/types/repository.ts';
 

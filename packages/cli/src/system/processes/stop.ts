@@ -41,13 +41,23 @@ function killProcessTree(pid: number): void {
         throw new GspotError('tool', `Cannot stop the tool and its child processes: ${result.stderr}`);
 }
 
-function isGroupRunning(child: ChildProcess, pid: number): boolean {
+/**
+Send signal 0 to a process, or with a negative ID to its group, which tests that it exists without signaling it.
+
+@returns the refusal of the system, or undefined when the process or group exists.
+*/
+function findSignalRefusal(pid: number): Error | undefined {
     try {
-        process.kill(-pid, 0);
-        return true;
+        process.kill(pid, 0);
+        return undefined;
     } catch (error) {
-        return !isGroupGone(error as Error, child);
+        return error as Error;
     }
+}
+
+function isGroupRunning(child: ChildProcess, pid: number): boolean {
+    const error = findSignalRefusal(-pid);
+    return error === undefined || !isGroupGone(error, child);
 }
 
 async function askGroupToStop(child: ChildProcess, pid: number): Promise<void> {
@@ -82,6 +92,16 @@ async function stopProcessTree(child: ChildProcess, pid: number, termination: Pr
         );
         for (const stream of child.stdio) stream?.destroy(error);
     }, OUTPUT_CLOSE_MILLISECONDS);
+}
+
+/**
+Check a process without signaling it. A permission refusal still means that the process exists.
+*/
+export function isProcessRunning(pid: number): boolean {
+    const error = findSignalRefusal(pid);
+    if (error === undefined || hasErrorCode(error, 'EPERM')) return true;
+    if (hasErrorCode(error, 'ESRCH')) return false;
+    throw error;
 }
 
 export function trackProcessTree(child: ChildProcess, options: CancelableSpawnOptions): ProcessTreeControl {

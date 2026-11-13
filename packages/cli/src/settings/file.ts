@@ -3,7 +3,7 @@ import { isDeepStrictEqual } from 'node:util';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/validation.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { planReplacements, writePlans } from '#cli/repository/writer.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';

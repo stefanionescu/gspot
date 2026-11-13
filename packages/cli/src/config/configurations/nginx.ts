@@ -1,5 +1,3 @@
-// checks
-
 export const ADD_HOST_FLAG = '--add-host';
 export const CERTIFICATE_ARGUMENTS = [
     'req',
@@ -40,20 +38,3 @@ export const NGINX_VARIABLE_MARK = '$';
 export const OPENSSL_CERTIFICATE_FLAG = '-out';
 export const OPENSSL_KEY_FLAG = '-keyout';
 export const OPENSSL_PROGRAM = 'openssl';
-
-// directives
-export const ESCAPED_CHARACTER = /\\([trn"'\\])/gu;
-export const ESCAPE_LENGTH = 2;
-export const NGINX_ESCAPES: Readonly<Record<string, string>> = {
-    t: '\t',
-    r: '\r',
-    n: '\n',
-    '"': '"',
-    "'": "'",
-    '\\': '\\',
-};
-export const NGINX_PUNCTUATION = new Set([';', '{', '}']);
-export const QUOTED_ARGUMENT = /^(["'])([\s\S]*)\1$/u;
-export const WHITESPACE_CHARACTER = /\s/u;
-export const WORD_START_STOPS = /[\s"'{};#\\]/u;
-export const WORD_STOPS = /[\s{};\\]/u;

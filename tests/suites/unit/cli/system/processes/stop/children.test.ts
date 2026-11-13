@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { runProcess, streamProcess } from '#cli/system/processes.ts';
+import { runProcess, streamProcess } from '#cli/system/processes/run.ts';
 import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
 import { STOPPED_CAPTURES, STREAM_FAILURE } from '#tests/config/system.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

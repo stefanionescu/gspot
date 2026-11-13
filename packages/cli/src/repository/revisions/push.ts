@@ -43,7 +43,7 @@ import {
 } from '#cli/repository/revisions/changes.ts';
 import { isShallowClone, readHead } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type {
     Comparison,
     PushBaseSearch,

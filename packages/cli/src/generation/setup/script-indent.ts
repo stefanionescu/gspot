@@ -1,7 +1,7 @@
 import { SCRIPT_EXTENSIONS, TAB_STEP } from '#cli/config/generation/setup.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 

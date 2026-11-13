@@ -10,7 +10,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';

@@ -29,6 +29,7 @@ import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { readDependencyFiles } from '#cli/repository/dependencies.ts';
+import { detectScopeFolders } from '#cli/repository/detection/scopes.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import {
@@ -38,12 +39,11 @@ import {
     parsePathAttributes,
 } from '#cli/repository/git/output.ts';
 import { readGitFlag, readGitPaths, runGit } from '#cli/repository/git/run.ts';
-import { detectScopeFolders } from '#cli/repository/scopes.ts';
 import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes, readText } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type {
     Repository,
     RepositoryListing,

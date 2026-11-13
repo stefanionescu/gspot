@@ -3,13 +3,13 @@ import { isDeepStrictEqual } from 'node:util';
 import type { z } from 'zod';
 
 import { DETECTED_SETTINGS } from '#cli/config/generation/setup.ts';
-import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { compareScopeDepth, isInScope } from '#cli/repository/scopes.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { findSetting, getSettingValue } from '#cli/settings/inherit.ts';
 import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { isInScope, stripTrailingSlashes } from '#cli/system/paths.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';
 import type { WrittenTable, WrittenTables } from '#cli/types/generation.ts';
 import type { TomlTable } from '#cli/types/settings.ts';

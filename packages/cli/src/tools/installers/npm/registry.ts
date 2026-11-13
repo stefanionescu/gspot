@@ -21,7 +21,7 @@ import {
 } from '#cli/config/tools/installers.ts';
 import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { findProgram } from '#cli/system/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
 
 async function readRegistrySettings(root: string): Promise<Record<string, unknown>> {

@@ -1,6 +1,7 @@
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { COMMAND_CHECK_DEFAULTS, COMMAND_CHECK_HELP, COMMAND_CHECK_WHY } from '#cli/config/settings/validation.ts';
-import { parseTomlFile, parseTomlSyntax } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { formatSettingsErrors } from '#cli/settings/validation/messages.ts';
 import { formatSettingsIssue, validateSettings } from '#cli/settings/validation/schema.ts';

@@ -8,7 +8,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { readHooks, readRepositorySetup } from '#cli/repository/setup.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { LINKED_RUFF_SECTION, SIMPLE_GIT_HOOKS_PACKAGES } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';

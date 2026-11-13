@@ -2,25 +2,16 @@ import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 
 import { openSession } from '#cli/engine/session.ts';
-import { listProjectDependencyNames, readDependencyFiles, readPackageJson } from '#cli/repository/dependencies.ts';
+import { listProjectDependencyNames, readDependencyFiles } from '#cli/repository/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { PYTHON_DEPENDENCY_CASES, TRACKED_SOURCE } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-
-const PACKAGE_FIELDS = {
-    name: 'example-package',
-    dependencies: { next: '16.0.0' },
-    'simple-git-hooks': null,
-    customSettings: { enabled: true },
-} as const;
 
 const PROJECT_DEPENDENCY_FILES = {
     'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',
@@ -56,26 +47,6 @@ test.each(INVALID_DEPENDENCY_FILES)('invalid %s content %s gives no dependency f
 
     const files = [{ path, ...TRACKED_SOURCE }];
     expect(await readDependencyFiles(createRunCache(sandbox.path), files)).toStrictEqual([]);
-});
-
-test('package.json reads keep your own fields and tell a missing file from invalid data', async () => {
-    await using sandbox = await createGitSandbox({});
-    expect(readPackageJson(sandbox.path, 'package.json')).toBeUndefined();
-    const source = JSON.stringify(PACKAGE_FIELDS);
-    await createFileTree(sandbox.path, { 'package.json': source });
-    expect(readPackageJson(sandbox.path, 'package.json')).toStrictEqual(PACKAGE_FIELDS);
-    await writeFile(join(sandbox.path, 'package.json'), '{');
-    expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
-        matchFields<GspotError>({ name: 'GspotError', code: 'parse' }),
-    );
-    await writeFile(join(sandbox.path, 'package.json'), '{"dependencies":{"next":16}}');
-    expect(() => readPackageJson(sandbox.path, 'package.json')).toThrow(
-        matchFields<GspotError>({
-            name: 'GspotError',
-            code: 'parse',
-            message: expect.stringContaining('dependencies.next') as string,
-        }),
-    );
 });
 
 test('declared framework dependencies follow the nearest npm project', async () => {

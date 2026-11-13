@@ -24,7 +24,7 @@ import { decodeGitPaths, parseGitBlobs, parseListingLine, stripIndexStages } fro
 import { readGitPath, readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
 import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/folders.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
 

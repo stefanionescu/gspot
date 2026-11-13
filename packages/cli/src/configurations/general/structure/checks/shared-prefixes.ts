@@ -11,18 +11,12 @@ import {
 } from '#cli/config/configurations/structure.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
+import { splitWords } from '#cli/configurations/general/naming/words.ts';
 import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 import { listTaggedExtensions } from '#cli/repository/files/classify.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/scopes.ts';
-import {
-    extractBaseName,
-    extractExtension,
-    extractParentFolder,
-    isInInstalledFolder,
-    isInScope,
-} from '#cli/system/paths.ts';
-import { splitWords } from '#cli/system/text.ts';
+import { extractBaseName, extractExtension, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
 import type { FolderChild } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';

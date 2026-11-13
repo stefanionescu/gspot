@@ -4,8 +4,8 @@ import { intersects, validRange } from 'semver';
 
 import { REACT_DOM_PACKAGE, REACT_PACKAGE, REACT_VERSIONS_RULE } from '#cli/config/configurations/framework.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { listSpecifiers, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';

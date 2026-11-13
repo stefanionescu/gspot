@@ -8,6 +8,7 @@ import {
     LAST_EXTENSION,
     LOWER_WORD,
     NAMING_RULES,
+    NUMERIC_WORDS,
     PASCAL_ACRONYM_WORD,
     PASCAL_WORD,
     RUFF_CATEGORIES,
@@ -21,8 +22,8 @@ import {
     WORD_FORM_SUFFIXES,
 } from '#cli/config/configurations/naming.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
-import { NUMERIC_WORDS } from '#cli/config/system.ts';
-import { formatNameList, splitWords } from '#cli/system/text.ts';
+import { splitWords } from '#cli/configurations/general/naming/words.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import type {
     BannedWord,
     CategoryLimits,

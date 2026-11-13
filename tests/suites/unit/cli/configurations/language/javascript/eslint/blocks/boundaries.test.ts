@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import {
     COMPONENT_IMPORT_CASES,
     IMPORT_RULE_CASES,

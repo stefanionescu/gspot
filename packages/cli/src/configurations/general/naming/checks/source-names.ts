@@ -3,7 +3,8 @@ import { extractPythonIdentifiers } from '#cli/configurations/general/naming/lan
 import { extractSqlIdentifiers } from '#cli/configurations/general/naming/languages/sql.ts';
 import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/languages/swift.ts';
 import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/languages/typescript.ts';
-import { parseSource, selectGrammar } from '#cli/parsers/code/grammars.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { remember } from '#cli/system/cache.ts';
 import type { Identifier, IdentifierRead, NamedFile } from '#cli/types/configurations/general.ts';

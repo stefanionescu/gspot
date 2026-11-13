@@ -28,9 +28,9 @@ import {
 } from '#cli/config/repository/version-pin.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { readPackageJson } from '#cli/repository/dependencies.ts';
 import { buildFrozenInstallArguments, detectPackageManager } from '#cli/repository/package-manager.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { miseToolsSchema } from '#cli/schemas/repository.ts';
@@ -38,7 +38,7 @@ import { createRunCache } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import type { SetupReference, StartRunner } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
 

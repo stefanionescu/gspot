@@ -16,7 +16,7 @@ import { listSelectedConfigurations } from '#cli/manifests/select.ts';
 import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
-import { formatCount } from '#cli/system/text.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import { downloadArchive } from '#cli/tools/installers/steps.ts';
 import type { GrammarName } from '#cli/types/parsers.ts';
 import type { RepositoryListing } from '#cli/types/repository.ts';
