@@ -22,7 +22,7 @@ import type { RuleExplanations, Session } from '#cli/types/tools.ts';
 
 export type Finding = z.infer<typeof findingSchema>;
 
-export type CheckFinding = Omit<Finding, 'check' | 'fixable'>;
+export type CheckFinding = Omit<Finding, 'check' | 'fixable'> & { fixable?: boolean };
 
 export type FinishedRun = {
     session: Session;
@@ -80,9 +80,17 @@ export type RunResult = { report: RunReport; fixes?: FixReport };
 
 export type CheckStatus = (typeof CHECK_STATUSES)[number];
 
-export type CheckCode = ({ check: BuiltInCheck; run?: never } | { run?: CheckRun; check?: never }) & {
+export type CheckCode = (
+    { check: BuiltInCheck; fix?: BuiltInFix; run?: never } | { run?: CheckRun; check?: never; fix?: never }
+) & {
     explanations?: RuleExplanations;
 };
+
+/**
+Fix what a built-in check reports, and return the paths it changed. `gspot check --fix` runs it in the working tree,
+before the fixer commands.
+*/
+export type BuiltInFix = (session: CheckSession) => Promise<string[]>;
 
 type CheckRun = (
     session: CheckSession,
@@ -126,6 +134,7 @@ export type CheckGeneration = {
     buildConfigs: (session: Session) => ConfigTargets;
     listStaleFiles: (session: Session, options: Pick<CheckRunOptions, 'verbose'>) => StaleFile[];
     listWrittenGlobs: (session: Session) => string[];
+    writeStaleFiles: (session: Session) => Promise<string[]>;
 };
 
 export type CheckSession = Session & {

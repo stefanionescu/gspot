@@ -1,4 +1,5 @@
-import { CLI_REFERENCE } from '#cli/reference.ts';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
+
 import { LEVEL_ADVICE } from '#docs/config/reference.ts';
 
 export function buildLevelRows(): Array<{ level: string; description: string; tools: string }> {

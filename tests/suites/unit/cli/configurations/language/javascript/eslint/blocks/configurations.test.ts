@@ -75,6 +75,17 @@ test("a parent's configuration block covers a matching nested scope, and a diffe
     expect(code.rules['@typescript-eslint/no-non-null-assertion']?.[0]).toBe(2);
 });
 
+test('ESLint loads the config when a selected configuration has no block for its scope', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript', 'testing-library']),
+        'package.json': '{"private":true,"type":"module"}',
+        'sample.test.js': 'export const value = 1;\n',
+    });
+
+    const eslint = await buildEslint(sandbox.path);
+    expect(await listLintFindings(eslint, sandbox.path, ['sample.test.js'], [])).toStrictEqual([]);
+});
+
 test('Jest rules apply only to their scope for .jsx files', async () => {
     await using sandbox = await testdir({
         'gspot.toml': buildSandboxSettings(['javascript'], {

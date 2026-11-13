@@ -1,21 +1,6 @@
 import { STRICT_TYPE_FLAGS } from '#tests/config/setup/languages.ts';
 
-export const REFERENCE_BUILD_RESULTS = [
-    { scope: '', status: 'passed' as const, findings: [] },
-    { scope: 'app', status: 'failed' as const, findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
-    { scope: 'neighbor', status: 'failed' as const, findings: [{ file: 'neighbor/source.ts', rule: 'TS18047' }] },
-];
-
-export const URL_MARKUP_CASES = [
-    { markup: '<a href="jav&#x61;script&colon;alert(1)">Link</a>', scheme: 'javascript:', columns: [4] },
-    { markup: '<a href=" VbScRiPt:msgbox(1)">Link</a>', scheme: 'vbscript:', columns: [4] },
-    { markup: '<a href="data:text/html;base64,PHNjcmlwdD4=">Link</a>', scheme: 'data:', columns: [4] },
-    { markup: '<object data="data:image/svg+xml,example"></object>', scheme: 'data:', columns: [9] },
-    { markup: '<a href="/page" title="javascript: is a scheme">Link</a>', scheme: '', columns: [] },
-    { markup: '<img src="data:image/svg+xml,example" alt="Image">', scheme: '', columns: [] },
-    { markup: '<a href="data:text/plain,example" download>Download</a>', scheme: '', columns: [] },
-] as const;
-
+// html
 export const INLINE_SCRIPT_PAGE = `<!doctype html>
 <html lang="en">
 <head><title>Shop</title></head>
@@ -27,13 +12,22 @@ export const INLINE_SCRIPT_PAGE = `<!doctype html>
 </body>
 </html>
 `;
-
 export const SCRIPT_TYPE_CASES = [
     { type: 'text&#x2F;javascript', rules: ['inline-script', 'script-link'] },
     { type: 'text/plain', rules: [] },
     { type: ' Text/JavaScript ', rules: ['inline-script', 'script-link'] },
 ] as const;
+export const URL_MARKUP_CASES = [
+    { markup: '<a href="jav&#x61;script&colon;alert(1)">Link</a>', scheme: 'javascript:', columns: [4] },
+    { markup: '<a href=" VbScRiPt:msgbox(1)">Link</a>', scheme: 'vbscript:', columns: [4] },
+    { markup: '<a href="data:text/html;base64,PHNjcmlwdD4=">Link</a>', scheme: 'data:', columns: [4] },
+    { markup: '<object data="data:image/svg+xml,example"></object>', scheme: 'data:', columns: [9] },
+    { markup: '<a href="/page" title="javascript: is a scheme">Link</a>', scheme: '', columns: [] },
+    { markup: '<img src="data:image/svg+xml,example" alt="Image">', scheme: '', columns: [] },
+    { markup: '<a href="data:text/plain,example" download>Download</a>', scheme: '', columns: [] },
+] as const;
 
+// markdown
 export const MARKDOWN_FENCE_CASES = [
     {
         name: 'a YAML fence beside one that parses',
@@ -120,6 +114,18 @@ const count = ;
     },
 ] as const;
 
+// tsc
+export const REFERENCE_BUILD_RESULTS = [
+    { scope: '', status: 'passed' as const, findings: [] },
+    { scope: 'app', status: 'failed' as const, findings: [{ file: 'app/src/main.ts', rule: 'TS2322' }] },
+    { scope: 'neighbor', status: 'failed' as const, findings: [{ file: 'neighbor/source.ts', rule: 'TS18047' }] },
+];
+
+// typescript
+export const ALL_LEVEL_OPTION_FINDINGS = [
+    { file: 'tsconfig.json', rule: 'noImplicitReturns' },
+    { file: 'tsconfig.json', rule: 'noPropertyAccessFromIndexSignature' },
+] as const;
 export const DEFAULT_LEVEL_TSCONFIG = {
     compilerOptions: {
         strict: true,
@@ -129,17 +135,10 @@ export const DEFAULT_LEVEL_TSCONFIG = {
         noFallthroughCasesInSwitch: true,
     },
 } as const;
-
 export const STRICT_OFF_FINDINGS = [
     {
         file: 'tsconfig.json',
         rule: 'strict',
     },
 ] as const;
-
-export const ALL_LEVEL_OPTION_FINDINGS = [
-    { file: 'tsconfig.json', rule: 'noImplicitReturns' },
-    { file: 'tsconfig.json', rule: 'noPropertyAccessFromIndexSignature' },
-] as const;
-
 export const STRICT_TSCONFIG_TEXT = JSON.stringify({ compilerOptions: STRICT_TYPE_FLAGS });

@@ -1,14 +1,14 @@
 import { posix } from 'node:path';
 
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import type { CliReference } from '#cli/types/main.ts';
+import { CLI_REFERENCE, type CliReference, DOCS_PATHS, formatNameList } from '@gspothq/cli/reference';
+
 import {
     CHECK_FIX_MESSAGE,
     CHECK_NEEDS_LABELS,
     CHECK_RUN_LABELS,
     CHECKS_HEADING,
     CHECKS_OPENING,
-    CONJUNCTION_FORMAT,
+    COMMENT_BLIND_ARGUMENTS,
     HELP_HEADING,
     LINT_RULES_HEADING,
     MINOR_HEADING_LEVEL,
@@ -30,13 +30,11 @@ import {
 import type { ReferencePage } from '#docs/types/pages.ts';
 import type { Suppression } from '#docs/types/reference.ts';
 
-const COMMENT_BLIND_ARGUMENTS = new Set(['--no-inline-config', 'format']);
-
 function formatCheckRequirements(needs: CliReference['checks'][number]['needs']): string {
     const resources = needs.flatMap((need) => (need === 'project-code' ? [] : [CHECK_NEEDS_LABELS[need]]));
-    return CONJUNCTION_FORMAT.format([
+    return formatNameList([
         ...(needs.includes('project-code') ? ['loads your code'] : []),
-        ...(resources.length === 0 ? [] : [`needs ${CONJUNCTION_FORMAT.format(resources)}`]),
+        ...(resources.length === 0 ? [] : [`needs ${formatNameList(resources)}`]),
     ]);
 }
 
@@ -46,11 +44,11 @@ function formatCheckRun(reference: CliReference['checks'][number]): string {
     const run = [
         check.stage === 'manual'
             ? `Runs only when \`gspot check --only ${check.id}\` names it`
-            : `Runs at the \`${check.stage}\` [stage](${CLI_REFERENCE.docs.stage})`,
-        check.level === 'basic' ? '' : `only at the \`${check.level}\` [level](${CLI_REFERENCE.docs.levels})`,
+            : `Runs at the \`${check.stage}\` [stage](${DOCS_PATHS.stage})`,
+        check.level === 'basic' ? '' : `only at the \`${check.level}\` [level](${DOCS_PATHS.levels})`,
         CHECK_RUN_LABELS[check.runs],
         program === undefined || check.id.includes(program) ? '' : `with ${program}`,
-        systems === undefined ? '' : `on ${CONJUNCTION_FORMAT.format(systems)}`,
+        systems === undefined ? '' : `on ${formatNameList(systems)}`,
     ]
         .filter(Boolean)
         .join(', ');

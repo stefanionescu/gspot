@@ -1,9 +1,7 @@
-import cliPackage from '#cli-package' with { type: 'json' };
 import { COMMAND_HELP } from '#cli/config/commands/help.ts';
 import { GROUP_LABELS } from '#cli/config/commands/setup.ts';
 import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/files.ts';
 import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/package-managers.ts';
 import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/schema.ts';
 import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
@@ -20,6 +18,11 @@ import { compareText } from '#cli/system/text.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
 import type { CliReference, CommandReference } from '#cli/types/main.ts';
 import type { Configuration, ConfigurationReference } from '#cli/types/manifests.ts';
+
+// The docs site imports the CLI only through this file, which package.json names in `exports`.
+export { DOCS_PATHS } from '#cli/config/manifests.ts';
+export { compareText, formatNameList } from '#cli/system/text.ts';
+export type { CliReference, CommandReference } from '#cli/types/main.ts';
 
 function buildCommandReference(command: ReturnType<typeof buildProgram>['commands'][number]): CommandReference {
     const help = COMMAND_HELP[command.name() as keyof typeof COMMAND_HELP];
@@ -88,8 +91,6 @@ function readCliReference(): CliReference {
         checks.filter(({ check }) => check.level === 'basic').flatMap(({ tools }) => tools),
     );
     return {
-        package: cliPackage,
-        docs: DOCS_PATHS,
         groups: GROUP_LABELS,
         commands: buildProgram(async () => {}).commands.map((command) => buildCommandReference(command)),
         globalOptions: GLOBAL_OPTIONS,

@@ -1,13 +1,9 @@
 import type { ProseRoute } from '#cli/types/configurations/general.ts';
 
 // checks
-
 export const AMBIGUOUS_DATE = /\b\d{1,2}\/\d{1,2}\/\d{2,4}\b|\b\d{1,2}[./]\d{1,2}[./]\d{4}\b/gu;
-
 export const DATE_RULE = 'ambiguous-date';
-
 export const NO_OUTPUT = 'no output';
-
 export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & { format?: string }>> = {
     '.md': { mode: 'path', extension: '.md' },
     '.mdx': { mode: 'path', extension: '.md' },
@@ -29,13 +25,9 @@ export const PROSE_GRAMMARS: Readonly<Record<string, Omit<ProseRoute, 'path'> & 
     '.pgsql': { mode: 'path', extension: '.pgsql', format: 'lua' },
     '.psql': { mode: 'path', extension: '.psql', format: 'lua' },
 };
-
 export const SCRIPT_GRAMMAR = { mode: 'stdin', extension: '.py' } as const;
-
 export const VALE_ARGUMENTS = ['--no-global', '--output', 'JSON', '--no-exit'] as const;
-
 export const VALE_ERROR_LINE = /(?:^E\d+)|(?:not found)|(?:error)/iu;
-
 export const VALE_MESSAGE_RULES = [
     'gspot.modals',
     'gspot.hedging',
@@ -49,7 +41,6 @@ export const VALE_MESSAGE_RULES = [
 ] as const;
 
 // generated config
-
 export const ACRONYMS = [
     'API',
     'CLI',
@@ -93,17 +84,11 @@ export const ACRONYMS = [
     'WASM',
     'XML',
 ] as const;
-
 export const ACRONYM_DEFINITION_PATTERN = String.raw`(?:\b[A-Za-z]+(?:-[A-Za-z]+)* ){2,5}\(([A-Z]{3,6})\)`;
-
 export const ACRONYM_MESSAGE = "Spell out '%s' on first use.";
-
 export const ACRONYM_NAME = /^[A-Z]{3,6}$/u;
-
 export const ACRONYM_PATTERN = String.raw`\b([A-Z]{3,6})\b`;
-
 export const ALL_FILES_SECTION = '[*]';
-
 export const BANNED_HEADINGS = [
     'project structure',
     'project layout',
@@ -115,22 +100,16 @@ export const BANNED_HEADINGS = [
     'codebase map',
     'source tree',
 ] as const;
-
 export const BANNED_HEADING_MESSAGE = "Heading '%s' lists files and folders. Describe behavior and ownership instead.";
-
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`] as const;
-
 // A word such as 3D starts with a digit, so Vale cannot read it as a capitalized first word.
 export const DIGIT_WORD_PATTERN = String.raw`\b\d+[A-Z][A-Z\d]*\b`;
-
 export const FILE_NAME_PATTERN = String.raw`[\w-]+(?:\.[\w-]+)*\.[A-Za-z]\w*`;
-
 export const HEADING_CASE_STYLE = {
     message: "Write titles and headings in sentence case: '%s'.",
     scope: ['heading', 'text.frontmatter.title'],
     match: '$sentence',
 } as const;
-
 export const LENGTH_STYLES = {
     item: {
         extends: 'occurrence',
@@ -154,18 +133,12 @@ export const LENGTH_STYLES = {
         message: 'A sentence longer than {{max}} words. Split it.',
     },
 } as const;
-
 export const MARKUP_RULES_COMMENT = '# Markup checks read markup only.';
-
 export const MIN_ALERT_LINE = 'MinAlertLevel = suggestion';
-
 export const NO_STYLES_LINE = 'BasedOnStyles =';
-
 export const STYLES_PATH_COMMENT =
     '# Vale reads both StylesPath lines in order and installs packages in the last folder.';
-
 export const TERMS_MESSAGE = "Use '%s' instead of '%s'.";
-
 export const TOKEN_IGNORES = [
     String.raw`(?m)(^USAGE[ \t]+[^\r\n]*)`,
     String.raw`(?m)(^MISE[ \t]+[a-z_][a-z0-9_-]*[ \t]*=[^\r\n]*)`,
@@ -176,7 +149,6 @@ export const TOKEN_IGNORES = [
     String.raw`(?m)((?:^|[ \t])[a-z][a-z0-9]*(?:_[a-z0-9]+)+\b)`,
     String.raw`(?m)((?:^|[ \t])[A-Z][A-Z0-9_-]*\.(?:md|txt|json|toml|ya?ml)\b)`,
 ] as const;
-
 export const VALE_COMMENT_RULES = [
     'gspot.conscious-language',
     'gspot.placeholders',
@@ -197,11 +169,8 @@ export const VALE_COMMENT_RULES = [
     'gspot.home-paths',
     'gspot.terms',
 ] as const;
-
 export const VALE_MARKUP_FILES = '*.{md,mdx}';
-
 export const VALE_MARKUP_RULES = ['gspot.alt-prefix', 'gspot.tree-blocks'] as const;
-
 export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'proselint.Very': 'gspot.hedging owns hedges',
     'Google.EmDash': 'gspot.em-dashes owns dashes',
@@ -242,9 +211,6 @@ export const VALE_OFF_RULES: Readonly<Record<string, string>> = {
     'write-good.Passive': 'Google.Passive owns passive voice',
     'Harper.NumericRangeEnDash': 'gspot.en-dashes owns ranges',
 };
-
 export const VALE_REGEX_SYMBOLS = /[.*+?^${}()|[\]\\/-]/gu;
-
 export const VALE_SKIPPED_SCOPES = 'script, style, pre, figure, table';
-
 export const VOCAB_LINE = 'Vocab = words';

@@ -1,20 +1,29 @@
 import { FIX_CANCELED_MESSAGE, FIX_ROUNDS } from '#cli/config/engine.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
-import { findCommandTool } from '#cli/engine/plan.ts';
+import { findCommandTool, isActive } from '#cli/engine/plan.ts';
 import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/tool-runs/check.ts';
 import { isReportedCrash } from '#cli/engine/tool-runs/output.ts';
 import { listCopyFiles } from '#cli/engine/tool-runs/placeholders.ts';
 import { runToolProcess } from '#cli/engine/tool-runs/tool.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
-import { hasErrorCode } from '#cli/system/errors.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { compareText, listConflictMarkerLines } from '#cli/system/text.ts';
 import { findToolPath } from '#cli/tools/inspect.ts';
 import type { FixerPlannedCheck, PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckSession, CommandLaunch, FixReport, FixResult, FixRounds, PathBytes } from '#cli/types/engine/run.ts';
+import type {
+    BuiltInFix,
+    CheckSession,
+    CommandLaunch,
+    FixReport,
+    FixResult,
+    FixRounds,
+    PathBytes,
+    RunOptions,
+} from '#cli/types/engine/run.ts';
 import type { Tool } from '#cli/types/manifests.ts';
 import type { FileContents, SpawnResult } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
@@ -94,6 +103,34 @@ async function runFixer(session: CheckSession, planned: FixerPlannedCheck): Prom
     const [name] = command;
     const tool = planned.tool?.name === name ? planned.tool : findCommandTool(readConfigurations().values(), name);
     return runFixTool(session, planned, { command, tool });
+}
+
+async function runBuiltInFix(session: CheckSession, planned: PlannedCheck, fix: BuiltInFix): Promise<FixResult> {
+    const check = planned.check.id;
+    if (session.cancelSignal?.aborted === true)
+        return { check, status: 'canceled', changed: [], note: FIX_CANCELED_MESSAGE };
+    // A fix in code writes to the working tree, and a copy of a revision is not the working tree.
+    if (planned.skip !== undefined || !isActive(planned, session.selection) || session.root !== session.toolsRoot)
+        return { check, status: 'skipped', changed: [] };
+    try {
+        return buildFixResult(check, await fix(session), undefined, session.cancelSignal);
+    } catch (error) {
+        if (!(error instanceof GspotError)) throw error;
+        return { check, status: 'failed', changed: [], note: error.message };
+    }
+}
+
+async function runBuiltInFixes(
+    session: CheckSession,
+    planned: PlannedCheck[],
+    selectCheckCode: RunOptions['selectCheckCode'],
+): Promise<FixResult[]> {
+    const results: FixResult[] = [];
+    for (const check of planned) {
+        const fix = selectCheckCode(check.check)?.fix;
+        if (fix !== undefined) results.push(await runBuiltInFix(session, check, fix));
+    }
+    return results;
 }
 
 function readContents(sourceRoot: string, paths: string[]): PathBytes {
@@ -204,7 +241,16 @@ export function listConflictedPaths(root: string, paths: string[]): string[] {
     return paths.filter((path) => listConflictMarkerLines(contents.get(path)?.toString('utf8') ?? '').length > 0);
 }
 
-export async function runFixers(session: CheckSession, planned: PlannedCheck[]): Promise<FixReport> {
+/**
+Run the fixes of the planned checks. The fixes in check code run first, so that the fixer commands read the generated
+config files that those fixes rewrite.
+*/
+export async function runFixers(
+    session: CheckSession,
+    planned: PlannedCheck[],
+    selectCheckCode: RunOptions['selectCheckCode'],
+): Promise<FixReport> {
+    const written = await runBuiltInFixes(session, planned, selectCheckCode);
     const fixable = planned.filter((check): check is FixerPlannedCheck => check.check.fix !== undefined);
     const conflicted = listConflictedPaths(session.root, [
         ...new Set(fixable.flatMap((check) => listPlannedPaths(check))),
@@ -222,5 +268,15 @@ export async function runFixers(session: CheckSession, planned: PlannedCheck[]):
     const changed = listChangedPaths(before, after);
     const broken = await listBrokenFiles(changed, before, after);
     restoreBrokenFiles(session.root, broken, rounds);
-    return { results, changed: changed.filter((path) => !broken.includes(path)), broken, conflicted };
+    return {
+        results: [...written, ...results],
+        changed: [
+            ...new Set([
+                ...written.flatMap((result) => result.changed),
+                ...changed.filter((path) => !broken.includes(path)),
+            ]),
+        ],
+        broken,
+        conflicted,
+    };
 }

@@ -18,8 +18,9 @@ a budget for one suite or system, an environment switch, and an option for one c
 Treat stored data and wire formats as contracts. Rename a stored key together with a migration of the stored data.
 During a rolling deploy, readers accept both shapes until no old writer runs.
 
-Delete a folder once neither it nor its subfolders hold a file. Before you add a module, folder, or helper, find the code that will call it. When you add a file, tell the user why that
-code needs a new file.
+Delete a folder once neither it nor its subfolders hold a file. Delete code that no input reaches and values that
+nothing reads. Delete an option of your own code when no value of it changes the output. Before you add a module,
+folder, or helper, find the code that will call it. When you add a file, tell the user why that code needs a new file.
 
 ## Open questions
 
@@ -55,6 +56,8 @@ Run `gspot explain <check>` to see what a check looks for and how to fix its fin
 make the code pass the check, and name both to the user. A help line that makes a setting weaker still needs the
 user's agreement.
 
+Keep the agent rules in the `AGENTS.md` at the repository root. Add no `AGENTS.md` in a subfolder.
+
 ## No defensive logic
 
 Do not add guards, fallbacks, retries, defaults, or wrappers for states the public interface rules out. Handle known
@@ -69,14 +72,23 @@ code. Do not add a guard for it.
 Keep one implementation of each concept, and one copy of each table of values, in the module that uses it. Extract
 shared code only when two or more callers need the same behavior now.
 
-- Inline a function of `{setting:limits.trivial_function_statements}` statements or fewer that has at most one caller, and
-  delete it. When one must stay, such as a method that an interface requires, ask the user. Then suppress it with the reason,
-  or run `gspot ignore` for a gspot check.
+Before you write a function, a type, or a fixed value, search the code for one that does the same job or holds the same
+value, and use it.
+
+- Inline a function that has at most one caller and holds `{setting:limits.trivial_function_statements}` statements or
+  fewer, and delete it. Count every statement of its body, nested ones included.
+- When such a function must stay, such as a method that an interface requires, ask the user. Then suppress it with the
+  reason, or run `gspot ignore` for a gspot check.
 - Keep a function with one caller when it names a step and holds more statements than that limit. Do not split code into
   functions only to pass a size or complexity limit. Split it by the steps it performs.
 - An abstraction that gains flags, modes, or caller-specific branches needs a different design. Do not combine loosely
   related behaviors in a function behind a parameter that picks one.
 - A function takes no positional boolean.
+- Remove a parameter that every caller sets to the same value, or that the function can read from another of its
+  arguments. Do not wrap one value in an object only to pass it.
+- Within one flow, compute a value once, on the path that uses it, and pass it to each step that needs it. Cache a value
+  only for callers that cannot receive it, such as separate checks.
+- Do not group statements in a bare block. Move them into a function named for the step.
 - Prefer plain functions, values, and explicit data flow to classes, factories, strategies, and inheritance.
 
 ## No backward compatibility

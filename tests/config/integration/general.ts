@@ -1,3 +1,10 @@
+// dependencies
+export const SYNCPACK_PACKAGE_FILES = {
+    'package.json': '{"name":"root","private":true,"dependencies":{"shared-library":"1.0.0"}}\n',
+    'packages/app/package.json': '{"name":"app","private":true,"dependencies":{"shared-library":"2.0.0"}}\n',
+} as const;
+
+// installed files
 export const BASE_INSTALLED_FILES = {
     '.gitignore': 'node_modules/\n',
     'package.json': '{"name":"example","private":true,"type":"module"}',
@@ -13,13 +20,10 @@ export const BASE_INSTALLED_FILES = {
     'pyproject.toml': '[project]\nname = "example"\nversion = "1.0.0"\ndependencies = []\n',
 } as const;
 
-export const SYNCPACK_PACKAGE_FILES = {
-    'package.json': '{"name":"root","private":true,"dependencies":{"shared-library":"1.0.0"}}\n',
-    'packages/app/package.json': '{"name":"app","private":true,"dependencies":{"shared-library":"2.0.0"}}\n',
-} as const;
-
+// secrets
 export const API_TOKEN = ['n3K5p7R9', 't2V4w6Y8', 'z1A3c5E7', 'g9I2m4O6'].join('');
 
+// security
 export const SEMGREP_SANDBOX = {
     configurations: ['python', 'security', 'fastapi'],
     level: 'all',

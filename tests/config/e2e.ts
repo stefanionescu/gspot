@@ -1,3 +1,12 @@
+// cli
+export const SWIFT_CHECK = {
+    check: 'naming/identifiers',
+    files: { 'Account.swift': 'let utils = 1\n' },
+    corrected: { files: { 'Account.swift': 'let account = 1\n' } },
+    expected: { file: 'Account.swift', line: 1, rule: 'banned-word' },
+} as const;
+
+// eslint plugin
 export const PLUGIN_TYPES_SOURCE = `
 import plugin from '@gspothq/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';
@@ -6,13 +15,7 @@ const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin
 console.log(configs, rule);
 `;
 
-export const SWIFT_CHECK = {
-    check: 'naming/identifiers',
-    files: { 'Account.swift': 'let utils = 1\n' },
-    corrected: { files: { 'Account.swift': 'let account = 1\n' } },
-    expected: { file: 'Account.swift', line: 1, rule: 'banned-word' },
-} as const;
-
+// quickstart
 export const PYTHON_TUTORIAL = {
     folder: 'orders-python',
     firstCheckCode: 0,
@@ -34,7 +37,6 @@ def hello() -> str:
     rule: 'S307',
     line: 1,
 } as const;
-
 export const SWIFT_TUTORIAL = {
     folder: 'orders-swift',
     firstCheckCode: 1,

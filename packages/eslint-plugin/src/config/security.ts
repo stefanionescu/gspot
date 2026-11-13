@@ -1,40 +1,30 @@
-export const INSECURE_RANDOM_GENERATOR = 'Math.random';
-
-export const PATH_COMMAND_METHODS = new Set([
-    'child_process.exec',
-    'child_process.execSync',
-    'child_process.execFile',
-    'child_process.execFileSync',
-    'child_process.spawn',
-    'child_process.spawnSync',
-]);
-
-export const EXPLICIT_COMMAND = /^(?:\.[/\\]|\.\.|[/\\]|[A-Za-z]:\\)/u;
-
-export const PUBLIC_TEMPORARY_FOLDERS = [
-    'tmp',
-    'var/tmp',
-    'usr/tmp',
-    'dev/shm',
-    'dev/mqueue',
-    'run/lock',
-    'var/run/lock',
-    'library/caches',
-    'users/shared',
-    'private/tmp',
-    'private/var/tmp',
-];
-
-export const WINDOWS_TEMPORARY_FOLDERS = new Set(['temp', 'tmp']);
-
-export const TEMPORARY_ENVIRONMENT_VARIABLES = new Set(['TMPDIR', 'TMP', 'TEMPDIR', 'TEMP']);
-
+// ciphers
 export const CIPHER_FUNCTION = 'crypto.createCipheriv';
 
-export const WEAK_CIPHER_PREFIXES = ['bf', 'blowfish', 'des', 'rc2', 'rc4'] as const;
+// disabled-auto-escaping rule
+export const ESCAPING_CALLS: Readonly<Record<string, { argument: number; property: string; value: boolean }>> = {
+    'handlebars.compile': { argument: 1, property: 'noEscape', value: true },
+    'marked.setOptions': { argument: 0, property: 'sanitize', value: false },
+    'markdown-it': { argument: 0, property: 'html', value: true },
+    'swig.setDefaults': { argument: 0, property: 'autoescape', value: false },
+};
+export const ESCAPING_CONSTRUCTIONS: Readonly<Record<string, { argument: number; property: string; value: boolean }>> =
+    {
+        'kramed.Renderer': { argument: 0, property: 'sanitize', value: false },
+    };
+export const MUSTACHE_ESCAPE = 'mustache.escape';
+export const MUSTACHE_GLOBAL = 'Mustache';
 
+// dynamic-templates rule
+export const TEMPLATE_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
+    'pug.compile',
+    'pug.render',
+    'ejs.compile',
+    'ejs.render',
+]);
+
+// encryption-secure-mode rule
 export const INSECURE_MODES = /CBC|ECB/iu;
-
 export const MODELESS_CIPHERS: ReadonlySet<string> = new Set([
     'aes128',
     'aes192',
@@ -57,43 +47,9 @@ export const MODELESS_CIPHERS: ReadonlySet<string> = new Set([
     'seed',
 ]);
 
-export const KEY_PAIR_SELECTOR =
-    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^generateKeyPair(?:Sync)?$/]';
-
-export const MINIMUM_KEY_LENGTHS = { modulusLength: 2048, divisorLength: 224 } as const;
-
-export const WEAK_CURVES: ReadonlySet<string> = new Set([
-    'secp112r1',
-    'secp112r2',
-    'secp128r1',
-    'secp128r2',
-    'secp160k1',
-    'secp160r1',
-    'secp160r2',
-    'secp192k1',
-    'secp192r1',
-    'prime192v2',
-    'prime192v3',
-    'sect113r1',
-    'sect113r2',
-    'sect131r1',
-    'sect131r2',
-    'sect163k1',
-    'sect163r1',
-    'sect163r2',
-    'sect193r1',
-    'sect193r2',
-    'c2tnb191v1',
-    'c2tnb191v2',
-    'c2tnb191v3',
-]);
-
-export const JWT_FUNCTIONS = { sign: 'jsonwebtoken.sign', verify: 'jsonwebtoken.verify' } as const;
-
-export const JWT_OPTIONS_ARGUMENT = 2;
-
-export const NO_ALGORITHM = 'none';
-
+// hardcoded-secret-signatures rule
+export const PLACEHOLDER_SECRET = /(?:^\$\{)|example|sample|placeholder|test|fake|dummy|changeme|redacted/iu;
+export const PLACEHOLDER_SECRET_LENGTH = 5;
 export const SECRET_ARGUMENTS: Readonly<Record<string, readonly number[]>> = {
     'cookie-parser': [0],
     'cookie-parser.JSONCookie': [1],
@@ -118,7 +74,6 @@ export const SECRET_ARGUMENTS: Readonly<Record<string, readonly number[]>> = {
     'node-jose.JWK.asKey': [0],
     'superagent.auth': [0],
 };
-
 export const SECRET_PROPERTIES: Readonly<Record<string, string>> = {
     'cookie-session': 'keys',
     'express-session': 'secret',
@@ -129,79 +84,12 @@ export const SECRET_PROPERTIES: Readonly<Record<string, string>> = {
     'mysql2.createPool': 'password',
 };
 
-export const PLACEHOLDER_SECRET_LENGTH = 5;
+// insecure-jwt-token rule
+export const JWT_FUNCTIONS = { sign: 'jsonwebtoken.sign', verify: 'jsonwebtoken.verify' } as const;
+export const JWT_OPTIONS_ARGUMENT = 2;
+export const NO_ALGORITHM = 'none';
 
-export const PLACEHOLDER_SECRET = /(?:^\$\{)|example|sample|placeholder|test|fake|dummy|changeme|redacted/iu;
-
-export const CHMOD_METHODS: ReadonlySet<string> = new Set([
-    'chmod',
-    'chmodSync',
-    'fchmod',
-    'fchmodSync',
-    'lchmod',
-    'lchmodSync',
-]);
-
-export const FILE_MODE_MODULE = 'fs.constants';
-
-export const FILE_MODE_CONSTANTS: Readonly<Record<string, number>> = {
-    S_IRWXU: 0o700,
-    S_IRUSR: 0o400,
-    S_IWUSR: 0o200,
-    S_IXUSR: 0o100,
-    S_IRWXG: 0o70,
-    S_IRGRP: 0o40,
-    S_IWGRP: 0o20,
-    S_IXGRP: 0o10,
-    S_IRWXO: 0o7,
-    S_IROTH: 0o4,
-    S_IWOTH: 0o2,
-    S_IXOTH: 0o1,
-};
-
-export const OTHERS_MASK = 0o7;
-
-export const UMASK_FUNCTION = 'process.umask';
-
-export const HASH_FUNCTIONS: Readonly<Record<string, ReadonlySet<string>>> = {
-    'crypto.createHash': new Set([
-        'md2',
-        'md4',
-        'md5',
-        'md6',
-        'haval128',
-        'hmacmd5',
-        'dsa',
-        'ripemd',
-        'ripemd128',
-        'ripemd160',
-        'hmacripemd160',
-        'sha1',
-    ]),
-    'crypto.subtle.digest': new Set(['sha-1']),
-};
-
-export const SUBTLE_DIGEST = 'crypto.subtle.digest';
-
-export const DIGEST_METHOD = 'digest';
-
-export const TRUNCATION_METHODS: ReadonlySet<string> = new Set(['slice', 'substring']);
-
-export const WALLET_MODULES: ReadonlySet<unknown> = new Set(['ethers', 'viem/accounts', 'tronweb']);
-
-export const MNEMONIC_FUNCTIONS: ReadonlySet<string | null> = new Set([
-    'fromPhrase',
-    'mnemonicToAccount',
-    'fromMnemonic',
-]);
-
-export const XML_PARSERS: ReadonlySet<string | undefined> = new Set([
-    'libxmljs.parseXml',
-    'libxmljs.parseXmlString',
-    'libxmljs2.parseXml',
-    'libxmljs2.parseXmlString',
-]);
-
+// no-code-eval rule
 export const EVAL_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
     'eval',
     'Function',
@@ -211,9 +99,10 @@ export const EVAL_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
     'vm.runInNewContext',
     'vm.runInThisContext',
 ]);
-
 export const SCRIPT_URL = /^javascript:/iu;
 
+// no-dynamic-sql-queries rule
+export const SQL_BUILDING_METHODS: ReadonlySet<string | null> = new Set(['concat', 'replace']);
 export const SQL_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
     'pg.Client.query',
     'pg.Pool.query',
@@ -265,27 +154,131 @@ export const SQL_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
     'typeorm.getRepository.query',
 ]);
 
-export const SQL_BUILDING_METHODS: ReadonlySet<string | null> = new Set(['concat', 'replace']);
+// no-insecure-random rule
+export const INSECURE_RANDOM_GENERATOR = 'Math.random';
 
-export const TEMPLATE_FUNCTIONS: ReadonlySet<string | undefined> = new Set([
-    'pug.compile',
-    'pug.render',
-    'ejs.compile',
-    'ejs.render',
+// no-path-command rule
+export const EXPLICIT_COMMAND = /^(?:\.[/\\]|\.\.|[/\\]|[A-Za-z]:\\)/u;
+export const PATH_COMMAND_METHODS = new Set([
+    'child_process.exec',
+    'child_process.execSync',
+    'child_process.execFile',
+    'child_process.execFileSync',
+    'child_process.spawn',
+    'child_process.spawnSync',
 ]);
 
-export const ESCAPING_CALLS: Readonly<Record<string, { argument: number; property: string; value: boolean }>> = {
-    'handlebars.compile': { argument: 1, property: 'noEscape', value: true },
-    'marked.setOptions': { argument: 0, property: 'sanitize', value: false },
-    'markdown-it': { argument: 0, property: 'html', value: true },
-    'swig.setDefaults': { argument: 0, property: 'autoescape', value: false },
+// no-public-file-permissions rule
+export const CHMOD_METHODS: ReadonlySet<string> = new Set([
+    'chmod',
+    'chmodSync',
+    'fchmod',
+    'fchmodSync',
+    'lchmod',
+    'lchmodSync',
+]);
+export const FILE_MODE_CONSTANTS: Readonly<Record<string, number>> = {
+    S_IRWXU: 0o700,
+    S_IRUSR: 0o400,
+    S_IWUSR: 0o200,
+    S_IXUSR: 0o100,
+    S_IRWXG: 0o70,
+    S_IRGRP: 0o40,
+    S_IWGRP: 0o20,
+    S_IXGRP: 0o10,
+    S_IRWXO: 0o7,
+    S_IROTH: 0o4,
+    S_IWOTH: 0o2,
+    S_IXOTH: 0o1,
 };
+export const FILE_MODE_MODULE = 'fs.constants';
+export const OTHERS_MASK = 0o7;
+export const UMASK_FUNCTION = 'process.umask';
 
-export const ESCAPING_CONSTRUCTIONS: Readonly<Record<string, { argument: number; property: string; value: boolean }>> =
-    {
-        'kramed.Renderer': { argument: 0, property: 'sanitize', value: false },
-    };
+// no-public-temporary-path rule
+export const PUBLIC_TEMPORARY_FOLDERS = [
+    'tmp',
+    'var/tmp',
+    'usr/tmp',
+    'dev/shm',
+    'dev/mqueue',
+    'run/lock',
+    'var/run/lock',
+    'library/caches',
+    'users/shared',
+    'private/tmp',
+    'private/var/tmp',
+];
+export const TEMPORARY_ENVIRONMENT_VARIABLES = new Set(['TMPDIR', 'TMP', 'TEMPDIR', 'TEMP']);
+export const WINDOWS_TEMPORARY_FOLDERS = new Set(['temp', 'tmp']);
 
-export const MUSTACHE_ESCAPE = 'mustache.escape';
+// no-weak-cipher rule
+export const WEAK_CIPHER_PREFIXES = ['bf', 'blowfish', 'des', 'rc2', 'rc4'] as const;
 
-export const MUSTACHE_GLOBAL = 'Mustache';
+// no-weak-hashing rule
+export const DIGEST_METHOD = 'digest';
+export const HASH_FUNCTIONS: Readonly<Record<string, ReadonlySet<string>>> = {
+    'crypto.createHash': new Set([
+        'md2',
+        'md4',
+        'md5',
+        'md6',
+        'haval128',
+        'hmacmd5',
+        'dsa',
+        'ripemd',
+        'ripemd128',
+        'ripemd160',
+        'hmacripemd160',
+        'sha1',
+    ]),
+    'crypto.subtle.digest': new Set(['sha-1']),
+};
+export const SUBTLE_DIGEST = 'crypto.subtle.digest';
+export const TRUNCATION_METHODS: ReadonlySet<string> = new Set(['slice', 'substring']);
+
+// no-weak-keys rule
+export const KEY_PAIR_SELECTOR =
+    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^generateKeyPair(?:Sync)?$/]';
+export const MINIMUM_KEY_LENGTHS = { modulusLength: 2048, divisorLength: 224 } as const;
+export const WEAK_CURVES: ReadonlySet<string> = new Set([
+    'secp112r1',
+    'secp112r2',
+    'secp128r1',
+    'secp128r2',
+    'secp160k1',
+    'secp160r1',
+    'secp160r2',
+    'secp192k1',
+    'secp192r1',
+    'prime192v2',
+    'prime192v3',
+    'sect113r1',
+    'sect113r2',
+    'sect131r1',
+    'sect131r2',
+    'sect163k1',
+    'sect163r1',
+    'sect163r2',
+    'sect193r1',
+    'sect193r2',
+    'c2tnb191v1',
+    'c2tnb191v2',
+    'c2tnb191v3',
+]);
+
+// review-blockchain-mnemonic rule
+export const MNEMONIC_FUNCTIONS: ReadonlySet<string | null> = new Set([
+    'fromPhrase',
+    'mnemonicToAccount',
+    'fromMnemonic',
+]);
+export const WALLET_MODULES: ReadonlySet<unknown> = new Set(['ethers', 'viem/accounts', 'tronweb']);
+
+// xml-parser-xxe rule
+export const XML_PARSERS: ReadonlySet<string | undefined> = new Set([
+    'libxmljs.parseXml',
+    'libxmljs.parseXmlString',
+    'libxmljs2.parseXml',
+    'libxmljs2.parseXmlString',
+]);

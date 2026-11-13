@@ -155,6 +155,7 @@ const noneOfList = [
     "rule \"generation",
     "rule \"commands",
     "rule \"main",
+    "rule \"cli-scripts",
     "rule \"plugin-config",
     "rule \"plugin-types",
     "rule \"plugin",
@@ -165,7 +166,7 @@ const noneOfList = [
     "rule \"tests-types",
     "rule \"tests-setup",
     "rule \"tests",
-    "rule \"release"
+    "rule \"mise-scripts"
 ];
 const runtimeDeclarations = [
     {
@@ -848,6 +849,13 @@ export default setRuleOptions(defineConfig([
                 "stopMatching": true
             },
             {
+                "category": "rule \"cli-scripts",
+                "pattern": [
+                    "packages/cli/scripts/**"
+                ],
+                "stopMatching": true
+            },
+            {
                 "category": "rule \"plugin-config",
                 "pattern": [
                     "packages/eslint-plugin/src/config/**"
@@ -925,7 +933,7 @@ export default setRuleOptions(defineConfig([
                 "stopMatching": true
             },
             {
-                "category": "rule \"release",
+                "category": "rule \"mise-scripts",
                 "pattern": [
                     ".mise/release/**"
                 ],
@@ -1493,6 +1501,44 @@ export default setRuleOptions(defineConfig([
                     {
                         "from": {
                             "file": {
+                                "categories": "rule \"cli-scripts"
+                            }
+                        },
+                        "disallow": {
+                            "to": {
+                                "file": {
+                                    "path": "**/*"
+                                }
+                            }
+                        },
+                        "message": "Import rule \"cli-scripts\" may import its own files and \"system\", \"manifests\", \"repository\", \"settings\", \"tools\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                    },
+                    {
+                        "from": {
+                            "file": {
+                                "categories": "rule \"cli-scripts"
+                            }
+                        },
+                        "allow": {
+                            "to": {
+                                "file": {
+                                    "categories": {
+                                        "anyOf": [
+                                            "rule \"cli-scripts",
+                                            "rule \"system",
+                                            "rule \"manifests",
+                                            "rule \"repository",
+                                            "rule \"settings",
+                                            "rule \"tools"
+                                        ]
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    {
+                        "from": {
+                            "file": {
                                 "categories": "rule \"plugin-config"
                             }
                         },
@@ -1604,7 +1650,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"docs-config\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"docs-config\" may import its own files and \"main\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1618,18 +1664,7 @@ export default setRuleOptions(defineConfig([
                                     "categories": {
                                         "anyOf": [
                                             "rule \"docs-config",
-                                            "rule \"system",
-                                            "rule \"parsers",
-                                            "rule \"manifests",
-                                            "rule \"repository",
-                                            "rule \"settings",
-                                            "rule \"tools",
-                                            "rule \"engine",
-                                            "rule \"configurations",
-                                            "rule \"generation",
-                                            "rule \"commands",
                                             "rule \"main",
-                                            "rule \"cli-types",
                                             "rule \"docs-types"
                                         ]
                                     }
@@ -1650,7 +1685,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"docs-types\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", \"docs-config\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"docs-types\" may import its own files and \"main\", \"docs-config\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1664,18 +1699,7 @@ export default setRuleOptions(defineConfig([
                                     "categories": {
                                         "anyOf": [
                                             "rule \"docs-types",
-                                            "rule \"system",
-                                            "rule \"parsers",
-                                            "rule \"manifests",
-                                            "rule \"repository",
-                                            "rule \"settings",
-                                            "rule \"tools",
-                                            "rule \"engine",
-                                            "rule \"configurations",
-                                            "rule \"generation",
-                                            "rule \"commands",
                                             "rule \"main",
-                                            "rule \"cli-types",
                                             "rule \"docs-config"
                                         ]
                                     }
@@ -1696,7 +1720,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"docs\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"docs\" may import its own files and \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1710,18 +1734,6 @@ export default setRuleOptions(defineConfig([
                                     "categories": {
                                         "anyOf": [
                                             "rule \"docs",
-                                            "rule \"cli-types",
-                                            "rule \"system",
-                                            "rule \"parsers",
-                                            "rule \"manifests",
-                                            "rule \"repository",
-                                            "rule \"settings",
-                                            "rule \"tools",
-                                            "rule \"engine",
-                                            "rule \"shipped-config",
-                                            "rule \"configurations",
-                                            "rule \"generation",
-                                            "rule \"commands",
                                             "rule \"main",
                                             "rule \"plugin-config",
                                             "rule \"plugin-types",
@@ -1840,7 +1852,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests-setup\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-scripts\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1867,6 +1879,7 @@ export default setRuleOptions(defineConfig([
                                             "rule \"generation",
                                             "rule \"commands",
                                             "rule \"main",
+                                            "rule \"cli-scripts",
                                             "rule \"plugin-config",
                                             "rule \"plugin-types",
                                             "rule \"plugin",
@@ -1894,7 +1907,7 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"tests\" may import its own files and \"cli-types\", \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"shipped-config\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-scripts\", \"plugin-config\", \"plugin-types\", \"plugin\", \"docs-config\", \"docs-types\", \"docs\", \"tests-config\", \"tests-types\", \"tests-setup\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
@@ -1921,6 +1934,7 @@ export default setRuleOptions(defineConfig([
                                             "rule \"generation",
                                             "rule \"commands",
                                             "rule \"main",
+                                            "rule \"cli-scripts",
                                             "rule \"plugin-config",
                                             "rule \"plugin-types",
                                             "rule \"plugin",
@@ -1939,7 +1953,7 @@ export default setRuleOptions(defineConfig([
                     {
                         "from": {
                             "file": {
-                                "categories": "rule \"release"
+                                "categories": "rule \"mise-scripts"
                             }
                         },
                         "disallow": {
@@ -1949,12 +1963,12 @@ export default setRuleOptions(defineConfig([
                                 }
                             }
                         },
-                        "message": "Import rule \"release\" may import its own files and \"system\", \"parsers\", \"manifests\", \"repository\", \"settings\", \"tools\", \"engine\", \"configurations\", \"generation\", \"commands\", \"main\", \"cli-types\", not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
+                        "message": "Import rule \"mise-scripts\" may import only its own files, not {{dependency.source}} from {{#each to.file.categories}}{{#if @last}}{{this}}{{/if}}{{/each}}\". Move the code, move that rule above this one, or list the rules it may import in can_import."
                     },
                     {
                         "from": {
                             "file": {
-                                "categories": "rule \"release"
+                                "categories": "rule \"mise-scripts"
                             }
                         },
                         "allow": {
@@ -1962,19 +1976,7 @@ export default setRuleOptions(defineConfig([
                                 "file": {
                                     "categories": {
                                         "anyOf": [
-                                            "rule \"release",
-                                            "rule \"system",
-                                            "rule \"parsers",
-                                            "rule \"manifests",
-                                            "rule \"repository",
-                                            "rule \"settings",
-                                            "rule \"tools",
-                                            "rule \"engine",
-                                            "rule \"configurations",
-                                            "rule \"generation",
-                                            "rule \"commands",
-                                            "rule \"main",
-                                            "rule \"cli-types"
+                                            "rule \"mise-scripts"
                                         ]
                                     }
                                 }

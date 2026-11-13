@@ -3,17 +3,12 @@ import { PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 // check output defaults
-
 export const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
-
 export const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
-
 export const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
-
 export const MAX_EXIT_CODE = 255;
 
 // detection labels
-
 export const DETECTION_LABELS = {
     extensions: ['a file extension', 'file extensions'],
     filenames: ['a filename', 'filenames'],
@@ -25,11 +20,8 @@ export const DETECTION_LABELS = {
 } as const;
 
 // docs links
-
 const REFERENCE_URL = `${cliPackage.homepage}/reference/`;
-
 const SCHEMA_FILE = 'gspot.schema.json';
-
 export const DOCS_PATHS = {
     reference: REFERENCE_URL,
     commands: `${REFERENCE_URL}commands/`,
@@ -44,25 +36,16 @@ export const DOCS_PATHS = {
 } as const;
 
 // gspot command lines
-
 export const GSPOT_ADD = 'gspot add';
-
 export const GSPOT_CHECK = 'gspot check';
-
 export const GSPOT_IGNORE = 'gspot ignore';
-
 export const GSPOT_INSTALL = 'gspot install';
-
 export const GSPOT_REMOVE = 'gspot remove';
 
 // gspot paths
-
 export const MISE_CONFIG_FILE = 'mise.toml';
-
 export const MISE_LOCKFILE = 'mise.lock';
-
 export const UV_LOCKFILE = 'uv.lock';
-
 export const GSPOT_PATHS = {
     configurations: `${GSPOT_FOLDER}/configurations`,
     rules: `${GSPOT_FOLDER}/rules`,
@@ -82,29 +65,18 @@ export const GSPOT_PATHS = {
 } as const;
 
 // manifest field patterns
-
 export const EXTENSION_PATTERN = /^\.[a-z0-9]+$/u;
-
 export const INSTALLER_VERSION_MESSAGE = 'This installer needs an exact version.';
-
 export const MINIMUM_VERSION_PATTERN = /^(?:\d+|\d+\.\d+|\d+\.\d+\.\d+)$/u;
-
 export const NAME_PATTERN = /^[a-z0-9-]+$/u;
-
 export const NUMERIC_MINIMUM_MESSAGE = 'Use a numeric minimum version.';
-
 export const RULE_FILE_PATTERN = /^[A-Z0-9-]+\.md$/u;
-
 export const RULE_PLACEHOLDER = '{rule}';
-
 export const SHEBANG_TAG = 'shebang:';
-
 export const SHIPPED_CHECKSUM_PATTERN = /^sha256:[a-f0-9]{64}$/u;
-
 export const VALID_UNICODE_MESSAGE = 'Use a valid Unicode regular expression.';
 
 // manifest field values
-
 export const CASE_NAMES = [
     'camel',
     'camel-acronym',
@@ -116,9 +88,7 @@ export const CASE_NAMES = [
     'upper-snake',
     'timestamp-snake',
 ] as const;
-
 export const CHECK_CWD_VALUES = ['root', 'scope'] as const;
-
 export const CHECK_NEEDS = [
     'build',
     'dependencies',
@@ -127,13 +97,9 @@ export const CHECK_NEEDS = [
     'project-code',
     'python-environment',
 ] as const;
-
 export const CHECK_RUNS = ['files', 'scope', 'once', 'history'] as const;
-
 export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;
-
 export const FILE_KINDS = ['source', 'generated', 'vendored', 'binary'] as const;
-
 export const GROUPS = [
     'language',
     'framework',
@@ -144,9 +110,7 @@ export const GROUPS = [
     'library',
     'general',
 ] as const;
-
 export const LEVELS = ['basic', 'all'] as const;
-
 export const NAMED_CATEGORIES = [
     'schemas',
     'tables',
@@ -172,38 +136,24 @@ export const NAMED_CATEGORIES = [
     'packages',
     'path_parameters',
 ] as const;
-
 export const PATH_ROLES = ['source', 'destination', 'build'] as const;
-
 export const SETTING_LANGUAGES = ['typescript', 'javascript', 'python', 'bash', 'swift', 'sql', 'css', 'html'] as const;
-
 export const SETTING_TYPES = ['number', 'string', 'path', 'boolean', 'list', 'table'] as const;
-
 export const STAGES = ['commit', 'push', 'manual', 'message'] as const;
-
 export const TOOL_KINDS = ['program', 'package'] as const;
 
 // manifest files
-
 export const CONFIGURATIONS_FOLDER = 'src/configurations';
-
 export const DEFAULT_OUTPUT_FORMAT = { format: 'regex', pattern: DEFAULT_PATTERN } as const;
-
 export const MANIFEST_FILE = 'manifest.toml';
-
 export const RULES_FOLDER = 'rules';
-
 export const SHIPPED_FILES_FOLDER = 'files';
-
 export const SOURCE_FILE_GROUPS = ['language', 'framework'] as const;
 
 // setting reasons
-
 export const BOUND_PREFIXES = { max_: 'raising', min_: 'lowering' } as const;
-
 export const BOUND_REASON_DESCRIPTION =
     'Why this code needs a weaker bound than the default; required when you weaken it.';
-
 export const REASON_DESCRIPTIONS = {
     raising: 'Why this code needs more than the default; required when you raise the value.',
     lowering: 'Why this code needs less than the default; required when you lower the value.',

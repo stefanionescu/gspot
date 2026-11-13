@@ -38,7 +38,11 @@ and temporary notes out of shipped content.
 Use imperatives for requirements and label optional steps. Put a condition before its action. Name the subject instead
 of relying on an ambiguous pronoun.
 
-Times shown to people include their time zone; machine values retain their required format.
+Times shown to people include their time zone; machine values retain their required format. Write a date as year,
+month, and day, such as 2026-09-17, or with the month name.
+
+Write headings in sentence case and use straight quotes. Spell out an acronym at its first use, write a placeholder as
+`<kebab-case>`, and name a thing, not its place on the page.
 
 ## Words to leave out
 

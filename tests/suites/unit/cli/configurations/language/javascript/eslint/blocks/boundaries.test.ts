@@ -12,6 +12,7 @@ import {
     IMPORT_RULE_CASES,
     IMPORT_RULE_FILES,
     IMPORT_RULE_TABLES,
+    STYLESHEET_IMPORT_CASES,
     TEST_IMPORT_CASES,
     TEST_IMPORT_RULE_TABLES,
     TRPC_IMPORTS,
@@ -85,6 +86,24 @@ test.each([...IMPORT_RULE_CASES])(
                 ['boundaries/dependencies'],
             ),
         ).toStrictEqual([]);
+    },
+);
+
+test.each(STYLESHEET_IMPORT_CASES)(
+    '$name: an import rule owns a stylesheet only when its paths match it',
+    async ({ glob, findings }) => {
+        const tables = `[[import_rule]]\nname = "app"\npaths = ["app/${glob}"]\n\n[[import_rule]]\nname = "styles"\npaths = ["styles/${glob}"]\n`;
+        await using sandbox = await testdir({
+            ...IMPORT_RULE_FILES,
+            'gspot.toml': buildSandboxSettings(['typescript'], { tables }),
+            'app/source.ts': "import '../styles/global.css';\nimport './source.module.css';\n",
+            'app/source.module.css': '.card { color: red; }\n',
+            'styles/global.css': 'a { color: red; }\n',
+        });
+        const eslint = await buildEslint(sandbox.path);
+        expect(
+            await listLintFindings(eslint, sandbox.path, ['app/source.ts'], ['boundaries/dependencies']),
+        ).toStrictEqual([...findings]);
     },
 );
 
@@ -166,12 +185,12 @@ test('a file outside test_files may not import a test file, in root and child sc
     }
 });
 
-test('each file holds one import rule, the tRPC category comes first, and a refused import names the rules', async () => {
+test('each file holds one import rule, the tRPC category comes first, and a refused import names the rules, also one with template braces', async () => {
     await using sandbox = await testdir({
         ...IMPORT_RULE_FILES,
         'gspot.toml': buildSandboxSettings(['trpc', 'typescript'], {
             level: 'all',
-            tables: `[trpc]\nserver_files = ["storage/**"]\n\n${IMPORT_RULE_TABLES.root}`,
+            tables: `[trpc]\nserver_files = ["storage/**"]\n\n[[import_rule]]\nname = "{{core}}"\npaths = [ "core/**" ]\n\n${IMPORT_RULE_TABLES.root}`,
         }),
         'app/source.ts': "import type { Value } from '../storage/value.js';\nexport type Result = Value;\n",
         'storage/value.ts': 'export type Value = number;\n',
@@ -183,7 +202,8 @@ test('each file holds one import rule, the tRPC category comes first, and a refu
         .filter(({ ruleId }) => ruleId === 'boundaries/dependencies')
         .map(({ message }) => message);
     expect(messages).toHaveLength(1);
-    for (const text of ['rule "app"', 'from rule "storage"']) expect(messages?.[0]).toContain(text);
+    for (const text of ['rule "app"', 'its own files and "{{core}}", not', 'from rule "storage"'])
+        expect(messages?.[0]).toContain(text);
 });
 
 test('an import of a javascript.externals specifier that resolves to a file passes its import rule, and other specifiers of that file are reported', async () => {

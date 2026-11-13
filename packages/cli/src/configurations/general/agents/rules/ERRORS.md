@@ -15,6 +15,8 @@ Read this rule when you write code that raises, catches, or reports an error.
 - Keep the try block around the one operation that can fail.
 - Do not swallow failures. Handle, record, or re-raise each caught error.
 - Run required cleanup in `finally` or the language's equivalent.
+- Map each exit code that a child process documents to its meaning. Report a run that your code canceled as canceled,
+  and any other result as a failure that keeps the command and its stderr.
 
 ## Async work
 

@@ -1,3 +1,5 @@
+export const BOOLEAN_TEXTS: ReadonlySet<string> = new Set(['true', 'false']);
+export const HEADER_SEPARATOR = /\s+/u;
 export const HTML_ELEMENTS: ReadonlySet<string> = new Set([
     'a',
     'abbr',
@@ -149,17 +151,8 @@ export const HTML_ELEMENTS: ReadonlySet<string> = new Set([
     'wbr',
     'xmp',
 ]);
-
-export const TABLE_SECTIONS: ReadonlySet<string> = new Set(['thead', 'tbody', 'tfoot']);
-
-export const TABLE_CELLS: ReadonlySet<string> = new Set(['td', 'th']);
-
-export const MAXIMUM_ROW_SPAN = 65_534;
-
-export const MAXIMUM_COLUMN_SPAN = 1000;
-
-export const BOOLEAN_TEXTS: ReadonlySet<string> = new Set(['true', 'false']);
-
-export const HEADER_SEPARATOR = /\s+/u;
-
 export const LAYOUT_ROLES: ReadonlySet<string> = new Set(['presentation', 'none']);
+export const MAXIMUM_COLUMN_SPAN = 1000;
+export const MAXIMUM_ROW_SPAN = 65_534;
+export const TABLE_CELLS: ReadonlySet<string> = new Set(['td', 'th']);
+export const TABLE_SECTIONS: ReadonlySet<string> = new Set(['thead', 'tbody', 'tfoot']);

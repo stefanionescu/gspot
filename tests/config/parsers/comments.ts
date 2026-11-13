@@ -1,28 +1,4 @@
-export const DOCSTRING_CASES = [
-    ['', 'todo'],
-    ['r', 'todo'],
-    ['f', undefined],
-    ['rb', undefined],
-] as const;
-
-export const QUOTED_PSQL_SOURCES = [
-    "SELECT ':value', E'\\\\:value', $$:value$$, $body$\n\\set literal\n$body$;",
-    '/* :value /* :nested */ :value */',
-    '-- :value',
-    'SELECT 1::int;',
-] as const;
-
-export const NESTED_COMMENT_SQL = [
-    '-- 前言',
-    '/* outer',
-    ' /* nested */',
-    '*/',
-    'DROP TABLE app.users;',
-    '-- Between statements.',
-    '/* next */',
-    ' SELECT 1;',
-].join('\n');
-
+// code comments
 export const COMMENT_BOUNDARIES = [
     [
         'Bats quoted hash',
@@ -158,7 +134,6 @@ const value = "<!-- marker: Literal sample text. -->";
         [],
     ],
 ] as const;
-
 export const COMPONENT_SCRIPT_COMMENTS = [
     {
         path: 'Component.vue',
@@ -175,4 +150,30 @@ export const COMPONENT_SCRIPT_COMMENTS = [
         source: '---\n// marker: Front matter directive.\nconst sample = "<!-- marker: String text. -->";\n---\n<p>// marker: Template text.</p>\n<script>\n// marker: Script directive.\n</script>\n<!-- marker: Markup directive. -->\n',
         lines: [2, 7, 9],
     },
+] as const;
+
+// python docstrings
+export const DOCSTRING_CASES = [
+    ['', 'todo'],
+    ['r', 'todo'],
+    ['f', undefined],
+    ['rb', undefined],
+] as const;
+
+// sql comments
+export const NESTED_COMMENT_SQL = [
+    '-- 前言',
+    '/* outer',
+    ' /* nested */',
+    '*/',
+    'DROP TABLE app.users;',
+    '-- Between statements.',
+    '/* next */',
+    ' SELECT 1;',
+].join('\n');
+export const QUOTED_PSQL_SOURCES = [
+    "SELECT ':value', E'\\\\:value', $$:value$$, $body$\n\\set literal\n$body$;",
+    '/* :value /* :nested */ :value */',
+    '-- :value',
+    'SELECT 1::int;',
 ] as const;

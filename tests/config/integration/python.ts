@@ -1,74 +1,6 @@
 import { BASE_INSTALLED_FILES } from '#tests/config/integration/general.ts';
 
-export const UNUSED_IMPORT_SOURCE = `"""An example module."""
-
-import math
-
-TOTAL: int = "one"
-`;
-
-export const PYTEST_SAMPLE = `"""Sample declarations."""
-
-import pytest
-
-
-@pytest.fixture()
-def example() -> int:
-    """Provide a reusable value."""
-    return 1
-`;
-
-export const VERSION_SOURCE = `"""Annotation examples."""
-
-from typing import List, Optional
-
-
-def retain(values: Optional[List[int]]) -> Optional[List[int]]:
-    """Keep the supplied values."""
-    return values
-`;
-
-export const RUFF_VERSION_CASES = [
-    { scope: '', requires: '>=3.8,<4', rules: ['FA100', 'FA100', 'FA100', 'FA100'], fixed: VERSION_SOURCE },
-    {
-        scope: 'legacy',
-        requires: '==3.9.*',
-        rules: ['UP035', 'FA100', 'UP006', 'FA100', 'UP006'],
-        fixed: VERSION_SOURCE,
-    },
-    {
-        scope: 'modern',
-        requires: '~=3.10',
-        rules: ['UP035', 'UP045', 'UP006', 'UP045', 'UP006'],
-        fixed: VERSION_SOURCE.replaceAll('Optional[List[int]]', 'list[int] | None'),
-    },
-] as const;
-
-export const PARAMETER_LIMIT_CASE = {
-    language: 'python',
-    file: 'example.py',
-    source: `"""Parameter-limit samples."""
-
-
-def _seven(value0: int, value1: int, value2: int, value3: int, value4: int, value5: int, value6: int) -> int:
-    return value0 + value1 + value2 + value3 + value4 + value5 + value6
-
-
-def _eight(
-    value0: int,
-    value1: int,
-    value2: int,
-    value3: int,
-    value4: int,
-    value5: int,
-    value6: int,
-    value7: int,
-) -> int:
-    return value0 + value1 + value2 + value3 + value4 + value5 + value6 + value7
-`,
-    finding: { line: 8, rule: 'PLR0913' },
-} as const;
-
+// arithmetic module
 export const ARITHMETIC_MODULE = `"""Arithmetic examples used by these tests."""
 
 def double(value: int) -> int:
@@ -96,12 +28,46 @@ def triple(value: int) -> int:
     return value * 3
 `;
 
+// ruff
+export const PARAMETER_LIMIT_CASE = {
+    language: 'python',
+    file: 'example.py',
+    source: `"""Parameter-limit samples."""
+
+
+def _seven(value0: int, value1: int, value2: int, value3: int, value4: int, value5: int, value6: int) -> int:
+    return value0 + value1 + value2 + value3 + value4 + value5 + value6
+
+
+def _eight(
+    value0: int,
+    value1: int,
+    value2: int,
+    value3: int,
+    value4: int,
+    value5: int,
+    value6: int,
+    value7: int,
+) -> int:
+    return value0 + value1 + value2 + value3 + value4 + value5 + value6 + value7
+`,
+    finding: { line: 8, rule: 'PLR0913' },
+} as const;
+export const PYTEST_SAMPLE = `"""Sample declarations."""
+
+import pytest
+
+
+@pytest.fixture()
+def example() -> int:
+    """Provide a reusable value."""
+    return 1
+`;
 export const RUFF_SANDBOX = {
     configurations: ['python', 'pytest'],
     level: 'all',
     files: BASE_INSTALLED_FILES,
 } as const;
-
 export const RUFF_SUPPRESSIONS = [
     { source: 'import os # noqa: F401\n', suppressed: true, directive: true },
     { source: 'import os # NOQA: F401\n', suppressed: true, directive: true },
@@ -118,3 +84,33 @@ export const RUFF_SUPPRESSIONS = [
     { source: '# noqa: F401\nimport os\n', suppressed: false, directive: true },
     { source: 'import os # noqa: F821\n', suppressed: false, directive: true },
 ] as const;
+export const VERSION_SOURCE = `"""Annotation examples."""
+
+from typing import List, Optional
+
+
+def retain(values: Optional[List[int]]) -> Optional[List[int]]:
+    """Keep the supplied values."""
+    return values
+`;
+export const RUFF_VERSION_CASES = [
+    { scope: '', requires: '>=3.8,<4', rules: ['FA100', 'FA100', 'FA100', 'FA100'], fixed: VERSION_SOURCE },
+    {
+        scope: 'legacy',
+        requires: '==3.9.*',
+        rules: ['UP035', 'FA100', 'UP006', 'FA100', 'UP006'],
+        fixed: VERSION_SOURCE,
+    },
+    {
+        scope: 'modern',
+        requires: '~=3.10',
+        rules: ['UP035', 'UP045', 'UP006', 'UP045', 'UP006'],
+        fixed: VERSION_SOURCE.replaceAll('Optional[List[int]]', 'list[int] | None'),
+    },
+] as const;
+export const UNUSED_IMPORT_SOURCE = `"""An example module."""
+
+import math
+
+TOTAL: int = "one"
+`;

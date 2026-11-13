@@ -5,11 +5,16 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
 import { gfmTableToMarkdown } from 'mdast-util-gfm-table';
 import { type Options, toMarkdown } from 'mdast-util-to-markdown';
 
-import { REFERENCE_FOLDERS, REFERENCE_PATH, SECTION_HEADING, TABLE_HEADING_LEVEL } from '#docs/config/reference.ts';
+import {
+    LITERAL_CONSTRUCTS,
+    OPTION_FLAG,
+    REFERENCE_FOLDERS,
+    REFERENCE_PATH,
+    SECTION_HEADING,
+    TABLE_HEADING_LEVEL,
+} from '#docs/config/reference.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
 
-const OPTION_FLAG = /(?<![\w-])--(?:[a-z][a-z-]*)?(?![\w-])/gu;
-const LITERAL_CONSTRUCTS = ['htmlFlow', 'htmlText', 'autolink', 'attention', 'characterReference'];
 const MARKDOWN_OPTIONS: Options = { bullet: '-', fences: true, extensions: [gfmTableToMarkdown()] };
 
 function buildTableRow(cells: readonly string[]) {

@@ -114,7 +114,7 @@ main() {
     assert_version_raised packages/eslint-plugin "${plugin_spec}" "${plugin_tag}"
     assert_version_raised packages/cli "${cli_spec}" "${cli_tag}"
     notes=$(print_changelog_section "${cli_spec##*@}")
-    bun .mise/release/pin-ages.ts || exit 1
+    bun packages/cli/scripts/pin-ages.ts || exit 1
     push_tag "${plugin_tag}"
     push_tag "${cli_tag}"
     create_release "${cli_tag}" "${notes}"

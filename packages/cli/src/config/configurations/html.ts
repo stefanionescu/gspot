@@ -1,7 +1,6 @@
 // checks
 
 export const ACTIVE_DOCUMENT_TYPES = new Set(['text/html', 'application/xhtml+xml', 'image/svg+xml']);
-
 export const DOCUMENT_URL_ATTRIBUTES: ReadonlyMap<string, readonly string[]> = new Map([
     ['a', ['href', 'xlink:href']],
     ['area', ['href']],
@@ -10,9 +9,7 @@ export const DOCUMENT_URL_ATTRIBUTES: ReadonlyMap<string, readonly string[]> = n
     ['object', ['data']],
     ['embed', ['src']],
 ]);
-
 export const EVENT_ATTRIBUTE = /^on[a-z]+$/u;
-
 export const EXECUTABLE_SCRIPT_TYPES: ReadonlySet<string> = new Set([
     '',
     'module',
@@ -33,40 +30,30 @@ export const EXECUTABLE_SCRIPT_TYPES: ReadonlySet<string> = new Set([
     'text/x-ecmascript',
     'text/x-javascript',
 ]);
-
 export const HTML_RULES = {
     scriptLink: 'script-link',
     inlineScript: 'inline-script',
     handlerAttribute: 'handler-attribute',
 } as const;
-
 export const INLINE_SCRIPT_MESSAGE = 'Move executable inline script to a script file.';
-
 export const RELATIVE_URL_BASE = 'https://example.invalid';
-
 export const SCRIPT_SCHEMES = new Set(['javascript:', 'vbscript:']);
-
 export const SURROUNDING_QUOTES = /^["']|["']$/gu;
-
 export const URL_ATTRIBUTES = new Set(['href', 'xlink:href', 'src', 'action', 'formaction', 'data', 'background']);
 
 // generated config
-
 export const GENERATED_MARKUP_PACKAGES: ReadonlySet<string> = new Set([
     '@astrojs/starlight',
     'astro-expressive-code',
     'expressive-code',
 ]);
-
 export const GENERATED_MARKUP_RULES = [
     'element-permitted-content',
     'no-implicit-button-type',
     'text-content',
     'unique-landmark',
 ] as const;
-
 export const HTML_VALIDATE_EXTENDS = ['html-validate:recommended'] as const;
-
 export const HTML_VALIDATE_RULES: Readonly<Record<string, Readonly<Record<string, unknown>>>> = {
     html: {
         'doctype-style': 'off',

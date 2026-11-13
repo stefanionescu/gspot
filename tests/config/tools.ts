@@ -1,15 +1,14 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { PYTHON_TOOL_PROJECT as PYTHON_PROJECT } from '#cli/config/tools/installers.ts';
 
+// foreign hooks
 const HUSKY_STUBS = {
     '.husky/_/.gitignore': '*\n',
     '.husky/_/h': '#!/usr/bin/env sh\n',
     '.husky/_/pre-commit': '#!/usr/bin/env sh\n. "$(dirname "$0")/h"\n',
 };
-
 const NPM_PROJECT_PACKAGE =
     '{"private":true,"packageManager":"npm@11.10.1","devDependencies":{"@gspothq/cli":"0.1.0"}}';
-
 export const HOOK_REPOSITORIES = [
     {
         name: 'another hooks folder',
@@ -50,11 +49,46 @@ export const HOOK_REPOSITORIES = [
     },
 ] as const;
 
+// gspot hooks
 export const STOCK_LFS_PRE_PUSH = String.raw`#!/bin/sh
 command -v git-lfs >/dev/null 2>&1 || { printf >&2 "\n%s\n\n" "This repository is configured for Git LFS but 'git-lfs' was not found on your path. If you no longer wish to use Git LFS, remove this hook by deleting the 'pre-push' file in the hooks directory (set by 'core.hookspath'; usually '.git/hooks')."; exit 2; }
 git lfs pre-push "$@"
 `;
 
+// package inspection
+export const SYSTEM_PLUGIN_REPORTS = [
+    {
+        name: 'installed',
+        stdout: 'registered third-party plugins:\n  pytest-cov-7.1.0 at /project/.venv/pytest_cov/plugin.py',
+        code: 0,
+        inspection: { state: 'system', found: '7.1.0', minimumVersion: undefined },
+        noted: undefined,
+    },
+    {
+        name: 'absent',
+        stdout: 'pytest 9.1.1',
+        code: 0,
+        inspection: { state: 'missing' },
+        noted: 'pytest-cov',
+    },
+] as const;
+
+// pypi installer
+export const INVALID_UV_SETTINGS = [
+    { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
+    {
+        file: 'pyproject.toml',
+        field: 'tool.uv.find-links',
+        text: '[tool.uv]\nfind-links = "https://example.com/wheels"\n',
+    },
+];
+export const PYPROJECT_UV_INDEX = `[project]
+name = "authored-project"
+
+[tool.uv]
+index-url = "https://example.com/simple"
+find-links = ["wheels"]
+`;
 export const UV_TOML = `index-url = "https://alex:test%2Bpassword@example.com/simple"
 find-links = ["wheels", "https://example.com/wheels"]
 offline = true
@@ -64,7 +98,6 @@ resolution = "lowest-direct"
 name = "local"
 url = "packages"
 `;
-
 export const PYTHON_TOOL_PROJECT = `[project]
 name = "tools"
 version = "0.0.0"
@@ -75,7 +108,6 @@ dependencies = ["Example.Package==1.2.3", "second-package==4.0.0"]
 package = false
 constraint-dependencies = ["transitive.package>=2.0.0"]
 `;
-
 export const PYTHON_TOOL_LOCKFILE = `version = 1
 requires-python = "${PYTHON_PROJECT['requires-python']}"
 
@@ -88,13 +120,17 @@ version = "0.0.0"
 source = { virtual = "." }
 metadata = { requires-dist = [{ name = "second_package", specifier = "==4.0.0" }, { name = "example-package", specifier = "==1.2.3" }] }
 `;
-
+export const PYTHON_INSTALL_FILES = {
+    'gspot.toml': 'configurations = []\n[rule_files]\nenabled = false\n',
+    [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT,
+    [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE,
+    'uv.toml': UV_TOML,
+};
 export const UV_LOCKFILE_MISMATCHES = [
     ['Python version', PYTHON_PROJECT['requires-python'], '==0.0.0'],
     ['pin', '==4.0.0', '==5.0.0'],
     ['virtual root', 'virtual = "."', 'virtual = "elsewhere"'],
 ] as const;
-
 export const UV_LOCKFILE_ORIGINS = [
     {
         name: 'the PyPI index and its file host',
@@ -154,30 +190,7 @@ export const UV_LOCKFILE_ORIGINS = [
     },
 ] satisfies Array<{ name: string; registry: string; url: string; expected: boolean; indexes: Record<string, unknown> }>;
 
-export const PYPROJECT_UV_INDEX = `[project]
-name = "authored-project"
-
-[tool.uv]
-index-url = "https://example.com/simple"
-find-links = ["wheels"]
-`;
-
-export const INVALID_UV_SETTINGS = [
-    { file: 'uv.toml', field: 'find-links', text: 'find-links = "https://example.com/wheels"\n' },
-    {
-        file: 'pyproject.toml',
-        field: 'tool.uv.find-links',
-        text: '[tool.uv]\nfind-links = "https://example.com/wheels"\n',
-    },
-];
-
-export const PYTHON_INSTALL_FILES = {
-    'gspot.toml': 'configurations = []\n[rule_files]\nenabled = false\n',
-    [GSPOT_PATHS.pythonProject]: PYTHON_TOOL_PROJECT,
-    [GSPOT_PATHS.uvLockfile]: PYTHON_TOOL_LOCKFILE,
-    'uv.toml': UV_TOML,
-};
-
+// tool pins
 export const TOOL_PROJECT_PACKAGES = [
     {
         name: 'npm',
@@ -208,23 +221,7 @@ export const TOOL_PROJECT_PACKAGES = [
     },
 ] as const;
 
-export const SYSTEM_PLUGIN_REPORTS = [
-    {
-        name: 'installed',
-        stdout: 'registered third-party plugins:\n  pytest-cov-7.1.0 at /project/.venv/pytest_cov/plugin.py',
-        code: 0,
-        inspection: { state: 'system', found: '7.1.0', minimumVersion: undefined },
-        noted: undefined,
-    },
-    {
-        name: 'absent',
-        stdout: 'pytest 9.1.1',
-        code: 0,
-        inspection: { state: 'missing' },
-        noted: 'pytest-cov',
-    },
-] as const;
-
+// tool versions
 export const VERSION_OUTPUTS = [
     {
         name: 'text without a version',

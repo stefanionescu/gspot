@@ -17,6 +17,8 @@ Give each page one purpose and a title that names its task or subject. Explain i
 shortest successful path in the README and link to specialist guides. Document real subprojects. Mention a path only
 when the reader must use it.
 
+Give each scope a `README.md` that says what it does, and the repository a license file.
+
 Use the renderer's Markdown. Keep routine pages free of custom layout HTML or CSS. A component that some viewers cannot
 show needs a text alternative.
 

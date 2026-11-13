@@ -1,5 +1,9 @@
-import { test } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
 
+import { expect, test } from 'bun:test';
+
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
@@ -37,6 +41,8 @@ const DEBUGGER_SAMPLE = {
 
 const eslintSandbox = shareInstalledSandbox({ ...ESLINT_SANDBOX, level: 'basic' });
 
+const strictSandbox = shareInstalledSandbox({ ...ESLINT_SANDBOX, level: 'all' });
+
 test('javascript/eslint runs with only the packages that the javascript configuration installs', async () => {
     await assertCheckSample(eslintSandbox(), DEBUGGER_SAMPLE);
 });
@@ -56,4 +62,17 @@ test('javascript/import-cycles reports a cycle and skips a disable comment for a
         ],
         corrected: { files: { 'src/second.js': 'export const second = 2;\n' } },
     });
+});
+
+test('check --fix removes an unused disable comment and leaves the doc comment above its function', async () => {
+    const { root } = strictSandbox();
+    const path = join(root, 'src/stale.js');
+    await writeFile(
+        path,
+        JAVASCRIPT_MODULE.replace('*/\nexport', '*/\n// eslint-disable-next-line no-console\nexport'),
+    );
+
+    const fixed = await spawnGspot(root, ['check', '--fix', '--only', 'javascript/eslint', 'src/stale.js']);
+
+    expect(await readFile(path, 'utf8'), fixed.stdout + fixed.stderr).toBe(JAVASCRIPT_MODULE);
 });

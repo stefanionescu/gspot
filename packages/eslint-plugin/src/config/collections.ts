@@ -1,5 +1,14 @@
+// collection types
 export const COLLECTION_TYPE_NAMES = new Set(['Array', 'Map', 'Set', 'WeakMap', 'WeakSet']);
 
+// no-element-overwrite rule
+export const KEY_WRITE_ARGUMENTS: ReadonlyMap<string, number> = new Map([
+    ['add', 1],
+    ['set', 2],
+]);
+
+// no-empty-collection rule
+export const ELEMENT_WRITE_OPERATORS: ReadonlySet<string> = new Set(['=', '||=', '&&=', '??=']);
 export const READING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
     'copyWithin',
     'pop',
@@ -35,6 +44,21 @@ export const READING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
     'values',
 ]);
 
+// no-in-misuse rule
+export const ARRAY_PROTOTYPE_NAMES: ReadonlySet<string> = new Set([
+    'indexOf',
+    'lastIndexOf',
+    'forEach',
+    'map',
+    'filter',
+    'every',
+    'some',
+]);
+
+// no-positive-index-check rule
+export const INDEX_OF_METHOD = 'indexOf';
+
+// no-unused-collection rule
 export const WRITING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
     'copyWithin',
     'fill',
@@ -51,8 +75,7 @@ export const WRITING_COLLECTION_METHODS: ReadonlySet<string> = new Set([
     'delete',
 ]);
 
-export const ELEMENT_WRITE_OPERATORS: ReadonlySet<string> = new Set(['=', '||=', '&&=', '??=']);
-
+// no-void-array-callback rule
 export const ARRAY_CALLBACK_METHODS: ReadonlySet<string | null> = new Set([
     'every',
     'filter',
@@ -68,7 +91,8 @@ export const ARRAY_CALLBACK_METHODS: ReadonlySet<string | null> = new Set([
     'sort',
     'toSorted',
 ]);
-
+export const ARRAY_FROM_METHOD = 'from';
+export const ARRAY_NAME = 'Array';
 export const ARRAY_TYPE_NAMES: ReadonlySet<string | undefined> = new Set([
     'Array',
     'Int8Array',
@@ -83,28 +107,7 @@ export const ARRAY_TYPE_NAMES: ReadonlySet<string | undefined> = new Set([
     'BigInt64Array',
     'BigUint64Array',
 ]);
-
-export const ARRAY_NAME = 'Array';
-
-export const ARRAY_FROM_METHOD = 'from';
-
 export const VOID_TYPE = 'void';
 
-export const ARRAY_PROTOTYPE_NAMES: ReadonlySet<string> = new Set([
-    'indexOf',
-    'lastIndexOf',
-    'forEach',
-    'map',
-    'filter',
-    'every',
-    'some',
-]);
-
+// require-reduce-initial-value rule
 export const REDUCE_METHOD = 'reduce';
-
-export const INDEX_OF_METHOD = 'indexOf';
-
-export const KEY_WRITE_ARGUMENTS: ReadonlyMap<string, number> = new Map([
-    ['add', 1],
-    ['set', 2],
-]);

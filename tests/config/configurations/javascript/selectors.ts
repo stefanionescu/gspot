@@ -1,12 +1,33 @@
 import type { SelectorSample } from '#tests/types/configurations.ts';
 
-const MODULE_PACKAGE = '{"private":true,"type":"module"}\n';
+// selector planning
+export const EXPRESS_SCOPE_SETTINGS = `[[scope]]
+path = "app"
+configurations = ["express"]
 
+[[scope]]
+path = "app/child"
+
+[[scope]]
+path = "sibling"
+`;
+export const SUPABASE_FOLDER_SETTINGS = `[[scope]]
+path = "api"
+configurations = ["supabase"]
+
+[scope.supabase]
+functions_folder = "edge"
+
+[[scope]]
+path = "sibling"
+`;
+
+// selector samples
+const MODULE_PACKAGE = '{"private":true,"type":"module"}\n';
 const NEXT_CONFIG_FILES = {
     'tsconfig.json': '{"include":["*.ts"]}\n',
     'settings.ts': 'export const settings = { env: { API_TOKEN: "text" } };\n',
 } as const;
-
 export const CONFIGURATION_SELECTOR_SAMPLES: readonly SelectorSample[] = [
     {
         name: 'store, form and procedure selectors report whole-store reads and calls without a schema, and accept schema options and unrelated queries',
@@ -174,25 +195,3 @@ export default {
         },
     },
 ];
-
-export const EXPRESS_SCOPE_SETTINGS = `[[scope]]
-path = "app"
-configurations = ["express"]
-
-[[scope]]
-path = "app/child"
-
-[[scope]]
-path = "sibling"
-`;
-
-export const SUPABASE_FOLDER_SETTINGS = `[[scope]]
-path = "api"
-configurations = ["supabase"]
-
-[scope.supabase]
-functions_folder = "edge"
-
-[[scope]]
-path = "sibling"
-`;

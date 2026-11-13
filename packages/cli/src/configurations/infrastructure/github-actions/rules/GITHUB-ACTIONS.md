@@ -5,6 +5,9 @@ Read this rule when you change a GitHub Actions workflow or action.
 ## Workflow shape
 
 - A workflow that runs only on the default branch or a tag has no `concurrency` group: its result records that commit.
+- A workflow that runs for pull requests has a `concurrency` group keyed by the ref.
+- Give each job a `timeout-minutes`, run it on a pinned runner image such as `ubuntu-24.04`, and give each artifact
+  upload `retention-days`.
 - Let a failing required step fail the job.
 - Upload diagnostics after failed checks with an explicit status condition. Deployments and release publication require
   successful prerequisites.
@@ -20,11 +23,14 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 - Pin every action from another repository to a full commit SHA, with its version in a comment:
   `uses: actions/checkout@<sha> # v5.0.0`.
+- Give each workflow and job the narrowest `permissions`. Check out no untrusted code in a `pull_request_target` or
+  `workflow_run` workflow.
 
 ## Scripts
 
 - Declare the shell required by the script. The explicit Bash shell in GitHub Actions turns on `-e` and `pipefail`, but
   not `-u`. Enable required options and validate inputs explicitly.
+- Pass an expression to a `run:` script through the `env` of its step, and read it as a quoted variable.
 - Key caches on the lockfile hash and the runtime version. Restore keys never match a different lockfile.
 
 ## Outputs

@@ -12,7 +12,10 @@ Read this rule before you add, upgrade, or remove a dependency.
 ## Versions
 
 - Pin exact versions in an application. A published library keeps ranges for its dependencies and peers.
-- Pin the runtime version once for Node, Python, Bun, or the Swift toolchain. Every file that states it agrees.
+- Pin the runtime and the package manager once for Node, Python, Bun, or the Swift toolchain. Every file that states it
+  agrees.
+- Give a dependency the same version range in every `package.json` of the workspace.
+- Commit the lockfile that the install writes in the same change as the manifest.
 - If the package manager rejects a release as too new, pick an older one or ask the user.
 - Upgrade one dependency per commit with the reason. Never upgrade broadly to pass a scanner without reading what
   changed.
@@ -25,3 +28,5 @@ Read this rule before you add, upgrade, or remove a dependency.
 - For a known advisory that has no fix, follow SUPPRESSIONS.md: ask the user, then run `gspot ignore` with the advisory
   ID and a reason. Never ignore advisories in bulk.
 - Before you remove a package that a check calls unused, search configuration and scripts for it.
+- Install packages only from the registries in `dependencies.allowed_registries`, and keep the lockfile of one package
+  manager per scope.

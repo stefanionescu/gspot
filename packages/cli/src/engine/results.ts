@@ -138,7 +138,7 @@ export async function runBuiltInCheck(
     const findings = (Array.isArray(result) ? result : result.findings).map((finding) => ({
         ...finding,
         check: planned.check.id,
-        fixable: false,
+        fixable: finding.fixable === true,
     }));
     const files = Array.isArray(result) ? undefined : [...new Set(result.files)];
     return {

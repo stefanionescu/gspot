@@ -3,9 +3,7 @@ export const CONFIGURATION_TABLE = `
 title = "Local"
 description = "A local configuration used by manifest loading."
 `;
-
 export const EXAMPLE_MANIFEST_FOLDER = 'src/configurations/language/example';
-
 export const MANIFEST_INVARIANT_CASES = [
     {
         name: 'a PyPI installer without a version',

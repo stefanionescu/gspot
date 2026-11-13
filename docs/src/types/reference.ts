@@ -1,4 +1,4 @@
-import type { CliReference } from '#cli/types/main.ts';
+import type { CliReference } from '@gspothq/cli/reference';
 
 export type SettingReference = CliReference['settings'][number];
 export type SettingVariant = SettingReference['variants'][number];

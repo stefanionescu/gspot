@@ -2,45 +2,21 @@ import { PUSH_INPUT_MESSAGE } from '#cli/config/commands/check.ts';
 import { INVALID_PUSH_INPUT_MESSAGE } from '#cli/config/repository/git.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
 
-export const NAMING_SCOPE_SETTINGS = {
-    level: 'all',
-    rules: true,
-    scopes: [
-        { path: 'api', configurations: ['javascript', 'naming'] },
-        { path: 'web', configurations: ['javascript', 'naming'] },
-    ],
-} as const;
-
+// check cancellation
 export const AUTHORED_SCRIPT = 'echo authored\n';
-
+export const CANCELLATION_REPORT_CASES = [
+    { signal: 'SIGINT', format: 'json' },
+    { signal: 'SIGTERM', format: 'text' },
+] as const;
 export const SIGNAL_EXITS = [
     { operation: 'init', signal: 'SIGINT', exitCode: 130 },
     { operation: 'checkout-index', signal: 'SIGTERM', exitCode: 143 },
 ] as const;
 
-export const CANCELLATION_REPORT_CASES = [
-    { signal: 'SIGINT', format: 'json' },
-    { signal: 'SIGTERM', format: 'text' },
-] as const;
-
-export const PUSH_CHECK_COMMAND = [
-    'check',
-    '--hook',
-    'pre-push',
-    '--only',
-    'project/bash-syntax',
-    '--json',
-    '--',
-    'origin',
-    'unused',
-] as const;
-
+// check refusals
 const INVALID_UTF8_BYTE = 0xff;
-
 const UTF16_MARKER_BYTE = 0xfe;
-
 const LINE_FEED_BYTE = 0x0a;
-
 export const PUSH_INPUT_REFUSALS = [
     {
         name: 'text that is no ref update',
@@ -54,8 +30,17 @@ export const PUSH_INPUT_REFUSALS = [
     },
 ] as const;
 
+// check report
+export const ENVIRONMENT_CHECK = {
+    check: 'python/basedpyright',
+    scope: '',
+    status: 'missing' as const,
+    fileCount: 1,
+    duration: 0,
+    findings: [],
+    note: PROJECT_ENVIRONMENT_MESSAGE,
+};
 const TEST_VERSION = '0.0.0-test';
-
 export const FAILED_CHECK_REPORT = {
     comparison: null,
     fixes: null,
@@ -105,16 +90,29 @@ export const FAILED_CHECK_REPORT = {
     exitCode: 1,
 } as const;
 
-export const ENVIRONMENT_CHECK = {
-    check: 'python/basedpyright',
-    scope: '',
-    status: 'missing' as const,
-    fileCount: 1,
-    duration: 0,
-    findings: [],
-    note: PROJECT_ENVIRONMENT_MESSAGE,
-};
+// check selection
+export const NAMING_SCOPE_SETTINGS = {
+    level: 'all',
+    rules: true,
+    scopes: [
+        { path: 'api', configurations: ['javascript', 'naming'] },
+        { path: 'web', configurations: ['javascript', 'naming'] },
+    ],
+} as const;
 
+// push checks
+export const PUSH_CHECK_COMMAND = [
+    'check',
+    '--hook',
+    'pre-push',
+    '--only',
+    'project/bash-syntax',
+    '--json',
+    '--',
+    'origin',
+    'unused',
+] as const;
+
+// staged snapshot
 export const NOTES_MARKDOWN = '# Notes\n';
-
 export const UPPERCASE_NOTES_MARKDOWN = '# NOTES\n';

@@ -1,33 +1,20 @@
 import { BASE_FLAG, FIX_FLAG, HOOK_FLAG, ONLY_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
 
 // options
-
 export const BASE_OPTION = `${BASE_FLAG} <ref>` as const;
-
 export const CONFIGURATIONS_OPTION = '--configurations <names>';
-
 export const FROM_OPTION = '--from <file>';
-
 export const HOOK_OPTION = `${HOOK_FLAG} <hook>` as const;
-
 export const LEVEL_OPTION = '--level <level>';
-
 export const ONLY_OPTION = `${ONLY_FLAG} <checks>` as const;
-
 export const PATHS_OPTION = '--paths <path>';
-
 export const REASON_OPTION = '--reason <text>';
-
 export const RULE_OPTION = '--rule <rule>';
-
 export const SCOPE_OPTION = '--scope <path>';
-
 export const SKIP_OPTION = '--skip <checks>';
 
 // command help
-
 const SCOPE_HELP = 'Apply to one project folder, by its path from the repository root, such as services/api';
-
 export const COMMAND_HELP = {
     scan: {
         summary: 'Try gspot on a copy of this repository, and change nothing',
@@ -268,5 +255,4 @@ export const COMMAND_HELP = {
 } as const;
 
 // text marks
-
 export const CODE_MARK = '`';

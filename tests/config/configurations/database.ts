@@ -1,6 +1,8 @@
+// definer search path
+// definer search path
+// definer search path
 export const DEFINER_FUNCTION_SQL =
     'CREATE FUNCTION grant_access() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n';
-
 export const DEFINER_REPAIRS = [
     {
         name: 'replacement',
@@ -8,7 +10,6 @@ export const DEFINER_REPAIRS = [
     },
     { name: 'removal', sql: 'DROP FUNCTION public.grant_access();\n' },
 ] as const;
-
 export const SECURITY_ALTERATIONS = [
     { change: 'SECURITY DEFINER', initial: '', unsafe: true },
     { change: 'SECURITY INVOKER', initial: 'SECURITY DEFINER', unsafe: false },
@@ -16,20 +17,47 @@ export const SECURITY_ALTERATIONS = [
     { change: 'RESET ALL', initial: "SECURITY DEFINER SET search_path = ''", unsafe: true },
 ] as const;
 
+// foreign key indexes
 export const COMPOSITE_INDEX_CASES = [
     { columns: 'tenant_id, user_id', expected: [] },
     { columns: 'user_id, tenant_id, id', expected: [] },
     { columns: 'id, tenant_id, user_id', expected: ['foreign-key-index'] },
 ] as const;
 
-const EQUIVALENT_INDEXES_SQL = `
-        CREATE TABLE posts (author_id int REFERENCES users(id));
-        ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-        CREATE INDEX first ON posts(author_id);
-        CREATE INDEX second ON posts(author_id);
-        DROP INDEX first;
-    `;
+// migrations
+export const FROZEN_MIGRATION_PATHS = ['db/V20240101__init.sql', 'db/V20240202__users.sql'] as const;
+export const FROZEN_MIGRATION_CASES = [
+    { through: '20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
+    { through: 'V20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
+    { through: 'none', frozen: [] },
+    { through: 'all', frozen: FROZEN_MIGRATION_PATHS },
+] as const;
 
+// postgres generator
+export const CHILD_MIGRATIONS = {
+    'migrations/V1_root.sql': 'SELECT 1;\n',
+    'app/migrations/V2_first.sql': 'SELECT 2;\n',
+    'app/migrations/V10_next.sql': 'SELECT 10;\n',
+    'other/migrations/V1_other.sql': 'SELECT 1;\n',
+} as const;
+export const CHILD_POSTGRES_SCOPE_TABLES = `[[scope]]
+path = "app"
+
+configurations = ["postgres"]
+[scope.postgres]
+frozen_through = "2"
+`;
+export const SQUAWK_MIGRATION_FILES = {
+    'migrations/2_initial.sql': 'SELECT 1;\n',
+    'migrations/10_next.sql': 'SELECT 1;\n',
+    'migrations/9007199254740992_large.sql': 'SELECT 1;\n',
+    'migrations/9007199254740993_later.sql': 'SELECT 1;\n',
+    'migrations/V2_initial.sql': 'SELECT 1;\n',
+} as const;
+
+// schema
+const ADDED_COLUMN_SQL =
+    'CREATE TABLE posts (id int); ALTER TABLE posts ADD COLUMN user_id int REFERENCES users(id); CREATE INDEX post_users ON posts(user_id);';
 const DROPPED_CONSTRAINTS_SQL = `
         CREATE TABLE posts (author_id int, team_id int,
             CONSTRAINT author_fk FOREIGN KEY(author_id) REFERENCES users(id),
@@ -38,13 +66,15 @@ const DROPPED_CONSTRAINTS_SQL = `
         CREATE INDEX author_index ON posts(author_id);
         ALTER TABLE posts DROP CONSTRAINT author_fk, DROP CONSTRAINT author_unique;
     `;
-
+const EQUIVALENT_INDEXES_SQL = `
+        CREATE TABLE posts (author_id int REFERENCES users(id));
+        ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
+        CREATE INDEX first ON posts(author_id);
+        CREATE INDEX second ON posts(author_id);
+        DROP INDEX first;
+    `;
 const UNNAMED_KEYS_SQL =
     'CREATE TABLE posts (id int PRIMARY KEY, author_id int REFERENCES users(id), title text UNIQUE, CHECK (id > 0));';
-
-const ADDED_COLUMN_SQL =
-    'CREATE TABLE posts (id int); ALTER TABLE posts ADD COLUMN user_id int REFERENCES users(id); CREATE INDEX post_users ON posts(user_id);';
-
 export const DATABASE_SCHEMA_CASES = [
     {
         name: 'table and column renames retain their foreign keys, indexes, and row security',
@@ -173,36 +203,4 @@ ALTER TABLE groups ENABLE ROW LEVEL SECURITY;
             indexed: [],
         },
     },
-] as const;
-
-export const CHILD_POSTGRES_SCOPE_TABLES = `[[scope]]
-path = "app"
-
-configurations = ["postgres"]
-[scope.postgres]
-frozen_through = "2"
-`;
-
-export const CHILD_MIGRATIONS = {
-    'migrations/V1_root.sql': 'SELECT 1;\n',
-    'app/migrations/V2_first.sql': 'SELECT 2;\n',
-    'app/migrations/V10_next.sql': 'SELECT 10;\n',
-    'other/migrations/V1_other.sql': 'SELECT 1;\n',
-} as const;
-
-export const SQUAWK_MIGRATION_FILES = {
-    'migrations/2_initial.sql': 'SELECT 1;\n',
-    'migrations/10_next.sql': 'SELECT 1;\n',
-    'migrations/9007199254740992_large.sql': 'SELECT 1;\n',
-    'migrations/9007199254740993_later.sql': 'SELECT 1;\n',
-    'migrations/V2_initial.sql': 'SELECT 1;\n',
-} as const;
-
-export const FROZEN_MIGRATION_PATHS = ['db/V20240101__init.sql', 'db/V20240202__users.sql'] as const;
-
-export const FROZEN_MIGRATION_CASES = [
-    { through: '20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
-    { through: 'V20240101', frozen: [FROZEN_MIGRATION_PATHS[0]] },
-    { through: 'none', frozen: [] },
-    { through: 'all', frozen: FROZEN_MIGRATION_PATHS },
 ] as const;

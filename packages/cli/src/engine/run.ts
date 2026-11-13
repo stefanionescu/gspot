@@ -243,7 +243,7 @@ async function runEveryActiveCheck(run: Run, checks: PlannedCheck[]): Promise<Ch
 async function planAfterFixes(session: CheckSession, options: RunOptions): Promise<PlanAfterFixes> {
     const planned = planChecks(session, options);
     if (!options.fix) return { session, planned, fixes: undefined };
-    const fixes = await runFixers(session, planned);
+    const fixes = await runFixers(session, planned, options.selectCheckCode);
     const fixed = buildCheckSession(
         await openSession(session.root, {
             toolsRoot: session.toolsRoot,

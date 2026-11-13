@@ -1,6 +1,7 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { VALE_PACKAGE_FOLDERS } from '#cli/config/tools/vale.ts';
 
+// ansible
 export const COMMAND_PLAYBOOK = `---
 - name: Deploy the service
   hosts: all
@@ -10,6 +11,72 @@ export const COMMAND_PLAYBOOK = `---
       changed_when: true
 `;
 
+// github actions
+export const CALLER_WORKFLOW = `on: workflow_dispatch
+jobs:
+  caller:
+    uses: $/.github/workflows/called.yml
+`;
+
+// nextjs
+export const NEXT_MESSAGES = {
+    'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
+    'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+} as const;
+
+// project documents
+export const LICENSE = `MIT License
+
+Copyright (c) 2026 Alex Garcia
+`;
+export const README = `# Test
+
+A sandbox that holds documents and nothing else.
+
+## Requirements
+
+- git
+
+## Setup
+
+\`\`\`bash
+git clone https://example.com/example.git
+\`\`\`
+
+## Usage
+
+Open the guide and read it from the top.
+`;
+
+// settings tables
+export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
+name = "local"
+path = "tools/lint/plugin.mjs"
+rules = { "no-forbidden" = [] }
+`;
+export const NPM_CHECK_IGNORES = `[[ignore]]
+check = "json/v8r"
+reason = "This sandbox exercises tools without JSON schema checks."
+[[ignore]]
+check = "format/editorconfig-checker"
+reason = "This sandbox exercises tools without the npm editor checker."
+[[ignore]]
+check = "format/prettier"
+reason = "This sandbox exercises tools without the npm formatter."
+`;
+
+// spelling
+export const TYPO = {
+    the: 'teh',
+    color: 'colour',
+    receive: 'recieve',
+    whether: 'wether',
+    word: 'wrod',
+    spelling: 'speling',
+    select: 'SELEC',
+} as const;
+
+// stylelint
 export const STYLELINT_PACKAGE_JSON = `{
   "name": "native-project",
   "private": true,
@@ -18,6 +85,16 @@ export const STYLELINT_PACKAGE_JSON = `{
 }
 `;
 
+// vale
+export const EMPTY_VALE_INI = 'Packages =\n';
+export const VALE_INSTALLED_FILES = Object.fromEntries(
+    VALE_PACKAGE_FOLDERS.map((folder) => [`${GSPOT_PATHS.valePackages}/${folder}/.keep`, '']),
+);
+export const VALE_PACKAGES_INI = `StylesPath = ../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
+
+// xcode projects
+export const BUILD_SETTINGS_PBXPROJ =
+    '{rootObject=P;objects={P={isa=PBXProject;};D={isa=XCBuildConfiguration;buildSettings={SDKROOT=macosx;SWIFT_VERSION=6.0;};};};}';
 export const GROUPED_PBXPROJ = `// !$*UTF8*$!
 {
     rootObject = P;
@@ -39,76 +116,3 @@ export const GROUPED_PBXPROJ = `// !$*UTF8*$!
     };
 }
 `;
-
-export const BUILD_SETTINGS_PBXPROJ =
-    '{rootObject=P;objects={P={isa=PBXProject;};D={isa=XCBuildConfiguration;buildSettings={SDKROOT=macosx;SWIFT_VERSION=6.0;};};};}';
-
-export const README = `# Test
-
-A sandbox that holds documents and nothing else.
-
-## Requirements
-
-- git
-
-## Setup
-
-\`\`\`bash
-git clone https://example.com/example.git
-\`\`\`
-
-## Usage
-
-Open the guide and read it from the top.
-`;
-
-export const LICENSE = `MIT License
-
-Copyright (c) 2026 Alex Garcia
-`;
-
-export const CALLER_WORKFLOW = `on: workflow_dispatch
-jobs:
-  caller:
-    uses: $/.github/workflows/called.yml
-`;
-
-export const NPM_CHECK_IGNORES = `[[ignore]]
-check = "json/v8r"
-reason = "This sandbox exercises tools without JSON schema checks."
-[[ignore]]
-check = "format/editorconfig-checker"
-reason = "This sandbox exercises tools without the npm editor checker."
-[[ignore]]
-check = "format/prettier"
-reason = "This sandbox exercises tools without the npm formatter."
-`;
-
-export const TYPO = {
-    the: 'teh',
-    color: 'colour',
-    receive: 'recieve',
-    whether: 'wether',
-    word: 'wrod',
-    spelling: 'speling',
-    select: 'SELEC',
-} as const;
-
-export const NEXT_MESSAGES = {
-    'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
-    'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
-} as const;
-
-export const VALE_PACKAGES_INI = `StylesPath = ../../vale\nPackages = Google, write-good, proselint, alex, Harper\n`;
-
-export const LOCAL_PLUGIN_TABLES = `[[tools.eslint.plugins]]
-name = "local"
-path = "tools/lint/plugin.mjs"
-rules = { "no-forbidden" = [] }
-`;
-
-export const VALE_INSTALLED_FILES = Object.fromEntries(
-    VALE_PACKAGE_FOLDERS.map((folder) => [`${GSPOT_PATHS.valePackages}/${folder}/.keep`, '']),
-);
-
-export const EMPTY_VALE_INI = 'Packages =\n';

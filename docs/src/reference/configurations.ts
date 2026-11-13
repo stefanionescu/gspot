@@ -1,7 +1,7 @@
 import { posix } from 'node:path';
 
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import type { CliReference } from '#cli/types/main.ts';
+import { CLI_REFERENCE, type CliReference, formatNameList } from '@gspothq/cli/reference';
+
 import {
     ALL_FILES_LABEL,
     ALWAYS_SELECTED_MESSAGE,
@@ -9,12 +9,11 @@ import {
     CONDITION_SEPARATOR,
     CONFIG_FILES_HEADING,
     CONFIGURATIONS_OPENING,
-    CONJUNCTION_FORMAT,
     DEFAULTS_HEADING,
-    DISJUNCTION_FORMAT,
     IGNORED_PATHS_HEADING,
     INSTALLED_HEADING,
     LINT_RULES_HEADING,
+    LOCAL_FILES_MESSAGE,
     REFERENCE_FOLDERS,
     RULE_FILE_HEADING,
     RULE_FILES_HEADING,
@@ -35,14 +34,12 @@ import {
 import { formatSettingLink } from '#docs/reference/settings.ts';
 import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
 
-const LOCAL_FILES_MESSAGE = '`repository/local-files` reports a tracked file at these paths.';
-
 function formatRuleFiles(configuration: CliReference['configurations'][number]): string {
     const rows = configuration.ruleFiles.map(({ path, conditions, exclusions }) => {
         const unless = exclusions.length === 0 ? '' : ', ' + exclusions.join(', ');
         return [
             `\`${path}\``,
-            conditions.length === 0 ? 'Always' : `The repository has ${conditions.join(' or ')}${unless}.`,
+            conditions.length === 0 ? 'Always' : `The repository has ${conditions.join(CONDITION_SEPARATOR)}${unless}.`,
         ];
     });
     return formatTable([RULE_FILE_HEADING, INSTALLED_HEADING], rows);
@@ -66,7 +63,10 @@ function formatSelection(configuration: CliReference['configurations'][number]):
     const { conditions, exclusions, requiredBy } = configuration.selection;
     const unless = exclusions.length === 0 ? '' : ', ' + exclusions.join(', ');
     const selected = conditions.length === 0 ? '' : `A scope has ${conditions.join(CONDITION_SEPARATOR)}${unless}.`;
-    const owners = DISJUNCTION_FORMAT.format(requiredBy.map((name) => formatConfigurationLink(name)));
+    const owners = formatNameList(
+        requiredBy.map((name) => formatConfigurationLink(name)),
+        'disjunction',
+    );
     return (
         [selected, owners === '' ? '' : `Also when ${owners} requires it.`].filter(Boolean).join(' ') ||
         `You run \`gspot add ${configuration.name}\`.`
@@ -99,11 +99,8 @@ function listInstalledSections(configuration: CliReference['configurations'][num
     const ignored = configuration.ignored_paths.map((path) => `\`${path}\``);
     return [
         [TOOLS_VERSIONS_HEADING, formatTable(['Tool', 'Version'], tools)],
-        [CONFIG_FILES_HEADING, CONJUNCTION_FORMAT.format(written)],
-        [
-            IGNORED_PATHS_HEADING,
-            ignored.length === 0 ? '' : `${CONJUNCTION_FORMAT.format(ignored)}. ${LOCAL_FILES_MESSAGE}`,
-        ],
+        [CONFIG_FILES_HEADING, formatNameList(written)],
+        [IGNORED_PATHS_HEADING, ignored.length === 0 ? '' : `${formatNameList(ignored)}. ${LOCAL_FILES_MESSAGE}`],
     ];
 }
 
@@ -165,9 +162,7 @@ export function buildConfigurationPages(guides: Map<string, ConfigurationGuide>)
     const index = buildReferencePage(
         'Configurations',
         undefined,
-        CONFIGURATIONS_OPENING +
-            formatSection('Core checks', CONJUNCTION_FORMAT.format(alwaysSelected)) +
-            groupSections.join(''),
+        CONFIGURATIONS_OPENING + formatSection('Core checks', formatNameList(alwaysSelected)) + groupSections.join(''),
     );
     const pages = new Map<string, ReferencePage>([[`${REFERENCE_FOLDERS.configurations}/index`, index]]);
     for (const configuration of CLI_REFERENCE.configurations)

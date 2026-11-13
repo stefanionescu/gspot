@@ -1,3 +1,5 @@
+// bare blocks
+// bare blocks
 export const SWIFT_BARE_BLOCKS = `func report(_ value: Int) {
     do {
         print(value)
@@ -10,7 +12,6 @@ export const SWIFT_BARE_BLOCKS = `func report(_ value: Int) {
 }
 do { print(1) }
 `;
-
 export const SWIFT_BLOCKS_FIXED = `func report(_ value: Int) {
     print(value)
     do {
@@ -22,6 +23,8 @@ export const SWIFT_BLOCKS_FIXED = `func report(_ value: Int) {
 print(1)
 `;
 
+// long files
+export const LONG_JAVASCRIPT_FILE = 'export const values = [\n1,\n2,\n3\n];\n';
 export const LONG_PYTHON_FILE = `VALUE_0 = 0
 VALUE_1 = 1
 VALUE_2 = 2
@@ -36,73 +39,61 @@ VALUE_10 = 10
 VALUE_11 = 11
 VALUE_12 = 12`;
 
-export const LONG_JAVASCRIPT_FILE = 'export const values = [\n1,\n2,\n3\n];\n';
-
-const SWIFT_ACCESSORS = `struct A {
-    var x: Int { 1 }
-    var y = 0 {
-        willSet { save(newValue) }
-        didSet { save(oldValue) }
-    }
-    subscript(i: Int) -> Int {
-        get { 1 }
+// trivial functions
+export const ACCESSOR_DECLARATIONS = `class A {
+    init() {}
+    var value: Int {
+        get { return 1 }
         set { save(newValue) }
     }
-}`;
-
-export const TRIVIAL_FUNCTION_CASES = [
-    {
-        name: 'switch expression',
-        source: `import Foundation
-
-private func label(_ count: Int) -> String {
-    switch count {
-    case 0:
-        "none"
-    case 1:
-        "one"
-    default:
-        "many"
+    @MainActor func method() { return }
+    func outer() {
+        func inner() { one(); two(); three() }
+        let f = { x in x + 1 }
     }
-}
-
-/// The label of a pair.
-func pairLabel() -> String {
-    let text = label(2)
-    return text + "!"
-}
-`,
-        lines: [15],
+}`;
+export const CALLER_CASES = [
+    {
+        language: 'python',
+        definition: 'shared.py',
+        source: 'def total():\n    return 1\n',
+        single: { 'first.py': 'from shared import total\n\nVALUE = total()\n' },
+        shared: {
+            'first.py': 'from shared import total\n\nVALUE = total()\n',
+            'second.py': 'from shared import total\n\nOTHER = total() + 1\n',
+        },
     },
     {
-        name: 'negated call',
-        source: `import Foundation
-
-/// Whether a name is new.
-func isNew(_ name: String) -> Bool {
-    !["a", "b"].contains(name)
-}
-`,
-        lines: [4],
+        language: 'swift',
+        definition: 'Shared.swift',
+        source: 'func total() -> Int {\n    return 1\n}\n',
+        single: { 'First.swift': 'let value = total()\n' },
+        shared: { 'First.swift': 'let value = total()\n', 'Second.swift': 'let other = total() + 1\n' },
     },
     {
-        name: 'implicit getters, property readers, and subscript accessors',
-        source: SWIFT_ACCESSORS,
-        lines: [2, 4, 5, 8, 9],
-    },
-    {
-        name: 'closures in a dictionary literal',
-        source: `import Foundation
-
-let handlers: [String: () -> Int] = [
-    "one": { 1 },
-    "two": { 2 },
-]
-`,
-        lines: [],
+        language: 'bash',
+        definition: 'shared.sh',
+        source: 'total() {\n  echo 1\n}\n',
+        single: { 'run.sh': '. ./shared.sh\ntotal\n' },
+        shared: { 'run.sh': '. ./shared.sh\ntotal\ntrap total EXIT\n' },
     },
 ] as const;
-
+export const NESTED_PYTHON_FUNCTIONS = `class A:
+    @decorator
+    def method(self):
+        return 1
+def outer():
+    def inner():
+        one()
+        two()
+        three()
+    return lambda x: x
+def flow(x):
+    if x:
+        one()
+        two()
+HANDLERS = {"one": lambda: 1, "two": lambda: 2}
+`;
 export const PYTHON_INTERFACES = `from abc import ABC, abstractmethod
 from typing import Protocol, overload
 
@@ -130,7 +121,18 @@ def parse(value: int) -> int: ...
 def parse(value):
     return value
 `;
-
+export const STATEMENT_COUNT_CASES = [
+    [
+        'python',
+        `def example():
+    """Contract."""
+    work()
+    work()
+`,
+    ],
+    ['swift', 'func example() { /* comment */ work(); work() }'],
+    ['bash', 'example() { # comment\necho value; echo value\n}'],
+] as const;
 export const TRIVIAL_FILES = [
     {
         name: 'a Python file of imports and aliases',
@@ -195,73 +197,66 @@ def wrapper():
         expected: ['trivial-file'],
     },
 ] as const;
-
-export const ACCESSOR_DECLARATIONS = `class A {
-    init() {}
-    var value: Int {
-        get { return 1 }
+const SWIFT_ACCESSORS = `struct A {
+    var x: Int { 1 }
+    var y = 0 {
+        willSet { save(newValue) }
+        didSet { save(oldValue) }
+    }
+    subscript(i: Int) -> Int {
+        get { 1 }
         set { save(newValue) }
     }
-    @MainActor func method() { return }
-    func outer() {
-        func inner() { one(); two(); three() }
-        let f = { x in x + 1 }
-    }
 }`;
+export const TRIVIAL_FUNCTION_CASES = [
+    {
+        name: 'switch expression',
+        source: `import Foundation
 
-export const STATEMENT_COUNT_CASES = [
-    [
-        'python',
-        `def example():
-    """Contract."""
-    work()
-    work()
+private func label(_ count: Int) -> String {
+    switch count {
+    case 0:
+        "none"
+    case 1:
+        "one"
+    default:
+        "many"
+    }
+}
+
+/// The label of a pair.
+func pairLabel() -> String {
+    let text = label(2)
+    return text + "!"
+}
 `,
-    ],
-    ['swift', 'func example() { /* comment */ work(); work() }'],
-    ['bash', 'example() { # comment\necho value; echo value\n}'],
-] as const;
+        lines: [15],
+    },
+    {
+        name: 'negated call',
+        source: `import Foundation
 
-export const CALLER_CASES = [
-    {
-        language: 'python',
-        definition: 'shared.py',
-        source: 'def total():\n    return 1\n',
-        single: { 'first.py': 'from shared import total\n\nVALUE = total()\n' },
-        shared: {
-            'first.py': 'from shared import total\n\nVALUE = total()\n',
-            'second.py': 'from shared import total\n\nOTHER = total() + 1\n',
-        },
+/// Whether a name is new.
+func isNew(_ name: String) -> Bool {
+    !["a", "b"].contains(name)
+}
+`,
+        lines: [4],
     },
     {
-        language: 'swift',
-        definition: 'Shared.swift',
-        source: 'func total() -> Int {\n    return 1\n}\n',
-        single: { 'First.swift': 'let value = total()\n' },
-        shared: { 'First.swift': 'let value = total()\n', 'Second.swift': 'let other = total() + 1\n' },
+        name: 'implicit getters, property readers, and subscript accessors',
+        source: SWIFT_ACCESSORS,
+        lines: [2, 4, 5, 8, 9],
     },
     {
-        language: 'bash',
-        definition: 'shared.sh',
-        source: 'total() {\n  echo 1\n}\n',
-        single: { 'run.sh': '. ./shared.sh\ntotal\n' },
-        shared: { 'run.sh': '. ./shared.sh\ntotal\ntrap total EXIT\n' },
+        name: 'closures in a dictionary literal',
+        source: `import Foundation
+
+let handlers: [String: () -> Int] = [
+    "one": { 1 },
+    "two": { 2 },
+]
+`,
+        lines: [],
     },
 ] as const;
-
-export const NESTED_PYTHON_FUNCTIONS = `class A:
-    @decorator
-    def method(self):
-        return 1
-def outer():
-    def inner():
-        one()
-        two()
-        three()
-    return lambda x: x
-def flow(x):
-    if x:
-        one()
-        two()
-HANDLERS = {"one": lambda: 1, "two": lambda: 2}
-`;

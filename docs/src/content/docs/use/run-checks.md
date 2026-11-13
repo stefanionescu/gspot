@@ -77,6 +77,10 @@ findings at the next commit. gspot does not stage the changes, so review them be
 parse after the fixers run, gspot restores the text that the file held before, names the file, and exits with code 2. To
 add a fixer to a command check of your own, follow [Add a fix command](/configure/command-checks/#add-a-fix-command).
 
+`gspot check --fix` also rewrites the generated files that `gspot/generated-files` reports as stale, before the fixers
+run. A plain `gspot check` writes nothing. `gspot install` rewrites the generated files too, and it alone installs the
+tools and writes the tool lockfiles under `.gspot/`.
+
 ## Statuses and exit codes
 
 | Status     | Meaning                                                                                                               | Exit code     |

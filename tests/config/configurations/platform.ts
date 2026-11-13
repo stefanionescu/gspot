@@ -1,13 +1,5 @@
-export const CLOUDFLARE_REDIRECTS = `/old /new 200
-/old /new
-/old /new 404
-/old /new 302!
-/lonely
-old /new 301
-/old http://legacy.example/new 301
-/old new 301
-`;
-
+// cloudflare
+// cloudflare
 export const CLOUDFLARE_HEADERS = `  Header-before-path: value
 # Comment
 /*
@@ -20,7 +12,15 @@ export const CLOUDFLARE_HEADERS = `  Header-before-path: value
 assets/*
   X-Robots-Tag: noindex
 `;
-
+export const CLOUDFLARE_REDIRECTS = `/old /new 200
+/old /new
+/old /new 404
+/old /new 302!
+/lonely
+old /new 301
+/old http://legacy.example/new 301
+/old new 301
+`;
 export const SECURITY_HEADER_CASES = [
     {
         name: 'missing content type protection',
@@ -39,6 +39,15 @@ export const SECURITY_HEADER_CASES = [
     },
 ] as const;
 
+// supabase
+export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';
+export const SERVICE_KEY_SETTINGS = `configurations = ["supabase"]
+test_files = ["qa/**"]
+[[scope]]
+path = "apps/web"
+
+test_files = ["qa/**", "verification/**"]
+`;
 export const STORAGE_POLICIES = [
     {
         name: 'dropped policy',
@@ -101,13 +110,3 @@ export const STORAGE_POLICIES = [
         allowed: true,
     },
 ] as const;
-
-export const SERVICE_KEY_SETTINGS = `configurations = ["supabase"]
-test_files = ["qa/**"]
-[[scope]]
-path = "apps/web"
-
-test_files = ["qa/**", "verification/**"]
-`;
-
-export const AVATARS_BUCKET_CONFIG = '[storage.buckets.avatars]\npublic = false\n';

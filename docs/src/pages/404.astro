@@ -3,9 +3,8 @@ import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import { Image } from 'astro:assets';
 
 import cliPackage from '#cli-package' with { type: 'json' };
+import hero from '#docs/assets/hero.avif';
 import { DOCS_PATH } from '#docs/config/site.ts';
-
-import hero from '../assets/hero.avif';
 
 const url = `${cliPackage.homepage}/404`;
 ---

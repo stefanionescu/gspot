@@ -1,3 +1,28 @@
+export const BASH_FUNCTIONS = [
+    {
+        name: '_one',
+        start: 2,
+        end: 4,
+        highestRead: 0,
+        branches: 0,
+        nesting: 0,
+        assignments: 0,
+    },
+    {
+        name: 'main',
+        start: 6,
+        end: 8,
+        highestRead: Infinity,
+        branches: 0,
+        nesting: 0,
+        assignments: 0,
+    },
+];
+export const FORWARDING_CALL_CASES = [
+    { source: 'consume "$*"\n', count: 1, forwards: true },
+    { source: 'consume one "$@"\n', count: 2, forwards: true },
+    { source: "consume '$@'\n", count: 1, forwards: false },
+] as const;
 export const MKTEMP_CLEANUP_CASES = [
     {
         name: 'a literal double-quoted cleanup with escaped quotes and a delayed variable',
@@ -89,40 +114,11 @@ second() { local tmp=$(mktemp); trap 'rm -rf "$tmp"' RETURN; }
         ],
     },
 ];
-
-export const FORWARDING_CALL_CASES = [
-    { source: 'consume "$*"\n', count: 1, forwards: true },
-    { source: 'consume one "$@"\n', count: 2, forwards: true },
-    { source: "consume '$@'\n", count: 1, forwards: false },
-] as const;
-
-export const TRAP_CALLS = [
-    { name: '_cleanup', count: 0, line: 1, forwards: false },
-    { name: '_quoted', count: 0, line: 2, forwards: false },
-] as const;
-
 export const QUOTED_TRAP_CALLS = [
     { source: `trap 'cleanup one "two words"' EXIT\n`, counts: [2] },
     { source: 'trap "cleanup $value" EXIT', counts: [] },
 ] as const;
-
-export const BASH_FUNCTIONS = [
-    {
-        name: '_one',
-        start: 2,
-        end: 4,
-        highestRead: 0,
-        branches: 0,
-        nesting: 0,
-        assignments: 0,
-    },
-    {
-        name: 'main',
-        start: 6,
-        end: 8,
-        highestRead: Infinity,
-        branches: 0,
-        nesting: 0,
-        assignments: 0,
-    },
-];
+export const TRAP_CALLS = [
+    { name: '_cleanup', count: 0, line: 1, forwards: false },
+    { name: '_quoted', count: 0, line: 2, forwards: false },
+] as const;

@@ -31,3 +31,4 @@ Rewrite or delete a comment that describes behavior the code lacks, or the reaso
 - When you move or delete a declaration, do the same to its comment.
 - Do not write work status in a comment. For example, do not describe a paused job or a temporary choice.
 - Track unfinished work in the issue tracker, not in a comment.
+- Delete code instead of commenting it out.

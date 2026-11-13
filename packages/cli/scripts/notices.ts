@@ -3,8 +3,6 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
-import { compareText } from '#cli/system/text.ts';
-
 type Manifest = {
     name: string;
     version: string;
@@ -29,7 +27,7 @@ function formatCredit({ author, repository }: Manifest): string[] {
     return [`Author: ${authorName ?? 'not named'}`, `Repository: ${address ?? 'not named'}`];
 }
 
-function formatNotice(folder: string): { key: string; text: string } {
+function formatNotice(folder: string): [key: string, text: string] {
     const manifest = JSON.parse(readFileSync(join(folder, 'package.json'), 'utf8')) as Manifest;
     const { name, version } = manifest;
     const files = readdirSync(folder).filter((file) => LICENSE_FILE.test(file));
@@ -38,20 +36,19 @@ function formatNotice(folder: string): { key: string; text: string } {
     const texts = files.map((file) => readFileSync(join(folder, file), 'utf8').trim());
     const credit = texts.length > 0 ? [] : formatCredit(manifest);
     const heading = [`## ${name} ${version}`, `License: ${license ?? 'see the text below'}`];
-    return { key: `${name}@${version}`, text: [...heading, ...credit, ...texts].join('\n\n') };
+    return [`${name}@${version}`, [...heading, ...credit, ...texts].join('\n\n')];
 }
 
 function main(): void {
     const [metafilePath, outputPath] = process.argv.slice(2) as [string, string];
     const { inputs } = JSON.parse(readFileSync(metafilePath, 'utf8')) as { inputs: Record<string, unknown> };
     const folders = new Set(Object.keys(inputs).flatMap((input) => PACKAGE_FOLDER.exec(input)?.[1] ?? []));
-    const notices = new Map(
-        [...folders].map((folder) => {
-            const { key, text } = formatNotice(folder);
-            return [key, text];
-        }),
-    );
-    const sections = [...notices].toSorted(([left], [right]) => compareText(left, right)).map(([, text]) => text);
+    const notices = new Map([...folders].map((folder) => formatNotice(folder)));
+    const sections = notices
+        .keys()
+        .toArray()
+        .toSorted()
+        .map((key) => notices.get(key));
     writeFileSync(outputPath, `# Third-party notices\n\n${sections.join('\n\n')}\n`);
 }
 

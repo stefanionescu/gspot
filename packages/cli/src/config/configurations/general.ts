@@ -1,19 +1,13 @@
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
 
 // agents checks
-
 export const NESTED_AGENTS_MESSAGE = 'Move these rules into the AGENTS.md at the root of the repository.';
-
 export const NESTED_AGENTS_RULE = 'nested-agents-file';
 
 // commits checks
-
 export const COMMIT_FIELD_END = '\0';
-
 export const COMMIT_RECORD_END = '\0\n';
-
 export const COMMIT_SCISSORS = /^. -{24} >8 -{24}\r?$/mu;
-
 export const GIT_COMMIT_MESSAGE_ARGUMENTS = [
     'log',
     '--stdin',
@@ -21,9 +15,7 @@ export const GIT_COMMIT_MESSAGE_ARGUMENTS = [
     '--no-show-signature',
     '--format=%H%x00%B%x00',
 ] as const;
-
 export const MESSAGE_FILE = 'message.txt';
-
 export const MESSAGE_REFERENCES = [
     {
         rule: 'session-link',
@@ -58,9 +50,7 @@ export const MESSAGE_REFERENCES = [
 ] as const;
 
 // commits generated config
-
 export const COMMITLINT_ERROR_SEVERITY = 2;
-
 export const COMMITLINT_PARSER_PRESET = {
     parserOpts: {
         headerPattern: String.raw`^(\w*)(?:\((.*)\))?!?: (.*)$`,
@@ -70,49 +60,35 @@ export const COMMITLINT_PARSER_PRESET = {
 } as const;
 
 // format generated config
-
 export const EDITORCONFIG_FIXED_SECTIONS = {
     // eslint-disable-next-line unicorn/text-encoding-identifier-case -- reason: EditorConfig defines this charset value as utf-8.
     '*': { charset: 'utf-8', end_of_line: 'lf', insert_final_newline: true, trim_trailing_whitespace: true },
     '*.md': { trim_trailing_whitespace: false },
     Makefile: { indent_style: 'tab' },
 } as const;
-
 export const EDITORCONFIG_ROOT_LINE = 'root = true\n\n';
-
 export const PRETTIER_CHECK = 'format/prettier';
-
 export const PRETTIER_MARKDOWN_OVERRIDE = {
     files: ['*.md', '*.mdx'],
     options: { embeddedLanguageFormatting: 'off' },
 } as const;
-
 export const SHFMT_CONFIGURATION = 'bash';
-
 // shfmt reads these keys, and no other tool does. They sit under [*] because shell scripts may have no extension.
 export const SHFMT_EDITORCONFIG_OPTIONS = { switch_case_indent: true, simplify: true } as const;
-
 export const UNREPRESENTABLE_SELECTOR = /[\r\n]|[!+?*@]\(/u;
 
 // licenses checks
-
 export const ANY_VERSION = '*';
-
 export const EMPTY_SCAN_MESSAGE =
     'The license scan found no packages. Install the selected project dependencies before scanning.';
-
 export const LICENSE_RULES = {
     unusedRecord: 'unused-record',
     disallowedLicense: 'disallowed-license',
     unmatchedIgnore: 'unmatched-ignore',
 } as const;
-
 export const OSV_FINDINGS_CODE = 1;
-
 export const OSV_LICENSES_FLAG = '--licenses';
-
 export const OSV_SCANNER_NAME = 'osv-scanner';
-
 export const OSV_LICENSE_COMMAND = [
     OSV_SCANNER_NAME,
     'scan',
@@ -122,13 +98,10 @@ export const OSV_LICENSE_COMMAND = [
     '--all-packages',
     '--allow-no-lockfiles',
 ] as const;
-
 export const OSV_LOCKFILE_FLAG = '--lockfile=:';
-
 export const OSV_PYTHON_ECOSYSTEM = 'PyPI';
 
 // mise config files
-
 export const MISE_FILES = [
     '.mise.local.toml',
     'mise.local.toml',
@@ -141,11 +114,8 @@ export const MISE_FILES = [
 ] as const;
 
 // repository checks
-
 export const ABSOLUTE_LINK_HELP = 'Use a relative link target inside the repository.';
-
 export const OUTWARD_LINK_HELP = 'Replace the link with the file or folder it points to, or delete it.';
-
 export const REPOSITORY_RULES = {
     pathEncoding: 'path-encoding',
     absoluteLink: 'absolute-link',
@@ -157,56 +127,34 @@ export const REPOSITORY_RULES = {
 } as const;
 
 // secrets checks
-
 export const ENVIRONMENT_DEFAULT_RULE = 'environment-default';
-
 export const ENVIRONMENT_READ_LANGUAGES = ['javascript', 'typescript', 'python', 'vue', 'svelte', 'astro'] as const;
-
 export const ENV_KEY_LINE = /^(?:#\s*)?(?:export )?(?<key>[A-Z][A-Z0-9_]*)=/u;
-
 export const GITLEAKS_FILES_MODE = 'dir';
-
 export const GITLEAKS_GIT_MODE = 'git';
-
 export const GITLEAKS_LOG_FLAG = '--log-opts';
-
 export const GITLEAKS_LOG_OPTIONS = '--diff-merges=separate';
-
 export const GITLEAKS_STAGED_FLAG = '--staged';
-
 export const MISSING_KEY_RULE = 'missing-key';
-
 export const ROOT_PLACEHOLDER = '{root}';
-
 export const SECRET_KEY_NAME = /(?:TOKEN|SECRET|KEY|PASSWORD)/u;
 
 // security checks
-
 export const SEMGREP_TOOL = 'semgrep';
 
 // spelling generated config
-
 export const ENGLISH_LOCALE_GLOBS = ['en', 'en[-_]*'] as const;
-
 export const EXTEND_EXCLUDE_LINE = 'extend-exclude = [';
-
 export const LOCKFILE_EXTENSION = '.lock';
-
 export const LOCKFILE_GLOB = '*.lock';
-
 export const MESSAGE_FILES_TITLE = 'Message files of other languages than English';
-
 export const TYPOS_CHECK = 'spelling/typos';
-
 export const TYPOS_FORMAT_GLOBS = ['*.pbxproj', '*.xcstrings', '*.svg', '*.min.js', '*.min.css'] as const;
-
 export const TYPOS_IGNORE_PATTERNS = [
     String.raw`\b[0-9a-f]{7,40}\b`,
     String.raw`\b[A-Za-z0-9+/]{40,}={0,2}\b`,
 ] as const;
-
 export const TYPOS_LOCKFILE_GLOBS = [LOCKFILE_GLOB, ...LOCKFILES.map(({ file }) => file)];
 
 // swift type nodes
-
 export const TYPE_NODES = ['class_declaration', 'protocol_declaration', 'typealias_declaration'] as const;

@@ -1,7 +1,6 @@
 import type { StylelintComponent } from '#cli/types/configurations/language.ts';
 
 // css generated config
-
 export const CSS_MODULES_OVERRIDE = {
     files: ['**/*.module.css'],
     suffix: '.module.css',
@@ -18,7 +17,6 @@ export const CSS_MODULES_OVERRIDE = {
     },
     atRules: ['value'],
 } as const;
-
 export const STYLELINT_BASE_RULES = {
     'import-notation': 'string',
     'function-no-unknown': true,
@@ -34,26 +32,22 @@ export const STYLELINT_BASE_RULES = {
     'selector-max-specificity': '0,3,0',
     'selector-disallowed-list': [String.raw`/^\.(is|has)-[\w-]+$/`],
 } as const;
-
 const SVELTE_STYLELINT_OVERRIDE = {
     files: ['**/*.svelte'],
     customSyntax: 'postcss-html',
     ignorePseudoClasses: ['global'],
 } as const;
-
 const VUE_STYLELINT_OVERRIDE = {
     files: ['**/*.vue'],
     customSyntax: 'postcss-html',
     ignorePseudoClasses: ['deep', 'global', 'slotted'],
     functions: ['v-bind'],
 } as const;
-
 export const STYLELINT_COMPONENTS: readonly StylelintComponent[] = [
     VUE_STYLELINT_OVERRIDE,
     SVELTE_STYLELINT_OVERRIDE,
     { files: ['**/*.astro'], customSyntax: 'postcss-html', ignorePseudoClasses: ['global'] },
 ];
-
 export const TAILWIND_AT_RULES = [
     'tailwind',
     'apply',
@@ -69,11 +63,9 @@ export const TAILWIND_AT_RULES = [
 ] as const;
 
 // import paths
-
 export const PATH_SEPARATOR_PATTERN = String.raw`[/\\]`;
 
 // sql generated config
-
 export const SQLFLUFF_CAPITALISATION = {
     'capitalisation.keywords': { capitalisation_policy: 'upper' },
     'capitalisation.identifiers': { extended_capitalisation_policy: 'lower' },
@@ -81,24 +73,18 @@ export const SQLFLUFF_CAPITALISATION = {
     'capitalisation.literals': { capitalisation_policy: 'upper' },
     'capitalisation.types': { extended_capitalisation_policy: 'upper' },
 } as const;
-
 export const SQL_FILES = ['**/*.sql', '**/*.pgsql', '**/*.psql'] as const;
 
 // toml generated config
-
 export const TAPLO_FORMATTING = {
     array_auto_expand: false,
     array_auto_collapse: false,
 } as const;
 
 // yaml checks
-
 export const YAML_COMMIT_USE = /^\s*(?:-\s+)?uses:\s*['"]?[^'"#\s]+@[\da-f]{40}['"]?\s*$/iu;
-
 export const YAML_GENERATED_ANCHOR = /^[a-z]?\d+$/iu;
-
 export const YAML_LEADING_ZERO = /^[+-]?(?:0\d+|0o[0-7]+)$/u;
-
 export const YAML_MESSAGES = {
     extension: 'Use the .yml extension unless the consumer requires this .yaml file name.',
     documents:
@@ -110,7 +96,6 @@ export const YAML_MESSAGES = {
     comments:
         'Move this comment above the key. Only a version comment after a uses value pinned to a full commit is allowed.',
 };
-
 export const YAML_REQUIRED_NAMES = new Set([
     'action.yaml',
     'analysis_options.yaml',
@@ -127,7 +112,6 @@ export const YAML_REQUIRED_NAMES = new Set([
     'pubspec.yaml',
     'values.yaml',
 ]);
-
 export const YAML_RULES = {
     syntax: 'syntax',
     duplicate: 'key-duplicates',
@@ -141,9 +125,6 @@ export const YAML_RULES = {
     comments: 'comments',
     extension: 'file-extension',
 } as const;
-
 export const YAML_TRAILING_ZERO = /^[+-]?\d+\.\d*0$/u;
-
 export const YAML_TRUTHY = /^(?:[Yy][Ee][Ss]|[Nn][Oo]|[Oo][Nn]|[Oo][Ff][Ff]|True|TRUE|False|FALSE)$/u;
-
 export const YAML_VERSION_COMMENT = /^#\s*v?\d+(?:\.\d+)*(?:[-+][\w.-]+)?\s*$/u;

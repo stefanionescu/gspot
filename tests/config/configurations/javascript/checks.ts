@@ -4,29 +4,24 @@ export const JAVASCRIPT_PROJECT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',
     [`${GSPOT_PATHS.nodeModules}/@types/private/index.d.ts`]: 'declare const privateValue: number;\n',
 } as const;
-
-const JSCONFIG_SCOPE_TABLES = `[[scope]]
-path = "app"
-
-configurations = ["javascript"]
-`;
-
-const FORMAT_SOURCE = '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n';
-
-const PRIVATE_TYPES_FINDING = {
-    file: 'source.js',
-    line: 3,
-    column: 23,
-    rule: 'TS2304',
-} as const;
-
 const ARGUMENT_TYPE_FINDING = {
     file: 'source.js',
     line: 2,
     column: 28,
     rule: 'TS2345',
 } as const;
+const FORMAT_SOURCE = '/** @param {string} value */\nexport function format(value) { return value.toUpperCase(); }\n';
+const JSCONFIG_SCOPE_TABLES = `[[scope]]
+path = "app"
 
+configurations = ["javascript"]
+`;
+const PRIVATE_TYPES_FINDING = {
+    file: 'source.js',
+    line: 3,
+    column: 23,
+    rule: 'TS2304',
+} as const;
 export const JSCONFIG_CASES = [
     {
         name: 'JSX syntax with project-owned element declarations',

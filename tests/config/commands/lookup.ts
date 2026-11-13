@@ -1,17 +1,4 @@
-export const LIST_SCOPE_SETTINGS = `configurations = ["bash"]
-[limits]
-max_file_lines = 250
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-configurations = ["bash"]
-limits.max_file_lines = 200
-[[scope]]
-path = "api/worker"
-configurations = ["sql"]
-`;
-
+// explain lint rules
 export const RULE_PAGES = [
     { check: 'javascript/eslint', rule: 'no-var', tool: 'eslint', key: 'no-var' },
     {
@@ -34,13 +21,13 @@ export const RULE_PAGES = [
     },
     { check: 'css/stylelint', rule: 'color-no-invalid-hex', tool: 'stylelint', key: 'color-no-invalid-hex' },
 ] as const;
-
 export const UNKNOWN_RULES = [
     ['javascript/eslint', 'no-consolee'],
     ['javascript/eslint', 'n/no-such-rule'],
     ['css/stylelint', 'no-such-rule'],
 ] as const;
 
+// explain settings
 export const REASON_VALUES = [
     {
         key: 'limits.max_file_lines',
@@ -75,12 +62,12 @@ export const REASON_VALUES = [
     },
 ] as const;
 
+// explain subjects
 export const PATH_IGNORE = {
     check: 'bash/shellcheck',
     rule: 'SC2086',
     reason: 'The script deliberately splits a list of arguments.',
 } as const;
-
 export const EXPLAIN_SETTINGS = `configurations = []
 
 [[scope]]
@@ -93,11 +80,24 @@ rule = "${PATH_IGNORE.rule}"
 paths = ["api/build.sh"]
 reason = "${PATH_IGNORE.reason}"
 `;
-
 export const SYNTAX_CHECK_TABLES =
     '[[command_check]]\nid = "project/syntax"\ncommand = ["bash", "-n", "{files}"]\npaths = ["**/*.sh"]\nstage = "manual"\n';
-
 export const UNKNOWN_SUBJECT_CASES = [
     ['unknown/no-such-rule', 'unknown/no-such-rule'],
     ['./missing.sh', 'missing.sh'],
 ] as const;
+
+// list scopes
+export const LIST_SCOPE_SETTINGS = `configurations = ["bash"]
+[limits]
+max_file_lines = 250
+[rule_files]
+enabled = false
+[[scope]]
+path = "api"
+configurations = ["bash"]
+limits.max_file_lines = 200
+[[scope]]
+path = "api/worker"
+configurations = ["sql"]
+`;

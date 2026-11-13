@@ -25,8 +25,8 @@ name = "app"
 paths = ["src/app/**"]
 ```
 
-A file may import the files of its own rule and of each rule listed before it, so here `features` may import `core`, and
-`app` may import both. When a `core` file imports a `features` file, the finding names the rule that refused the import:
+A rule without `can_import` may import its own files and the files of each rule listed before it, so here `features`
+may import `core`, and `app` may import both. When a `core` file imports a `features` file, the finding names the rule that refused the import:
 
 ```text
 Import rule "core" may import only its own files, not ../features/cart.ts from rule "features". Move the code, move that rule above this one, or list the rules it may import in can_import.
@@ -36,8 +36,15 @@ Each file belongs to the first rule whose paths match it. gspot rejects a path t
 pattern such as `!(generated)/**`. To keep some files out of a rule, put a narrower rule for them first, and list what
 they may import in its `can_import`.
 
-After you write the rules, run `gspot install`, because JavaScript and TypeScript import rules need an ESLint plugin
-that it adds. Until you run it, `javascript/eslint` reports `missing`, or at level `all`, runs without the import rules.
+A rule owns every file that its `paths` match, stylesheets included. When a `styles` rule with `paths = ["styles/**"]`
+comes after `app`, an `app` file that imports a stylesheet of `styles` gets a finding. A glob that names only code
+files, such as `src/ui/**/*.{ts,tsx}`, leaves the stylesheets out, and an import of a file that no rule owns gets no
+finding.
+
+After you write the first rule, run `gspot install`, because JavaScript and TypeScript import rules need an ESLint
+plugin that it adds. Until you run it, `javascript/eslint` reports `missing`, or at level `all`, runs without the import
+rules. After a later edit of the rules, `gspot check --fix` rewrites the generated ESLint config. `gspot install`
+rewrites it too, then installs the tools.
 
 ## Every code file belongs to a rule
 

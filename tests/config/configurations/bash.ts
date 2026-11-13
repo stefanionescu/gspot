@@ -1,12 +1,12 @@
 import { BASH_HEADER } from '#tests/config/setup/languages.ts';
 
+// function size
 export const BASH_SIZE_CASES = [
     { rule: 'function-lines', line: 9, limit: 12 },
     { rule: 'function-branches', line: 9, limit: 4 },
     { rule: 'block-nesting', line: 9, limit: 2 },
     { rule: 'function-assignments', line: 9, limit: 3 },
 ] as const;
-
 export const COUNTED_LOOPS = `main() {
     local declared=0
     for ((i=0; i<2; i=i+1)); do
@@ -22,6 +22,7 @@ export const COUNTED_LOOPS = `main() {
 }
 `;
 
+// inline scripts
 export const INLINE_SCRIPT_SAMPLE = {
     check: 'bash/inline-scripts',
     files: {
@@ -38,6 +39,7 @@ main "$@"
     expected: { file: 'scripts/python.sh', rule: 'runtime-embed', line: 10 },
 } as const;
 
+// safety
 export const BASH_SAFETY_SAMPLE = {
     check: 'bash/safety',
     files: {
@@ -52,7 +54,6 @@ main "$@"
     },
     expected: { file: 'scripts/unsafe.sh', rule: 'ignored-failure', line: 11 },
 } as const;
-
 export const COMMAND_SAFETY_CASES = [
     { source: 'rm -rf /etc', rule: 'recursive-remove' },
     { source: 'rm --recursive --force /etc', rule: 'recursive-remove' },
@@ -92,6 +93,68 @@ export const COMMAND_SAFETY_CASES = [
     { source: 'join() { local IFS=,; printf \'%s\' "$*"; }', rule: undefined },
 ] as const;
 
+// script layout
+export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
+path = "tools"
+configurations = ["bash"]
+[scope.structure]
+environment_readers = ["env.sh"]
+`;
+export const LAYOUT_RULE_CASES = [
+    { rule: 'shebang', source: 'VALUE=1\n', corrected: '#!/usr/bin/env bash\nVALUE=1\n', executable: false },
+    {
+        rule: 'main-function',
+        source: '#!/usr/bin/env bash\nset -euo pipefail\nrun() { true; }\nmain "$@"\n',
+        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
+        executable: true,
+    },
+    {
+        rule: 'main-call',
+        source: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain\n',
+        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
+        executable: true,
+    },
+    {
+        rule: 'library-options',
+        source: '#!/usr/bin/env bash\nset -euo pipefail\n',
+        corrected: '#!/usr/bin/env bash\nVALUE=1\n',
+        executable: false,
+    },
+    {
+        rule: 'library-main',
+        source: '#!/usr/bin/env bash\nmain() { true; }\n',
+        corrected: '#!/usr/bin/env bash\nrun() { true; }\n',
+        executable: false,
+    },
+    {
+        rule: 'library-exit',
+        source: '#!/usr/bin/env bash\nexit 0\n',
+        corrected: '#!/usr/bin/env bash\nVALUE=1\n',
+        executable: false,
+    },
+    {
+        rule: 'executable-bit',
+        source: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
+        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
+        executable: false,
+    },
+] as const;
+export const SCRIPT_LAYOUT_SAMPLE = {
+    check: 'bash/script-layout',
+    files: {
+        'scripts/headless.sh': `#!/usr/bin/env bash
+main() {
+    echo hi
+}
+
+main "$@"
+`,
+    },
+    expected: { file: 'scripts/headless.sh', rule: 'strict-mode', line: 2 },
+    executable: ['scripts/headless.sh'],
+} as const;
+
+// unread arguments
 export const UNREAD_ARGUMENT_CASES = [
     {
         files: {
@@ -135,6 +198,8 @@ main "$@"
     },
 ] as const;
 
+// unused functions
+export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
 const BASH_MAIN = `# main: runs the script.
 main() {
     echo "hello"
@@ -142,7 +207,6 @@ main() {
 
 main "$@"
 `;
-
 export const UNUSED_FUNCTION_SAMPLE = {
     check: 'bash/unused-functions',
     files: {
@@ -157,67 +221,3 @@ ${BASH_MAIN}`,
     },
     expected: { file: 'scripts/orphan.sh', rule: 'never-called', line: 9 },
 } as const;
-
-export const LITERAL_FUNCTION_REFERENCES = ['xargs -n1 _each', 'export -f _each'] as const;
-
-export const SCRIPT_LAYOUT_SAMPLE = {
-    check: 'bash/script-layout',
-    files: {
-        'scripts/headless.sh': `#!/usr/bin/env bash
-main() {
-    echo hi
-}
-
-main "$@"
-`,
-    },
-    expected: { file: 'scripts/headless.sh', rule: 'strict-mode', line: 2 },
-    executable: ['scripts/headless.sh'],
-} as const;
-
-export const ENVIRONMENT_READER_SCOPE_TABLES = `[[scope]]
-path = "tools"
-configurations = ["bash"]
-[scope.structure]
-environment_readers = ["env.sh"]
-`;
-
-export const LAYOUT_RULE_CASES = [
-    { rule: 'shebang', source: 'VALUE=1\n', corrected: '#!/usr/bin/env bash\nVALUE=1\n', executable: false },
-    {
-        rule: 'main-function',
-        source: '#!/usr/bin/env bash\nset -euo pipefail\nrun() { true; }\nmain "$@"\n',
-        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
-        executable: true,
-    },
-    {
-        rule: 'main-call',
-        source: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain\n',
-        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
-        executable: true,
-    },
-    {
-        rule: 'library-options',
-        source: '#!/usr/bin/env bash\nset -euo pipefail\n',
-        corrected: '#!/usr/bin/env bash\nVALUE=1\n',
-        executable: false,
-    },
-    {
-        rule: 'library-main',
-        source: '#!/usr/bin/env bash\nmain() { true; }\n',
-        corrected: '#!/usr/bin/env bash\nrun() { true; }\n',
-        executable: false,
-    },
-    {
-        rule: 'library-exit',
-        source: '#!/usr/bin/env bash\nexit 0\n',
-        corrected: '#!/usr/bin/env bash\nVALUE=1\n',
-        executable: false,
-    },
-    {
-        rule: 'executable-bit',
-        source: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
-        corrected: '#!/usr/bin/env bash\nset -euo pipefail\nmain() { true; }\nmain "$@"\n',
-        executable: false,
-    },
-] as const;

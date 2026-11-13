@@ -1,10 +1,6 @@
 ---
-import { getEntry } from 'astro:content';
-
-type Props = { guide: string };
-const page = await getEntry('docs', Astro.props.guide);
-if (page?.data.checksTable === undefined) throw new Error(`The guide ${Astro.props.guide} has no check table.`);
-const { checksTable } = page.data;
+const { checksTable } = Astro.locals.starlightRoute.entry.data;
+if (checksTable === undefined) throw new Error(`The guide ${Astro.locals.starlightRoute.id} has no check table.`);
 ---
 
 {/* eslint-disable-next-line astro/no-set-html-directive -- reason: The loader renders escaped shipped check metadata through Astro's Markdown renderer. */}

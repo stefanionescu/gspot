@@ -1,12 +1,14 @@
 import type { RunReport } from '#cli/types/engine/run.ts';
 
+// init report
 export const HOOKS_PATH_CASES = [
     { hooksPath: '', named: ['none'], unnamed: ['use-thing.ts'] },
     { hooksPath: 'hooks', named: ['hooks/', 'pre-commit', 'use-thing.ts', '(your own)'], unnamed: [] },
     { hooksPath: '.husky', named: ['.husky/', 'pre-commit', '(husky)'], unnamed: ['use-thing.ts'] },
 ] as const;
-
 export const HOOK_NAMED_SOURCE = 'export function useThing() { return true; }\n';
+
+// scan report
 export const SCAN_RUN_REPORT: RunReport = {
     comparison: null,
     fixes: null,

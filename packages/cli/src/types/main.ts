@@ -1,9 +1,7 @@
 import type { z } from 'zod';
 
-import type cliPackage from '#cli-package';
 import type { GROUP_LABELS } from '#cli/config/commands/setup.ts';
 import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import type { DOCS_PATHS } from '#cli/config/manifests.ts';
 import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
 import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { ConfigurationCheck, ConfigurationReference, Tool } from '#cli/types/manifests.ts';
@@ -35,8 +33,6 @@ export type CommandReference = {
 type CheckReference = ConfigurationCheck & CheckDescription & { explanations: RuleExplanations | undefined };
 
 export type CliReference = {
-    package: typeof cliPackage;
-    docs: typeof DOCS_PATHS;
     groups: typeof GROUP_LABELS;
     commands: CommandReference[];
     globalOptions: typeof GLOBAL_OPTIONS;

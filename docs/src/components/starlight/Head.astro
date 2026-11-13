@@ -5,18 +5,7 @@ import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff
 
 import RuleRedirect from '#docs/components/starlight/RuleRedirect.astro';
 import { REFERENCE_FOLDERS, REFERENCE_PATH } from '#docs/config/reference.ts';
-
-const SOCIAL_IMAGE = { path: '/open-graph.png', alt: 'The gspot name and logo.', width: 1200, height: 630 } as const;
-const SECTION_IMAGES = new Map([
-    ['start', { name: 'Start', path: '/social/start.png' }],
-    ['use', { name: 'Use', path: '/social/use.png' }],
-    ['configure', { name: 'Configure', path: '/social/configure.png' }],
-    ['languages', { name: 'Languages', path: '/social/languages.png' }],
-    ['frameworks', { name: 'Frameworks', path: '/social/frameworks.png' }],
-    ['topics', { name: 'Topics', path: '/social/topics.png' }],
-    ['reference', { name: 'Reference', path: '/social/reference.png' }],
-]);
-const SECTION_SEGMENT = /^\/(?<section>[^/]+)\//u;
+import { SECTION_IMAGES, SECTION_SEGMENT, SOCIAL_IMAGE } from '#docs/config/site.ts';
 
 const section = SECTION_SEGMENT.exec(Astro.url.pathname)?.groups?.['section'] ?? '';
 const sectionImage = SECTION_IMAGES.get(section);

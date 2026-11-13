@@ -17,11 +17,17 @@ function checkGeneratedFiles(
             rule: staleFile.kind,
             message: GENERATED_FILE_FINDINGS[staleFile.kind].message,
             help: TOOL_LOCKFILES.has(staleFile.path) ? INSTALL_HELP : GENERATED_FILE_FINDINGS[staleFile.kind].help,
+            // Only gspot install writes a tool lockfile, because locking the tools needs the network.
+            fixable: staleFile.kind === 'stray' || !TOOL_LOCKFILES.has(staleFile.path),
             ...(diff !== undefined && { diff }),
         };
     });
 }
 
 export const GSPOT_GENERATED_FILES_CHECKS: Readonly<Record<string, CheckCode>> = {
-    'gspot/generated-files': { check: checkGeneratedFiles, explanations: GENERATED_FILE_EXPLANATIONS },
+    'gspot/generated-files': {
+        check: checkGeneratedFiles,
+        fix: (session) => session.generation.writeStaleFiles(session),
+        explanations: GENERATED_FILE_EXPLANATIONS,
+    },
 };

@@ -4,6 +4,7 @@ import { join } from 'node:path';
 
 import { expect, test } from 'bun:test';
 
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { runFixers } from '#cli/engine/fixes.ts';
 import { buildCheckSession } from '#cli/engine/run.ts';
 import { openSession } from '#cli/engine/session.ts';
@@ -36,7 +37,7 @@ test('a fix in a copy writes only the selected file back and removes the copy', 
         ),
     );
     planned.check = { ...planned.check, run_in_copy: true, exit_codes: [3] };
-    const result = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
+    const result = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
     expect(result.results).toMatchObject([{ status: 'changed', changed: ['source.txt'] }]);
     expect(await readFile(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
     const [call] = await readCallRecords(trace);
@@ -48,7 +49,7 @@ test('a fixer in a copy that deletes a file deletes it from the working tree', a
     const session = await openSession(sandbox.path);
     const planned = planFixer(session, buildProgramCommand('fakes/tool', '--delete', 'source.txt'));
     planned.check = { ...planned.check, run_in_copy: true };
-    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned]);
+    const fixed = await runFixers(buildCheckSession(session, CHECK_GENERATION), [planned], selectCheckCode);
     expect(fixed.changed).toStrictEqual(['source.txt']);
     expect(existsSync(join(sandbox.path, 'source.txt'))).toBe(false);
 });

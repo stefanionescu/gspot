@@ -1,7 +1,6 @@
 // eslint base block
 
 export const CONSOLE_RULES = { 'no-console': 'error' } as const;
-
 export const JAVASCRIPT_RULES = {
     'no-implied-eval': 'error',
     'no-throw-literal': 'error',
@@ -21,11 +20,9 @@ export const JAVASCRIPT_RULES = {
     'jsdoc/no-undefined-types': 'error',
     'jsdoc/valid-types': 'error',
 } as const;
-
 export const SCRIPT_RULES = { 'n/no-process-exit': 'off', 'unicorn/no-process-exit': 'off' } as const;
 
 // eslint plan
-
 const ESLINT_RULES = {
     'array-callback-return': 'error',
     'block-scoped-var': 'error',
@@ -58,7 +55,6 @@ const ESLINT_RULES = {
 
     'no-warning-comments': ['error', { terms: ['todo', 'fixme', 'xxx', 'hack'], location: 'anywhere' }],
 } as const;
-
 const IMPORT_X_RULES = {
     'import-x/export': 'error',
     'import-x/no-self-import': 'error',
@@ -69,7 +65,6 @@ const IMPORT_X_RULES = {
     'import-x/no-relative-packages': 'error',
     'import-x/no-default-export': 'error',
 } as const;
-
 const JSDOC_RULES = {
     'jsdoc/require-param-name': 'error',
     'jsdoc/check-param-names': ['error', { checkDestructured: false, disableMissingParamChecks: true }],
@@ -90,7 +85,6 @@ const JSDOC_RULES = {
     'jsdoc/informative-docs': 'error',
     'jsdoc/tag-lines': ['error', 'any', { startLines: 1 }],
 } as const;
-
 const REGEXP_RULES = {
     'regexp/no-super-linear-backtracking': 'error',
     'regexp/no-empty-alternative': 'error',
@@ -127,7 +121,6 @@ const REGEXP_RULES = {
     'regexp/prefer-named-backreference': 'error',
     'regexp/no-unused-capturing-group': 'error',
 } as const;
-
 const SECURITY_RULES = {
     'security/detect-disable-mustache-escape': 'error',
     'security/detect-eval-with-expression': 'off',
@@ -143,7 +136,6 @@ const SECURITY_RULES = {
     'security/detect-child-process': 'error',
     'security/detect-possible-timing-attacks': 'error',
 } as const;
-
 const SORTING_RULES = {
     'perfectionist/sort-imports': [
         'error',
@@ -167,7 +159,6 @@ const SORTING_RULES = {
     ],
     'perfectionist/sort-named-exports': ['error', { type: 'line-length', ignoreCase: false }],
 } as const;
-
 const UNICORN_RULES = {
     'unicorn/name-replacements': 'off',
     'unicorn/filename-case': 'off',
@@ -203,7 +194,6 @@ const UNICORN_RULES = {
         },
     ],
 } as const;
-
 export const BASE_RULES = {
     ...ESLINT_RULES,
     ...SORTING_RULES,

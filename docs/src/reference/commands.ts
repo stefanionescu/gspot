@@ -1,5 +1,5 @@
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import { type CommandReference } from '#cli/types/main.ts';
+import { CLI_REFERENCE, type CommandReference } from '@gspothq/cli/reference';
+
 import {
     COMMANDS_OPENING,
     DEFINITION_HEADING,

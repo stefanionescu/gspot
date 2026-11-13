@@ -1,3 +1,45 @@
+// no-mismatched-assertion-types rule
+export const OPEN_CATEGORIES = new Set(['object', 'null', 'undefined', 'unknown']);
+export const TYPE_CATEGORIES = new Map([
+    ['string', 'string'],
+    ['number', 'number'],
+    ['boolean', 'boolean'],
+    ['true', 'boolean'],
+    ['false', 'boolean'],
+    ['bigint', 'bigint'],
+    ['symbol', 'symbol'],
+    ['unique symbol', 'symbol'],
+    ['null', 'null'],
+    ['undefined', 'undefined'],
+    ['void', 'undefined'],
+    ['any', 'unknown'],
+    ['unknown', 'unknown'],
+    ['never', 'unknown'],
+]);
+
+// prefer-matcher-assertions rule
+export const ASSERT_MESSAGE_INDEX = 2;
+export const BARE_RECEIVERS = new Set(['Identifier', 'MemberExpression', 'CallExpression', 'ThisExpression']);
+export const BOOLEAN_KINDS = new Set(['true', 'false']);
+export const INVERTED_OPERATORS = new Map([
+    ['>', '<='],
+    ['>=', '<'],
+    ['<', '>='],
+    ['<=', '>'],
+]);
+export const JASMINE_SIZE_VERSION = [3, 6, 0];
+export const JASMINE_VERSION_PACKAGES = ['jasmine-core', 'jasmine'];
+export const LOCATOR_STATES: ReadonlyMap<string | null, readonly string[]> = new Map([
+    ['isVisible', ['toBeVisible', 'toBeHidden']],
+    ['isHidden', ['toBeHidden', 'toBeVisible']],
+    ['isEnabled', ['toBeEnabled', 'toBeDisabled']],
+    ['isDisabled', ['toBeDisabled', 'toBeEnabled']],
+    ['isChecked', ['toBeChecked', 'not.toBeChecked']],
+]);
+export const LOCATOR_VALUES: ReadonlyMap<string | null, string> = new Map([
+    ['count', 'toHaveCount'],
+    ['inputValue', 'toHaveValue'],
+]);
 export const MATCHER_FAMILIES = new Map([
     ['jest-like', 'jest'],
     ['playwright', 'jest'],
@@ -5,53 +47,6 @@ export const MATCHER_FAMILIES = new Map([
     ['chai-assert', 'chai-assert'],
     ['cypress', 'cypress'],
 ]);
-
-export const OPERAND_KINDS = new Map([
-    ['null', 'null'],
-    ['undefined', 'undefined'],
-    ['NaN', 'nan'],
-    ['Number.NaN', 'nan'],
-    ['true', 'true'],
-    ['false', 'false'],
-]);
-
-export const NULLISH_KINDS = new Set(['null', 'undefined']);
-
-export const VALUE_KINDS = new Set(['null', 'undefined', 'nan']);
-
-export const BOOLEAN_KINDS = new Set(['true', 'false']);
-
-export const STRICT_EQUALITY_OPERATORS = new Set(['===', '!==']);
-
-export const NUMERIC_MATCHERS: ReadonlyMap<string | undefined, string> = new Map([
-    ['>', 'above'],
-    ['>=', 'atLeast'],
-    ['<', 'below'],
-    ['<=', 'atMost'],
-]);
-
-export const INVERTED_OPERATORS = new Map([
-    ['>', '<='],
-    ['>=', '<'],
-    ['<', '>='],
-    ['<=', '>'],
-]);
-
-export const NUMERIC_NAME =
-    /^[\w$.]*(?:amount|count|delta|depth|diff|duration|elapsed|height|index|length|level|limit|number|price|score|size|total|width)$/iu;
-
-export const TEXT_RECEIVER = /^(?:[\w$]*(?:text|string|message|content|html)|'[^'\\]*'|"[^"\\]*"|`[^`\\$]*`)$/iu;
-
-export const BARE_RECEIVERS = new Set(['Identifier', 'MemberExpression', 'CallExpression', 'ThisExpression']);
-
-export const JASMINE_VERSION_PACKAGES = ['jasmine-core', 'jasmine'];
-
-export const JASMINE_SIZE_VERSION = [3, 6, 0];
-
-export const ASSERT_MESSAGE_INDEX = 2;
-
-export const TEMPLATE_FIELD = /\{(\w+)\}/gu;
-
 export const MATCHER_TEMPLATES = new Map<string, readonly string[]>([
     ['jest.null', ['expect({received}).toBeNull()', 'expect({received}).not.toBeNull()']],
     ['jest.undefined', ['expect({received}).toBeUndefined()', 'expect({received}).toBeDefined()']],
@@ -146,43 +141,32 @@ export const MATCHER_TEMPLATES = new Map<string, readonly string[]>([
     ['cypress.null', ["{received}.{method}('be.null')", "{received}.{method}('not.be.null')"]],
     ['cypress.undefined', ["{received}.{method}('be.undefined')", "{received}.{method}('not.be.undefined')"]],
 ]);
-
-export const LOCATOR_STATES: ReadonlyMap<string | null, readonly string[]> = new Map([
-    ['isVisible', ['toBeVisible', 'toBeHidden']],
-    ['isHidden', ['toBeHidden', 'toBeVisible']],
-    ['isEnabled', ['toBeEnabled', 'toBeDisabled']],
-    ['isDisabled', ['toBeDisabled', 'toBeEnabled']],
-    ['isChecked', ['toBeChecked', 'not.toBeChecked']],
+export const NULLISH_KINDS = new Set(['null', 'undefined']);
+export const NUMERIC_MATCHERS: ReadonlyMap<string | undefined, string> = new Map([
+    ['>', 'above'],
+    ['>=', 'atLeast'],
+    ['<', 'below'],
+    ['<=', 'atMost'],
 ]);
-
-export const LOCATOR_VALUES: ReadonlyMap<string | null, string> = new Map([
-    ['count', 'toHaveCount'],
-    ['inputValue', 'toHaveValue'],
-]);
-
-export const TYPE_CATEGORIES = new Map([
-    ['string', 'string'],
-    ['number', 'number'],
-    ['boolean', 'boolean'],
-    ['true', 'boolean'],
-    ['false', 'boolean'],
-    ['bigint', 'bigint'],
-    ['symbol', 'symbol'],
-    ['unique symbol', 'symbol'],
+export const NUMERIC_NAME =
+    /^[\w$.]*(?:amount|count|delta|depth|diff|duration|elapsed|height|index|length|level|limit|number|price|score|size|total|width)$/iu;
+export const OPERAND_KINDS = new Map([
     ['null', 'null'],
     ['undefined', 'undefined'],
-    ['void', 'undefined'],
-    ['any', 'unknown'],
-    ['unknown', 'unknown'],
-    ['never', 'unknown'],
+    ['NaN', 'nan'],
+    ['Number.NaN', 'nan'],
+    ['true', 'true'],
+    ['false', 'false'],
 ]);
+export const STRICT_EQUALITY_OPERATORS = new Set(['===', '!==']);
+export const TEMPLATE_FIELD = /\{(\w+)\}/gu;
+export const TEXT_RECEIVER = /^(?:[\w$]*(?:text|string|message|content|html)|'[^'\\]*'|"[^"\\]*"|`[^`\\$]*`)$/iu;
+export const VALUE_KINDS = new Set(['null', 'undefined', 'nan']);
 
-export const OPEN_CATEGORIES = new Set(['object', 'null', 'undefined', 'unknown']);
-
+// valid-throw-assertions rule
 export const THROW_EXPECTS: ReadonlySet<string | undefined> = new Set([
     '@jest/globals.expect',
     'vitest.expect',
     'bun:test.expect',
 ]);
-
 export const UNCERTAIN_TYPES = new Set(['any', 'unknown']);

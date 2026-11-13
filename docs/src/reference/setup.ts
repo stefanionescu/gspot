@@ -1,31 +1,23 @@
-import { CLI_REFERENCE } from '#cli/reference.ts';
-import {
-    CONJUNCTION_FORMAT,
-    CURL_COMMAND,
-    DISJUNCTION_FORMAT,
-    RELEASE_AGE_EXCLUSIONS,
-} from '#docs/config/reference.ts';
+import { CLI_REFERENCE, DOCS_PATHS, formatNameList } from '@gspothq/cli/reference';
+
+import cliPackage from '#cli-package' with { type: 'json' };
+import { CURL_COMMAND, EVALUATION_HEADING, LEVEL_SUGGESTION, RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 import { SITE_TITLE } from '#docs/config/site.ts';
 
 export const { runtimeMinimums, packageManagerMinimums, setup, yarnClassicInstall, cloneInstalls, hookProgramMissing } =
     CLI_REFERENCE;
 
-const { homepage } = CLI_REFERENCE.package;
+const { homepage } = cliPackage;
 
 export const LLMS_URL = `${homepage}/llms.txt`;
 
 export const LLMS_COMMAND = `${CURL_COMMAND} ${LLMS_URL}`;
 
-const SCAN_COMMAND = `npx --yes ${CLI_REFERENCE.package.name}@${CLI_REFERENCE.package.version} scan`;
-
-const EVALUATION_HEADING = 'Try gspot';
+const SCAN_COMMAND = `npx --yes ${cliPackage.name}@${cliPackage.version} scan`;
 
 export const AGENT_PROMPT = `Set up gspot in my repository. Run ${LLMS_COMMAND} and follow its steps.`;
 
 export const EVALUATION_PROMPT = `Show me what gspot would find in my repository. Run \`${LLMS_COMMAND}\`, follow "${EVALUATION_HEADING}", and change nothing until I answer.`;
-
-const LEVEL_SUGGESTION =
-    '`basic` for an existing codebase, and `all` for a new repository or one that coding agents write';
 
 const LANGUAGE_CONFIGURATIONS = CLI_REFERENCE.configurations.filter(({ group }) => group === 'language');
 
@@ -35,23 +27,23 @@ function listPrograms(configuration: (typeof CLI_REFERENCE.configurations)[numbe
 
 const OVERVIEW = `# ${SITE_TITLE}
 
-${CLI_REFERENCE.package.description}
+${cliPackage.description}
 
 gspot sets up linters, formatters, and type checkers for the languages and frameworks in a repository, and pins each
 tool that it installs. It writes the config files of those tools from one settings file, \`gspot.toml\`, and runs the
 tools before each commit and push, through Git hooks, and in CI. It also writes \`AGENTS.md\` and rule files that tell
 coding agents how to write code that passes the checks.
 
-These steps cover ${CLI_REFERENCE.package.name} ${CLI_REFERENCE.package.version}. gspot needs Git, Node.js ${runtimeMinimums.node} or newer,
+These steps cover ${cliPackage.name} ${cliPackage.version}. gspot needs Git, Node.js ${runtimeMinimums.node} or newer,
 npm ${packageManagerMinimums.npm}, pnpm ${packageManagerMinimums.pnpm}, or Bun ${packageManagerMinimums.bun} or newer, and mise. Node.js 22 comes with an older npm,
 so run \`npm install --global npm@latest\` there.`;
 
 const SUPPORT = `## Supported languages and frameworks
 
-- Languages: ${CONJUNCTION_FORMAT.format(LANGUAGE_CONFIGURATIONS.map(({ title }) => title))}. Files in other
+- Languages: ${formatNameList(LANGUAGE_CONFIGURATIONS.map(({ title }) => title))}. Files in other
   languages, such as Go, Rust, or Java, get only the checks that run on every repository, such as the secret scan and
   the spell check.
-- Frameworks and tools: ${CONJUNCTION_FORMAT.format(
+- Frameworks and tools: ${formatNameList(
     CLI_REFERENCE.configurations
         .filter(({ group }) => group !== 'language' && group !== 'general')
         .map(({ title }) => title),
@@ -89,14 +81,17 @@ mise, because gspot runs that version through it.
 
 Some package managers refuse a version until it is a set age, as pnpm 11 does for one day by default. In that case,
 let gspot's two packages, @gspothq/cli and @gspothq/eslint-plugin, install right away by adding them to
-${CONJUNCTION_FORMAT.format(RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => `${key} in ${file} for ${label}`))}.
+${formatNameList(RELEASE_AGE_EXCLUSIONS.map(({ label, key, file }) => `${key} in ${file} for ${label}`))}.
 
 1. Add gspot to the repository, pinned to one exact version. Use the package manager of the repository, or mise when
    the repository has no \`package.json\`:
 ${setup.map(({ label, add }) => `   - ${label}: \`${add}\``).join('\n')}
 
 ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `   With ${label}, run \`${command}\` first, so that gspot runs on a supported Node.js version.`)).join('\n')}
-   Start every gspot command after this one with ${DISJUNCTION_FORMAT.format(setup.map(({ start }) => `\`${start}\``))}.
+   Start every gspot command after this one with ${formatNameList(
+       setup.map(({ start }) => `\`${start}\``),
+       'disjunction',
+   )}.
 2. Skip this step when you followed "${EVALUATION_HEADING}". Otherwise run \`gspot scan\`. It changes nothing in the
    repository. Show the user what it found, and what \`gspot init\` will do at the default level.
 3. Ask the user which level they want, and wait for the answer.
@@ -129,9 +124,9 @@ ${setup.flatMap(({ label, prerequisites }) => prerequisites.map((command) => `  
 const DOCUMENTATION = `## Documentation
 
 - [Troubleshooting](${homepage}/use/troubleshooting/)
-- [Commands](${CLI_REFERENCE.docs.commands})
-- [gspot.toml settings](${CLI_REFERENCE.docs.settings})
-- [JSON output](${CLI_REFERENCE.docs.jsonOutput})
+- [Commands](${DOCS_PATHS.commands})
+- [gspot.toml settings](${DOCS_PATHS.settings})
+- [JSON output](${DOCS_PATHS.jsonOutput})
 - [Uninstall](${homepage}/start/install/#uninstall)`;
 
 export const LLMS_TEXT = `${[OVERVIEW, SUPPORT, EVALUATION, SETUP, DOCUMENTATION].join('\n\n')}\n`;

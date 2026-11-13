@@ -1,3 +1,21 @@
+// naming languages
+// naming languages
+export const QUALIFIED_FUNCTION_DECLARATION = `CREATE FUNCTION same.same(integer, IN same integer DEFAULT same(1, 2), OUT "out" integer, VARIADIC "variadic" integer[])
+RETURNS integer LANGUAGE sql AS $$SELECT same$$;
+CREATE FUNCTION named.named() RETURNS TABLE (
+    named integer,
+    "out" integer
+) LANGUAGE sql AS $$SELECT 1, 2$$;
+`;
+export const QUALIFIED_SQL_NAMES = [
+    { category: 'functions', name: 'same', line: 1, column: 22 },
+    { category: 'parameters', name: 'same', line: 1, column: 39 },
+    { category: 'parameters', name: 'out', line: 1, column: 77 },
+    { category: 'parameters', name: 'variadic', line: 1, column: 101 },
+    { category: 'functions', name: 'named', line: 3, column: 23 },
+    { category: 'parameters', name: 'named', line: 4, column: 5 },
+    { category: 'parameters', name: 'out', line: 5, column: 6 },
+] as const;
 export const SQL_DECLARATIONS = `-- Accounts.
 CREATE SCHEMA app;
 
@@ -13,25 +31,6 @@ CREATE POLICY owner_reads ON app.user_accounts FOR SELECT USING (true);
 CREATE TRIGGER touch_on_write BEFORE UPDATE ON app.user_accounts FOR EACH ROW EXECUTE FUNCTION app.touch_account();
 CREATE VIEW app.active_accounts AS SELECT id FROM app.user_accounts;
 `;
-
-export const QUALIFIED_FUNCTION_DECLARATION = `CREATE FUNCTION same.same(integer, IN same integer DEFAULT same(1, 2), OUT "out" integer, VARIADIC "variadic" integer[])
-RETURNS integer LANGUAGE sql AS $$SELECT same$$;
-CREATE FUNCTION named.named() RETURNS TABLE (
-    named integer,
-    "out" integer
-) LANGUAGE sql AS $$SELECT 1, 2$$;
-`;
-
-export const QUALIFIED_SQL_NAMES = [
-    { category: 'functions', name: 'same', line: 1, column: 22 },
-    { category: 'parameters', name: 'same', line: 1, column: 39 },
-    { category: 'parameters', name: 'out', line: 1, column: 77 },
-    { category: 'parameters', name: 'variadic', line: 1, column: 101 },
-    { category: 'functions', name: 'named', line: 3, column: 23 },
-    { category: 'parameters', name: 'named', line: 4, column: 5 },
-    { category: 'parameters', name: 'out', line: 5, column: 6 },
-] as const;
-
 export const SQL_SOURCE_NAMES: Array<Array<string | number>> = [
     ['schemas', 'app', 2],
     ['tables', 'user_accounts', 4],
@@ -46,6 +45,7 @@ export const SQL_SOURCE_NAMES: Array<Array<string | number>> = [
     ['tables', 'active_accounts', 14],
 ];
 
+// naming settings
 export const SWIFT_NAMING_LIMITS = `[naming.swift]
 max_characters = 38
 max_words = 4

@@ -22,8 +22,8 @@ summary = "Finds a tool config that a generated config file replaces, and the sc
 why = "The tool reads only the settings gspot writes, so a rule left in the old file looks active and does nothing, and a lint command fails or runs a second lint stack beside gspot."
 
 [[check]]
-example = "An edit by hand to a generated config file reports `changed`. Move the change into gspot.toml, then run `gspot install`."
-help = "Change gspot.toml, then run `gspot install`. After a merge, run `gspot install`."
+example = "An edit by hand to a generated config file reports `changed`. Move the change into gspot.toml, then run `gspot check --fix` or `gspot install`. A stale tool lockfile under `.gspot/` needs `gspot install`."
+help = "Change gspot.toml, then run `gspot check --fix` or `gspot install`. After a merge, run `gspot install`."
 name = "generated-files"
 runs = "once"
 stage = "commit"

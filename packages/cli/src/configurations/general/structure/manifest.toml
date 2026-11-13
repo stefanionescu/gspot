@@ -115,14 +115,14 @@ summary = "Finds Python, Swift, and Bash functions at or under `limits.trivial_f
 why = "A function of one statement that one place calls makes the reader jump for nothing."
 
 [[check]]
-example = "A TypeScript file whose `function parseRow` sits below `export function loadRows`, and that no function above `parseRow` calls, reports `private-below-public`. Move `parseRow` above `loadRows`, or below the function that calls it."
+example = "A TypeScript file whose `function parseRow` sits below `export function loadRows` reports `private-below-public`. Move `parseRow` above `loadRows`."
 files = { extensions = [".py", ".swift", ".js", ".jsx", ".mjs", ".cjs", ".ts", ".tsx", ".mts", ".cts"], kinds = ["source"] }
-help = "Move each private function above the first public function of its file, or below a function that calls it."
+help = "Move each private function above the public function that calls it."
 level = "all"
 name = "function-order"
 stage = "commit"
-summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript, unless a function above it calls it."
-why = "When each private function sits above the public functions, or below the function that calls it, a reader finds a helper next to the code that uses it."
+summary = "Finds a private top-level function below a public one in Python, Swift, JavaScript, and TypeScript."
+why = "When each private function sits above the public functions, a reader finds a helper next to the code that uses it."
 
 [[check]]
 example = "A Swift `do { ... }` without `catch` reports `bare-block`. Move its statements into a function named after their step, or remove the `do`."

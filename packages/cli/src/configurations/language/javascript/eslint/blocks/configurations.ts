@@ -109,7 +109,7 @@ function buildScopeConfigurationBlocks(
             }));
         const matching = listMatchingScopes(scopeBlocks, planned.session.scopes);
         for (const { path, blocks } of scopeBlocks) {
-            if (matching.has(path)) continue;
+            if (matching.has(path) || blocks.length === 0) continue;
             const excluded = listNestedScopeGlobs(
                 planned.session.scopes.map((each) => each.path).filter((child) => !matching.has(child)),
                 path,

@@ -1,6 +1,16 @@
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 
+export const INVALID_CSS = `a {
+    invalid-property: 1;
+}
+`;
+export const REPLACED_CONFIG_DELETIONS = [
+    { path: '.shellcheckrc' },
+    { path: '.prettierrc' },
+    { path: '.eslintrc.json' },
+    { path: 'typos.toml' },
+] as const;
 export const REPLACED_PYPROJECT_TABLES = [
     {
         configuration: 'python',
@@ -17,7 +27,12 @@ export const REPLACED_PYPROJECT_TABLES = [
         generated: `${GSPOT_PATHS.configurations}/sql/sqlfluff.cfg`,
     },
 ] as const;
+export const SHARED_SETUP_CONFIG = `[flake8]
+ignore = E501
 
+[sqlfluff]
+exclude_rules = LT01
+`;
 export const STYLELINT_REPLACEMENT_CASES = [
     {
         name: 'a root package field',
@@ -44,22 +59,3 @@ export const STYLELINT_REPLACEMENT_CASES = [
         unchangedFiles: [{ path: 'package.json', text: '{"private":true,"type":"module"}' }],
     },
 ] as const;
-
-export const SHARED_SETUP_CONFIG = `[flake8]
-ignore = E501
-
-[sqlfluff]
-exclude_rules = LT01
-`;
-
-export const REPLACED_CONFIG_DELETIONS = [
-    { path: '.shellcheckrc' },
-    { path: '.prettierrc' },
-    { path: '.eslintrc.json' },
-    { path: 'typos.toml' },
-] as const;
-
-export const INVALID_CSS = `a {
-    invalid-property: 1;
-}
-`;

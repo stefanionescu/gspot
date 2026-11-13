@@ -7,7 +7,7 @@ import ChecksTable from '#docs/components/ChecksTable.astro';
 
 `gspot add licenses` adds a check that runs before each push and reads the lockfiles of each scope:
 
-<ChecksTable guide="topics/licenses" />
+<ChecksTable />
 
 The check sends the names and versions of your locked packages to the deps.dev service, so it needs network access and a
 lockfile. It skips until you list the licenses that your project accepts:

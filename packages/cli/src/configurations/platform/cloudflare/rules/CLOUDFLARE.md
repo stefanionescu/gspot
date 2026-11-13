@@ -26,3 +26,5 @@ Read this rule when code runs on Cloudflare Workers or Pages, or when you change
 - Deploy through a task. When CI deploys, its job runs the same task.
 - After you change a binding in the Wrangler file, run `wrangler types`, and commit the file that
   `cloudflare.types_file` names.
+- The `/*` block of `_headers` sets `X-Content-Type-Options`, `Referrer-Policy`, and `X-Frame-Options` or the
+  `frame-ancestors` directive of a content security policy.

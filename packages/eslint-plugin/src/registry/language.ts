@@ -50,6 +50,7 @@ import { noUnknownRegexGroup } from '../rules/regex/no-unknown-regex-group.ts';
 import { importBoundaries } from '../rules/structure/import-boundaries.ts';
 import { noCommentedCode } from '../rules/structure/no-commented-code.ts';
 import { noCommentsInImports } from '../rules/structure/no-comments-in-imports.ts';
+import { noDetachedDocComments } from '../rules/structure/no-detached-doc-comments.ts';
 import { noIndexImports } from '../rules/structure/no-index-imports.ts';
 import { noNestedTemplateLiterals } from '../rules/structure/no-nested-template-literals.ts';
 import { noRenamedExports } from '../rules/structure/no-renamed-exports.ts';
@@ -134,6 +135,7 @@ export const LANGUAGE_TOPICS = {
         importBoundaries,
         noCommentedCode,
         noCommentsInImports,
+        noDetachedDocComments,
         noIndexImports,
         noNestedTemplateLiterals,
         noRenamedExports,

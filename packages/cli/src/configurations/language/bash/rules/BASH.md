@@ -9,6 +9,8 @@ Read this rule when you write or change a shell script.
 Use Bash to run commands and wire tools together. Parsing, data structures, long-running work, and typed contracts
 belong in application code.
 
+Put Python or Node code in its own file and run that file. Never embed it in a heredoc or a `-c` string.
+
 ## Deprecated and forbidden syntax
 
 Do not use `function` or `&>`. Use `name() { ...; }` and explicit redirections instead. `trap ERR` does not provide
@@ -16,6 +18,10 @@ general error handling. Check failure where it matters, and reserve traps for cl
 relevant exit path.
 
 ## Options
+
+Start an executable script with `#!/usr/bin/env bash` and `set -euo pipefail`, give it the executable bit, and end it
+with `main "$@"`. A sourced library only defines functions and variables: it sets no option, calls no `main`, and does
+not exit.
 
 Do not rely on `errexit` for control flow. It does not stop the script inside conditionals, pipelines, command
 substitutions, subshells, and some functions. Check the status of `cd`, `rm`, builds, publishing, uploads, and
@@ -34,6 +40,11 @@ boundary. Use `${1:-}` where callers can omit an argument.
 
 Declare function-local variables with `local`. Preserve the documented status contract: a predicate may return 1 for
 false, distinct from an execution error. Delete a function that no script calls.
+
+A function reads every argument that its callers pass. Drop an argument that it does not read.
+
+Keep a function within `{setting:limits.bash.max_function_lines}` lines and a script within
+`{setting:limits.bash.max_file_lines}`. Split by steps.
 
 ## Variables and constants
 

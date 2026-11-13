@@ -28,7 +28,8 @@
         "gspot": "dist/gspot.js"
     },
     "exports": {
-        "./package.json": "./package.json"
+        "./package.json": "./package.json",
+        "./reference": "./src/reference.ts"
     },
     "files": [
         "dist/selector-process.js",

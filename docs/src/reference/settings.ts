@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 
-import { CLI_REFERENCE } from '#cli/reference.ts';
+import { CLI_REFERENCE, DOCS_PATHS } from '@gspothq/cli/reference';
+
 import {
     ANGLE_BRACKETS,
     BANNED_NAME_MESSAGE,
@@ -15,6 +16,7 @@ import {
     SCHEMA_TYPE_LABELS,
     SENTENCE_END,
     TABLE_HEADING_LEVEL,
+    TOP_LEVEL_ANCHOR,
     TOP_LEVEL_HEADING,
 } from '#docs/config/reference.ts';
 import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
@@ -140,8 +142,12 @@ function formatVariantSection(node: SettingReference, headingLevel: number): str
     );
 }
 
+function formatTableHeader(node: SettingReference): string {
+    return node.kind === 'record' ? `[[${node.key}]]` : `[${node.key}]`;
+}
+
 function formatSettingTable(node: SettingReference, headingLevel: number): string {
-    const header = node.kind === 'record' ? `[[${node.key}]]` : `[${node.key}]`;
+    const header = formatTableHeader(node);
     const keys = node.children.filter((child) => child.kind === 'value');
     return formatSection(
         `\`${header}\``,
@@ -209,23 +215,23 @@ export function buildSettingsPage(): ReferencePage {
     const page = buildReferencePage(
         'gspot.toml settings',
         undefined,
-        `[gspot.toml](/configure/gspot-toml/) says how to change these settings, and the [JSON Schema](${CLI_REFERENCE.docs.schema}) gives your editor the same keys.\n` +
+        `[gspot.toml](/configure/gspot-toml/) says how to change these settings, and the [JSON Schema](${DOCS_PATHS.schema}) gives your editor the same keys.\n` +
             formatSection(
                 TOP_LEVEL_HEADING,
                 formatSettingKeys(topLevelKeys, TABLE_HEADING_LEVEL + 1),
                 TABLE_HEADING_LEVEL,
-                'top-level-settings',
+                TOP_LEVEL_ANCHOR,
             ) +
             sections.join(''),
     );
     page.headings = [
-        { depth: TABLE_HEADING_LEVEL, slug: 'top-level-settings', text: TOP_LEVEL_HEADING },
+        { depth: TABLE_HEADING_LEVEL, slug: TOP_LEVEL_ANCHOR, text: TOP_LEVEL_HEADING },
         ...roots
             .filter((node) => node.kind !== 'value')
             .map((node) => ({
                 depth: TABLE_HEADING_LEVEL,
                 slug: buildSettingAnchor(node.key, node.kind),
-                text: node.kind === 'record' ? `[[${node.key}]]` : `[${node.key}]`,
+                text: formatTableHeader(node),
             })),
     ];
     page.data.tableOfContents = { maxHeadingLevel: TABLE_HEADING_LEVEL };

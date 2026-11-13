@@ -1,48 +1,7 @@
+// copy dependencies
 export const VALUE_ONE_LINE = 'export const value = 1;';
 
-export const GIT_HOOK_REPORT = {
-    reports: [
-        {
-            kind: 'index',
-            source: 'selected\n',
-            tree: true,
-            ownMetadata: true,
-            toolMetadata: true,
-            paths: ['source.txt'],
-            configuration: 'inherited',
-            explicit: 'caller',
-            cancelled: true,
-        },
-        {
-            kind: 'commit',
-            source: 'committed\n',
-            tree: true,
-            ownMetadata: true,
-            toolMetadata: true,
-            paths: ['source.txt'],
-            configuration: 'inherited',
-            explicit: 'caller',
-            cancelled: true,
-        },
-    ],
-    headKept: true,
-    indexKept: true,
-    workingBytes: 'working\n',
-} as const;
-
-export const SELECTED_SOURCE = 'selected source';
-
-export const TWO_SCOPES_SETTINGS = `configurations = []
-[[scope]]
-path = "api"
-configurations = []
-[[scope]]
-path = "web"
-configurations = []
-`;
-
-export const TSC_PUSH_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc'] };
-
+// file selection
 export const PROJECT_PATH_IGNORES = [
     {
         name: 'a deleted ignored input',
@@ -86,12 +45,55 @@ export const PROJECT_PATH_IGNORES = [
     },
 ] as const;
 
-export const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
-    'configurations = []',
-    'configurations = ["typescript"]',
-);
-
+// file triggers
 export const LAST_FILE_CHANGES = [
     ['delete', 'staged'],
     ['rename', 'changed'],
 ];
+
+// revision copies
+export const GIT_HOOK_REPORT = {
+    reports: [
+        {
+            kind: 'index',
+            source: 'selected\n',
+            tree: true,
+            ownMetadata: true,
+            toolMetadata: true,
+            paths: ['source.txt'],
+            configuration: 'inherited',
+            explicit: 'caller',
+            cancelled: true,
+        },
+        {
+            kind: 'commit',
+            source: 'committed\n',
+            tree: true,
+            ownMetadata: true,
+            toolMetadata: true,
+            paths: ['source.txt'],
+            configuration: 'inherited',
+            explicit: 'caller',
+            cancelled: true,
+        },
+    ],
+    headKept: true,
+    indexKept: true,
+    workingBytes: 'working\n',
+} as const;
+export const SELECTED_SOURCE = 'selected source';
+
+// typescript scopes
+export const TSC_PUSH_OPTIONS = { stage: 'push' as const, only: ['typescript/tsc'] };
+export const TWO_SCOPES_SETTINGS = `configurations = []
+[[scope]]
+path = "api"
+configurations = []
+[[scope]]
+path = "web"
+configurations = []
+`;
+export const TYPESCRIPT_SCOPES_SETTINGS = TWO_SCOPES_SETTINGS.replace(
+    'configurations = []',
+    'configurations = ["typescript"]',
+);

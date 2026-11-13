@@ -12,7 +12,7 @@ main() {
             --external libpg-query --minify-whitespace --minify-syntax --metafile=dist/bundle.json
     } >dist/gspot.js
     chmod +x dist/gspot.js
-    bun ../../.mise/release/notices.ts dist/bundle.json dist/THIRD-PARTY-NOTICES.md
+    bun scripts/notices.ts dist/bundle.json dist/THIRD-PARTY-NOTICES.md
     rm -f -- dist/bundle.json
     bun build src/configurations/framework/site/checks/selector-process.ts --outdir dist --target node --format esm \
         --minify-whitespace --minify-syntax

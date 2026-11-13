@@ -1,5 +1,16 @@
+export const COMPOSE_SOURCES = [
+    {
+        name: 'a local build beside a registry image',
+        source: 'services: {app: {build: ., image: example/web:dev}, proxy: {image: nginx:1.27.2}}',
+    },
+    {
+        name: 'duplicate services with interpolation and unrelated images',
+        source: `x-example: {image: unrelated:1}
+services: {app: {image: nginx:1.27.2}, copy: {image: nginx:1.27.2}, env: {image: "\${IMAGE}"}, local: {build: .}}
+`,
+    },
+] as const;
 const REQUIRED_DOCKERIGNORE = '.git\n.env\n**/coverage/**\n**/.env\n**/.env.*\n**/.dev.vars\n**/.dev.vars.*\n';
-
 export const DOCKERIGNORE_CASES = [
     {
         name: 'each scope lists the folders of its own configurations',
@@ -71,31 +82,7 @@ export const DOCKERIGNORE_CASES = [
         findings: [{ file: 'Dockerfile.dockerignore', rule: 'missing-entry', entry: '**/coverage/**' }],
     },
 ] as const;
-
 export const NGINX_COMPOSE = 'services: {app: {image: nginx:1.27.2}}\n';
-
-export const COMPOSE_SOURCES = [
-    {
-        name: 'a local build beside a registry image',
-        source: 'services: {app: {build: ., image: example/web:dev}, proxy: {image: nginx:1.27.2}}',
-    },
-    {
-        name: 'duplicate services with interpolation and unrelated images',
-        source: `x-example: {image: unrelated:1}
-services: {app: {image: nginx:1.27.2}, copy: {image: nginx:1.27.2}, env: {image: "\${IMAGE}"}, local: {build: .}}
-`,
-    },
-] as const;
-
-export const TRIVY_REPORT =
-    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
-
-export const TRIVY_REGISTRY_FAILURE = {
-    code: 1,
-    stdout: TRIVY_REPORT,
-    stderr: 'FATAL registry authentication failed',
-} as const;
-
 export const TRIVY_IMAGE_FINDINGS = [
     {
         file: 'compose.yaml',
@@ -104,3 +91,10 @@ export const TRIVY_IMAGE_FINDINGS = [
         message: 'nginx:1.27.2: CVE-example (example)',
     },
 ] as const;
+export const TRIVY_REPORT =
+    '{"SchemaVersion":2,"ArtifactName":"nginx:1.27.2","Results":[{"Target":"nginx","Vulnerabilities":[{"VulnerabilityID":"CVE-example","PkgName":"example"}]}]}';
+export const TRIVY_REGISTRY_FAILURE = {
+    code: 1,
+    stdout: TRIVY_REPORT,
+    stderr: 'FATAL registry authentication failed',
+} as const;

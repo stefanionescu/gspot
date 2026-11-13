@@ -1,55 +1,7 @@
 import { MARKERS } from '#cli/config/parsers/formats.ts';
 import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 
-export const MALFORMED_BLOCKS = [
-    { path: 'AGENTS.md', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
-    { path: 'AGENTS.md', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
-    {
-        path: 'AGENTS.md',
-        source: `<!-- <<< gspot managed <<< -->
-body
-<!-- >>> gspot managed >>> -->
-`,
-    },
-    {
-        path: 'AGENTS.md',
-        source: `<!-- >>> gspot managed >>> -->
-<!-- >>> gspot managed >>> -->
-body
-<!-- <<< gspot managed <<< -->
-`,
-    },
-    {
-        path: 'AGENTS.md',
-        source: `<!-- >>> gspot managed >>> -->
-body
-<!-- <<< gspot managed <<< -->
-<!-- <<< gspot managed <<< -->
-`,
-    },
-] as const;
-
-export const BLOCK_FORMATS = [
-    { path: 'AGENTS.md', ...MARKERS.markdown },
-    { path: '.gitignore', ...MARKERS.hash },
-] as const;
-
-export const SWIFT_DEPENDENCY_CALLS = `import PackageDescription
-let package = Package(
-    dependencies: [
-        .package(url: "https://example.com/live.git", from: "1.0.0"),
-        /* .package(url: "https://example.com/removed.git", from: "1.0.0") */
-        .package(path: "../local")
-    ],
-    targets: [
-        .binaryTarget(name: "Vendor", url: "https://example.com/Vendor.xcframework.zip", checksum: "abc")
-    ]
-)
-let example = """
-.package(url: "https://example.com/documentation.git", from: "1.0.0")
-"""
-`;
-
+// lockfiles
 export const LOCKED_VERSION_CASES = [
     {
         name: 'npm root',
@@ -101,6 +53,58 @@ export const LOCKED_VERSION_CASES = [
     },
 ] as const;
 
+// managed blocks
+export const BLOCK_FORMATS = [
+    { path: 'AGENTS.md', ...MARKERS.markdown },
+    { path: '.gitignore', ...MARKERS.hash },
+] as const;
+export const MALFORMED_BLOCKS = [
+    { path: 'AGENTS.md', source: '<!-- >>> gspot managed >>> -->\nbody\n' },
+    { path: 'AGENTS.md', source: 'body\n<!-- <<< gspot managed <<< -->\n' },
+    {
+        path: 'AGENTS.md',
+        source: `<!-- <<< gspot managed <<< -->
+body
+<!-- >>> gspot managed >>> -->
+`,
+    },
+    {
+        path: 'AGENTS.md',
+        source: `<!-- >>> gspot managed >>> -->
+<!-- >>> gspot managed >>> -->
+body
+<!-- <<< gspot managed <<< -->
+`,
+    },
+    {
+        path: 'AGENTS.md',
+        source: `<!-- >>> gspot managed >>> -->
+body
+<!-- <<< gspot managed <<< -->
+<!-- <<< gspot managed <<< -->
+`,
+    },
+] as const;
+
+// project dependencies
+export const SWIFT_DEPENDENCY_CALLS = `import PackageDescription
+let package = Package(
+    dependencies: [
+        .package(url: "https://example.com/live.git", from: "1.0.0"),
+        /* .package(url: "https://example.com/removed.git", from: "1.0.0") */
+        .package(path: "../local")
+    ],
+    targets: [
+        .binaryTarget(name: "Vendor", url: "https://example.com/Vendor.xcframework.zip", checksum: "abc")
+    ]
+)
+let example = """
+.package(url: "https://example.com/documentation.git", from: "1.0.0")
+"""
+`;
+
+// xcode projects
+export const FIRST_GROUP_SWIFT_PATH = '/repo/First Group/Shared.swift';
 export const PROJECT_SYNTAX_CASES = [
     { name: 'quoted keys', source: GROUPED_PBXPROJ.replace('rootObject = P;', '"rootObject" = P;') },
     {
@@ -111,5 +115,3 @@ export const PROJECT_SYNTAX_CASES = [
         ),
     },
 ] as const;
-
-export const FIRST_GROUP_SWIFT_PATH = '/repo/First Group/Shared.swift';

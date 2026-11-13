@@ -1,14 +1,3 @@
-export const LICENSE_TABLES = '[licenses]\nallowed = ["MIT", "Apache-2.0"]\n';
-
-export const MIT_PACKAGE = { name: 'ready', version: '1.0.0', ecosystem: 'npm', licenses: [] } as const;
-
-export const GPL_PACKAGE = {
-    name: 'strict',
-    version: '1.0.0',
-    ecosystem: 'npm',
-    licenses: ['GPL-3.0-only'],
-} as const;
-
 export const ALLOWED_PACKAGE_CASES = [
     {
         name: 'with a version range covers a package',
@@ -39,3 +28,11 @@ export const ALLOWED_PACKAGE_CASES = [
         findings: ['disallowed-license', 'unused-record'],
     },
 ] as const;
+export const GPL_PACKAGE = {
+    name: 'strict',
+    version: '1.0.0',
+    ecosystem: 'npm',
+    licenses: ['GPL-3.0-only'],
+} as const;
+export const LICENSE_TABLES = '[licenses]\nallowed = ["MIT", "Apache-2.0"]\n';
+export const MIT_PACKAGE = { name: 'ready', version: '1.0.0', ecosystem: 'npm', licenses: [] } as const;

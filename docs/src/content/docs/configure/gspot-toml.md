@@ -115,7 +115,7 @@ The rules are `level`, `hooks`, and `rule-files`. gspot rejects an ignore of the
 ## Edit records by hand
 
 `gspot ignore` writes `[[ignore]]`. `gspot set`, `unset`, `add`, and `remove` with `--scope` add a `[[scope]]` for a
-folder that holds a project file. Write the rest yourself, then run `gspot install`:
+folder that holds a project file. Write the rest yourself, then run `gspot check --fix` or `gspot install`:
 
 | Record                          | Holds                                                        |
 | ------------------------------- | ------------------------------------------------------------ |
@@ -133,12 +133,15 @@ folder that holds a project file. Write the rest yourself, then run `gspot insta
 
 `gspot set` and `gspot unset` also take `javascript.banned_imports` and the two plugin lists, as one inline TOML list.
 
-After a hand edit, preview the changes to the generated files, then write them and install the tools:
+After a hand edit, preview the changes to the generated files, then write them:
 
 ```shell
 gspot check --only gspot/generated-files --verbose
-gspot install
+gspot check --fix --only gspot/generated-files
 ```
+
+`gspot check --fix` rewrites the stale generated files. `gspot install` rewrites them too, then installs the tools and
+writes the tool lockfiles under `.gspot/`, so run it when the edit needs a new tool.
 
 `gspot.toml` uses TOML 1.0, so keep each inline table on one line. [Editors](/use/editors/#validate-gspottoml) shows how
 to validate the file as you type.

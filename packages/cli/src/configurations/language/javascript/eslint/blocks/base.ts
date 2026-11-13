@@ -8,6 +8,7 @@ import {
     IMPORT_LAYOUT_RULES,
     NODE_RULES,
     NODE_RUNTIMES,
+    NON_NODE_RULES,
     PACKAGE_JSON_PATTERN,
     PACKAGE_JSON_RULES,
     PIN_RANGES_RULE,
@@ -143,6 +144,7 @@ function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRunti
                 files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
                 rules: {
                     ...(runtime === 'commonjs' && { 'unicorn/prefer-module': 'off' }),
+                    ...(!NODE_RUNTIMES.includes(runtime) && NON_NODE_RULES),
                 },
             },
             calls: [

@@ -1,5 +1,19 @@
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 
+// bash sandbox
+export const BASH_SANDBOX = {
+    executable: ['scripts/a.sh', 'scripts/b.sh', 'scripts/build.sh'],
+    cleanSource: CLEAN_BASH_SCRIPT,
+    configurations: ['bash', 'javascript'],
+    files: {
+        'scripts/a.sh': CLEAN_BASH_SCRIPT,
+        'scripts/b.sh': CLEAN_BASH_SCRIPT,
+        'scripts/build.sh': CLEAN_BASH_SCRIPT,
+        'package.json': '{"private":true}\n',
+    },
+} as const;
+
+// bun project
 export const BUN_PROJECT_FILES = {
     'package.json': JSON.stringify({
         name: 'shop',
@@ -24,22 +38,13 @@ export const BUN_PROJECT_FILES = {
     }),
 } as const;
 
-export const BASH_SANDBOX = {
-    executable: ['scripts/a.sh', 'scripts/b.sh', 'scripts/build.sh'],
-    cleanSource: CLEAN_BASH_SCRIPT,
-    configurations: ['bash', 'javascript'],
-    files: {
-        'scripts/a.sh': CLEAN_BASH_SCRIPT,
-        'scripts/b.sh': CLEAN_BASH_SCRIPT,
-        'scripts/build.sh': CLEAN_BASH_SCRIPT,
-        'package.json': '{"private":true}\n',
-    },
-} as const;
-
-export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
-
+// gitattributes
 export const LINGUIST_GENERATED_PATTERN = 'emitted/** linguist-generated\n';
 
+// prose checks
+export const SCHEDULE_RELEASE_MARKDOWN = '# Schedule\n\nRelease on 03/04/2026.\n';
+
+// unmatched paths
 export const UNMATCHED_PATH_CASES = [
     {
         name: 'primitive lists and nested record paths',

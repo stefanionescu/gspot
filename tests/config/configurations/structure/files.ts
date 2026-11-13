@@ -1,3 +1,6 @@
+// environment readers
+// environment readers
+export const OS_VALUE_SOURCE = 'import os\nVALUE = os.environ["KEY"]\n';
 export const PYTHON_ENVIRONMENT_SOURCE = `import os as system
 from os import environ as values, getenv as read
 first = system.environ["KEY"]
@@ -15,8 +18,7 @@ from unrelated import getenv as other
 fifth = other("KEY")
 `;
 
-export const OS_VALUE_SOURCE = 'import os\nVALUE = os.environ["KEY"]\n';
-
+// lone files
 export const ROUTE_FILE_CASES = [
     {
         framework: 'Next.js',
@@ -41,6 +43,7 @@ export const ROUTE_FILE_CASES = [
     },
 ] as const;
 
+// shared prefixes
 export const NESTJS_PREFIX_RESULTS: Array<{ scope: string; paths: string[] }> = [
     { scope: '', paths: ['feature.controller.spec.ts'] },
     { scope: 'app', paths: ['app/custom.one.ts', 'app/jsx.controller.tsx'] },

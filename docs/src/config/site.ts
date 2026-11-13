@@ -1,23 +1,12 @@
 import cliPackage from '#cli-package' with { type: 'json' };
 
-export const SITE_TITLE = 'gspot';
+// inline text
+export const INLINE_CODE_SPAN = /(`[^`]+`)/u;
 
-export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
-
-export const RELEASES_URL = `${REPOSITORY_URL}/releases`;
-
-export const DOCS_PATH = '/start/quickstart/';
-
-export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
-
-export const THEME_STORAGE_KEY = 'starlight-theme';
-
-export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Switch to dark theme' } as const;
-
-export const NPM_URL = `https://www.npmjs.com/package/${cliPackage.name}`;
-
+// readme opening
 export const README_OPENING_BLOCKS = 2;
 
+// sidebar
 export const SIDEBAR = [
     {
         label: 'Start',
@@ -115,3 +104,37 @@ export const SIDEBAR = [
         ],
     },
 ];
+export const WIDE_SCREEN_QUERY = '(min-width: 50em)';
+
+// site identity
+export const BACKGROUND_COLOR = '#0b1020';
+export const SITE_TITLE = 'gspot';
+
+// site links
+export const DOCS_PATH = '/start/quickstart/';
+export const REPOSITORY_URL = 'https://github.com/stefanionescu/gspot';
+export const EDIT_URL = `${REPOSITORY_URL}/edit/main/docs/`;
+export const NPM_URL = `https://www.npmjs.com/package/${cliPackage.name}`;
+export const RELEASES_URL = `${REPOSITORY_URL}/releases`;
+
+// social images
+export const SECTION_IMAGES = new Map([
+    ['start', { name: 'Start', path: '/social/start.png' }],
+    ['use', { name: 'Use', path: '/social/use.png' }],
+    ['configure', { name: 'Configure', path: '/social/configure.png' }],
+    ['languages', { name: 'Languages', path: '/social/languages.png' }],
+    ['frameworks', { name: 'Frameworks', path: '/social/frameworks.png' }],
+    ['topics', { name: 'Topics', path: '/social/topics.png' }],
+    ['reference', { name: 'Reference', path: '/social/reference.png' }],
+]);
+export const SECTION_SEGMENT = /^\/(?<section>[^/]+)\//u;
+export const SOCIAL_IMAGE = {
+    path: '/open-graph.png',
+    alt: 'The gspot name and logo.',
+    width: 1200,
+    height: 630,
+} as const;
+
+// theme switch
+export const THEME_STORAGE_KEY = 'starlight-theme';
+export const THEME_SWITCH_LABELS = { dark: 'Switch to light theme', light: 'Switch to dark theme' } as const;

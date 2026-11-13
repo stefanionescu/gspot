@@ -1,19 +1,7 @@
 import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
+// no-globals-shadowing rule
 export const ARGUMENTS_NAME = 'arguments';
-
-export const SHADOWING_EXCEPTIONS: ReadonlySet<string> = new Set([
-    'constructor',
-    'hasOwnProperty',
-    'isPrototypeOf',
-    'propertyIsEnumerable',
-    'toLocaleString',
-    'toString',
-    'valueOf',
-    'escape',
-    'unescape',
-]);
-
 export const BUILTIN_GLOBALS: ReadonlySet<string> = new Set([
     'AggregateError',
     'Array',
@@ -79,22 +67,19 @@ export const BUILTIN_GLOBALS: ReadonlySet<string> = new Set([
     'WeakRef',
     'WeakSet',
 ]);
+export const SHADOWING_EXCEPTIONS: ReadonlySet<string> = new Set([
+    'constructor',
+    'hasOwnProperty',
+    'isPrototypeOf',
+    'propertyIsEnumerable',
+    'toLocaleString',
+    'toString',
+    'valueOf',
+    'escape',
+    'unescape',
+]);
 
-export const IMMEDIATE_RETURN_DECLARATION =
-    'VariableDeclaration[kind=/^(const|let|var)$/][declarations.length=1] > VariableDeclarator[id.type="Identifier"]:not([id.typeAnnotation])[init]';
-
-export const UPSTREAM_RULE = 'no-magic-numbers';
-
-export const TABLE_CONSTRUCTORS: ReadonlySet<string> = new Set(['Map', 'Set']);
-
-export const MAGIC_NUMBER_OPTIONS_SCHEMA = {
-    description: 'The options of @typescript-eslint/no-magic-numbers, passed through unchanged.',
-    type: 'object',
-    additionalProperties: true,
-} satisfies JSONSchema4;
-
-export const TRANSPOSED_UNARY_OPERATORS = new Set(['+', '-', '!']);
-
+// no-keyword-declarations rule
 export const RESERVED_DECLARATION_NAMES = new Set([
     'implements',
     'interface',
@@ -114,3 +99,19 @@ export const RESERVED_DECLARATION_NAMES = new Set([
     'yield',
     'await',
 ]);
+
+// no-magic-numbers rule
+export const MAGIC_NUMBER_OPTIONS_SCHEMA = {
+    description: 'The options of @typescript-eslint/no-magic-numbers, passed through unchanged.',
+    type: 'object',
+    additionalProperties: true,
+} satisfies JSONSchema4;
+export const TABLE_CONSTRUCTORS: ReadonlySet<string> = new Set(['Map', 'Set']);
+export const UPSTREAM_RULE = 'no-magic-numbers';
+
+// no-transposed-assignment rule
+export const TRANSPOSED_UNARY_OPERATORS = new Set(['+', '-', '!']);
+
+// prefer-immediate-return rule
+export const IMMEDIATE_RETURN_DECLARATION =
+    'VariableDeclaration[kind=/^(const|let|var)$/][declarations.length=1] > VariableDeclarator[id.type="Identifier"]:not([id.typeAnnotation])[init]';

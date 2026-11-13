@@ -94,17 +94,16 @@ function listFunctionOrderFindings(rootNode: Node, path: string, grammar: Gramma
                 line: statement.startPosition.row + 1,
                 column: statement.startPosition.column + 1,
                 rule: FUNCTION_ORDER_RULE,
-                message: `The private function ${name} sits below the public function ${firstPublic.name}, and no function above it calls it. Move ${name} above ${firstPublic.name}, or below a function that calls it.`,
+                message: `The private function ${name} sits below the public function ${firstPublic.name}. Move ${name} above ${firstPublic.name}.`,
             },
         ];
     });
 }
 
 /**
-Report each private top-level function below a public one, unless a function above it calls it, so that a file can read
-from the top: a public function, then its helpers. Python marks a private function with a leading `_`, and Swift with
-`private` or `fileprivate`. In JavaScript and TypeScript, a function or a constant set to a function stays private
-unless the module exports it.
+Report each private top-level function below a public one, so that a file can read from the top: a public function, then
+its helpers. Python marks a private function with a leading `_`, and Swift with `private` or `fileprivate`. In
+JavaScript and TypeScript, a function or a constant set to a function stays private unless the module exports it.
 */
 async function checkFunctionOrder(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const files = planned.files.flatMap((file) => {

@@ -1,58 +1,6 @@
 import { TYPO } from '#tests/config/setup/configurations.ts';
 
-export const CHECK_OUTPUTS = [
-    { format: 'knip', inputs: ['shape', 'foreign'] },
-    { format: 'semgrep', inputs: ['shape', 'foreign'] },
-    { format: 'typos', inputs: ['foreign'] },
-    { format: 'vale', inputs: ['shape', 'foreign'] },
-    { format: 'osv-scanner', inputs: ['shape', 'foreign'] },
-] as const;
-
-export const EDITORCONFIG_REPORT = `source.js:
-	Wrong line endings or no final newline
- notes.txt:
-	1: Trailing whitespace
-
-2 errors found
-`;
-
-export const WINDOWS_ROOT_CASES = [
-    {
-        root: 'C:/work',
-        stdout: 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n',
-        stderr: '',
-        line: 2,
-        column: 3,
-    },
-    { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
-] as const;
-
-export const LINE_ENDING_CASES = [
-    ['LF', '\n'],
-    ['CRLF', '\r\n'],
-] as const;
-
-export const TWO_LEVEL_FORMAT = {
-    format: 'json' as const,
-    list: 'results',
-    children: ['packages', 'vulnerabilities'],
-    fields: { file: 'source.path', rule: 'id', message: ['package.name', 'package.version', 'summary'] },
-} as const;
-
-export const NESTED_LIST_OUTPUT = {
-    results: [
-        {
-            source: { path: 'bun.lock' },
-            packages: [
-                {
-                    package: { name: 'qs', version: '6.15.3' },
-                    vulnerabilities: [{ id: 'GHSA-1', summary: 'Denial of service.' }],
-                },
-            ],
-        },
-    ],
-} as const;
-
+// json output
 export const FIX_FIELD_CASES = [
     ['absent', {}, false],
     ['object', { fix: { range: [0, 1], text: '' } }, true],
@@ -60,14 +8,6 @@ export const FIX_FIELD_CASES = [
     ['empty list', { fix: [] }, false],
     ['list of one edit', { fix: [{ edit: 'replace' }] }, true],
 ] as const;
-
-export const NESTED_LIST_FORMAT = {
-    format: 'json' as const,
-    list: 'files',
-    children: ['violations'],
-    fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
-} as const;
-
 export const FLAT_JSON_FINDINGS = [
     {
         check: 'nginx/gixy',
@@ -78,7 +18,6 @@ export const FLAT_JSON_FINDINGS = [
         fixable: false,
     },
 ] as const;
-
 export const INVALID_FINDING_REPORTS = [
     {
         name: 'a null finding',
@@ -96,14 +35,69 @@ export const INVALID_FINDING_REPORTS = [
         stdout: '[{"messages":{}}]',
     },
 ] as const;
+export const NESTED_LIST_FORMAT = {
+    format: 'json' as const,
+    list: 'files',
+    children: ['violations'],
+    fields: { file: 'filepath', line: 'start_line_no', rule: 'code', message: 'description' },
+} as const;
+export const NESTED_LIST_OUTPUT = {
+    results: [
+        {
+            source: { path: 'bun.lock' },
+            packages: [
+                {
+                    package: { name: 'qs', version: '6.15.3' },
+                    vulnerabilities: [{ id: 'GHSA-1', summary: 'Denial of service.' }],
+                },
+            ],
+        },
+    ],
+} as const;
+export const TWO_LEVEL_FORMAT = {
+    format: 'json' as const,
+    list: 'results',
+    children: ['packages', 'vulnerabilities'],
+    fields: { file: 'source.path', rule: 'id', message: ['package.name', 'package.version', 'summary'] },
+} as const;
 
+// output formats
+export const CHECK_OUTPUTS = [
+    { format: 'knip', inputs: ['shape', 'foreign'] },
+    { format: 'semgrep', inputs: ['shape', 'foreign'] },
+    { format: 'typos', inputs: ['foreign'] },
+    { format: 'vale', inputs: ['shape', 'foreign'] },
+    { format: 'osv-scanner', inputs: ['shape', 'foreign'] },
+] as const;
+export const EDITORCONFIG_REPORT = `source.js:
+	Wrong line endings or no final newline
+ notes.txt:
+	1: Trailing whitespace
+
+2 errors found
+`;
+export const LINE_ENDING_CASES = [
+    ['LF', '\n'],
+    ['CRLF', '\r\n'],
+] as const;
+export const WINDOWS_ROOT_CASES = [
+    {
+        root: 'C:/work',
+        stdout: 'error: invalid TOML\n  ┌─ C:/work/settings.toml:2:3\n  │\n',
+        stderr: '',
+        line: 2,
+        column: 3,
+    },
+    { root: '/repository', stdout: '', stderr: '  ┌─ settings.toml:2:1\n', line: 2, column: 1 },
+] as const;
+
+// semgrep output
 export const SEMGREP_MATCH = {
     check_id: 'gspot.bash.eval',
     path: 'scripts/café build.sh',
     start: { line: 2, col: 1 },
     extra: { message: 'eval runs a string as code.' },
 } as const;
-
 export const SEMGREP_PARSE_ERROR = {
     code: 3,
     type: ['PartialParsing', []],
@@ -111,13 +105,13 @@ export const SEMGREP_PARSE_ERROR = {
     path: 'scripts/café build.sh',
     spans: [{ file: 'scripts/café build.sh', start: { line: 1, col: 1 } }],
 } as const;
-
 export const SEMGREP_REFUSED_REPORTS = [
     ['a scanner error', JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, code: 2 }] })],
     ['a rule error', JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, type: 'RuleParseError' }] })],
     ['an error without a position', JSON.stringify({ results: [], errors: [{ ...SEMGREP_PARSE_ERROR, spans: [] }] })],
 ] as const;
 
+// typos output
 export const TYPO_REPORT = {
     type: 'typo',
     path: 'sample.txt',
@@ -126,7 +120,6 @@ export const TYPO_REPORT = {
     typo: TYPO.the,
     corrections: ['the'],
 } as const;
-
 export const TYPOS_FINDING_CASES = [
     {
         name: 'a byte offset after Unicode text',

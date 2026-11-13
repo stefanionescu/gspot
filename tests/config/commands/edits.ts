@@ -1,5 +1,28 @@
-export const ROOT_EDITORCONFIG = 'root = true\n';
+// edit refusals
+const COMMAND_VALUE_SETTINGS = `configurations = ["site"]
+[rule_files]
+enabled = false
+[site]
+allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private page belongs outside the public site map." }
+`;
+export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;
 
+// scope inheritance
+export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
+[rule_files]
+enabled = false
+[[scope]]
+path = "api"
+`;
+
+// scope removals
+export const EXCLUDED_CONFIGURATION_SETTINGS = `configurations = ["typescript"]
+[rule_files]
+enabled = false
+[[scope]]
+path = "api"
+removed_configurations = { typescript = "The API scope uses Bash without the inherited TypeScript tools." }
+`;
 const PARENT_CONFIGURATION_SETTINGS = `configurations = ["markdown"]
 [rule_files]
 enabled = false
@@ -10,22 +33,6 @@ configurations = ["bash"]
 path = "api/child"
 configurations = ["python"]
 `;
-
-export const EXCLUDED_CONFIGURATION_SETTINGS = `configurations = ["typescript"]
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-removed_configurations = { typescript = "The API scope uses Bash without the inherited TypeScript tools." }
-`;
-
-export const INHERITED_CONFIGURATION_SETTINGS = `configurations = ["markdown", "bash"]
-[rule_files]
-enabled = false
-[[scope]]
-path = "api"
-`;
-
 export const SCOPE_REMOVALS = [
     {
         name: 'a scope that inherits bash records the removal in the scope',
@@ -52,16 +59,9 @@ export const SCOPE_REMOVALS = [
     },
 ] as const;
 
+// set values
+export const ROOT_EDITORCONFIG = 'root = true\n';
 export const STRING_SETTING_VALUES = [
     { key: 'naming.banned_words', words: ['2024'], value: ['2024'] },
     { key: 'ci.linux_runner', words: ['true'], value: 'true' },
 ] as const;
-
-const COMMAND_VALUE_SETTINGS = `configurations = ["site"]
-[rule_files]
-enabled = false
-[site]
-allowed_unlisted_pages = { value = ["private/index.html"], reason = "The private page belongs outside the public site map." }
-`;
-
-export const REFUSAL_FILES = { 'gspot.toml': COMMAND_VALUE_SETTINGS, 'control.txt': 'preserve\n' } as const;

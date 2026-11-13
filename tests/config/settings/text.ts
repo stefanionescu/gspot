@@ -1,17 +1,4 @@
-export const SEMGREP_IGNORE = {
-    check: 'security/semgrep',
-    rule: 'js/file-system-race',
-    paths: ['sample.js'],
-    reason: 'The sandbox owns its temporary files.',
-};
-
-export const SCOPE_SETTING_WRITES = [
-    ['a dotted key', 'limits.max_file_lines = 100'],
-    ['an inline table', 'limits = { max_file_lines = 100 }'],
-] as const;
-
-export const INITIAL_SETTINGS = 'configurations = ["bash", "naming", "format"]\n';
-
+// field comments
 export const FIELD_COMMENT_CASES = [
     {
         name: 'first ignore',
@@ -35,3 +22,16 @@ export const FIELD_COMMENT_CASES = [
             '# schema note\n# Root\nlevel="all" # Level inline\n# Dotted hook\nhooks.enabled=true\n\n# Z scope\n[[scope]]\npath="z/app"\n\n# A check\n[[command_check]]\nid="a/task"\ncommand=["bun","task.ts"]\npaths=["src/**"]\nstage="manual"\nsummary="Changed task" # Summary inline\n\n# A scope\n[[scope]]\npath="a/app"\n',
     },
 ];
+
+// settings edits
+export const INITIAL_SETTINGS = 'configurations = ["bash", "naming", "format"]\n';
+export const SCOPE_SETTING_WRITES = [
+    ['a dotted key', 'limits.max_file_lines = 100'],
+    ['an inline table', 'limits = { max_file_lines = 100 }'],
+] as const;
+export const SEMGREP_IGNORE = {
+    check: 'security/semgrep',
+    rule: 'js/file-system-race',
+    paths: ['sample.js'],
+    reason: 'The sandbox owns its temporary files.',
+};

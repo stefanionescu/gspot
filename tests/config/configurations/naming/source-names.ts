@@ -1,15 +1,5 @@
-export const REACT_COMPONENT_SOURCE = [
-    "import { createContext, memo } from 'react';",
-    "import styled from 'styled-components';",
-    'export const CartContext = createContext(null);',
-    'export const Row = memo(() => null);',
-    'export const Title = styled.h1`font-weight: bold;`;',
-    'export const BadValue = readValue();',
-    'const { user_name, account: bad_account } = payload;',
-    'export const names = [user_name, bad_account];',
-    '',
-] as const;
-
+// naming identifiers
+// naming identifiers
 export const PYTHON_TYPE_SOURCE = [
     'from typing import Literal, Optional, TypeAlias',
     'Mode = Literal["read", "write"]',
@@ -26,7 +16,17 @@ export const PYTHON_TYPE_SOURCE = [
     'badAlias = Literal["x"]',
     '',
 ] as const;
-
+export const REACT_COMPONENT_SOURCE = [
+    "import { createContext, memo } from 'react';",
+    "import styled from 'styled-components';",
+    'export const CartContext = createContext(null);',
+    'export const Row = memo(() => null);',
+    'export const Title = styled.h1`font-weight: bold;`;',
+    'export const BadValue = readValue();',
+    'const { user_name, account: bad_account } = payload;',
+    'export const names = [user_name, bad_account];',
+    '',
+] as const;
 export const TEST_FILE_FINDINGS = [
     { file: 'Sources/ServiceTests.swift', rule: 'banned-word' },
     { file: 'Tests/Service.swift', rule: 'banned-word' },
@@ -35,22 +35,44 @@ export const TEST_FILE_FINDINGS = [
     { file: 'apps/web/qa/entry.js', rule: 'banned-word' },
 ] as const;
 
-const SWIFT_EXTRACTOR_SOURCE = String.raw`import Foundation
-
-protocol Greeter { func greet(name: String) -> String }
-enum Mood { case happy, sad; case veryAngry(level: Int) }
-struct UserTemplate: Greeter {
-    static let maxCount = 3
-    var display_name: String
-    func greet(name userName: String) -> String { let local_value = 1; return "\(local_value)" }
-    init(id: Int) { self.display_name = "" }
-}
-typealias Handler = () -> Void
-extension UserTemplate { var short: String { "" } }
-func top_level(_ value: Int, with label: String) {}
-let globalConstant = 1
-`;
-
+// naming source names
+export const BASH_SOURCE_NAMES = [
+    'variables:ROOT',
+    'variables:count',
+    'functions:build_all',
+    'variables:TARGET',
+] as const;
+const EXPECTED_PYTHON_NAMES = {
+    constants: ['MAX_ITEMS'],
+    variables: ['default_name', 'local_total'],
+    type_aliases: ['OrderId'],
+    exceptions: ['OrderError'],
+    classes: ['Order_Book'],
+    attributes: ['limit'],
+    methods: ['__init__', 'addItem'],
+    functions: ['make_order'],
+    parameters: ['owner', 'verbatim', 'flags', 'item_name', 'count', 'name', 'size'],
+} as const;
+const EXPECTED_SWIFT_NAMES = {
+    types: ['Greeter', 'Mood', 'UserTemplate', 'Handler'],
+    methods: ['greet', 'greet'],
+    functions: ['top_level'],
+    parameters: ['name', 'userName', 'id', 'value', 'label'],
+    properties: ['maxCount', 'display_name', 'short'],
+    variables: ['local_value'],
+    constants: ['globalConstant'],
+    enum_cases: ['happy', 'sad', 'veryAngry'],
+} as const;
+const EXPECTED_TYPESCRIPT_NAMES = {
+    functions: ['parseHttpUrl'],
+    parameters: ['rawInput', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
+    variables: ['enhancedHandler', 'payload', 'table'],
+    classes: ['HttpClient'],
+    properties: ['secret', 'DEFAULT_PORT', 'baseUrl'],
+    methods: ['send'],
+    types: ['Options', 'Verdict', 'Mode'],
+    enum_cases: ['Fast', 'Slow'],
+} as const;
 const PYTHON_EXTRACTOR_SOURCE = `"""Orders."""
 
 MAX_ITEMS = 3
@@ -78,7 +100,21 @@ class Order_Book:
 def make_order(name, /, size: int) -> None:
     """Make one."""
 `;
+const SWIFT_EXTRACTOR_SOURCE = String.raw`import Foundation
 
+protocol Greeter { func greet(name: String) -> String }
+enum Mood { case happy, sad; case veryAngry(level: Int) }
+struct UserTemplate: Greeter {
+    static let maxCount = 3
+    var display_name: String
+    func greet(name userName: String) -> String { let local_value = 1; return "\(local_value)" }
+    init(id: Int) { self.display_name = "" }
+}
+typealias Handler = () -> Void
+extension UserTemplate { var short: String { "" } }
+func top_level(_ value: Int, with label: String) {}
+let globalConstant = 1
+`;
 const TYPESCRIPT_EXTRACTOR_SOURCE = `
 export function parseHttpUrl(rawInput: string, { retries = 3, ...rest }: Options, [first, second]: string[]): void {}
 const enhancedHandler = (event) => {};
@@ -94,41 +130,43 @@ type Verdict = 'ok';
 enum Mode { Fast, Slow = 2 }
 const table = { keyOne: 1 };
 `;
-
-const EXPECTED_TYPESCRIPT_NAMES = {
-    functions: ['parseHttpUrl'],
-    parameters: ['rawInput', 'rest', 'first', 'second', 'event', 'baseUrl', 'body'],
-    variables: ['enhancedHandler', 'payload', 'table'],
-    classes: ['HttpClient'],
-    properties: ['secret', 'DEFAULT_PORT', 'baseUrl'],
-    methods: ['send'],
-    types: ['Options', 'Verdict', 'Mode'],
-    enum_cases: ['Fast', 'Slow'],
-} as const;
-
-const EXPECTED_PYTHON_NAMES = {
-    constants: ['MAX_ITEMS'],
-    variables: ['default_name', 'local_total'],
-    type_aliases: ['OrderId'],
-    exceptions: ['OrderError'],
-    classes: ['Order_Book'],
-    attributes: ['limit'],
-    methods: ['__init__', 'addItem'],
-    functions: ['make_order'],
-    parameters: ['owner', 'verbatim', 'flags', 'item_name', 'count', 'name', 'size'],
-} as const;
-
-const EXPECTED_SWIFT_NAMES = {
-    types: ['Greeter', 'Mood', 'UserTemplate', 'Handler'],
-    methods: ['greet', 'greet'],
-    functions: ['top_level'],
-    parameters: ['name', 'userName', 'id', 'value', 'label'],
-    properties: ['maxCount', 'display_name', 'short'],
-    variables: ['local_value'],
-    constants: ['globalConstant'],
-    enum_cases: ['happy', 'sad', 'veryAngry'],
-} as const;
-
+export const DECLARATION_CASES = [
+    {
+        language: 'typescript',
+        path: 'src/a.ts',
+        source: TYPESCRIPT_EXTRACTOR_SOURCE,
+        expected: EXPECTED_TYPESCRIPT_NAMES,
+        absent: ['keyOne'],
+    },
+    {
+        language: 'python',
+        path: 'shop/orders.py',
+        source: PYTHON_EXTRACTOR_SOURCE,
+        expected: EXPECTED_PYTHON_NAMES,
+        absent: ['self'],
+    },
+    {
+        language: 'swift',
+        path: 'Sources/User.swift',
+        source: SWIFT_EXTRACTOR_SOURCE,
+        expected: EXPECTED_SWIFT_NAMES,
+        absent: [],
+    },
+] as const;
+export const IMPORT_NAME_LINES = [
+    "const { existsSync } = require('node:fs');",
+    "const { default: lazyWidget } = await import('./widget.js');",
+    'const loadedRecord = await loadRecord();',
+    'const eagerTotal = computeTotal();',
+] as const;
+export const JAVASCRIPT_PARAMETER_NAMES = [
+    { name: 'loadValue', category: 'functions' },
+    { name: 'localAccount', category: 'parameters' },
+    { name: 'firstValue', category: 'parameters' },
+    { name: 'remainingValues', category: 'parameters' },
+    { name: 'readValue', category: 'variables' },
+    { name: 'inputValue', category: 'parameters' },
+] as const;
 export const NAME_POSITION_CASES = [
     {
         file: 'source.py',
@@ -164,51 +202,4 @@ func \`repeat\`(\`default\`: Int) {}
             { name: 'default', category: 'parameters', line: 3, column: 15 },
         ],
     },
-] as const;
-
-export const DECLARATION_CASES = [
-    {
-        language: 'typescript',
-        path: 'src/a.ts',
-        source: TYPESCRIPT_EXTRACTOR_SOURCE,
-        expected: EXPECTED_TYPESCRIPT_NAMES,
-        absent: ['keyOne'],
-    },
-    {
-        language: 'python',
-        path: 'shop/orders.py',
-        source: PYTHON_EXTRACTOR_SOURCE,
-        expected: EXPECTED_PYTHON_NAMES,
-        absent: ['self'],
-    },
-    {
-        language: 'swift',
-        path: 'Sources/User.swift',
-        source: SWIFT_EXTRACTOR_SOURCE,
-        expected: EXPECTED_SWIFT_NAMES,
-        absent: [],
-    },
-] as const;
-
-export const JAVASCRIPT_PARAMETER_NAMES = [
-    { name: 'loadValue', category: 'functions' },
-    { name: 'localAccount', category: 'parameters' },
-    { name: 'firstValue', category: 'parameters' },
-    { name: 'remainingValues', category: 'parameters' },
-    { name: 'readValue', category: 'variables' },
-    { name: 'inputValue', category: 'parameters' },
-] as const;
-
-export const BASH_SOURCE_NAMES = [
-    'variables:ROOT',
-    'variables:count',
-    'functions:build_all',
-    'variables:TARGET',
-] as const;
-
-export const IMPORT_NAME_LINES = [
-    "const { existsSync } = require('node:fs');",
-    "const { default: lazyWidget } = await import('./widget.js');",
-    'const loadedRecord = await loadRecord();',
-    'const eagerTotal = computeTotal();',
 ] as const;

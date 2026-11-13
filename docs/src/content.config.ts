@@ -1,10 +1,10 @@
 import { docsLoader } from '@astrojs/starlight/loaders';
 import { docsSchema } from '@astrojs/starlight/schema';
+import { CLI_REFERENCE } from '@gspothq/cli/reference';
 import { defineCollection } from 'astro:content';
 import type { Loader, LoaderContext } from 'astro/loaders';
 import { z } from 'astro/zod';
 
-import { CLI_REFERENCE } from '#cli/reference.ts';
 import {
     CHANGELOG_PATH,
     DOCS_SOURCE_NAME,

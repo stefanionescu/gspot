@@ -79,8 +79,8 @@ entry_files = [
     "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts",
     "packages/cli/src/configurations/framework/site/files/purgecss.ts",
     ".mise/release/changelog.ts",
-    ".mise/release/notices.ts",
-    ".mise/release/pin-ages.ts",
+    "packages/cli/scripts/notices.ts",
+    "packages/cli/scripts/pin-ages.ts",
 ]
 
 [tools.eslint.rules]
@@ -155,6 +155,11 @@ name = "main"
 paths = ["packages/cli/src/main.ts", "packages/cli/src/bin.ts", "packages/cli/src/reference.ts", "packages/cli/src/config/main.ts", "packages/cli/src/types/main.ts"]
 
 [[import_rule]]
+name = "cli-scripts"
+paths = ["packages/cli/scripts/**"]
+can_import = ["system", "manifests", "repository", "settings", "tools"]
+
+[[import_rule]]
 name = "plugin-config"
 paths = ["packages/eslint-plugin/src/config/**"]
 can_import = []
@@ -172,16 +177,17 @@ can_import = ["plugin-config", "plugin-types"]
 [[import_rule]]
 name = "docs-config"
 paths = ["docs/src/config/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "docs-types"]
+can_import = ["main", "docs-types"]
 
 [[import_rule]]
 name = "docs-types"
 paths = ["docs/src/types/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types", "docs-config"]
+can_import = ["main", "docs-config"]
 
 [[import_rule]]
 name = "docs"
 paths = ["docs/src/*.*", "docs/src/!(config|types)/**"]
+can_import = ["main", "plugin-config", "plugin-types", "plugin", "docs-config", "docs-types"]
 
 [[import_rule]]
 name = "tests-config"
@@ -202,9 +208,9 @@ name = "tests"
 paths = ["tests/suites/**"]
 
 [[import_rule]]
-name = "release"
+name = "mise-scripts"
 paths = [".mise/release/**"]
-can_import = ["system", "parsers", "manifests", "repository", "settings", "tools", "engine", "configurations", "generation", "commands", "main", "cli-types"]
+can_import = []
 
 [[ignore]]
 check = "dependencies/osv-scanner"

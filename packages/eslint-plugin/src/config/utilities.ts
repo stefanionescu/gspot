@@ -1,9 +1,80 @@
+// no-default-utility-imports rule
+export const UTILITY_LIBRARIES = new Map([
+    ['lodash', { minimum: [4, 0, 0], example: 'lodash/map' }],
+    ['lodash-es', { minimum: [4, 0, 0], example: undefined }],
+    ['rxjs', { minimum: [7, 2, 0], example: undefined }],
+    ['rambda', { minimum: [0, 8, 8], example: undefined }],
+    ['validator', { minimum: [12, 1, 0], example: 'validator/es/lib/isEmail' }],
+]);
+
+// no-shallow-clone-mutation rule
+export const CLONE_ADVICE: ReadonlyMap<string | undefined, string> = new Map([
+    ['lodash.clone', 'structuredClone() or _.cloneDeep()'],
+    ['lodash-es.clone', 'structuredClone() or _.cloneDeep()'],
+    ['underscore.clone', 'structuredClone()'],
+]);
+export const DEEP_CLONE_NAMES: ReadonlySet<string | undefined> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
+export const MUTATING_CALL =
+    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^(?:add|clear|copyWithin|delete|fill|pop|push|reverse|set|shift|sort|splice|unshift)$/]';
+export const NESTED_MEMBER_DEPTH = 2;
+export const SHALLOW_CLONE_NAMES: ReadonlySet<string | undefined> = new Set([
+    'lodash.clone',
+    'lodash-es.clone',
+    'underscore.clone',
+]);
+export const STRUCTURED_CLONE_NAME = 'structuredClone';
+
+// prefer-native-axios rule
+export const AXIOS_CANCEL_TOKEN = 'axios.CancelToken';
+export const AXIOS_CONFIG_POSITIONS = new Map([
+    ['axios', [0, 1]],
+    ['axios.request', [0]],
+    ['axios.get', [1]],
+    ['axios.delete', [1]],
+    ['axios.head', [1]],
+    ['axios.options', [1]],
+    ['axios.post', [2]],
+    ['axios.put', [2]],
+    ['axios.patch', [2]],
+]);
+export const AXIOS_DEPRECATIONS = new Map([
+    ['axios.all', { symbol: 'axios.all()', alternative: 'Promise.all()' }],
+    ['axios.spread', { symbol: 'axios.spread()', alternative: 'array destructuring' }],
+]);
+
+// prefer-native-jquery rule
+export const JQUERY_GLOBALS = new Set(['jQuery', '$']);
+export const JQUERY_METHODS: ReadonlyMap<string | null, { alternative: string; isDeprecated: boolean }> = new Map([
+    ['isArray', { alternative: 'Array.isArray()', isDeprecated: true }],
+    ['parseJSON', { alternative: 'JSON.parse()', isDeprecated: true }],
+    ['now', { alternative: 'Date.now()', isDeprecated: true }],
+    ['trim', { alternative: 'String.prototype.trim()', isDeprecated: true }],
+    ['inArray', { alternative: 'Array.prototype.indexOf()', isDeprecated: false }],
+]);
+export const JQUERY_ORIGINS = new Set(
+    ['jquery', 'jquery.slim', 'jquery.dist.jquery.slim', 'jquery.dist.jquery.slim.js'].flatMap((module) => [
+        module,
+        `${module}.$`,
+        `${module}.jQuery`,
+    ]),
+);
+
+// prefer-native-lodash rule
+export const CALLBACK_METHODS = new Set([
+    'every',
+    'filter',
+    'find',
+    'findIndex',
+    'map',
+    'reduce',
+    'reduceRight',
+    'some',
+]);
 export const LIBRARY_NAMES = new Map([
     ['lodash', 'lodash'],
     ['lodash-es', 'lodash-es'],
     ['underscore', 'underscore.js'],
 ]);
-
 export const NATIVE_REPLACEMENTS = new Map([
     [
         'assign',
@@ -179,99 +250,19 @@ export const NATIVE_REPLACEMENTS = new Map([
     ],
     ['values', { alternative: 'Object.values()', year: 2017, reason: 'the library treats nullish values differently' }],
 ]);
-
-export const STRING_INCLUDES = {
-    alternative: 'String.prototype.includes()',
-    year: 2016,
-    reason: 'the library also accepts arrays, objects, and nullish values',
-};
-
+export const PATTERN_TEXT = /^(?:\/|(?:new\s+)?RegExp\()/u;
 export const SEARCH_METHODS = new Set(['contains', 'includes']);
-
-export const CALLBACK_METHODS = new Set([
-    'every',
-    'filter',
-    'find',
-    'findIndex',
-    'map',
-    'reduce',
-    'reduceRight',
-    'some',
-]);
-
 export const SHORTHAND_ITERATEES = new Set<string>([
     'ArrayExpression',
     'Literal',
     'ObjectExpression',
     'TemplateLiteral',
 ]);
+export const STRING_INCLUDES = {
+    alternative: 'String.prototype.includes()',
+    year: 2016,
+    reason: 'the library also accepts arrays, objects, and nullish values',
+};
 
-export const PATTERN_TEXT = /^(?:\/|(?:new\s+)?RegExp\()/u;
-
-export const UTILITY_LIBRARIES = new Map([
-    ['lodash', { minimum: [4, 0, 0], example: 'lodash/map' }],
-    ['lodash-es', { minimum: [4, 0, 0], example: undefined }],
-    ['rxjs', { minimum: [7, 2, 0], example: undefined }],
-    ['rambda', { minimum: [0, 8, 8], example: undefined }],
-    ['validator', { minimum: [12, 1, 0], example: 'validator/es/lib/isEmail' }],
-]);
-
+// require-memoize-key rule
 export const MEMOIZE_FUNCTIONS = new Set(['lodash.memoize', 'lodash-es.memoize', 'underscore.memoize']);
-
-export const JQUERY_GLOBALS = new Set(['jQuery', '$']);
-
-export const JQUERY_ORIGINS = new Set(
-    ['jquery', 'jquery.slim', 'jquery.dist.jquery.slim', 'jquery.dist.jquery.slim.js'].flatMap((module) => [
-        module,
-        `${module}.$`,
-        `${module}.jQuery`,
-    ]),
-);
-
-export const JQUERY_METHODS: ReadonlyMap<string | null, { alternative: string; isDeprecated: boolean }> = new Map([
-    ['isArray', { alternative: 'Array.isArray()', isDeprecated: true }],
-    ['parseJSON', { alternative: 'JSON.parse()', isDeprecated: true }],
-    ['now', { alternative: 'Date.now()', isDeprecated: true }],
-    ['trim', { alternative: 'String.prototype.trim()', isDeprecated: true }],
-    ['inArray', { alternative: 'Array.prototype.indexOf()', isDeprecated: false }],
-]);
-
-export const AXIOS_DEPRECATIONS = new Map([
-    ['axios.all', { symbol: 'axios.all()', alternative: 'Promise.all()' }],
-    ['axios.spread', { symbol: 'axios.spread()', alternative: 'array destructuring' }],
-]);
-
-export const AXIOS_CANCEL_TOKEN = 'axios.CancelToken';
-
-export const AXIOS_CONFIG_POSITIONS = new Map([
-    ['axios', [0, 1]],
-    ['axios.request', [0]],
-    ['axios.get', [1]],
-    ['axios.delete', [1]],
-    ['axios.head', [1]],
-    ['axios.options', [1]],
-    ['axios.post', [2]],
-    ['axios.put', [2]],
-    ['axios.patch', [2]],
-]);
-
-export const NESTED_MEMBER_DEPTH = 2;
-
-export const STRUCTURED_CLONE_NAME = 'structuredClone';
-
-export const MUTATING_CALL =
-    'CallExpression[callee.type="MemberExpression"][callee.property.name=/^(?:add|clear|copyWithin|delete|fill|pop|push|reverse|set|shift|sort|splice|unshift)$/]';
-
-export const CLONE_ADVICE: ReadonlyMap<string | undefined, string> = new Map([
-    ['lodash.clone', 'structuredClone() or _.cloneDeep()'],
-    ['lodash-es.clone', 'structuredClone() or _.cloneDeep()'],
-    ['underscore.clone', 'structuredClone()'],
-]);
-
-export const DEEP_CLONE_NAMES: ReadonlySet<string | undefined> = new Set(['lodash.cloneDeep', 'lodash-es.cloneDeep']);
-
-export const SHALLOW_CLONE_NAMES: ReadonlySet<string | undefined> = new Set([
-    'lodash.clone',
-    'lodash-es.clone',
-    'underscore.clone',
-]);

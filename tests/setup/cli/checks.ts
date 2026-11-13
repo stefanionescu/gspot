@@ -83,6 +83,9 @@ export async function runSandboxCheck(
         selectCheckCode(planned.check),
         {},
     );
+    // A check that did not run holds no finding, so a test that expects none passes without running it.
+    if (result.status !== 'passed' && result.status !== 'failed')
+        throw new Error(`${checkId} ended with the status ${result.status}: ${result.note ?? 'no note'}`);
     return result.findings;
 }
 

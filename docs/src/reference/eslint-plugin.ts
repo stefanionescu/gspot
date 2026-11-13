@@ -1,8 +1,8 @@
 import { readFileSync } from 'node:fs';
 
-import { compareText } from '#cli/system/text.ts';
+import { compareText, formatNameList } from '@gspothq/cli/reference';
+
 import {
-    CONJUNCTION_FORMAT,
     DEFAULT_OPTION_DESCRIPTION,
     ESLINT_FIX_MESSAGE,
     HELP_HEADING,
@@ -55,7 +55,7 @@ function formatPluginPresets(): string {
             .filter((rule) => !enabled.includes(rule));
         if (excluded.length === 0) return `The \`${name}\` config turns on every lint rule.`;
         if (name !== 'all') return `The \`${name}\` config turns on ${String(enabled.length)} rules.`;
-        const names = CONJUNCTION_FORMAT.format(excluded.map((rule) => `\`${rule}\``));
+        const names = formatNameList(excluded.map((rule) => `\`${rule}\``));
         return `The \`${name}\` config turns on every lint rule except ${names}.`;
     });
     return presets.join(' ');
@@ -105,7 +105,7 @@ function formatRuleConfigs(name: string): string {
         .filter(([, configuration]) => configuration.rules[`${PLUGIN_PREFIX}/${name}`] !== undefined)
         .map(([config]) => config);
     if (configs.length === 0) return NO_CONFIG_MESSAGE;
-    const names = CONJUNCTION_FORMAT.format(configs.map((config) => `\`${config}\``));
+    const names = formatNameList(configs.map((config) => `\`${config}\``));
     return configs.length === 1 ? `On in the ${names} config.` : `On in the ${names} configs.`;
 }
 

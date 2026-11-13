@@ -1,3 +1,5 @@
+// deptry
+// deptry
 export const DEPTRY_SCOPE_PATHS = {
     '': {
         excluded: ['.gspot/tool.py', 'app/main.py', 'app/nested/main.py', 'other/main.py'],
@@ -8,11 +10,13 @@ export const DEPTRY_SCOPE_PATHS = {
     other: { excluded: ['.gspot/tool.py'], kept: ['main.py'] },
 } as const;
 
+// pip installs
 export const REQUIREMENTS_FILE_FINDINGS = [
     { file: 'locked/requirements.txt', line: 1, rule: 'requirements-file' },
     { file: 'locked/requirements/dev.txt', line: 1, rule: 'requirements-file' },
 ] as const;
 
+// placeholder docstrings
 export const PLACEHOLDER_DOCSTRING_CASES = [
     {
         check: 'python/placeholder-docstrings',
@@ -28,6 +32,7 @@ export const PLACEHOLDER_DOCSTRING_CASES = [
     },
 ] as const;
 
+// pydoclint
 export const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
@@ -36,7 +41,6 @@ export const GOOGLE_DOCSTRING_MODULE = `def double(value: int) -> int:
     """
     return value * 2
 `;
-
 export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     """Double it.
 
@@ -47,7 +51,6 @@ export const NUMPY_DOCSTRING_MODULE = `def double(value: int) -> int:
     """
     return value * 2
 `;
-
 export const PYDOCLINT_PROJECT_CASES = [
     {
         name: 'uses the Google setting without project configuration',
@@ -83,13 +86,7 @@ skip-checking-raises = true
     },
 ] as const;
 
-export const VULTURE_OUTPUT = [
-    "app/main.py:1: unused import 'os' (90% confidence)",
-    "app/nodes.py:1: unused function 'helper' (60% confidence)",
-    "app/nodes.py:3: unreachable code after 'return' (100% confidence)",
-    "app/nodes.py:4: unused variable 'value' (60% confidence)",
-] as const;
-
+// pytest coverage
 export const COVERAGE_PROJECT_FILES = [
     { name: 'generated defaults', files: {}, generated: true },
     { name: '.coveragerc', files: { '.coveragerc': '[run]\nomit = custom/**\n' }, generated: false },
@@ -99,4 +96,12 @@ export const COVERAGE_PROJECT_FILES = [
         generated: false,
     },
     { name: 'setup.cfg coverage', files: { 'setup.cfg': '[coverage:run]\nomit = custom/**\n' }, generated: false },
+] as const;
+
+// vulture
+export const VULTURE_OUTPUT = [
+    "app/main.py:1: unused import 'os' (90% confidence)",
+    "app/nodes.py:1: unused function 'helper' (60% confidence)",
+    "app/nodes.py:3: unreachable code after 'return' (100% confidence)",
+    "app/nodes.py:4: unused variable 'value' (60% confidence)",
 ] as const;

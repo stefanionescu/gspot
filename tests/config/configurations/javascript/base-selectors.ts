@@ -1,20 +1,19 @@
 import type { SelectorSample } from '#tests/types/configurations.ts';
 
+// selector planning
 const MODULE_PACKAGE = '{"private":true,"type":"module"}\n';
-
-const LITERAL_CALLS = ['[]', 'class {}', '{}', '42', '`text`'].flatMap((expression) => [
-    `(${expression})();`,
-    `(${expression})\`text\`;`,
-]);
-
-const REGISTRY_LOOP = 'const registry = new Map();\nfor (const name of ["a", "b"]) registry.set(name, name.length);\n';
-
 export const STANDALONE_BLOCK_FILES = {
     'package.json': MODULE_PACKAGE,
     'source.js':
         'export const first = 1;\n{\n    console.info(first);\n}\nexport function pick(kind) {\n    {\n        console.info(kind);\n    }\n    switch (kind) {\n        case 1: {\n            return 1;\n        }\n        default: {\n            return 0;\n        }\n    }\n}\n',
 } as const;
 
+// selector samples
+const LITERAL_CALLS = ['[]', 'class {}', '{}', '42', '`text`'].flatMap((expression) => [
+    `(${expression})();`,
+    `(${expression})\`text\`;`,
+]);
+const REGISTRY_LOOP = 'const registry = new Map();\nfor (const name of ["a", "b"]) registry.set(name, name.length);\n';
 export const BASE_SELECTOR_SAMPLES: readonly SelectorSample[] = [
     {
         name: 'a template message to a logger method, including log, is reported, and console.log is not',
