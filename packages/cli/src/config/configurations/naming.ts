@@ -63,6 +63,9 @@ export const TABLE_PARAMETERS = /^\s*RETURNS\s+TABLE\s*\(/iu;
 
 // swift names
 export const MEMBER_PARENTS = new Set(['class_body', 'protocol_body', 'enum_class_body']);
+export const OBJC_ATTRIBUTE = 'objc';
+// SWIFT.md reserves `handle...` for the UIKit target-action and notification handlers marked `@objc`.
+export const OBJC_CALLBACK_PREFIX = /^handle(?=[A-Z])/u;
 const SWIFT_FUNCTION_NODES = ['function_declaration', 'protocol_function_declaration'] as const;
 export const SWIFT_CALLABLE_NODES = [...SWIFT_FUNCTION_NODES, 'init_declaration'] as const;
 

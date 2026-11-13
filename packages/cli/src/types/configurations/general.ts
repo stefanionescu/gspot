@@ -105,6 +105,7 @@ export type Identifier = {
     name: string;
     folder?: string;
     addedCases?: NamingCase[];
+    ignoredPrefix?: RegExp;
 };
 
 export type SqlName = { category: NamedCategory; name: string; location?: number; offset?: number };

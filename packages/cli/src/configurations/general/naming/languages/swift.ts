@@ -1,7 +1,12 @@
 import type { Node } from 'web-tree-sitter';
 
 import { TYPE_NODES } from '#cli/config/configurations/general.ts';
-import { MEMBER_PARENTS, SWIFT_CALLABLE_NODES } from '#cli/config/configurations/naming.ts';
+import {
+    MEMBER_PARENTS,
+    OBJC_ATTRIBUTE,
+    OBJC_CALLBACK_PREFIX,
+    SWIFT_CALLABLE_NODES,
+} from '#cli/config/configurations/naming.ts';
 import { addIdentifier } from '#cli/configurations/general/naming/languages/identifier.ts';
 import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/general.ts';
 
@@ -26,9 +31,25 @@ function addFunctions(found: FileIdentifiers, syntaxRoot: Node): void {
     for (const node of declarations) {
         addParameters(found, node);
         const name = node.childForFieldName('name');
-        if (name?.type !== 'simple_identifier') continue;
-        addIdentifier(found, name, MEMBER_PARENTS.has(node.parent?.type ?? '') ? 'methods' : 'functions');
+        if (name?.type === 'simple_identifier') addFunctionName(found, node, name);
     }
+}
+
+function addFunctionName(found: FileIdentifiers, declaration: Node, name: Node): void {
+    const start = found.identifiers.length;
+    addIdentifier(found, name, MEMBER_PARENTS.has(declaration.parent?.type ?? '') ? 'methods' : 'functions');
+    if (isObjcDeclaration(declaration))
+        for (const identifier of found.identifiers.slice(start)) identifier.ignoredPrefix = OBJC_CALLBACK_PREFIX;
+}
+
+function isObjcDeclaration(declaration: Node): boolean {
+    return declaration.namedChildren.some(
+        (child) =>
+            child.type === 'modifiers' &&
+            child.namedChildren.some(
+                (modifier) => modifier.type === 'attribute' && modifier.namedChildren[0]?.text === OBJC_ATTRIBUTE,
+            ),
+    );
 }
 
 function classifyName(node: Node): NamedCategory {

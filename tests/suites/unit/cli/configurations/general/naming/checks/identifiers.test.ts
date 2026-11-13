@@ -207,6 +207,21 @@ export class Command {
     ]);
 });
 
+test('a Swift handle function marked @objc passes, and one without @objc is reported', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['swift', 'naming'], { level: 'all' }),
+        'Sources/App/Screen.swift': `final class Screen {
+    @objc func handleTap(_ sender: UIButton) {}
+    func handleTap() {}
+    @objc private func handleKeyboardWillShow(_ note: Notification) {}
+}
+`,
+    });
+    expect(await listIdentifierFindings(sandbox.path)).toStrictEqual([
+        { file: 'Sources/App/Screen.swift', line: 3, rule: 'banned-word' },
+    ]);
+});
+
 test('Next.js JavaScript routes accept PascalCase components', async () => {
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings(['javascript', 'nextjs', 'naming'], { level: 'all' }),

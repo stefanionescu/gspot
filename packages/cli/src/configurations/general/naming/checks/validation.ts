@@ -79,8 +79,9 @@ function hasTerm(words: string[], term: BannedWord): boolean {
     return false;
 }
 
-function stripPrefixes(name: string, exceptions: CompiledException[]): string {
-    let result = name;
+function stripPrefixes(identifier: Identifier, exceptions: CompiledException[]): string {
+    const { name } = identifier;
+    let result = identifier.ignoredPrefix === undefined ? name : name.replace(identifier.ignoredPrefix, '');
     for (const exception of exceptions)
         if (exception.ignoredPrefix !== undefined) result = result.replace(exception.ignoredPrefix, '');
     return result === '' ? name : result;
@@ -250,7 +251,7 @@ function validateIdentifier(identifier: Identifier, naming: FileNaming): CheckFi
     )
         return [];
     const limits = buildIdentifierLimits(settings, identifier, exceptions);
-    const name = stripPrefixes(identifier.name, exceptions);
+    const name = stripPrefixes(identifier, exceptions);
     const nameWords = splitWords(name);
     const words = splitWords(name.split('.', 1)[0] ?? name).filter((segment) => !DIGITS_ONLY.test(segment));
     const findings = [
