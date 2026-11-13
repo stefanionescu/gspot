@@ -18,12 +18,22 @@ import { readPackageAliases, readScopeAliases } from '#cli/configurations/langua
 import {
     buildExtensionGlob,
     buildNodePatterns,
+    buildScopeFiles,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
     buildScopeOverrideBlocks,
     listNestedScopeGlobs,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
+} from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import { listExternals, listJavascriptScopes } from '#cli/configurations/language/javascript/sources.ts';
 import { joinScope, joinScopeGlob } from '#cli/repository/scopes.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { escapeGlob, escapeRegExp } from '#cli/system/patterns.ts';
-import type { EslintBlock, EslintImportBoundaryRule, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
+import type {
+    EslintBlock,
+    EslintBlockFields,
+    EslintImportBoundaryRule,
+    PlannedEslintFile,
+} from '#cli/types/configurations/javascript.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
 export function buildImportStyleBlocks(scopes: Scope[], nodeFiles: string[], denoFolders: Set<string>): EslintBlock[] {
@@ -60,10 +70,6 @@ export function listImportBoundaryFolders(scopes: Scope[]): string[] {
     const scopePaths = scopes.map((scope) => escapeGlob(scope.path)).filter((path) => path !== '');
     const boundaries = scopes.flatMap(({ settings }) => settings.tables.javascript?.import_boundaries ?? []);
     return [...new Set([...IMPORT_BOUNDARY_FOLDERS, ...scopePaths, ...boundaries])];
-}
-
-export function listExternals(scopes: Scope[]): string[] {
-    return [...new Set(scopes.flatMap(({ settings }) => settings.tables.javascript?.externals ?? []))];
 }
 
 export function buildImportBoundariesRule(scopes: Scope[], aliases: Record<string, string>): EslintImportBoundaryRule {
@@ -144,4 +150,22 @@ export function buildImportIgnores(globs: string[]): string[] {
         patterns.push(`${PATH_SEPARATOR_PATTERN}${escaped}${PATH_SEPARATOR_PATTERN}`);
     }
     return patterns;
+}
+
+export function buildRestrictedImportBlocks(
+    planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>,
+): EslintBlockFields[] {
+    return buildScopeOverrideBlocks(listJavascriptScopes(planned.session.scopes), {
+        read: ({ settings }) => getTable(settings, 'javascript').banned_imports,
+        build: ({ scope, parent, value, ignores }) =>
+            parent === undefined && value.length === 0
+                ? []
+                : [
+                      {
+                          files: buildScopeFiles(planned.eslintFiles.code, scope.path, ['**/*']),
+                          ignores,
+                          rules: { 'no-restricted-imports': ['error', { paths: value }] },
+                      },
+                  ],
+    });
 }

@@ -1,5 +1,5 @@
 import { NAMING_RULES } from '#cli/config/configurations/naming.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 

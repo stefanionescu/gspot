@@ -8,8 +8,9 @@ import {
     PRISMA_MIGRATION_FILE,
     SQUAWK_CHECK,
 } from '#cli/config/configurations/postgres.ts';
-import { SQL_EXTENSION, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/schema.ts';
+import { buildSyntaxFinding } from '#cli/configurations/syntax.ts';
 import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
@@ -79,17 +80,7 @@ export async function readMigrations(session: Session, planned: PlannedCheck): P
     return {
         migrations,
         findings: migrations.flatMap(({ path, error }) =>
-            error === undefined
-                ? []
-                : [
-                      {
-                          file: path,
-                          line: error.line,
-                          column: error.column,
-                          rule: SYNTAX_RULE,
-                          message: error.text,
-                      },
-                  ],
+            error === undefined ? [] : [buildSyntaxFinding(path, error)],
         ),
     };
 }

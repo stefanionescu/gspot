@@ -13,7 +13,7 @@ import {
     WINDOW_UNDEFINED_MESSAGE,
 } from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, readEslintRules } from '#tests/setup/eslint/lint.ts';
 
 test('a browser override gets no Node.js globals and no Node.js rules, and other files keep both', async () => {
     await using sandbox = await testdir({
@@ -166,4 +166,24 @@ test('a Next.js page in a package without a type is a module', async () => {
         languageOptions: { sourceType: string };
     };
     expect(config.languageOptions.sourceType).toBe('module');
+});
+
+test('a browser runtime block turns unicorn/prefer-iterator-to-array off', async () => {
+    await using sandbox = await testdir({
+        'gspot.toml': buildSandboxSettings(['javascript'], {
+            level: 'all',
+            scopes: [{ path: 'web', configurations: ['react'] }],
+        }),
+        'package.json': '{"private":true,"type":"module"}\n',
+        'server.js': '',
+        'web/client.jsx': '',
+    });
+
+    const eslint = await buildEslint(sandbox.path);
+    const tables = await readEslintRules(eslint, ['server.js', 'web/client.jsx']);
+    expect(
+        Object.fromEntries(
+            Object.entries(tables).map(([file, table]) => [file, table['unicorn/prefer-iterator-to-array']?.[0]]),
+        ),
+    ).toStrictEqual({ 'server.js': 2, 'web/client.jsx': 0 });
 });

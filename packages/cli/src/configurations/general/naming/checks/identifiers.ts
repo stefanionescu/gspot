@@ -1,9 +1,9 @@
 import { POSTGRES_PARSER_DIALECTS, SQL_SYNTAX_HELP } from '#cli/config/configurations/naming.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles, parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import { IDENTIFIER_EXPLANATIONS } from '#cli/configurations/general/naming/explanations.ts';
+import { buildSyntaxFinding } from '#cli/configurations/syntax.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -19,14 +19,7 @@ async function checkIdentifiers(session: Session, planned: PlannedCheck): Promis
         if (error !== undefined) {
             const isSql = language === 'sql';
             if (!isSql || POSTGRES_PARSER_DIALECTS.has(getTable(planned.scope.settings, 'sql').dialect))
-                findings.push({
-                    file: file.path,
-                    line: error.line,
-                    column: error.column,
-                    rule: SYNTAX_RULE,
-                    message: error.text,
-                    ...(isSql && { help: SQL_SYNTAX_HELP }),
-                });
+                findings.push({ ...buildSyntaxFinding(file.path, error), ...(isSql && { help: SQL_SYNTAX_HELP }) });
             continue;
         }
         findings.push(...validateIdentifiers(settings, identifiers));

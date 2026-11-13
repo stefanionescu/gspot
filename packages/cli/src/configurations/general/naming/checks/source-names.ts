@@ -1,8 +1,8 @@
-import { extractBashIdentifiers } from '#cli/configurations/general/naming/languages/bash.ts';
-import { extractPythonIdentifiers } from '#cli/configurations/general/naming/languages/python.ts';
-import { extractSqlIdentifiers } from '#cli/configurations/general/naming/languages/sql.ts';
-import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/languages/swift.ts';
-import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/languages/typescript.ts';
+import { extractBashIdentifiers } from '#cli/configurations/general/naming/checks/languages/bash.ts';
+import { extractPythonIdentifiers } from '#cli/configurations/general/naming/checks/languages/python.ts';
+import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
+import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/checks/languages/swift.ts';
+import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/checks/languages/typescript.ts';
 import { selectGrammar } from '#cli/configurations/syntax.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { buildFileMatcher } from '#cli/repository/files/selection.ts';

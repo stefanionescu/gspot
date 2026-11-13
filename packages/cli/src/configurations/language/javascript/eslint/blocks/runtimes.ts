@@ -1,4 +1,10 @@
 import {
+    NODE_RULES,
+    NODE_RUNTIMES,
+    NON_NODE_RULES,
+    RUNTIME_GLOBALS,
+} from '#cli/config/configurations/javascript/eslint-blocks.ts';
+import {
     COMMONJS_FILES,
     COMMONJS_PACKAGE_TYPE,
     ESLINT_BROWSER_CONFIGURATIONS,
@@ -6,11 +12,12 @@ import {
 } from '#cli/config/configurations/javascript/eslint-config.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
 import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { listScriptFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
 import { findNearestPackageJson } from '#cli/repository/projects/dependencies.ts';
 import { compareScopeDepth, isInScope, joinScope } from '#cli/repository/scopes.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
-import type { EslintRuntime } from '#cli/types/configurations/javascript.ts';
+import type { ConfigurationBlocks, EslintFiles, EslintRuntime } from '#cli/types/configurations/javascript.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Scope } from '#cli/types/settings.ts';
 
@@ -92,4 +99,39 @@ export function buildRuntimes(scopes: Scope[], dependencyFiles: DependencyFile[]
         );
     }
     return blocks;
+}
+
+export function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks {
+    const runtimes: ConfigurationBlocks = runtimeBlocks.map(({ runtime }, index) => {
+        const names = RUNTIME_GLOBALS[runtime] ?? runtime;
+        return {
+            fields: {
+                files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
+                rules: {
+                    ...(runtime === 'commonjs' && { 'unicorn/prefer-module': 'off' }),
+                    ...(!NODE_RUNTIMES.includes(runtime) && NON_NODE_RULES),
+                },
+            },
+            calls: [
+                {
+                    name: 'setRuntime',
+                    args: [
+                        { package: 'globals' },
+                        { value: names },
+                        { value: runtime === 'commonjs' ? 'commonjs' : 'module' },
+                    ],
+                },
+            ],
+        };
+    });
+    const nodeIndexes = runtimeBlocks.flatMap(({ runtime }, index) => (NODE_RUNTIMES.includes(runtime) ? index : []));
+    return [
+        ...runtimes,
+        {
+            fields: {
+                files: eslintFiles.code.flatMap((pattern) => nodeIndexes.map((index) => [pattern, { runtime: index }])),
+                rules: NODE_RULES,
+            },
+        },
+    ];
 }

@@ -11,17 +11,15 @@ import {
     UV_RUN_ARGUMENTS,
 } from '#cli/config/configurations/python.ts';
 import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { UV_FLAGS, UV_TOOL } from '#cli/config/tools/installers.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { deptrySchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { DeptryProject } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
@@ -72,10 +70,8 @@ function buildUvRunCommand(scope: Scope, scopeRoot: string, command: [string, ..
 Runs deptry on the scope. Passes the project's extend_exclude list again with .gspot and child scopes added, because the command-line flag replaces it.
 */
 async function checkDeptry(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = findText(session.cache, pyproject);
-    if (text === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
-    const project = parseTomlFile(pyproject, text, deptrySchema);
+    const project = readPyproject(session.cache, planned.scope.path, deptrySchema);
+    if (project === undefined) throw new CheckStop('skipped', NO_PYPROJECT_NOTE);
     const excluded = [
         String.raw`(^|.*[/\\])${escapeRegExp(GSPOT_FOLDER)}([/\\]|$)`,
         ...listNestedScopes(

@@ -1,10 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
 
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
-import {
-    buildScopeOverrideBlocks,
-    listJavascriptScopes,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
+import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import { listJavascriptScopes } from '#cli/configurations/language/javascript/sources.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';

@@ -2,7 +2,7 @@ import { TYPE_NODES } from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
-import type { ParsedLanguage } from '#cli/types/configurations/general.ts';
+import type { ParsedLanguage } from '#cli/types/parsers.ts';
 
 // bare-blocks check
 export const BARE_BLOCK_MESSAGE =

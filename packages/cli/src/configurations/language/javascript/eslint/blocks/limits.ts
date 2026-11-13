@@ -4,9 +4,9 @@ import { ESLINT_CHECK, ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/j
 import {
     buildExtensionGlob,
     buildNodePatterns,
-    buildScopeOverrideBlocks,
     splitGlobs,
 } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
 import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
 import { getLimit, getTable } from '#cli/settings/tables.ts';
 import { getRequired } from '#cli/system/tables.ts';
@@ -14,13 +14,21 @@ import type { EslintLanguageRules, EslintRuleBlock, PlannedEslintFile } from '#c
 import type { ScopeSettings } from '#cli/types/settings.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
-    const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');
     return Object.fromEntries(
         Object.entries(ESLINT_LIMIT_OPTIONS).map(([rule, options]): [string, unknown] => {
-            const maximum = getLimit(scopeSettings, limitRules[rule] as string, language);
+            const maximum = getRuleLimit(scopeSettings, rule, language);
             return [rule, ['error', Object.keys(options).length > 0 ? { max: maximum, ...options } : maximum]];
         }),
     );
+}
+
+/**
+Get the limit of a scope for one language, from the limits setting that the manifest of javascript/eslint maps to the
+rule.
+*/
+export function getRuleLimit(scopeSettings: ScopeSettings, rule: string, language: string): number {
+    const limitRules = getRequired(LIMIT_RULES_BY_CHECK, ESLINT_CHECK, 'limit rules');
+    return getLimit(scopeSettings, limitRules[rule] as string, language);
 }
 
 export function buildScopeLimitRules(settings: ScopeSettings): EslintLanguageRules {

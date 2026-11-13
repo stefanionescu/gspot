@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 test('JSX text is not an environment read and destructuring records the original property', async () => {
@@ -45,5 +45,9 @@ test('Python reads use the preceding import binding and decode literal escapes',
         'python',
         'import os\nfirst = os.getenv("API\\x5fKEY")\nos = object()\nsecond = os.getenv("IGNORED")\n',
     );
-    expect(listPythonEnvironmentReads(tree.rootNode, []).map(({ key }) => key)).toStrictEqual(['API_KEY']);
+    expect(
+        listEnvironmentReads('python', tree.rootNode, { environmentFunctions: [], readerVariables: new Set() }).map(
+            ({ key }) => key,
+        ),
+    ).toStrictEqual(['API_KEY']);
 });

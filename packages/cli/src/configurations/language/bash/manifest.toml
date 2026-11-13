@@ -82,6 +82,7 @@ why = "One formatter means diffs show what changed, not how someone's editor ind
 
 [[check]]
 example = "An executable Bash script without `set -euo pipefail` reports a finding. Put that line before the first command, and when the script defines functions, call `main` last."
+files = { tags = ["bash"] }
 help = "Open with the shebang and run `set -euo pipefail` first. When an executable defines functions, end it with a call to main."
 level = "all"
 name = "script-layout"

@@ -1,5 +1,5 @@
 import { TRANSLATION_RULES } from '#cli/config/configurations/library.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const TRANSLATION_EXPLANATIONS = {

@@ -29,6 +29,8 @@ import type {
     EnvironmentRead,
     EnvironmentScope,
     ParseCache,
+    ParsedLanguage,
+    ReaderNames,
 } from '#cli/types/parsers.ts';
 
 function getCallKey(node: Node, getters: Set<string>): string | undefined {
@@ -219,7 +221,7 @@ function listTreeReads(syntaxRoot: Node, getters: Set<string>): EnvironmentRead[
         });
 }
 
-export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
+function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: ReadonlySet<string>): EnvironmentRead[] {
     return syntaxRoot.descendantsOfType([...EXPANSION_NODES]).flatMap((expansion) =>
         expansion.namedChildren
             .filter((node) => node.type === 'variable_name' && readerVariables.has(node.text))
@@ -231,33 +233,14 @@ export function listBashEnvironmentReads(syntaxRoot: Node, readerVariables: Read
     );
 }
 
-export function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
+function listSwiftEnvironmentReads(syntaxRoot: Node): EnvironmentRead[] {
     return syntaxRoot
         .descendantsOfType('navigation_expression')
         .filter((node) => node.text.replaceAll(WHITESPACE_RUN, '') === SWIFT_ENVIRONMENT)
         .map((node) => ({ key: undefined, line: node.startPosition.row + 1, column: node.startPosition.column + 1 }));
 }
 
-export async function listJavascriptEnvironmentReads(
-    path: string,
-    text: string,
-    environmentFunctions: readonly string[],
-    cache?: ParseCache,
-): Promise<EnvironmentRead[]> {
-    const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
-    const reads: EnvironmentRead[] = [];
-    const sources = await listJavascriptSources(path, text);
-    for (const { grammar, source } of sources) {
-        using tree = await parseSource(grammar, source, cache);
-        reads.push(...listTreeReads(tree.rootNode, getters));
-    }
-    return reads;
-}
-
-export function listPythonEnvironmentReads(
-    syntaxRoot: Node,
-    environmentFunctions: readonly string[],
-): EnvironmentRead[] {
+function listPythonEnvironmentReads(syntaxRoot: Node, environmentFunctions: readonly string[]): EnvironmentRead[] {
     const pythonNames = listPythonNames(syntaxRoot);
     const nodes = syntaxRoot.descendantsOfType(['attribute', 'call', 'identifier']);
     const accessIds = new Set(
@@ -291,4 +274,37 @@ export function listPythonEnvironmentReads(
                 ...(hasPythonDefault(literal) && { hasDefault: true }),
             };
         });
+}
+
+const ENVIRONMENT_READS: Record<ParsedLanguage, (syntaxRoot: Node, names: ReaderNames) => EnvironmentRead[]> = {
+    python: (syntaxRoot, { environmentFunctions }) => listPythonEnvironmentReads(syntaxRoot, environmentFunctions),
+    bash: (syntaxRoot, { readerVariables }) => listBashEnvironmentReads(syntaxRoot, readerVariables),
+    swift: listSwiftEnvironmentReads,
+};
+
+export async function listJavascriptEnvironmentReads(
+    path: string,
+    text: string,
+    environmentFunctions: readonly string[],
+    cache?: ParseCache,
+): Promise<EnvironmentRead[]> {
+    const getters = new Set([...JAVASCRIPT_ENVIRONMENT_GETTERS, ...environmentFunctions]);
+    const reads: EnvironmentRead[] = [];
+    const sources = await listJavascriptSources(path, text);
+    for (const { grammar, source } of sources) {
+        using tree = await parseSource(grammar, source, cache);
+        reads.push(...listTreeReads(tree.rootNode, getters));
+    }
+    return reads;
+}
+
+/**
+List the environment reads of one parsed Python, Bash, or Swift source.
+*/
+export function listEnvironmentReads(
+    language: ParsedLanguage,
+    syntaxRoot: Node,
+    names: ReaderNames,
+): EnvironmentRead[] {
+    return ENVIRONMENT_READS[language](syntaxRoot, names);
 }

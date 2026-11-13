@@ -2,7 +2,8 @@ import { dirname, join, relative } from 'node:path';
 
 import { MISSING_MODULE_RULE, QUOTED_MODULE, TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { listCompilerFiles, runTsc, writeReferenceProjects } from '#cli/configurations/tsc/compiler.ts';
+import { runTsc } from '#cli/configurations/tsc/compiler.ts';
+import { listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/references.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';

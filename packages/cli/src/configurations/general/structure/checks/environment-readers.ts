@@ -1,27 +1,14 @@
-import type { Node } from 'web-tree-sitter';
-
 import { READ_OUTSIDE_READER_RULE, UNNAMED_VARIABLE_LABEL } from '#cli/config/configurations/structure.ts';
 import { VARIABLE_NAME } from '#cli/config/parsers/code.ts';
 import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
 import { findFunctionNode } from '#cli/parsers/code/bash/functions.ts';
-import {
-    listBashEnvironmentReads,
-    listPythonEnvironmentReads,
-    listSwiftEnvironmentReads,
-} from '#cli/parsers/code/environment.ts';
+import { listEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ParsedLanguage, ReaderNames } from '#cli/types/configurations/general.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { EnvironmentRead } from '#cli/types/parsers.ts';
 import type { Session } from '#cli/types/tools.ts';
-
-const ENVIRONMENT_READS: Record<ParsedLanguage, (syntaxRoot: Node, names: ReaderNames) => EnvironmentRead[]> = {
-    python: (syntaxRoot, { environmentFunctions }) => listPythonEnvironmentReads(syntaxRoot, environmentFunctions),
-    bash: (syntaxRoot, { readerVariables }) => listBashEnvironmentReads(syntaxRoot, readerVariables),
-    swift: listSwiftEnvironmentReads,
-};
 
 async function listReaderVariables(
     session: Session,
@@ -50,7 +37,7 @@ async function checkEnvironmentReaders(session: Session, planned: PlannedCheck):
     const findings: CheckFinding[] = [];
     const others = planned.files.filter((file) => !isReader(file.path));
     await visitQueriedSources(session, { ...planned, files: others }, (source) => {
-        const reads = ENVIRONMENT_READS[source.language](source.rootNode, { environmentFunctions, readerVariables });
+        const reads = listEnvironmentReads(source.language, source.rootNode, { environmentFunctions, readerVariables });
         const lines = new Map<number, EnvironmentRead>();
         for (const read of reads) if (!lines.has(read.line)) lines.set(read.line, read);
         for (const [line, read] of lines)

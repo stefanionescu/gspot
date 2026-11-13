@@ -9,18 +9,17 @@ import {
     RAISES_MISMATCH_HELP,
     RAISES_MISMATCH_RULE,
 } from '#cli/config/configurations/python.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
 import { findDocstring, parsePythonModule } from '#cli/parsers/code/python.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { docstringStyleSchema } from '#cli/schemas/configurations.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import type { PydoclintOptions, PythonDocstringStyle } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Level } from '#cli/types/settings.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';
 
 async function detectDocstringStyle(session: Session, path: string): Promise<PythonDocstringStyle | undefined> {
@@ -52,8 +51,8 @@ async function groupByDocstringStyle(
     );
 }
 
-function parsePydoclintOptions(path: string, text: string, convention: unknown, level: Level): PydoclintOptions {
-    const { tool } = parseTomlFile(path, text, docstringStyleSchema);
+function readPydoclintOptions(cache: RunCache, scopePath: string, convention: unknown, level: Level): PydoclintOptions {
+    const { tool } = readPyproject(cache, scopePath, docstringStyleSchema) ?? docstringStyleSchema.parse({});
     const inherited = tool.ruff.lint.pydocstyle.convention ?? convention;
     const style = tool.pydoclint.style ?? (inherited === 'google' || inherited === 'numpy' ? inherited : undefined);
     const written = new Set(Object.keys(tool.pydoclint).map((name) => name.replaceAll('_', '-')));
@@ -64,10 +63,9 @@ function parsePydoclintOptions(path: string, text: string, convention: unknown, 
 }
 
 async function checkPydoclint(session: CheckSession, planned: PlannedCheck): Promise<CheckResult> {
-    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const configured = parsePydoclintOptions(
-        pyproject,
-        findText(session.cache, pyproject) ?? '',
+    const configured = readPydoclintOptions(
+        session.cache,
+        planned.scope.path,
         planned.scope.settings.tables.python?.docstring_convention,
         session.settings.level,
     );

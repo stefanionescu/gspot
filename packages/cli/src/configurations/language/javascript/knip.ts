@@ -13,8 +13,11 @@ import { COMMAND_SEPARATORS, MISE_TASK_FOLDERS } from '#cli/config/repository/se
 import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
-import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { listCodePatterns, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    listCodePatterns,
+    listExternals,
+    listJavascriptScopes,
+} from '#cli/configurations/language/javascript/sources.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
 import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';

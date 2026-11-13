@@ -15,9 +15,12 @@ import {
 } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
-import { listExternals } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { listCodePatterns, listJavascriptScopes } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/configurations/import-rules.ts';
+import {
+    listCodePatterns,
+    listExternals,
+    listJavascriptScopes,
+} from '#cli/configurations/language/javascript/sources.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
     EslintBlock,

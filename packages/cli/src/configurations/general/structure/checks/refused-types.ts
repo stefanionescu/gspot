@@ -13,7 +13,7 @@ import {
 } from '#cli/config/configurations/structure.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
 import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
-import { formatRefusedImport } from '#cli/configurations/general/structure/import-rules.ts';
+import { formatRefusedImport } from '#cli/configurations/import-rules.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';

@@ -9,7 +9,7 @@ import {
     TYPESCRIPT_NAME_NODES,
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/configurations/naming.ts';
-import { addIdentifier } from '#cli/configurations/general/naming/languages/identifier.ts';
+import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
 import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/general.ts';
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {

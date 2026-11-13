@@ -5,7 +5,7 @@ import {
     POLICY_RULES,
     ROW_SECURITY_RULE,
 } from '#cli/config/configurations/postgres.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const EDITED_MIGRATION_EXPLANATIONS = {

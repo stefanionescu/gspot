@@ -1,4 +1,3 @@
-import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
 import { SCRIPT_TAG } from '#cli/config/parsers/code.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { remember } from '#cli/system/cache.ts';
@@ -29,11 +28,4 @@ export function readScripts(session: Session, planned: PlannedCheck): Promise<Sc
         for (const file of files) scripts.push(await readScript(session, file));
         return scripts;
     });
-}
-
-export function listFunctionCalls(scripts: ScriptFile[], target: ScriptFile, name: string): ScriptFile['calls'] {
-    const callers = scripts.filter(
-        (file) => file === target || file.commands.some((call) => BASH_SOURCE_COMMANDS.has(call.name)),
-    );
-    return callers.flatMap((file) => file.calls.filter((call) => call.name === name));
 }

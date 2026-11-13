@@ -4,7 +4,6 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
 
-import { listCodePatterns } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import {
     EXTENSIONLESS_SCRIPT_CASES,
@@ -92,19 +91,6 @@ test('a child scope wildcard exempts its tests and scripts without exempting sib
         { file: 'sibling/build.js', rule: 'no-console', line: 1 },
         { file: 'sibling/read.js', rule: 'no-console', line: 1 },
     ]);
-});
-
-test('ESLint test patterns omit foreign extensions and retain components and shared globs', () => {
-    expect(
-        listCodePatterns([
-            '**/test_*.py',
-            '**/*.test.ts',
-            '**/*.spec.vue',
-            '**/*.test.astro',
-            '**/tests/**',
-            '**/*.{js,ts}',
-        ]),
-    ).toStrictEqual(['**/*.test.ts', '**/*.spec.vue', '**/*.test.astro', '**/tests/**', '**/*.{js,ts}']);
 });
 
 test('ESLint lints Node script files by role and shebang, and skips generated, vendored and other files', async () => {

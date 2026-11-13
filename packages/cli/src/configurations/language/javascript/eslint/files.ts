@@ -1,22 +1,15 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/eslint-blocks.ts';
-import { COMPONENT_CONFIGURATIONS, MISE_TASKS_GLOB } from '#cli/config/configurations/javascript/eslint-config.ts';
-import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/eslint-config.ts';
+import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
-import { compareScopeDepth, isInScope, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
-import { findParentScope } from '#cli/settings/scopes.ts';
-import { extractExtension } from '#cli/system/paths.ts';
+import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';
 import { buildPathMatcher, escapeGlob, includeFolderContents } from '#cli/system/patterns.ts';
 import type {
     EslintBlockFields,
     EslintFileGroups,
     EslintFiles,
     PathExpressions,
-    ScopeOverride,
 } from '#cli/types/configurations/javascript.ts';
-import type { Scope } from '#cli/types/settings.ts';
 
 /**
 Build the glob of the files of these languages.
@@ -26,47 +19,6 @@ Build the glob of the files of these languages.
 export function buildExtensionGlob(...languages: string[]): string {
     const extensions = listTaggedExtensions(...languages).map((extension) => extension.slice(1));
     return extensions.length === 1 ? `**/*.${String(extensions[0])}` : `**/*.{${extensions.join(',')}}`;
-}
-
-export function listNestedScopeGlobs(paths: readonly string[], scopePath: string): string[] {
-    return listNestedScopes(paths, scopePath).map((path) => joinScopeGlob(path, '**'));
-}
-
-/**
-Build the blocks of each scope whose value differs from its parent, deepest last, so a nested scope overrides its
-parent.
-*/
-export function buildScopeOverrideBlocks<Value, Block>(
-    scopes: Scope[],
-    override: ScopeOverride<Value, Block>,
-): Block[] {
-    const { read, build, base } = override;
-    const changes = scopes
-        .toSorted((left, right) => compareScopeDepth(left.path, right.path))
-        .map((scope) => ({ scope, parent: findParentScope(scopes, scope.path), value: read(scope) }))
-        .filter(({ parent, value }) => {
-            const inherited = parent ?? base;
-            return !isDeepStrictEqual(value, inherited && read(inherited));
-        });
-    return changes.flatMap(({ scope, parent, value }) =>
-        build({
-            scope,
-            parent,
-            value,
-            ignores: listNestedScopeGlobs(
-                changes.map((change) => change.scope.path),
-                scope.path,
-            ),
-        }),
-    );
-}
-
-export function listJavascriptScopes(scopes: Scope[]): Scope[] {
-    return scopes.filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION));
-}
-
-export function listScriptFiles(scope: Pick<Scope, 'path' | 'settings'>): string[] {
-    return [...(scope.settings.tables.javascript?.script_files ?? []), joinScopeGlob(scope.path, MISE_TASKS_GLOB)];
 }
 
 export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
@@ -108,14 +60,6 @@ export function buildFilePatterns(groups: EslintFileGroups): EslintFiles {
             scripts.flatMap((script) => code.map((pattern) => [script, joinScopeGlob(scopePath, '**/*'), pattern])),
         ),
     };
-}
-
-export function listCodePatterns(patterns: string[]): string[] {
-    const extensions = listTaggedExtensions(...CODE_LANGUAGES, ...COMPONENT_CONFIGURATIONS, 'astro');
-    return patterns.filter((pattern) => {
-        const extension = extractExtension(pattern);
-        return extension === '' || !EXTENSION_PATTERN.test(extension) || extensions.includes(extension);
-    });
 }
 
 export function buildNodePatterns(paths: string[], scopePath: string): string[] {

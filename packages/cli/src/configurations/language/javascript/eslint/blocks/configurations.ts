@@ -7,11 +7,9 @@ import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/gene
 import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
 import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
 import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
-import {
-    buildTestFiles,
-    listCodePatterns,
-    listNestedScopeGlobs,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
+import { buildTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
 import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
 import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
 import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';

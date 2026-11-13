@@ -10,6 +10,7 @@ import {
 import { LEVELS } from '#cli/config/manifests.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
+import { listAllowedRules } from '#cli/configurations/import-rules.ts';
 import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { buildAvailableSettings } from '#cli/settings/available.ts';
@@ -108,11 +109,6 @@ function listSettingMoves(base: Settings, head: Settings): Weakening[] {
     });
 }
 
-function listAllowedImports(rules: Settings['import_rule'], name: string): string[] {
-    const index = rules.findIndex((rule) => rule.name === name);
-    return rules[index]?.can_import ?? rules.slice(0, index).map((rule) => rule.name);
-}
-
 /**
 A rule that the head adds widens no rule of the base, so its name does not count as a new import of the rules below
 it.
@@ -124,12 +120,16 @@ function listImportRuleWeakenings(base: Settings, head: Settings): Weakening[] {
     const tables = new Map(listSettingsTables(head).map(({ table, scopePath }) => [scopePath, table]));
     return [
         ...base.import_rule.flatMap(({ name, paths }) => {
-            const kept = head.import_rule.find((each) => each.name === name);
+            const index = head.import_rule.findIndex((each) => each.name === name);
+            const kept = head.import_rule[index];
             if (kept === undefined) return [{ rule, file, change: `The import rule ${name} goes` }];
-            const allowed = listAllowedImports(base.import_rule, name);
-            const imports = listAllowedImports(head.import_rule, name).filter(
-                (each) => names.has(each) && !allowed.includes(each),
+            // The first name is the rule itself. Compare only the names that can_import or the rules above give.
+            const [, ...allowed] = listAllowedRules(
+                base.import_rule,
+                base.import_rule.findIndex((each) => each.name === name),
             );
+            const [, ...reached] = listAllowedRules(head.import_rule, index);
+            const imports = reached.filter((each) => names.has(each) && !allowed.includes(each));
             const added = kept.paths.filter((path) => !paths.includes(path));
             return [
                 ...(imports.length > 0

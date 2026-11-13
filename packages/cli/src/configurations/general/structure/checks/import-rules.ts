@@ -16,8 +16,8 @@ import { PYTHON_CONFIGURATION, SWIFT_CONFIGURATION } from '#cli/config/settings/
 import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
 import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
 import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/configurations/general/structure/import-rules.ts';
-import { listScriptFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { formatRefusedImport, listAllowedRules } from '#cli/configurations/import-rules.ts';
+import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listPythonImports } from '#cli/parsers/code/python.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';

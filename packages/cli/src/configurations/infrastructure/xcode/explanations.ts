@@ -1,5 +1,5 @@
 import { XCODE_RULES } from '#cli/config/configurations/xcode.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/explanations.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const ASSET_EXPLANATIONS = {

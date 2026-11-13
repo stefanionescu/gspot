@@ -6,54 +6,39 @@ import {
     GSPOT_RULE_PREFIX,
     IMPORT_BOUNDARIES_RULE,
     IMPORT_LAYOUT_RULES,
-    NODE_RULES,
-    NODE_RUNTIMES,
-    NON_NODE_RULES,
-    PACKAGE_JSON_PATTERN,
-    PACKAGE_JSON_RULES,
-    PIN_RANGES_RULE,
     PRESETS_AFTER_CONFIGURATIONS,
     PRESETS_BEFORE_CONFIGURATIONS,
-    PRIVATE_PIN_OPTIONS,
     RESTRICTED_SYNTAX_RULE,
-    ROOT_PACKAGE_JSON_RULES,
-    RUNTIME_GLOBALS,
     TEST_RULES,
 } from '#cli/config/configurations/javascript/eslint-blocks.ts';
 import { CONSOLE_RULES, JAVASCRIPT_RULES, SCRIPT_RULES } from '#cli/config/configurations/javascript/eslint-rules.ts';
 import { DENO_CONFIG_FILES } from '#cli/config/configurations/shared.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
 import {
     buildImportBoundariesRule,
     buildImportIgnores,
     buildImportStyleBlocks,
     buildNodeScriptBlocks,
+    buildRestrictedImportBlocks,
     buildScopeImportBlocks,
 } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
+import { buildPackageJsonBlocks } from '#cli/configurations/language/javascript/eslint/blocks/package-json.ts';
+import { buildRuntimeBlocks } from '#cli/configurations/language/javascript/eslint/blocks/runtimes.ts';
 import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
+import { splitSettingsBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
+import { buildScopeFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
 import {
-    buildRestrictedImportBlocks,
-    splitSettingsBlocks,
-} from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
-import {
-    buildScopeFiles,
     listCodePatterns,
     listJavascriptScopes,
-    listNestedScopeGlobs,
     listScriptFiles,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
+} from '#cli/configurations/language/javascript/sources.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { escapeGlob } from '#cli/system/patterns.ts';
 import type {
     ConfigurationBlocks,
     EslintBlock,
     EslintBlockFields,
-    EslintFiles,
-    EslintRuntime,
     ListedPlugins,
     PlannedEslintFile,
 } from '#cli/types/configurations/javascript.ts';
@@ -137,41 +122,6 @@ function buildRootBlock(
     };
 }
 
-function buildRuntimeBlocks(eslintFiles: EslintFiles, runtimeBlocks: EslintRuntime[]): ConfigurationBlocks {
-    const runtimes: ConfigurationBlocks = runtimeBlocks.map(({ runtime }, index) => {
-        const names = RUNTIME_GLOBALS[runtime] ?? runtime;
-        return {
-            fields: {
-                files: eslintFiles.code.map((pattern) => [pattern, { runtime: index }]),
-                rules: {
-                    ...(runtime === 'commonjs' && { 'unicorn/prefer-module': 'off' }),
-                    ...(!NODE_RUNTIMES.includes(runtime) && NON_NODE_RULES),
-                },
-            },
-            calls: [
-                {
-                    name: 'setRuntime',
-                    args: [
-                        { package: 'globals' },
-                        { value: names },
-                        { value: runtime === 'commonjs' ? 'commonjs' : 'module' },
-                    ],
-                },
-            ],
-        };
-    });
-    const nodeIndexes = runtimeBlocks.flatMap(({ runtime }, index) => (NODE_RUNTIMES.includes(runtime) ? index : []));
-    return [
-        ...runtimes,
-        {
-            fields: {
-                files: eslintFiles.code.flatMap((pattern) => nodeIndexes.map((index) => [pattern, { runtime: index }])),
-                rules: NODE_RULES,
-            },
-        },
-    ];
-}
-
 function buildConsoleBlocks(planned: Pick<PlannedEslintFile, 'session' | 'eslintFiles'>): EslintBlockFields[] {
     const scopes = listJavascriptScopes(planned.session.scopes);
     return scopes.map((scope) => ({
@@ -221,14 +171,6 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
     const { eslintFiles, session } = planned;
     const { level, runtimes, allLevelRules } = planned.blockWriter;
     const rules = planned.languageRules;
-    const privatePackages = session.repository.files
-        .filter(
-            (file) =>
-                file.kind === 'source' &&
-                basename(file.path) === PACKAGE_JSON &&
-                tryParseFile(() => readPackageJson(session.cache, file.path))?.['private'] === true,
-        )
-        .map((file) => escapeGlob(file.path));
     const selectorGroups = buildSelectorBlocks(session.scopes, level, session.repository.dependencyFiles);
     return [
         ...buildRuntimeBlocks(eslintFiles, runtimes),
@@ -250,16 +192,7 @@ export function buildClosingBlocks(planned: PlannedEslintFile): ConfigurationBlo
             fields: { files: 'files' in preset ? [...preset.files] : eslintFiles.code },
             presets: [{ ...preset, merge: 'fields' as const }],
         })),
-        {
-            fields: {
-                files: [PACKAGE_JSON_PATTERN],
-                rules: PACKAGE_JSON_RULES,
-            },
-        },
-        ...(privatePackages.length === 0
-            ? []
-            : [{ fields: { files: privatePackages, rules: { [PIN_RANGES_RULE]: ['error', PRIVATE_PIN_OPTIONS] } } }]),
-        { fields: { files: [PACKAGE_JSON], rules: ROOT_PACKAGE_JSON_RULES } },
+        ...buildPackageJsonBlocks(planned),
         {
             fields: {
                 files: eslintFiles.javascript,

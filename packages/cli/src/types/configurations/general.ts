@@ -7,7 +7,7 @@ import type { namingExceptionSchema } from '#cli/schemas/manifests/fields.ts';
 import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { CheckFinding, Finding } from '#cli/types/engine/run.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { SqlFile } from '#cli/types/parsers.ts';
+import type { ParsedLanguage, SqlFile } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Defined, ImportRule, ParsedSettings, TableSettings } from '#cli/types/settings.ts';
 
@@ -112,8 +112,6 @@ export type FileIdentifiers = { file: string; language: string; identifiers: Ide
 
 export type IdentifierRead = { identifiers: Identifier[]; error: SqlFile['error'] };
 
-export type ParsedLanguage = 'python' | 'swift' | 'bash';
-
 export type FolderChild = { name: string; kind: 'file' | 'folder' };
 
 export type ParsedSource = { path: string; language: ParsedLanguage; rootNode: Node; captures: Map<string, Node[]> };
@@ -158,8 +156,6 @@ export type WrittenFormat = z.input<typeof formatSchema>;
 // `owners` maps each type that other files can name to the rules that declare it. `hidden` maps each rule to the names
 // that its files declare for a narrower reach: inside a type, as a generic parameter, or as a private top-level type.
 export type SwiftDeclarations = { owners: Map<string, Set<string>>; hidden: Map<string, Set<string>> };
-
-export type ReaderNames = { environmentFunctions: string[]; readerVariables: Set<string> };
 
 export type TrivialFunction = { finding: CheckFinding; key?: string };
 

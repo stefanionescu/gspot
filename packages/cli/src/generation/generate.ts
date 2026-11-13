@@ -10,7 +10,7 @@ import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { FILTER_ATTRIBUTE, GITATTRIBUTES_FILE, LFS_FILTER } from '#cli/config/repository/files.ts';
 import { AGENTS_FILE } from '#cli/config/repository/setup.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/generate.ts';
+import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/bunfig.ts';
 import { buildAgentsBlock, hasTopHeading } from '#cli/generation/builders/agents.ts';
 import {
     buildGithubWorkflow,

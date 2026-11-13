@@ -108,10 +108,7 @@ function validateScriptFile(file: ScriptFile): CheckFinding[] {
 
 async function checkScriptLayout(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const isEnvironmentReader = buildPathMatcher(planned.scope.settings.tables.structure?.environment_readers ?? []);
-    const scripts = await readScripts(session, {
-        ...planned,
-        files: planned.files.filter((file) => file.tags.includes('bash')),
-    });
+    const scripts = await readScripts(session, planned);
     return scripts.flatMap((file) =>
         validateScriptFile(file).filter(
             (finding) => finding.rule !== SCRIPT_LAYOUT_RULES.libraryFlow || !isEnvironmentReader(file.path),

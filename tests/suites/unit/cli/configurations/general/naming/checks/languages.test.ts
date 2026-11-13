@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 
-import { extractSqlIdentifiers } from '#cli/configurations/general/naming/languages/sql.ts';
+import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import {
     QUALIFIED_FUNCTION_DECLARATION,

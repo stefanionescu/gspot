@@ -113,6 +113,10 @@ export type EnvironmentScope = Map<string, EnvironmentKind>;
 
 export type EnvironmentNames = Map<number, Map<string, Array<{ position: number; kind: EnvironmentKind }>>>;
 
+export type ParsedLanguage = 'python' | 'swift' | 'bash';
+
+export type ReaderNames = { environmentFunctions: string[]; readerVariables: Set<string> };
+
 export type PythonModule = {
     path: string;
     lines: string[];

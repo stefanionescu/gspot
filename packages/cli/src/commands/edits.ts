@@ -9,7 +9,7 @@ import {
 } from '#cli/config/commands/edits.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/validation.ts';
-import { hasReleasedScanner } from '#cli/configurations/general/dependencies/generate.ts';
+import { hasReleasedScanner } from '#cli/configurations/general/dependencies/bunfig.ts';
 import { findEmptySetting } from '#cli/engine/plan/skips.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';

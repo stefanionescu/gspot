@@ -24,12 +24,17 @@ import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
 
+function listTsconfigPaths(planned: PlannedCheck, scopeTsconfig: string): string[] {
+    return [
+        ...new Set([
+            scopeTsconfig,
+            ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
+        ]),
+    ];
+}
+
 function listUnreadableTsconfigs(session: Session, planned: PlannedCheck): CheckFinding[] {
-    const paths = new Set([
-        joinScope(planned.scope.path, TSCONFIG_FILE),
-        ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
-    ]);
-    return [...paths].flatMap((path) => {
+    return listTsconfigPaths(planned, joinScope(planned.scope.path, TSCONFIG_FILE)).flatMap((path) => {
         try {
             readTsconfig(session.root, join(session.root, path), session.cache);
             return [];
@@ -94,12 +99,8 @@ function checkTsconfig(session: Session, planned: PlannedCheck): CheckFinding[] 
                 help: MISSING_TSCONFIG_HELP,
             },
         ];
-    const tsconfigPaths = new Set([
-        scopeTsconfig,
-        ...planned.files.map((file) => file.path).filter((path) => TSCONFIG_NAME.test(posix.basename(path))),
-    ]);
     const required = selectRequiredTsconfigOptions(session.settings.level, planned.scope.configurations);
-    const projects = [...tsconfigPaths].flatMap((path) => {
+    const projects = listTsconfigPaths(planned, scopeTsconfig).flatMap((path) => {
         const parsed = readTsconfig(session.root, join(session.root, path), session.cache);
         return parsed === undefined || (parsed.fileNames.length === 0 && (parsed.projectReferences?.length ?? 0) > 0)
             ? []

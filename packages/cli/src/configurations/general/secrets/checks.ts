@@ -18,7 +18,7 @@ import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
 import { buildBaseResult, keepListedFindings } from '#cli/engine/results.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { listJavascriptEnvironmentReads, listPythonEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
 import { readPushedRange, readSelectedCommits } from '#cli/repository/revisions/push.ts';
@@ -43,7 +43,7 @@ async function readEnvironmentReferences(
     if (!path.endsWith(PYTHON_EXTENSION))
         return await listJavascriptEnvironmentReads(path, text, environmentFunctions, session);
     using tree = await parseSource('python', text, session);
-    return listPythonEnvironmentReads(tree.rootNode, environmentFunctions);
+    return listEnvironmentReads('python', tree.rootNode, { environmentFunctions, readerVariables: new Set() });
 }
 
 function listEnvironmentSources(planned: PlannedCheck): PlannedCheck['files'] {

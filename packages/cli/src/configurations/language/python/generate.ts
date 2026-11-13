@@ -22,18 +22,16 @@ import {
 } from '#cli/config/configurations/python.ts';
 import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
 import { UV_LOCKFILE } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { FASTAPI_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
 import { pyprojectSchema } from '#cli/schemas/parsers.ts';
 import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/tables.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { Pyproject } from '#cli/types/parsers.ts';
 
@@ -49,21 +47,18 @@ function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string)
     return [...shared, ...own].map((path) => `${root}/${path}`);
 }
 
-function readPyproject(planned: PlannedConfig): Pyproject['project'] {
-    const pyproject = joinScope(planned.scope.path, PYPROJECT_TOML);
-    const text = findText(planned.session.cache, pyproject);
-    if (text === undefined) return undefined;
-    return tryParseFile(() => parseTomlFile(pyproject, text, pyprojectSchema))?.project;
+function readProjectTable(planned: PlannedConfig): Pyproject['project'] {
+    return tryParseFile(() => readPyproject(planned.session.cache, planned.scope.path, pyprojectSchema))?.project;
 }
 
 function readMinimumPython(planned: PlannedConfig): string | undefined {
-    const requirement = readPyproject(planned)?.['requires-python'];
+    const requirement = readProjectTable(planned)?.['requires-python'];
     if (requirement === undefined) return undefined;
     return MINIMUM_PYTHON.exec(requirement)?.groups?.['version'];
 }
 
 function listConsoleModules(planned: PlannedConfig): string[] {
-    const scripts = readPyproject(planned)?.scripts;
+    const scripts = readProjectTable(planned)?.scripts;
     return scripts === undefined
         ? []
         : Object.values(scripts).map((target) => (target.split(':', 1)[0] as string).replaceAll('.', '/'));

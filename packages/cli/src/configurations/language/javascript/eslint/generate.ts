@@ -15,12 +15,12 @@ import {
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/installers.ts';
 import { convertToGlobs, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
-import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/block-calls.ts';
 import { buildClosingBlocks, buildOpeningBlocks } from '#cli/configurations/language/javascript/eslint/blocks/base.ts';
 import { buildBoundaryBlocks } from '#cli/configurations/language/javascript/eslint/blocks/boundaries.ts';
 import { listConfigurationBlocks } from '#cli/configurations/language/javascript/eslint/blocks/configurations.ts';
 import { listLocalPlugins } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
 import { buildPlannedEslintFile } from '#cli/configurations/language/javascript/eslint/plan.ts';
+import { buildBlockLists, buildImportName } from '#cli/configurations/language/javascript/eslint/print.ts';
 import { assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type { BlockWriter, EslintFileWriter, PlannedEslintBlock } from '#cli/types/configurations/javascript.ts';
