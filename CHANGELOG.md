@@ -1,5 +1,72 @@
 # Changelog
 
+## 0.4.4
+
+gspot 0.4.4 sorts imports by line length again, as it did before 0.3.9. It fixes checks that missed a download piped
+into a shell, a package manager in `devEngines`, a Node.js version list in `mise.toml`, a Stylelint config in a
+nested scope, and an `exclude` that a tsconfig inherits with `${configDir}`. Five pairs of ESLint plugin rules share one
+helper each, and 16 rules move to three new topics of the rule reference. `@gspothq/eslint-plugin` is 0.3.1.
+
+### Breaking changes
+
+Checks that newly fail:
+
+- Level `all` sorts imports by line length again: single-line imports from shortest to longest, then multi-line imports
+  from shortest to longest, and the names inside braces by length too. Run `gspot check --fix` to reorder them.
+  (fe06e48)
+- `bash/safety` and `github-actions/workflow-shape` report a download piped into a shell that a path names, such as
+  `/usr/bin/curl … | /bin/sh`, and a shell that `sudo`, `doas`, `env`, `exec`, `command`, `nice`, `nohup`, or `time`
+  starts, also after their options and assignments, as in `curl … | sudo -E bash -`. Save the script to a file, read
+  it, then run it. (03b24e3)
+- `docker/instructions` reports every form that `bash/safety` reports, such as `sh -c "$(curl …)"`, and no longer
+  reports `| tee sh`. (03b24e3)
+- `dependencies/package-manager-pin` reads `devEngines.packageManager`, as CI does, and reports a version there that
+  differs from the mise pin. It asks for a version when `packageManager` holds none or holds a second `@`. Write
+  `<name>@<version>`. (03b24e3)
+- With `css` in a nested scope, a `.stylelintrc.yml` in that scope folder is a source file, and
+  `gspot/conflicting-configs` reports it. Move its rules into `gspot.toml`, then delete it. (03b24e3)
+- A `mise.toml` whose `tools` is not a table stops `doctor`, `init`, `scan`, and every command that reads the gspot pin.
+  mise refuses that file too. Write `tools` as a table. (03b24e3)
+- `gspot/prefer-matcher-assertions` reports a locator state read through `first()`, `last()`, `nth()`, `filter()`,
+  `and()`, or `or()`, and on any receiver, such as `frame` or `this.page`. (f7090b9)
+- `gspot/require-test-assertions` reports `it.concurrent`, `test.each(table)`, `test.failing`, and the other running
+  variants of `it`, `specify`, and `test` that hold no assertion. (f7090b9)
+- `gspot/no-unexplained-test-skips` reads the framework from the imports of a file before `package.json`. In a
+  repository that lists Jest and Playwright, a Playwright file reports `test.describe.skip(title)`. A file that imports
+  `node:test` reports a silent `t.skip()`. (f7090b9)
+
+### Highlights
+
+#### Findings that were wrong
+
+- The generated jsconfig reads `${configDir}` in an inherited `exclude` as the folder of the tsconfig it extends, so the
+  `dist` folder of an Astro project stays out of the program. (1bf8247)
+- CI runs the first Node.js of a version list in `mise.toml`, the one mise runs, and the gspot pin check reads such a
+  list too. (03b24e3)
+- `gspot/no-unexplained-test-skips` no longer reports `test.skip(condition, reason)` in a Playwright file of a
+  repository that also lists Jest. (f7090b9)
+- `gspot/prefer-matcher-assertions` no longer reports a variable that later holds an element handle. (f7090b9)
+- `gspot/no-nested-functions` no longer counts the callbacks of `test.describe.parallel`, `describe.each(table)`, and the
+  other test calls with several members. (f7090b9)
+- `gspot/require-error-checks` no longer reports `.throw()` after a computed member, such as
+  `expect(run).to[mode].throw()`, or after an `expect()` with no value or a spread value. (f7090b9)
+- `bash/script-layout` selects its files in its manifest. A scope with only Zsh, Bats, or Korn shell scripts shows the
+  check as skipped, where it showed it as passed. (43b588d)
+
+#### Docs
+
+- The rule reference of the ESLint plugin gains the topics Comments, Code layout, and Cryptography, which take 16 rules
+  from Code structure, Control flow, Functions, Variables, and Security. Rule names stay, and a link from the plugin to
+  a rule still opens it. (592f2fa)
+
+### Development
+
+Each file of the CLI, the plugin, the docs, and the tests holds one subject, and each layer groups its files in folders
+by subject. AGENTS.md gains the rules that keep that shape. The build and release tasks sit in `build/` and `release/`,
+and `release:publish` refuses a commit other than the one its tag names. This repository runs gspot 0.4.3, and the docs
+site runs astro 7.4.7 for GHSA-r3h5-4585-7x3w. (187a51e, 6accb67, eb58d51, 18ed194, 43b588d, a3023cc, 592f2fa, fa8a24d,
+e102384, c239dba, 65e97b7, 783efb7, 8a6b760, dcb6a53, b3b1260)
+
 ## 0.4.3
 
 gspot 0.4.3 fixes the defects that a run of 0.4.2 on 19 repositories, an audit of the code, and an outside report
