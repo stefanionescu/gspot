@@ -1,16 +1,8 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { SPLICE_METHOD } from '../../config/control-flow.ts';
+import { listCounterUpdates } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-
-function listCounters(update: TSESTree.Node): TSESTree.Identifier[] {
-    if (update.type === AST_NODE_TYPES.SequenceExpression)
-        return update.expressions.flatMap((expression) => listCounters(expression));
-    let counter: TSESTree.Node | undefined;
-    if (update.type === AST_NODE_TYPES.AssignmentExpression) counter = update.left;
-    else if (update.type === AST_NODE_TYPES.UpdateExpression) counter = update.argument;
-    return counter?.type === AST_NODE_TYPES.Identifier ? [counter] : [];
-}
 
 function isInLoopUpdate(identifier: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
     const chain = [...ancestors, identifier];
@@ -48,10 +40,11 @@ function isSkipAhead(identifier: TSESTree.Identifier, ancestors: readonly TSESTr
 }
 
 function listBodyWrites(loop: TSESTree.ForStatement, source: TSESLint.SourceCode): TSESTree.Identifier[] {
-    const { body, update } = loop;
-    if (update === null || body.type !== AST_NODE_TYPES.BlockStatement) return [];
+    const { body } = loop;
+    if (body.type !== AST_NODE_TYPES.BlockStatement) return [];
     const [bodyStart, bodyEnd] = body.range;
-    return listCounters(update).flatMap((counter) => {
+    return listCounterUpdates(loop.update).flatMap(({ counter }) => {
+        if (counter.type !== AST_NODE_TYPES.Identifier) return [];
         const references = ASTUtils.findVariable(source.getScope(loop), counter.name)?.references ?? [];
         return references.flatMap(({ identifier }, index) => {
             const isInBody = identifier.range[0] > bodyStart && identifier.range[1] < bodyEnd;

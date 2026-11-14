@@ -25,9 +25,15 @@ export type SkipFramework = 'jasmine' | 'jest' | 'vitest' | 'mocha' | 'playwrigh
 
 export type EarlyReturnFramework = 'mocha' | 'vitest' | 'playwright' | 'nodeTest' | 'bun';
 
+export type FrameworkImport<Framework> = { framework: Framework; modules: readonly string[] };
+
+export type FrameworkDependency<Framework> = { framework: Framework; dependencies: readonly string[] };
+
 export type TestOrigin = { name: string; module: string | undefined };
 
-export type TestCallee = TestOrigin & { base: TSESTree.Identifier; modifiers: string[] };
+export type CalleeChain = { base: TSESTree.Identifier; modifiers: string[] };
+
+export type TestCallee = TestOrigin & CalleeChain;
 
 export type TestCall = TestCallee & {
     kind: 'test' | 'suite' | 'hook';

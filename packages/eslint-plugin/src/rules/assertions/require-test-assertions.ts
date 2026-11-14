@@ -3,7 +3,8 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 import {
     ASSERTION_TEXT,
     CHAI_TERMINALS,
-    CHECKED_TEST_CALLEE,
+    CHECKED_TEST_MODIFIERS,
+    CHECKED_TEST_NAMES,
     DONE_CALLBACKS,
     EVIDENCE_DEPENDENCIES,
     EVIDENCE_IMPORTS,
@@ -16,13 +17,22 @@ import { getTypes } from '../../language/checker.ts';
 import { isModuleUsed } from '../../language/packages.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { readAssertionKind } from '../../libraries/assertions.ts';
+import { getCalleeChain } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionSearch } from '../../types/assertions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
 
-function getTestCallback(node: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
+/**
+Get the callback of a test that the rule checks. The callee name decides, so a test fixture that `test.extend` builds
+and the `test` of uvu count too. A member such as `step` or `describe` makes the call something other than a test.
+*/
+function getCheckedTestCallback(node: TSESTree.CallExpression): TSESTree.Node | undefined {
+    const chain = getCalleeChain(node.callee);
     const callback = node.arguments.at(1);
-    const isTest = CHECKED_TEST_CALLEE.test(source.getText(node.callee));
+    const isTest =
+        chain !== undefined &&
+        CHECKED_TEST_NAMES.has(chain.base.name) &&
+        chain.modifiers.every((modifier) => CHECKED_TEST_MODIFIERS.has(modifier));
     return isTest && callback !== undefined && ASTUtils.isFunction(callback) ? callback : undefined;
 }
 
@@ -130,7 +140,7 @@ export const requireTestAssertions = createRule<[], 'missing'>({
         return {
             [DONE_CALLBACKS]: (node: TSESTree.Identifier) => doneUses.add(node),
             'CallExpression:exit': function (node: TSESTree.CallExpression) {
-                const callback = getTestCallback(node, source);
+                const callback = getCheckedTestCallback(node);
                 const isChecked =
                     callback === undefined || isDoneUsed(callback, source, doneUses) || hasAssertion(callback, search);
                 if (!isChecked) context.report({ node: node.callee, messageId: 'missing' });

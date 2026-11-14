@@ -1,4 +1,4 @@
-import { JASMINE_PACKAGES } from '../testing.ts';
+import { JASMINE_PACKAGES, MARKED_TEST_MODIFIERS, RUNNING_TEST_MODIFIERS } from '../testing.ts';
 
 // assertion evidence
 export const EVIDENCE_DEPENDENCIES = ['cypress', 'jasmine', 'jest', '@playwright/test'];
@@ -123,7 +123,12 @@ export const CHAI_TERMINALS: ReadonlySet<string | null> = new Set([
     'true',
     'undefined',
 ]);
-export const CHECKED_TEST_CALLEE = /^(?:it|specify|test)(?:\.(?:only|skip))?$/u;
+export const CHECKED_TEST_MODIFIERS: ReadonlySet<string> = new Set([
+    ...MARKED_TEST_MODIFIERS,
+    ...RUNNING_TEST_MODIFIERS,
+    'each',
+]);
+export const CHECKED_TEST_NAMES: ReadonlySet<string> = new Set(['it', 'specify', 'test']);
 export const DONE_CALLBACKS =
     'CallExpression[arguments.length>0] > Identifier.callee, CallExpression[callee.property.name="catch"] > Identifier.arguments:first-child, CallExpression[callee.property.name=/^(?:then|subscribe)$/] > Identifier.arguments:nth-child(2), CallExpression[callee.property.name="subscribe"] > ObjectExpression > Property[key.name="error"] > Identifier.value';
 export const HTTP_EXPECTATIONS: ReadonlySet<string | null> = new Set(['expectOne', 'expectNone', 'verify']);

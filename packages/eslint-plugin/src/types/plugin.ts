@@ -39,6 +39,8 @@ export type TypeCategory = 'array' | 'string' | 'number' | 'boolean' | 'other';
 
 export type CallText = { argument: TSESTree.CallExpressionArgument; text: string };
 
+export type CounterUpdate = { counter: TSESTree.Node; operator: string };
+
 export type MemberAssignment = { variable: TSESLint.Scope.Variable; property: string };
 
 export type RuleContext = Readonly<TSESLint.RuleContext<string, unknown[]>>;

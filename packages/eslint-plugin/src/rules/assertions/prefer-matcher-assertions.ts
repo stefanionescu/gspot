@@ -7,6 +7,7 @@ import {
     INVERTED_OPERATORS,
     JASMINE_SIZE_VERSION,
     JASMINE_VERSION_PACKAGES,
+    LOCATOR_REFINEMENTS,
     LOCATOR_STATES,
     LOCATOR_VALUES,
     MATCHER_FAMILIES,
@@ -21,10 +22,11 @@ import {
     VALUE_KINDS,
 } from '../../config/assertions/matchers.ts';
 import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
-import { PLAYWRIGHT_LOCATOR } from '../../config/testing.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
 import { readPackageFacts } from '../../language/packages.ts';
 import { requiresVersion } from '../../language/versions.ts';
 import { readAssertion } from '../../libraries/assertions.ts';
+import { isLocatorQuery } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { ComparisonAssertion, MatcherSuggestion } from '../../types/assertions.ts';
 import type { FileContext } from '../../types/plugin.ts';
@@ -150,21 +152,17 @@ function getFields(
     ]);
 }
 
-function isLocatorVariable(node: TSESTree.Identifier, source: TSESLint.SourceCode, seen: Set<TSESTree.Node>): boolean {
-    const definition = ASTUtils.findVariable(source.getScope(node), node)?.defs.at(0);
-    const init = definition?.node.type === AST_NODE_TYPES.VariableDeclarator ? definition.node.init : null;
-    const isUnseen = init !== null && !seen.has(init);
-    return isUnseen && isLocator(init, source, seen.add(init));
-}
-
+/**
+Check whether a node is a Playwright locator: a locator query, or a refinement such as `first()` of a locator. A
+web-first matcher such as `toBeVisible` takes only a locator, so an element handle that a query yields does not count.
+*/
 function isLocator(node: TSESTree.Node, source: TSESLint.SourceCode, seen: Set<TSESTree.Node>): boolean {
-    if (node.type === AST_NODE_TYPES.Identifier) return isLocatorVariable(node, source, seen);
-    if (node.type !== AST_NODE_TYPES.CallExpression || node.callee.type !== AST_NODE_TYPES.MemberExpression)
-        return false;
-    const { object: receiver } = node.callee;
-    const isPage = receiver.type === AST_NODE_TYPES.Identifier && receiver.name === 'page';
-    const isFactory = PLAYWRIGHT_LOCATOR.test(ASTUtils.getPropertyName(node.callee) ?? '');
-    return isFactory && (isPage || isLocator(receiver, source, seen));
+    const value = getExpressionValue(node, source, seen);
+    if (value !== undefined && isLocatorQuery(value)) return true;
+    const callee = value?.type === AST_NODE_TYPES.CallExpression ? value.callee : undefined;
+    const isRefinement =
+        callee?.type === AST_NODE_TYPES.MemberExpression && LOCATOR_REFINEMENTS.has(ASTUtils.getPropertyName(callee));
+    return isRefinement && isLocator(callee.object, source, seen);
 }
 
 function getLocatorGetter(

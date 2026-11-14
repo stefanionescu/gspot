@@ -42,6 +42,11 @@ buildRuleTester({ root }).run('no-early-test-return', noEarlyTestReturn, {
             code: 'import { test } from "@playwright/test";\nit("pays", () => { if (!ready) return; pay(); });',
             filename: join(root, 'plain/h.test.ts'),
         },
+        {
+            code: 'import { it } from "@jest/globals";\nit("pays", () => { if (!ready) return; pay(); });',
+            filename: join(root, 'vitest/b.test.ts'),
+            name: 'an import of a framework without a skip call',
+        },
     ],
     invalid: [
         {

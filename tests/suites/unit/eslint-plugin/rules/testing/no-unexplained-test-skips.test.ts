@@ -9,6 +9,7 @@ const root = writePackageFolders({
     vitest: { devDependencies: { vitest: '4.0.0' } },
     mocha: { devDependencies: { mocha: '11.0.0' } },
     playwright: { devDependencies: { '@playwright/test': '1.50.0' } },
+    jestPlaywright: { devDependencies: { jest: '30.0.0', '@playwright/test': '1.50.0' } },
     node: {},
 });
 
@@ -28,6 +29,11 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
         { code: 'run("adds", (t) => { t.skip(); });', filename: join(root, 'node/f.test.ts') },
         { code: 'it.only("adds", run);', filename: join(root, 'jest/b.test.ts') },
         { code: 'it.skip("adds", run);\n// Waits for the tax table.', filename: join(root, 'jest/c.test.ts') },
+        {
+            code: 'import { test } from "@playwright/test";\ntest.skip(isMobile, "no touch");',
+            filename: join(root, 'jestPlaywright/a.test.ts'),
+            name: 'the import names the framework',
+        },
     ],
     invalid: [
         {
@@ -53,9 +59,19 @@ buildRuleTester({ root }).run('no-unexplained-test-skips', noUnexplainedTestSkip
             errors: [{ messageId: 'skipped' }, { messageId: 'skipped' }],
         },
         {
+            code: 'import { test } from "@playwright/test";\ntest.describe.skip("cart", run);',
+            filename: join(root, 'jestPlaywright/b.test.ts'),
+            errors: [{ messageId: 'skipped' }],
+        },
+        {
             code: 'test("adds", (t) => { t.skip(); });',
             filename: join(root, 'node/a.test.ts'),
             errors: [{ messageId: 'skipped', column: 23 }],
+        },
+        {
+            code: 'import test from "node:test";\ntest("adds", (t) => { t.skip(); });',
+            filename: join(root, 'jest/d.test.ts'),
+            errors: [{ messageId: 'skipped', line: 2 }],
         },
         {
             code: 'import test from "node:test";\nconst options = { skip: true };\ntest("adds", options, run);\ntest("b", { skip: "" }, run);',

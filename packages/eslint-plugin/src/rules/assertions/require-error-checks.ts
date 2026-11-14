@@ -1,22 +1,13 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { MOCHA_CONSTRUCTS } from '../../config/testing.ts';
-import { isCallOf, listBodyNodes } from '../../language/syntax.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
+import { getChaiChain } from '../../libraries/assertions.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 
 function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return listEnclosingTestCalls(node, source).some(({ name }) => MOCHA_CONSTRUCTS.has(name));
-}
-
-function isPositiveThrowAssertion(node: TSESTree.CallExpression & { callee: TSESTree.MemberExpression }): boolean {
-    let value = node.callee.object;
-    while (value.type === AST_NODE_TYPES.MemberExpression) {
-        const name = ASTUtils.getPropertyName(value);
-        if (name === 'not' || name === 'should') return name === 'should';
-        value = value.object;
-    }
-    return isCallOf(value, 'expect');
 }
 
 export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({
@@ -49,7 +40,8 @@ export const requireErrorChecks = createRule<[], 'errorType' | 'ignoredError'>({
                 const isVague =
                     first === undefined ||
                     (rest.length === 0 && ASTUtils.isIdentifier(first) && first.name === 'Error');
-                if (isVague && isPositiveThrowAssertion(node) && isInsideTest(node, source))
+                const isPositive = getChaiChain(node.callee.object)?.names.includes('not') === false;
+                if (isVague && isPositive && isInsideTest(node, source))
                     context.report({ node: node.callee.property, messageId: 'errorType' });
             },
             'CatchClause[param.type="Identifier"]': function (

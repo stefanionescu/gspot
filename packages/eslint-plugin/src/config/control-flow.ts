@@ -4,7 +4,7 @@ export const SWITCH_CASES_OPTIONS_SCHEMA = { type: 'integer', minimum: 0 } as co
 
 // no-equal-loop-condition rule
 export const INCREMENT_OPERATORS = new Set(['++', '+=']);
-export const STEP_OPERATORS = new Set(['+=', '-=']);
+export const STEP_OPERATORS = new Set(['++', '--', '+=', '-=']);
 
 // no-ignored-catch rule
 export const COMPLEX_TRY_STATEMENTS = /^(?:Block|For(?:In|Of)?|While|DoWhile|Switch)Statement$/u;

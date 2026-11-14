@@ -11,6 +11,7 @@ buildRuleTester().run('no-equal-loop-condition', noEqualLoopCondition, {
         'for (let index = 10; index != 0; index--) {}',
         'for (let index = 0; index != 10; index += 1) {}',
         'for (index = 0; index != 10; index++) {}',
+        { code: 'for (let index = 1; index !== limit; index *= 2) {}', name: 'a product is not a step' },
     ],
     invalid: [
         {

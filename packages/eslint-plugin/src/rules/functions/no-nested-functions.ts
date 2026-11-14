@@ -5,15 +5,18 @@ import {
     FUNCTION_NESTING_OPTIONS_SCHEMA,
     TEST_STRUCTURE_CALLS,
 } from '../../config/functions.ts';
+import { getCalleeChain } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
 
-function isTestCallback(node: TSESTree.Node): boolean {
+/**
+Check whether a function is an argument of a call whose callee starts with a test structure name. The name decides
+alone, so a test fixture that `test.extend` builds, and the tests of any framework, count too.
+*/
+function isTestStructureCallback(node: TSESTree.Node): boolean {
     const { parent } = node;
-    if (parent?.type !== AST_NODE_TYPES.CallExpression) return false;
-    const { callee } = parent;
-    const target = callee.type === AST_NODE_TYPES.MemberExpression ? callee.object : callee;
-    return ASTUtils.isIdentifier(target) && TEST_STRUCTURE_CALLS.has(target.name);
+    const chain = parent?.type === AST_NODE_TYPES.CallExpression ? getCalleeChain(parent.callee) : undefined;
+    return chain !== undefined && TEST_STRUCTURE_CALLS.has(chain.base.name);
 }
 
 export const noNestedFunctions = createRule<[{ threshold: number }], 'nested'>({
@@ -35,9 +38,11 @@ export const noNestedFunctions = createRule<[{ threshold: number }], 'nested'>({
     create(context, [{ threshold }]) {
         return {
             ':function': function (node: FunctionNode) {
-                if (isTestCallback(node)) return;
+                if (isTestStructureCallback(node)) return;
                 const chain = [...context.sourceCode.getAncestors(node), node];
-                const depth = chain.filter((each) => ASTUtils.isFunction(each) && !isTestCallback(each)).length;
+                const depth = chain.filter(
+                    (each) => ASTUtils.isFunction(each) && !isTestStructureCallback(each),
+                ).length;
                 if (depth === threshold + 1) context.report({ node, messageId: 'nested', data: { threshold } });
             },
         };

@@ -19,6 +19,7 @@ buildRuleTester().run('no-updated-loop-counter', noUpdatedLoopCounter, {
         },
         ...[
             'for (let index = 0; index < 10; index += 2) { index = 5; }',
+            'for (let index = 1; index < 10; index *= 2) { index = 5; }',
             'for (let index = 0, size = 3; index < 10; index++, size++) { index = 5; }',
             'for (let index = 0; index < 10; index++) { [index] = next(); }',
         ].map((code) => ({ code, errors: [{ messageId: 'counter' as const, data: { name: 'index' } }] })),

@@ -7,20 +7,9 @@ import {
     EARLY_RETURN_MODIFIERS,
     PLAYWRIGHT_MODULE,
 } from '../../config/testing.ts';
-import { listImportedModules } from '../../language/modules.ts';
-import { isModuleUsed } from '../../language/packages.ts';
-import { getTestCall } from '../../libraries/testing.ts';
+import { getTestCall, selectFramework } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
-import type { FileContext } from '../../types/plugin.ts';
 import type { EarlyReturnFramework, TestCall } from '../../types/testing.ts';
-
-function selectFramework(context: FileContext): EarlyReturnFramework | undefined {
-    const imported = listImportedModules(context.sourceCode);
-    const direct = EARLY_RETURN_IMPORTS.find(({ modules }) => modules.some((module) => imported.has(module)));
-    if (direct !== undefined) return direct.framework;
-    return EARLY_RETURN_DEPENDENCIES.find(({ modules, dependencies }) => isModuleUsed(context, modules, dependencies))
-        ?.framework;
-}
 
 function getRunningTest(
     node: TSESTree.CallExpression,
@@ -57,7 +46,7 @@ export const noEarlyTestReturn = createRule<[], EarlyReturnFramework>({
         },
     },
     create(context) {
-        const framework = selectFramework(context);
+        const framework = selectFramework(context, EARLY_RETURN_IMPORTS, EARLY_RETURN_DEPENDENCIES);
         if (framework === undefined) return {};
         return {
             [EARLY_RETURN_GUARD](guard: TSESTree.IfStatement) {

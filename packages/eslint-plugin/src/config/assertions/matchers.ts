@@ -50,6 +50,7 @@ export const INVERTED_OPERATORS = new Map([
 ]);
 export const JASMINE_SIZE_VERSION = [3, 6, 0];
 export const JASMINE_VERSION_PACKAGES = ['jasmine-core', 'jasmine'];
+export const LOCATOR_REFINEMENTS: ReadonlySet<string | null> = new Set(['and', 'filter', 'first', 'last', 'nth', 'or']);
 export const LOCATOR_STATES: ReadonlyMap<string | null, readonly string[]> = new Map([
     ['isVisible', ['toBeVisible', 'toBeHidden']],
     ['isHidden', ['toBeHidden', 'toBeVisible']],

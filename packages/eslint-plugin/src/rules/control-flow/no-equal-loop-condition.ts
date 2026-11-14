@@ -2,16 +2,8 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 
 import { INCREMENT_OPERATORS, STEP_OPERATORS } from '../../config/control-flow.ts';
 import { EQUALITY_OPERATORS, INEQUALITY_OPERATORS } from '../../config/logic.ts';
+import { listCounterUpdates } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-
-function listCounters(update: TSESTree.Expression | null): TSESTree.Node[] {
-    if (update?.type === AST_NODE_TYPES.SequenceExpression)
-        return update.expressions.flatMap((expression) => listCounters(expression));
-    if (update?.type === AST_NODE_TYPES.UpdateExpression) return [update.argument];
-    return update?.type === AST_NODE_TYPES.AssignmentExpression && STEP_OPERATORS.has(update.operator)
-        ? [update.left]
-        : [];
-}
 
 function getStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
     if (update.type === AST_NODE_TYPES.UpdateExpression)
@@ -64,7 +56,10 @@ function getCounterTest(node: TSESTree.ForStatement): TSESTree.BinaryExpression 
     const { left } = test;
     const isCounter =
         left.type === AST_NODE_TYPES.Identifier &&
-        listCounters(node.update).some((counter) => ASTUtils.isIdentifier(counter) && counter.name === left.name);
+        listCounterUpdates(node.update).some(
+            ({ counter, operator }) =>
+                STEP_OPERATORS.has(operator) && ASTUtils.isIdentifier(counter) && counter.name === left.name,
+        );
     return isCounter ? test : undefined;
 }
 

@@ -1,21 +1,18 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
-import { EXPLANATION_LETTER, NODE_TEST_MODULES, SKIP_FRAMEWORKS, SKIPPED_TEST_CALLS } from '../../config/testing.ts';
+import {
+    EXPLANATION_LETTER,
+    NODE_TEST_MODULES,
+    SKIP_FRAMEWORKS,
+    SKIP_IMPORTS,
+    SKIPPED_TEST_CALLS,
+} from '../../config/testing.ts';
 import { getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
 import { readPackageFacts } from '../../language/packages.ts';
-import { getTestCall, isPlaywrightSuite } from '../../libraries/testing.ts';
+import { getTestCall, isPlaywrightSuite, selectFramework } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
-import type { FileContext, FunctionNode } from '../../types/plugin.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
 import type { SkipFramework, TestCall } from '../../types/testing.ts';
-
-function selectFramework(context: FileContext): SkipFramework | 'node' | undefined {
-    const facts = readPackageFacts(context);
-    const match = SKIP_FRAMEWORKS.find(({ dependencies }) =>
-        dependencies.some((dependency) => facts.dependencies.has(dependency)),
-    );
-    if (match !== undefined) return match.framework;
-    return facts.manifests > 0 ? 'node' : undefined;
-}
 
 function isSkippedCall(call: TSESTree.CallExpression, framework: SkipFramework): boolean {
     const { callee } = call;
@@ -72,7 +69,9 @@ export const noUnexplainedTestSkips = createRule<[], 'skipped'>({
         messages: { skipped: 'Remove this skipped test, or explain in a comment why it is skipped.' },
     },
     create(context) {
-        const framework = selectFramework(context);
+        const framework =
+            selectFramework(context, SKIP_IMPORTS, SKIP_FRAMEWORKS) ??
+            (readPackageFacts(context).manifests > 0 ? 'node' : undefined);
         const source = context.sourceCode;
         if (framework === 'node')
             return {

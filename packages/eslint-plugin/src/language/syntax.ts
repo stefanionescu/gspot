@@ -1,6 +1,7 @@
 import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 
 import { FUNCTION_NODES, MODULE_DECLARATION_NODES, UNWRAPPABLE_NODES } from '../config/plugin.ts';
+import type { CounterUpdate } from '../types/plugin.ts';
 
 const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 
@@ -62,6 +63,19 @@ export function listBodyNodes(root: TSESTree.Node, source: TSESLint.SourceCode):
         node = pending.pop();
     }
     return nodes;
+}
+
+/**
+List what the update clause of a `for` loop writes with `++`, `--`, or an assignment, through a comma sequence too.
+*/
+export function listCounterUpdates(update: TSESTree.Node | null): CounterUpdate[] {
+    if (update?.type === AST_NODE_TYPES.SequenceExpression)
+        return update.expressions.flatMap((expression) => listCounterUpdates(expression));
+    if (update?.type === AST_NODE_TYPES.UpdateExpression)
+        return [{ counter: update.argument, operator: update.operator }];
+    return update?.type === AST_NODE_TYPES.AssignmentExpression
+        ? [{ counter: update.left, operator: update.operator }]
+        : [];
 }
 
 export function isCalleeNamed({ callee }: TSESTree.CallExpression, name: string): boolean {

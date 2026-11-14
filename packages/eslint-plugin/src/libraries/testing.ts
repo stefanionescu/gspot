@@ -3,6 +3,7 @@ import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescr
 import {
     CALL_STEP,
     MARKED_TEST_MODIFIERS,
+    PLAYWRIGHT_LOCATOR,
     PLAYWRIGHT_SUITE_MODES,
     RUNNING_TEST_MODIFIERS,
     TABLE_DEPENDENCIES,
@@ -16,10 +17,18 @@ import {
     TEST_KINDS,
 } from '../config/testing.ts';
 import { findEnclosingFunction, findFunction } from '../language/functions.ts';
-import { getRequiredModule } from '../language/modules.ts';
-import { isModuleUsed } from '../language/packages.ts';
-import type { FileContext } from '../types/plugin.ts';
-import type { TableCall, TestCall, TestCallee, TestOrigin } from '../types/testing.ts';
+import { getRequiredModule, listImportedModules } from '../language/modules.ts';
+import { isModuleUsed, readPackageFacts } from '../language/packages.ts';
+import type { FileContext, MemberCall } from '../types/plugin.ts';
+import type {
+    CalleeChain,
+    FrameworkDependency,
+    FrameworkImport,
+    TableCall,
+    TestCall,
+    TestCallee,
+    TestOrigin,
+} from '../types/testing.ts';
 
 function getImportedOrigin(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;
@@ -71,16 +80,24 @@ function isTableTest(call: TestCall | undefined, context: FileContext): call is 
 }
 
 /**
-Get the name at the base of a callee, its module when a test framework exports it, and the member names after it.
-A call of `each` without its table call counts as no callee.
+Get the identifier at the base of a callee and the member names after it, as the code writes them, whatever the
+identifier holds. A call of `each` without its table call counts as no callee.
 */
-export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+export function getCalleeChain(callee: TSESTree.Node): CalleeChain | undefined {
     const { steps, base } = listCalleeSteps(callee);
     const isFactory = steps.some((step, index) => step === 'each' && steps[index - 1] !== CALL_STEP);
     if (isFactory || base.type !== AST_NODE_TYPES.Identifier) return undefined;
-    const origin = getOrigin(base, source);
-    const modifiers = steps.filter((step) => step !== CALL_STEP).toReversed();
-    return origin && { ...origin, base, modifiers };
+    return { base, modifiers: steps.filter((step) => step !== CALL_STEP).toReversed() };
+}
+
+/**
+Get the callee chain with the origin of its base: a global, or an export of a test framework and its module. A base
+that the file defines in another way counts as no callee.
+*/
+export function getCalleeName(callee: TSESTree.Node, source: TSESLint.SourceCode): TestCallee | undefined {
+    const chain = getCalleeChain(callee);
+    const origin = chain && getOrigin(chain.base, source);
+    return origin && { ...origin, ...chain };
 }
 
 /**
@@ -144,6 +161,35 @@ export function isTestRelatedPath(path: string): boolean {
     if (path.split(/[\\/]/u).some((folder) => TEST_FOLDERS.has(folder))) return true;
     return TEST_FILE_EXTENSIONS.some((extension) =>
         TEST_FILE_MARKERS.some((marker) => path.endsWith(`.${marker}.${extension}`)),
+    );
+}
+
+/**
+Select the test framework of a file from the first entry of `imports` whose modules it imports. Without one, take the
+first entry of `dependencies` that a package.json file up to the root lists. The imports win, because a repository can
+list several frameworks.
+*/
+export function selectFramework<Framework>(
+    context: FileContext,
+    imports: ReadonlyArray<FrameworkImport<Framework>>,
+    dependencies: ReadonlyArray<FrameworkDependency<Framework>>,
+): Framework | undefined {
+    const imported = listImportedModules(context.sourceCode);
+    const direct = imports.find(({ modules }) => modules.some((module) => imported.has(module)));
+    if (direct !== undefined) return direct.framework;
+    const listed = readPackageFacts(context).dependencies;
+    return dependencies.find((entry) => entry.dependencies.some((name) => listed.has(name)))?.framework;
+}
+
+/**
+Check whether a node calls a Playwright locator query: `locator`, `frameLocator`, or a `getBy` method of a page, a
+frame, or a locator.
+*/
+export function isLocatorQuery(node: TSESTree.Node): node is MemberCall {
+    return (
+        node.type === AST_NODE_TYPES.CallExpression &&
+        node.callee.type === AST_NODE_TYPES.MemberExpression &&
+        PLAYWRIGHT_LOCATOR.test(ASTUtils.getPropertyName(node.callee) ?? '')
     );
 }
 

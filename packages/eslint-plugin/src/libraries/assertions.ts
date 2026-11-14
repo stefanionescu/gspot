@@ -83,19 +83,6 @@ function getExpectAssertion(node: TSESTree.CallExpression, style: AssertionStyle
     return getCheckedCall(node, checks, callee.property, [received, ...node.arguments]);
 }
 
-function getChaiChain(node: TSESTree.Node): ChaiChain | undefined {
-    const names: Array<string | null> = [];
-    let value = node;
-    while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) {
-        const name = ASTUtils.getPropertyName(value);
-        if (name === 'should') return { received: value.object, names };
-        names.unshift(name);
-        value = value.object;
-    }
-    const [received] = isCallOf(value, 'expect') ? value.arguments : [];
-    return received === undefined || received.type === AST_NODE_TYPES.SpreadElement ? undefined : { received, names };
-}
-
 function getChaiPredicate(node: TSESTree.MemberExpression): Assertion | undefined {
     const chain = getChaiChain(node.object);
     const predicate = CHAI_PREDICATES.get(ASTUtils.getPropertyName(node));
@@ -216,6 +203,24 @@ function isRunnerAssertion(
         CYPRESS_ASSERTIONS.has(ASTUtils.getPropertyName(callee)) &&
         isCypressChain(callee.object);
     return isRunner || isCypress || (styles.globalExpect && isGlobalExpect(node, source));
+}
+
+/**
+Get the value and the words of the chai chain that ends at a node, such as `expect(value).to.not` or
+`value.should.not`. A computed member, or an `expect` call with no value or a spread value, ends no chain, because its
+words or its value are unknown.
+*/
+export function getChaiChain(node: TSESTree.Node): ChaiChain | undefined {
+    const names: Array<string | null> = [];
+    let value = node;
+    while (value.type === AST_NODE_TYPES.MemberExpression && !value.computed) {
+        const name = ASTUtils.getPropertyName(value);
+        if (name === 'should') return { received: value.object, names };
+        names.unshift(name);
+        value = value.object;
+    }
+    const [received] = isCallOf(value, 'expect') ? value.arguments : [];
+    return received === undefined || received.type === AST_NODE_TYPES.SpreadElement ? undefined : { received, names };
 }
 
 /**

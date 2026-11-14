@@ -32,5 +32,10 @@ buildRuleTester({ root }).run('no-forced-ui-actions', noForcedUiActions, {
             filename: join(root, 'plain/c.spec.ts'),
             errors: [{ messageId: 'force', line: 3 }],
         },
+        {
+            code: 'import { test } from "@playwright/test";\nconst handle = await page.locator("a").elementHandle();\nawait handle.click({ force: true });',
+            filename: join(root, 'plain/d.spec.ts'),
+            errors: [{ messageId: 'force', line: 3 }],
+        },
     ],
 });

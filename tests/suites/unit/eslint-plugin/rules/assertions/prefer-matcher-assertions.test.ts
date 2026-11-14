@@ -20,6 +20,8 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', preferMatcherAssertio
         'import { expect } from "@playwright/test";\nexpect(await other.isVisible()).toBe(true);',
         'import { expect } from "@playwright/test";\nexpect(await load().isVisible()).toBe(true);',
         'import { expect } from "@playwright/test";\nexpect(page.getByRole("button").isVisible()).toBe(true);',
+        'import { expect } from "@playwright/test";\nconst handle = await page.locator("a").elementHandle();\nexpect(await handle.isVisible()).toBe(true);',
+        'import { expect } from "@playwright/test";\nlet field = page.locator("a");\nfield = await field.elementHandle();\nexpect(await field.isVisible()).toBe(true);',
         'import { assert } from "chai";\nassert.equal(value, null);',
         'import { assert } from "chai";\nassert.notStrictEqual(items.length, 3);',
         'import { assert } from "chai";\nconst { strictEqual } = assert;\nstrictEqual(value.length, 1);',
@@ -80,6 +82,18 @@ buildRuleTester({ root }).run('prefer-matcher-assertions', preferMatcherAssertio
             [
                 'const box = page.getByRole("checkbox");\nexpect(await box.isChecked()).toEqual(false)',
                 'await expect(box).not.toBeChecked()',
+            ],
+            [
+                'expect(await page.locator("li").first().isVisible()).toBe(true)',
+                'await expect(page.locator("li").first()).toBeVisible()',
+            ],
+            [
+                'expect(await frame.getByRole("button").isEnabled()).toBe(true)',
+                'await expect(frame.getByRole("button")).toBeEnabled()',
+            ],
+            [
+                'let row;\nrow = page.locator("tr");\nexpect(await row.count()).toBe(3)',
+                'await expect(row).toHaveCount(3)',
             ],
         ].map(([call = '', assertion = '']) => ({
             code: `import { test, expect } from "@playwright/test";\n${call};`,

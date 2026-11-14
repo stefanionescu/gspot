@@ -125,13 +125,13 @@ export const TEST_KINDS = new Map<string, 'test' | 'suite' | 'hook'>([
 
 // no-early-test-return rule
 export const EARLY_RETURN_DEPENDENCIES = [
-    { framework: undefined, modules: ['jest', '@jest/globals'], dependencies: ['jest'] },
-    { framework: undefined, modules: [...JASMINE_PACKAGES], dependencies: [...JASMINE_PACKAGES] },
-    { framework: undefined, modules: ['ava'], dependencies: ['ava'] },
-    { framework: undefined, modules: ['qunit'], dependencies: ['qunit'] },
-    { framework: 'playwright', modules: ['@playwright/test'], dependencies: ['@playwright/test'] },
-    { framework: 'vitest', modules: ['vitest'], dependencies: ['vitest'] },
-    { framework: 'mocha', modules: ['mocha'], dependencies: ['mocha'] },
+    { framework: undefined, dependencies: ['jest'] },
+    { framework: undefined, dependencies: [...JASMINE_PACKAGES] },
+    { framework: undefined, dependencies: ['ava'] },
+    { framework: undefined, dependencies: ['qunit'] },
+    { framework: 'playwright', dependencies: ['@playwright/test'] },
+    { framework: 'vitest', dependencies: ['vitest'] },
+    { framework: 'mocha', dependencies: ['mocha'] },
 ] as const;
 export const EARLY_RETURN_GUARD = [
     ':function > BlockStatement[body.length>1] > IfStatement:first-child[alternate=null]',
@@ -143,6 +143,10 @@ export const EARLY_RETURN_IMPORTS = [
     { framework: 'bun', modules: ['bun:test'] },
     { framework: 'vitest', modules: ['vitest'] },
     { framework: 'mocha', modules: ['mocha'] },
+    { framework: undefined, modules: ['jest', '@jest/globals'] },
+    { framework: undefined, modules: [...JASMINE_PACKAGES] },
+    { framework: undefined, modules: ['ava'] },
+    { framework: undefined, modules: ['qunit'] },
 ] as const;
 const PLAYWRIGHT_TEST_MODIFIERS = new Set(['only', 'fail']);
 export const EARLY_RETURN_MODIFIERS = {
@@ -221,6 +225,13 @@ export const SKIP_FRAMEWORKS = [
     { framework: 'vitest', dependencies: ['vitest'] },
     { framework: 'mocha', dependencies: ['mocha', 'cypress'] },
     { framework: 'playwright', dependencies: ['@playwright/test'] },
+] as const;
+export const SKIP_IMPORTS = [
+    { framework: 'playwright', modules: ['@playwright/test'] },
+    { framework: 'node', modules: ['node:test'] },
+    { framework: 'vitest', modules: ['vitest'] },
+    { framework: 'jest', modules: ['@jest/globals'] },
+    { framework: 'mocha', modules: ['mocha'] },
 ] as const;
 
 // prefer-test-table rule
