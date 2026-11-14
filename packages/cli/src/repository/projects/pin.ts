@@ -10,7 +10,6 @@ import {
     GSPOT_MISE_OPTIONS,
     GSPOT_MISE_TOOL,
     JSON_INDENT_PATTERN,
-    MISE_NODE_PIN_COMMAND,
     SETUP_NODE_VERSION,
 } from '#cli/config/repository/projects.ts';
 import { NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
@@ -25,20 +24,7 @@ import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { StartRunner } from '#cli/types/repository.ts';
 import type { Files } from '#cli/types/system.ts';
-
-function readMiseTools(root: string): Record<string, unknown> {
-    return parseTomlFile(MISE_CONFIG_FILE, findText(root, MISE_CONFIG_FILE) ?? '', miseToolsSchema).tools;
-}
-
-/**
-Any Node.js entry counts, a version list or a table included, so that the pin never replaces the Node.js that the user
-chose.
-*/
-function hasNodePin(tools: Record<string, unknown>): boolean {
-    return tools[NODE_PROGRAM] !== undefined;
-}
 
 function addPackagePin(text: string): string {
     const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;
@@ -56,6 +42,18 @@ function addPackagePin(text: string): string {
     return applyEdits(text, edits);
 }
 
+export function readMiseTools(root: string): Record<string, unknown> {
+    return parseTomlFile(MISE_CONFIG_FILE, findText(root, MISE_CONFIG_FILE) ?? '', miseToolsSchema).tools;
+}
+
+/**
+Any Node.js entry counts, a version list or a table included, so that the pin never replaces the Node.js that the user
+chose.
+*/
+export function hasNodePin(tools: Record<string, unknown>): boolean {
+    return tools[NODE_PROGRAM] !== undefined;
+}
+
 /**
 Get the version that an entry of a mise [tools] table pins: a version, the version of a table, or the first item of a
 list, which is the version that mise runs.
@@ -68,14 +66,6 @@ export function getMiseToolVersion(entry: unknown): string | undefined {
 
 export function readMisePin(root: string, tool: string): string | undefined {
     return getMiseToolVersion(readMiseTools(root)[tool]);
-}
-
-/**
-List the commands that a mise pin needs before it. Without a Node.js pin, mise starts gspot with the Node.js of the
-system, which can be too old to run it.
-*/
-export function listPinPrerequisites(root: string, runner: StartRunner['name']): string[] {
-    return runner === 'mise' && !hasNodePin(readMiseTools(root)) ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
 /**

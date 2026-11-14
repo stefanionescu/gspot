@@ -16,13 +16,14 @@ import {
     SCAN_RULES_SHOWN,
 } from '#cli/config/commands/setup.ts';
 import { INCOMPLETE_STATUSES, RAN_STATUSES } from '#cli/config/engine.ts';
+import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/projects.ts';
 import { BYTES_PER_MEGABYTE, GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/report.ts';
 import { readShippedChecks } from '#cli/manifests/checks.ts';
 import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
-import { listPinPrerequisites } from '#cli/repository/projects/pin.ts';
+import { hasNodePin, readMiseTools } from '#cli/repository/projects/pin.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
@@ -95,7 +96,9 @@ function listChecksNotRun({ checks }: RunReport): string[] {
 function listNextSteps({ pinPath, session }: ScanInput['planning']): string[] {
     const { name, command, installCommand } = session.startRunner;
     const add = installCommand.replace('<version>', () => cliPackage.version);
-    const pin = pinPath === undefined ? [] : [...listPinPrerequisites(session.root, name), add];
+    // Without a Node.js pin, mise starts gspot with the Node.js of the system, which can be too old to run it.
+    const isNeedsNodePin = pinPath !== undefined && name === 'mise' && !hasNodePin(readMiseTools(session.root));
+    const pin = pinPath === undefined ? [] : [...(isNeedsNodePin ? [MISE_NODE_PIN_COMMAND] : []), add];
     return [...pin, `${command} init`, ...SCAN_NEXT_STEPS];
 }
 
