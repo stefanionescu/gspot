@@ -17,13 +17,13 @@ import { validateSettings } from '#cli/settings/validation/settings.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
-import {
-    type ParsedSettings,
-    type ParsedSettingValue,
-    type Setting,
-    type Settings,
-    type SettingsFailure,
-    type TomlTable,
+import type {
+    ParsedSettings,
+    ParsedSettingValue,
+    Setting,
+    Settings,
+    SettingsFailure,
+    TomlTable,
 } from '#cli/types/settings.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {

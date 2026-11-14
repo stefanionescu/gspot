@@ -12,14 +12,14 @@ import {
 } from '#cli/settings/values/written.ts';
 import { getRequired } from '#cli/system/tables.ts';
 import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text/messages.ts';
-import {
-    type AvailableSettings,
-    type Setting,
-    type Settings,
-    type SettingsError,
-    type SettingsTable,
-    type WrittenKeyLookup,
-    type WrittenSetting,
+import type {
+    AvailableSettings,
+    Setting,
+    Settings,
+    SettingsError,
+    SettingsTable,
+    WrittenKeyLookup,
+    WrittenSetting,
 } from '#cli/types/settings.ts';
 
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {

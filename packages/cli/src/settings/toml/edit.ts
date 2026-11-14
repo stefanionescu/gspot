@@ -9,17 +9,17 @@ import { isReasonedValue, listWrittenKeys } from '#cli/settings/values/written.t
 import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
 import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
-import {
-    type AvailableSettings,
-    type EditedSettings,
-    type IgnoreRecord,
-    type IgnoreRemoval,
-    type ParsedSettingValue,
-    type Setting,
-    type SettingKey,
-    type SettingsFile,
-    type SettingsTable,
-    type TomlTable,
+import type {
+    AvailableSettings,
+    EditedSettings,
+    IgnoreRecord,
+    IgnoreRemoval,
+    ParsedSettingValue,
+    Setting,
+    SettingKey,
+    SettingsFile,
+    SettingsTable,
+    TomlTable,
 } from '#cli/types/settings.ts';
 
 function splitKey(key: string): SettingKey {

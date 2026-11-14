@@ -151,11 +151,6 @@ function buildFrozenInstall(
 }
 
 /**
-Build one lint job for each system, each with one mise setup. With test checks, each system also gets a tests job,
-and its lint job leaves them out. Refuse a command from the repository that holds a GitHub expression: GitHub expands
-it before the shell runs.
-*/
-/**
 Select the Node.js that CI runs gspot and the package managers with: the one that mise.toml pins, so CI runs what the
 developers run, or the one that gspot is tested with when mise.toml pins none.
 */
@@ -164,6 +159,11 @@ export function readCiNode(root: string): string {
     return version === undefined ? CI_NODE : `${NODE_PROGRAM}@${version}`;
 }
 
+/**
+Build one lint job for each system, each with one mise setup. With test checks, each system also gets a tests job,
+and its lint job leaves them out. Refuse a command from the repository that holds a GitHub expression: GitHub expands
+it before the shell runs.
+*/
 export function buildGithubWorkflow(pipeline: Pipeline): GeneratedFile {
     const commands = [...(pipeline.setupCommand ?? []), ...pipeline.projectInstall, buildGspotTools(pipeline)];
     if (commands.some((command) => command.includes(WORKFLOW_EXPRESSION)))

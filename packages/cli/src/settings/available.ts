@@ -14,7 +14,7 @@ import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { extractKeyName, getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { mergeValue } from '#cli/settings/values/inherit.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import { type AvailableSettings, type Level, type Setting } from '#cli/types/settings.ts';
+import type { AvailableSettings, Level, Setting } from '#cli/types/settings.ts';
 
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     const previous = availableSettings.defaults.get(setting.name);

@@ -15,16 +15,16 @@ import { joinSettingPaths } from '#cli/settings/values/paths.ts';
 import { findWrittenSetting, listApplicableTables, listWrittenKeys } from '#cli/settings/values/written.ts';
 import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import {
-    type AvailableSettings,
-    type InheritedSetting,
-    type InheritedValue,
-    type Setting,
-    type SettingDefault,
-    type SettingMatch,
-    type SettingOrigin,
-    type Settings,
-    type WrittenScopeTable,
+import type {
+    AvailableSettings,
+    InheritedSetting,
+    InheritedValue,
+    Setting,
+    SettingDefault,
+    SettingMatch,
+    SettingOrigin,
+    Settings,
+    WrittenScopeTable,
 } from '#cli/types/settings.ts';
 
 function findLanguageSetting(

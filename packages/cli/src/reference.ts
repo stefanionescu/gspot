@@ -17,7 +17,7 @@ import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference
 import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import { type CliReference, type CommandReference, type ConfigurationReference } from '#cli/types/main.ts';
+import type { CliReference, CommandReference, ConfigurationReference } from '#cli/types/main.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
 
 // The docs site imports the CLI only through this file. package.json names it in `exports` under the condition

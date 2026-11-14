@@ -28,7 +28,7 @@ import type {
     SettingsEditContext,
 } from '#cli/types/commands.ts';
 import type { Check } from '#cli/types/manifests.ts';
-import { type InheritedSetting, type ParsedSettingValue, type Setting, type TomlTable } from '#cli/types/settings.ts';
+import type { InheritedSetting, ParsedSettingValue, Setting, TomlTable } from '#cli/types/settings.ts';
 import type { CommandResult } from '#cli/types/system.ts';
 
 function formatMissingReason({ options, change, previous }: SettingReasonContext): string {

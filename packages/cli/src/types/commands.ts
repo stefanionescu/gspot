@@ -25,14 +25,14 @@ import type { RunSelection, SessionOptions, StageFilter } from '#cli/types/engin
 import type { RunReport } from '#cli/types/engine/run.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
 import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
-import {
-    type InheritedSetting,
-    type Level,
-    type ParsedSettingValue,
-    type Setting,
-    type Settings,
-    type SettingsFile,
-    type TomlTable,
+import type {
+    InheritedSetting,
+    Level,
+    ParsedSettingValue,
+    Setting,
+    Settings,
+    SettingsFile,
+    TomlTable,
 } from '#cli/types/settings.ts';
 import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
 import type { Session } from '#cli/types/tools.ts';

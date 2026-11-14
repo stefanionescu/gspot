@@ -16,13 +16,7 @@ import { findChildSchema } from '#cli/settings/lookup.ts';
 import { getSettingValue } from '#cli/settings/values/inherit.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { KeyPath } from '#cli/types/parsers.ts';
-import {
-    type AvailableSettings,
-    type ReasonRequirement,
-    type Setting,
-    type Settings,
-    type SettingsError,
-} from '#cli/types/settings.ts';
+import type { AvailableSettings, ReasonRequirement, Setting, Settings, SettingsError } from '#cli/types/settings.ts';
 
 function isLimitWeakening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

@@ -13,7 +13,7 @@ import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
 import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
-import { type Setting, type SettingsError } from '#cli/types/settings.ts';
+import type { Setting, SettingsError } from '#cli/types/settings.ts';
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,
