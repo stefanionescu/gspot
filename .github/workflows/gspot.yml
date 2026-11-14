@@ -38,8 +38,8 @@ jobs:
 
       - name: Install gspot
         run: |-
-          mise install node@24.20.0 'npm:@gspothq/cli[allow_low_downloads=true]@0.4.2' bun@1.4.4
-          mise bin-paths node@24.20.0 'npm:@gspothq/cli[allow_low_downloads=true]@0.4.2' bun@1.4.4 >> "$GITHUB_PATH"
+          mise install node@24.20.0 'npm:@gspothq/cli[allow_low_downloads=true]@0.4.3' bun@1.4.4
+          mise bin-paths node@24.20.0 'npm:@gspothq/cli[allow_low_downloads=true]@0.4.3' bun@1.4.4 >> "$GITHUB_PATH"
 
       - name: Set up the project
         run: mise run setup
@@ -54,4 +54,4 @@ jobs:
         env:
           GSPOT_CI_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
         run: |
-          gspot check --base "${GSPOT_CI_BASE}"
+          mise exec node@24.20.0 'npm:@gspothq/cli[allow_low_downloads=true]@0.4.3' bun@1.4.4 -- gspot check --base "${GSPOT_CI_BASE}"

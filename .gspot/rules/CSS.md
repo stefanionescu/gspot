@@ -7,6 +7,7 @@ Read this rule when you change a stylesheet or the style block of a component.
 - Keep shared color, spacing, type, radius, and motion tokens in one file.
 - Keep feature styles with their component or import them through the stylesheet entry.
 - Order rules from general styles to component states.
+- Use logical properties and values instead of left and right, such as `margin-inline-start` and `text-align: start`.
 
 ## Naming
 

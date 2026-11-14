@@ -147,3 +147,4 @@ exceptions:
   - zizmor
   - zsh
   - "[\\w-]+(?:\\.[\\w-]+)*\\.[A-Za-z]\\w*"
+  - \b\d+[A-Z][A-Z\d]*\b

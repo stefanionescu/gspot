@@ -31,6 +31,8 @@ Return safe field paths and stable codes. Keep private values out of issues and 
 reporting for private payloads. Translate at the request or presentation boundary without mutating global locale state
 for one request.
 
+Give each Zod check an error message that names the field and the valid form.
+
 A JSON Schema projection cannot represent every runtime contract. Keep runtime validation and verify the exported
 dialect against meaningful examples. Use an explicit transport schema for non-JSON values instead of allowing anything
 in the projection. Regenerate consumers when the contract changes, and check omitted fields, defaults, patches, and date

@@ -21,8 +21,9 @@ one meaning there.
 Do not repeat context the enclosing type, module, folder, or package already supplies, or encode every implementation
 detail: `Car.make`, not `Car.carMake`.
 
-Give each concept one word across the repository, and each word one meaning. Before you give a word to a new concept,
-search the code for it. When the word already names another concept, choose a different one.
+Give each concept one word across the repository, and each word one meaning. When you rename a concept, rename in the
+same change each file, folder, type, value, and member that carries the old word. Before you give a word to a new
+concept, search the code for it. When the word already names another concept, choose a different one.
 
 Pick one word for each concept the program shows, and use it everywhere.
 
@@ -79,6 +80,10 @@ Name files and folders for the behavior or entity they contain, not for reuse.
 
 - Name a file that holds one primary type after it, where the language does so. Name a module after the capability it
   implements. Prefer feature folders to top-level type buckets.
+- Never leave a folder that holds one code file and nothing else, or one folder and nothing else.
+- When `2` or more sibling files start with the same word, move them into a
+  folder named for that word.
+- Never give a file and a sibling folder the same name, such as `turn.ts` beside `turn/`.
 
 ## External names
 

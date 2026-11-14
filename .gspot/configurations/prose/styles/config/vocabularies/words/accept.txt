@@ -34,6 +34,7 @@ TanStack
 TypeScript
 Vale
 Windows
+XML
 YAML
 Zod
 actionlint

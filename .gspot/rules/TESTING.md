@@ -22,10 +22,14 @@ guarantee, a fixed bug, or a platform difference. One behavior gets one test, at
 - No test checks a library, the language, a wrapper, or the test setup.
 - Before you keep a new test, break the code it covers and see the test fail. A test that expects no finding needs a
   break that makes the check report.
+- Write three or more tests that differ only in values as one table.
 - Add a table row only when you can name a bug that fails it and no other row. A table with one case is a plain test.
 - Do not export a function only so that a test can call it. Test it through the public function that uses it.
 - Test the behavior that exists. Never write a test that proves the absence of a feature, option, setting, export, or
   file that the project removed or decided against. When you remove a feature, delete its tests.
+- Never pin a known bug as expected behavior, such as a valid case for code that a lint rule misses by mistake. Tell the
+  user about the bug.
+- Every assertion runs whenever its test runs. Do not put one inside an `if`, or inside a loop that can run zero times.
 
 ## Mocks
 
@@ -42,8 +46,9 @@ guarantee, a fixed bug, or a platform difference. One behavior gets one test, at
 - Put builders, fakes, servers, and database code in one folder beside the tests, named for what it holds, such as
   builders. Never name it `mocks/`, `helpers/`, `utils/`, `support/`, or `shared/`. These files hold no
   assertions or test blocks.
-- A test name states the scenario and expected result. Never use `test1`, `works`, `edge cases`, or `happy path`. Group
-  tests by unit, then scenario.
+- A test name states the scenario and the result that its assertions check. Never use `test1`, `works`, `edge cases`, or
+  `happy path`. Group tests by unit, then scenario.
+- Give each skipped test a reason comment on the line above it.
 
 ## Test data
 
@@ -53,6 +58,8 @@ guarantee, a fixed bug, or a platform difference. One behavior gets one test, at
 - Do not share mutable IDs between tests or count unrelated data. Add unrelated records when a test must prove that the
   code leaves them unchanged.
 - Test data does not copy the version of the project or of a tool.
+- Test data holds only what its scenario needs. Leave out each file, field, setting, and installed tool that no
+  assertion depends on.
 - Do not use fixed sleeps. Use bounded polling, fake timers, or a signal that proves completion.
 
 ## Network and providers

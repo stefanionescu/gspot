@@ -12,9 +12,11 @@ A suppression turns a lint rule off for one place, and it carries a reason.
 - Scope a suppression to the narrowest thing that works: one lint rule, one line, one symbol. A file-wide suppression
   needs a reason that holds for every line.
 - Suppress only when the lint rule misjudges this line. When the code breaks the lint rule, fix it.
+- gspot accepts no Semgrep or Vale suppression comment. Ask the user, then run `gspot ignore` with a reason.
 - Never suppress a maximum, such as `complexity`, `max-lines`, or `max-statements`. Split the code by its steps, or ask
   the user to raise the limit in `gspot.toml`.
 - Widen an import boundary or an import rule only after the user agrees.
+- Remove an ignore or a path pattern from `gspot.toml` when it matches no tracked file.
 - Never add filler statements to pass a check.
 
 Never remove a configuration or lower the level to stop a finding.

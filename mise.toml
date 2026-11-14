@@ -1,7 +1,7 @@
 [tools]
 bun = "1.4.4"
 node = "24.20.0"
-"npm:@gspothq/cli" = { version = "0.4.2", allow_low_downloads = "true" }
+"npm:@gspothq/cli" = { version = "0.4.3", allow_low_downloads = "true" }
 "npm:wrangler" = "4.151.1"
 
 [settings.task]

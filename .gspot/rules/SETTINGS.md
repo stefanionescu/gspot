@@ -9,6 +9,8 @@ Read this rule when you change how a program reads its settings or environment.
   declared separator. Treat an empty required value as missing.
 - When the project keeps an env example, such as `.env.example`, list in it each key that code reads, with an empty
   value and a comment on what it holds. Sort the keys.
+- The validation that runs when the program reads its settings holds every rule about a valid value. A command adds no
+  rule of its own about a setting.
 
 ## Reading settings
 

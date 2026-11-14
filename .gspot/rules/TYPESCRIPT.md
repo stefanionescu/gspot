@@ -13,6 +13,17 @@ source type. Represent known variants with discriminated unions.
 
 Normalize external empty strings, missing fields, and nulls where they enter the program.
 
+Derive a type that repeats fields of another type with `Pick`, `Omit`, an indexed access, or an intersection. Check a
+table keyed by a list, or a subset of a list, against the list's type with `satisfies`.
+
+Use a literal union or an `as const` object instead of an `enum`.
+
+Write each condition as a boolean. Compare strings, numbers, and optional values explicitly, such as `name !== ''`.
+
+Declare the parameter and return types of each exported function.
+
+Keep `strict` and the compiler options of the level on in every tsconfig.
+
 ## Errors and async work
 
 Use `Promise.all` for a bounded set of independent calls. Use sequential `await` when order, rate limits, or failure

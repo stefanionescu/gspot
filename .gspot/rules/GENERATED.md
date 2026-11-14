@@ -8,6 +8,8 @@ Read this rule when you change a generated file, or the code that writes one.
 - A generated file equals a fresh run of its command. A difference shows a defect in the change.
 - Do not commit build output (`dist/`, `coverage/`, compiled assets) unless the deployment reads it from the repository,
   and then declare it.
+- Configure a tool that gspot runs through `gspot.toml` only. Delete its own config file, and replace a script or CI
+  step that runs it with `gspot check`.
 
 ## Readable output
 

@@ -26,7 +26,6 @@ A more specific rule wins over a general one.
 - `.gspot/rules/NAMING.md`: when you name a file, folder, type, function, or variable.
 - `.gspot/rules/OPERATIONS.md`: when you write a deployment, publishing, or remote shell script.
 - `.gspot/rules/PLANNING.md`: before you write a plan.
-- `.gspot/rules/PLAYWRIGHT.md`: when you write or change a Playwright test.
 - `.gspot/rules/SAFETY.md`: when a shell script deletes files, downloads, uses `sudo`, starts background jobs, or parses JSON or YAML.
 - `.gspot/rules/SECRETS.md`: when code reads, stores, or logs a secret.
 - `.gspot/rules/SECURITY.md`: when code takes input from outside the program, or handles authentication, redirects, or downloads.

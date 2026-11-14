@@ -10,6 +10,7 @@ Read this rule before you commit, push, tag, or open a pull request.
 - Leave out counts of tests, files, or bytes.
 - A commit message names only files, commands, and issues that exist in the repository. It names no finding ID, audit
   label, or plan step.
+- Write no `[skip ci]` marker, and no `Refs:` or `Closes:` footer without an issue number.
 - Never bypass hooks with `--no-verify`.
 - Never force-push the default branch or a protected branch.
 

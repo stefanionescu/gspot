@@ -1,7 +1,8 @@
 import { setLevelRules, mergePresetRules, addPlugins, setRuntime, setRootFolder, setBoundaryLookup, buildRuntimeMatcher, setRuleOptions } from "./functions.mjs";
 import eslintJs from "@eslint/js";
 import gspothqEslintPlugin from "@gspothq/eslint-plugin";
-import eslintPluginUnicorn from "eslint-plugin-unicorn";
+import { limitUnicornFixes } from "./fixes.mjs";
+const eslintPluginUnicorn = limitUnicornFixes();
 import eslintPluginImportX from "eslint-plugin-import-x";
 import eslintPluginJsdoc from "eslint-plugin-jsdoc";
 import eslintPluginN from "eslint-plugin-n";
@@ -432,6 +433,19 @@ export default setRuleOptions(defineConfig([
         "eqeqeq": "error",
         "prefer-const": "error",
         "no-param-reassign": "error",
+        "no-implicit-coercion": "error",
+        "no-lonely-if": "error",
+        "object-shorthand": [
+            "error",
+            "always",
+            {
+                "avoidQuotes": true
+            }
+        ],
+        "operator-assignment": "error",
+        "prefer-object-has-own": "error",
+        "prefer-template": "error",
+        "radix": "error",
         "no-warning-comments": [
             "error",
             {
@@ -504,6 +518,10 @@ export default setRuleOptions(defineConfig([
         "unicorn/prefer-simple-condition-first": "off",
         "unicorn/prefer-combined-guards": "off",
         "unicorn/expiring-todo-comments": "off",
+        "unicorn/consistent-destructuring": "error",
+        "unicorn/no-repeated-call-wrappers": "error",
+        "unicorn/no-unused-properties": "error",
+        "unicorn/no-useless-coercion": "error",
         "unicorn/consistent-boolean-name": [
             "error",
             {

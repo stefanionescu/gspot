@@ -29,5 +29,7 @@ Read this rule when you change Astro components, pages, or content collections.
 
 - A page under `src/pages/` names its route by its path. A dynamic route of a static site exports `getStaticPaths`.
 - Load content through a content collection with a schema, so a missing field fails the build.
+- Give a content page the `.mdx` extension only when it imports a component or uses JSX. Write every other page as
+  `.md`.
 - Read a secret on the server only, from a variable without the `PUBLIC_` prefix. Every visitor can read a `PUBLIC_`
   variable.

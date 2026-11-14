@@ -1,8 +1,11 @@
-import config from './eslint.mjs';
-import { keepCycleFields } from './functions.mjs';
-
+// The two generated siblings exist only beside the generated copy of this file, so it loads them at run time.
+const [eslint, functions] = (await Promise.all([
+    import(new URL('eslint.mjs', import.meta.url).href),
+    import(new URL('functions.mjs', import.meta.url).href),
+]));
+const blocks = eslint.default.map((block) => functions.keepCycleFields(block));
 export default [
-    ...config.map((block) => keepCycleFields(block)),
+    ...blocks,
     {
         linterOptions: { reportUnusedDisableDirectives: 'off' },
         settings: { 'import-x/cache': { lifetime: Infinity } },
