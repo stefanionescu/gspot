@@ -1,24 +1,23 @@
-import { readFileSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, join, relative, resolve } from 'node:path';
-
 import type ts from 'typescript';
+import { remember } from '#cli/system/cache.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { readFileSync, realpathSync } from 'node:fs';
+import { tsconfigSchema } from '#cli/schemas/parsers.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { findText, readContainedPath } from '#cli/system/files/reads.ts';
+import { join, dirname, resolve, relative, isAbsolute } from 'node:path';
+import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
+import { isInside, convertToPosixPath, listEnclosingFolders } from '#cli/system/paths.ts';
 
 import {
-    MISSING_EXTENDED_CONFIG,
-    TS_EMPTY_FILES_CODE,
-    TS_NO_FILES_CODE,
-    TS_UNKNOWN_VALUE_CODE,
     TSCONFIG_FILE,
+    TS_NO_FILES_CODE,
+    TS_EMPTY_FILES_CODE,
+    TS_UNKNOWN_VALUE_CODE,
+    MISSING_EXTENDED_CONFIG,
 } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
-import { tsconfigSchema } from '#cli/schemas/parsers.ts';
-import { remember } from '#cli/system/cache.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { findText, readContainedPath } from '#cli/system/files/reads.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import { convertToPosixPath, isInside, listEnclosingFolders } from '#cli/system/paths.ts';
-import type { ParsedTsconfig, TypeScriptProject } from '#cli/types/parsers.ts';
-import type { RunCache } from '#cli/types/system.ts';
 
 const PARSED_TSCONFIGS = Symbol('parsed tsconfigs');
 

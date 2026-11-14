@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
+import { createRule } from '../../rule.ts';
 import { SANITIZER_BYPASS_METHODS } from '../../config/web.ts';
 import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
-import { createRule } from '../../rule.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSanitizerProperty(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (

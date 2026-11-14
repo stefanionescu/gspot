@@ -1,19 +1,17 @@
-import { chmod, mkdir, symlink, unlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { readHooks, readRepositorySetup } from '#cli/repository/setup/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { LINKED_RUFF_SECTION, SIMPLE_GIT_HOOKS_PACKAGES } from '#tests/config/repository.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { chmod, mkdir, unlink, symlink, writeFile } from 'node:fs/promises';
+import { readHooks, readRepositorySetup } from '#cli/repository/setup/read.ts';
+import { LINKED_RUFF_SECTION, SIMPLE_GIT_HOOKS_PACKAGES } from '#tests/config/repository.ts';
 
 test('tool discovery finds nested config files and skips root .gspot and vendored folders', async () => {
     await using sandbox = await createGitSandbox({

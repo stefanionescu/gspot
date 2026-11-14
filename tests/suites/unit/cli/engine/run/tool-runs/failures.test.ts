@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { OUT_OF_MEMORY_MESSAGE } from '#cli/config/engine.ts';
-import { formatOutputTail, isReportedCrash } from '#cli/engine/run/tool-runs/failures.ts';
-import { BASE_CHECK, CRASH_TAIL_CASES, ESLINT_CRASH, ESLINT_MANIFEST_TOOL } from '#tests/config/engine/run.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { isReportedCrash, formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { BASE_CHECK, ESLINT_CRASH, CRASH_TAIL_CASES, ESLINT_MANIFEST_TOOL } from '#tests/config/engine/run.ts';
 
 test('a shortened failure output keeps the last line of stdout and of stderr', () => {
     const progress = Array.from({ length: 30 }, (_, index) => `progress ${String(index)}`).join('\n');

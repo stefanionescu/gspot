@@ -1,17 +1,15 @@
-import { realpathSync } from 'node:fs';
-import { rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
+import { realpathSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
+import type { SpawnOptions } from '#cli/types/system.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { readMiseBinPaths } from '#cli/tools/programs/mise.ts';
-import type { SpawnOptions } from '#cli/types/system.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { MISE_PROJECT_MESSAGE, MISE_STALE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
 
 test('mise reads the tool project for one call only while it is the generated one with no other mise file', async () => {
     const project = '[tools]\nshfmt = "3.12.0"\n';

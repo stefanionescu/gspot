@@ -1,8 +1,8 @@
-import { GSPOT_PATHS, STAGES } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON, PYPROJECT_TOML, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { SETTING_PLACEHOLDER, SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import type { CheckStatus } from '#cli/types/engine/run.ts';
 import type { CheckOutput } from '#cli/types/manifests.ts';
+import type { CheckStatus } from '#cli/types/engine/run.ts';
+import { STAGES, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { SETTINGS_FILE, SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { PACKAGE_JSON, TSCONFIG_FILE, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 
 // check flags
 export const BASE_FLAG = '--base';

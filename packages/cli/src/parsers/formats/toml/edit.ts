@@ -1,21 +1,21 @@
 import { patch } from '@decimalturn/toml-patch';
-
-import { PATCH_FORMAT, TABLE_PROPERTY_FLAGS } from '#cli/config/parsers/formats.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { PATCH_FORMAT, TABLE_PROPERTY_FLAGS } from '#cli/config/parsers/formats.ts';
+import { getTomlRange, parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
+
 import type {
-    EditableFile,
     KeyPath,
-    TomlAnchoredComment,
-    TomlCommentMove,
-    TomlCommentNode,
+    TomlSyntax,
+    EditableFile,
     TomlComments,
     TomlPathNode,
-    TomlSyntax,
-    TomlTableOptions,
     TomlTextChunk,
+    TomlCommentMove,
+    TomlCommentNode,
+    TomlTableOptions,
+    TomlAnchoredComment,
 } from '#cli/types/parsers.ts';
 
 function findTomlTable(

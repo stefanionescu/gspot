@@ -1,14 +1,14 @@
-import { SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
+import type { Files } from '#cli/types/system.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
+import type { ManagedKeys } from '#cli/types/repository.ts';
 import { BUNFIG_FILE } from '#cli/config/tools/installers.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import type { ManagedKeys } from '#cli/types/repository.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { Files } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { SCANNER_KEY } from '#cli/config/configurations/dependencies.ts';
 
 // A scanner that the repository sets by itself in bunfig.toml is no change of this edit.
 export function hasReleasedScanner(before: Scope, after: Scope, writer: Files): boolean {

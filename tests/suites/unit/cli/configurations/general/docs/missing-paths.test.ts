@@ -1,27 +1,26 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getBuiltInCheck, runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+
 import {
-    COVERAGE_CHECK_TABLES,
-    DOC_FENCE_PATH_CASES,
+    MDX_GUIDE,
     DOC_TASK_FILES,
     DOC_TASK_FINDINGS,
-    EXTERNAL_COMMAND_GUIDE,
-    MALFORMED_TASK_FILES,
-    MDX_GUIDE,
     MISE_TASK_SOURCES,
     RELATIVE_PATH_FILES,
+    DOC_FENCE_PATH_CASES,
+    MALFORMED_TASK_FILES,
+    COVERAGE_CHECK_TABLES,
+    EXTERNAL_COMMAND_GUIDE,
 } from '#tests/config/configurations/docs.ts';
-import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const DOC_TASK_SCOPES = ['app', 'app/nested', 'app/empty', 'sibling'].map((path) => ({
     path,

@@ -1,7 +1,6 @@
+import type { Result } from 'execa';
 import type { Stats } from 'node:fs';
 import type { Readable } from 'node:stream';
-
-import type { Result } from 'execa';
 
 export type FileContents = { bytes: Buffer; mode: number; isSymlink?: true };
 

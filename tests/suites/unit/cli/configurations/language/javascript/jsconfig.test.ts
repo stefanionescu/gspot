@@ -1,14 +1,12 @@
-import { dirname, join, resolve } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import ts from 'typescript';
-
-import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { test, expect } from 'bun:test';
+import { join, dirname, resolve } from 'node:path';
 import { findValueAt } from '#cli/system/tables.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

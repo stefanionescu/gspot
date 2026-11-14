@@ -1,28 +1,28 @@
-import semver from 'semver';
-import parseExpression from 'spdx-expression-parse';
 import { z } from 'zod';
-
+import semver from 'semver';
+import { isTable } from '#cli/system/tables.ts';
+import parseExpression from 'spdx-expression-parse';
+import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { CI_PROVIDERS } from '#cli/config/repository/setup.ts';
-import {
-    CI_PINS,
-    DOCSTRING_CONVENTIONS,
-    GITHUB_ONLY_CI_KEYS,
-    NAMING_LANGUAGE_CATEGORIES,
-    NAMING_TABLE_CATEGORIES,
-    NAMING_TERM,
-} from '#cli/config/settings/tables.ts';
-import { GLOB_EXCLUSION } from '#cli/config/system.ts';
 import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { namingExceptionSchema, nonemptyStringSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
+import type { ImportRule, SettingsError, NamingCategory } from '#cli/types/settings.ts';
+import { nonemptyStringSchema, namingExceptionSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
+
 import {
     allowReasonedValue,
-    namingCategorySchema,
-    nonemptyPathsSchema,
     relativePathSchema,
+    nonemptyPathsSchema,
+    namingCategorySchema,
 } from '#cli/schemas/settings/fields.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type { ImportRule, NamingCategory, SettingsError } from '#cli/types/settings.ts';
+import {
+    CI_PINS,
+    NAMING_TERM,
+    GITHUB_ONLY_CI_KEYS,
+    DOCSTRING_CONVENTIONS,
+    NAMING_TABLE_CATEGORIES,
+    NAMING_LANGUAGE_CATEGORIES,
+} from '#cli/config/settings/tables.ts';
 
 export const ciFields = {
     enabled: z.boolean().default(false).meta({

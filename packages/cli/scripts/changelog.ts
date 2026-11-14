@@ -1,6 +1,6 @@
 // Prints the material for the CHANGELOG.md section of one CLI version. `mise run release:changelog <version>` runs it on Bun.
-import { execFile } from 'node:child_process';
 import { promisify } from 'node:util';
+import { execFile } from 'node:child_process';
 
 type Commit = { hash: string; subject: string; body: string };
 

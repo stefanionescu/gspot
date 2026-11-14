@@ -1,10 +1,10 @@
-import { EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/configurations/general.ts';
-import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
-import { EDITORCONFIG_COMMENT, EDITORCONFIG_FILE, EDITORCONFIG_SECTION } from '#cli/config/generation/setup.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { prettierOptionsSchema } from '#cli/schemas/generation.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import type { EditorconfigSection, PrettierOptions } from '#cli/types/generation.ts';
+import { DIGITS_ONLY } from '#cli/config/configurations/naming.ts';
+import { prettierOptionsSchema } from '#cli/schemas/generation.ts';
+import { EDITORCONFIG_FIXED_SECTIONS } from '#cli/config/configurations/general.ts';
+import type { PrettierOptions, EditorconfigSection } from '#cli/types/generation.ts';
+import { EDITORCONFIG_FILE, EDITORCONFIG_COMMENT, EDITORCONFIG_SECTION } from '#cli/config/generation/setup.ts';
 
 function listLineSettings(files: string, fields: Record<string, string>): string[] {
     const sections: Readonly<Record<string, object>> = EDITORCONFIG_FIXED_SECTIONS;

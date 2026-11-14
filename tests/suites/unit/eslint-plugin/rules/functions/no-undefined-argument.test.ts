@@ -1,5 +1,5 @@
-import { noUndefinedArgument } from '#eslint-plugin/rules/functions/no-undefined-argument.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUndefinedArgument } from '#eslint-plugin/rules/functions/no-undefined-argument.ts';
 
 buildTypedRuleTester().run('no-undefined-argument', noUndefinedArgument, {
     valid: [

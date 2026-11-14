@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { buildCheckSession, runBuiltInCheck } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runBuiltInCheck, buildCheckSession } from '#cli/engine/run/checks.ts';
 
 test('the built-in dispatcher attaches the check ID and fixability to sparse findings, and keeps the help of a finding', async () => {
     await using sandbox = await createGitSandbox({

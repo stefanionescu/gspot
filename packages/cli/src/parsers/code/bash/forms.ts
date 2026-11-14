@@ -1,19 +1,18 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
+import type { ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
-    BASH_TOKEN_FORMS,
-    DELEGATING_COMMANDS,
-    DOWNLOAD_COMMANDS,
-    IFS_VARIABLE,
-    INLINE_ASSIGNMENT_NODES,
-    INTERPRETER_COMMANDS,
-    PROGRAM_PREFIX_ARGUMENT,
     SAVED_IFS,
+    IFS_VARIABLE,
+    BASH_TOKEN_FORMS,
     SEQUENCE_COMMAND,
+    DOWNLOAD_COMMANDS,
+    DELEGATING_COMMANDS,
+    INTERPRETER_COMMANDS,
+    INLINE_ASSIGNMENT_NODES,
+    PROGRAM_PREFIX_ARGUMENT,
 } from '#cli/config/parsers/code.ts';
-import type { ScriptSyntax } from '#cli/types/parsers.ts';
 
 function isScriptLevel(node: Node): boolean {
     for (let parent = node.parent; parent !== null; parent = parent.parent)

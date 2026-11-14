@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { SQL_BUILDING_METHODS, SQL_FUNCTIONS } from '../../config/security.ts';
-import { isDynamicString } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { isDynamicString } from '../../language/expressions.ts';
+import { SQL_FUNCTIONS, SQL_BUILDING_METHODS } from '../../config/security.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noDynamicSqlQueries = createRule<[], 'builtQuery'>({
     name: 'no-dynamic-sql-queries',

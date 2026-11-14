@@ -1,47 +1,47 @@
 import { realpathSync } from 'node:fs';
-import { basename, isAbsolute, join, relative, resolve } from 'node:path';
-
-import {
-    APP_TARGET_SUFFIX,
-    COVERAGE_BUNDLE,
-    COVERAGE_RULE,
-    FAILED_BUILD_NOTE,
-    FAILED_TEST_RULE,
-    MISSING_COVERAGE_MESSAGE,
-    SCRATCH_PATH_FLAG,
-    SWIFT_CODECOV_COMMAND,
-    SWIFT_DESCRIBE_COMMAND,
-    SWIFT_PACKAGE_NAME,
-    SWIFT_TARGET_MODULE,
-    SWIFT_TEST_NAME,
-    SWIFT_TESTING_FAILURE_LINE,
-    SWIFT_TESTS_MESSAGE,
-    TEST_RUNNER_MESSAGE,
-    TEST_TARGET_TYPE,
-    XCCOV_COMMAND,
-    XCODE_COVERAGE_FLAGS,
-    XCTEST_FAILURE_LINE,
-} from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
-import { MAX_PERCENTAGE } from '#cli/config/settings/fields.ts';
-import { runSwiftBuild, stripPrivatePrefix } from '#cli/configurations/language/swift/checks/build.ts';
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
-import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { packageDescriptionSchema, swiftCoverageSchema, xccovSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
 import { CheckStop } from '#cli/system/errors.ts';
+import type { Files } from '#cli/types/system.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { CoverageOutput, CoverageRun, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 import type { TableSettings } from '#cli/types/settings.ts';
-import type { Files } from '#cli/types/system.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import { MAX_PERCENTAGE } from '#cli/config/settings/fields.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { join, resolve, basename, relative, isAbsolute } from 'node:path';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { SWIFT_TEST_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
+import { runSwiftBuild, stripPrivatePrefix } from '#cli/configurations/language/swift/checks/build.ts';
+import type { CoverageRun, CoverageOutput, SwiftBuildPlan } from '#cli/types/configurations/language.ts';
+import { xccovSchema, swiftCoverageSchema, packageDescriptionSchema } from '#cli/schemas/configurations.ts';
+
+import {
+    COVERAGE_RULE,
+    XCCOV_COMMAND,
+    COVERAGE_BUNDLE,
+    SWIFT_TEST_NAME,
+    FAILED_TEST_RULE,
+    TEST_TARGET_TYPE,
+    APP_TARGET_SUFFIX,
+    FAILED_BUILD_NOTE,
+    SCRATCH_PATH_FLAG,
+    SWIFT_PACKAGE_NAME,
+    SWIFT_TARGET_MODULE,
+    SWIFT_TESTS_MESSAGE,
+    TEST_RUNNER_MESSAGE,
+    XCTEST_FAILURE_LINE,
+    XCODE_COVERAGE_FLAGS,
+    SWIFT_CODECOV_COMMAND,
+    SWIFT_DESCRIBE_COMMAND,
+    MISSING_COVERAGE_MESSAGE,
+    SWIFT_TESTING_FAILURE_LINE,
+} from '#cli/config/configurations/swift.ts';
 
 function findFailureFile(planned: PlannedCheck, file: string, cwd: string): string | undefined {
     const restored = stripPrivatePrefix(file);

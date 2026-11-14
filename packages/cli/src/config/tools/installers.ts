@@ -1,8 +1,8 @@
-import { FENCE_GRAMMARS, type GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
-import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
-import { BYTES_PER_MEGABYTE, GIT_PROGRAM } from '#cli/config/system.ts';
 import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
+import { HOOKS_PATH_SETTING } from '#cli/config/repository/setup.ts';
 import type { ToolPackageManagerName } from '#cli/types/repository.ts';
+import { GIT_PROGRAM, BYTES_PER_MEGABYTE } from '#cli/config/system.ts';
+import { FENCE_GRAMMARS, type GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 
 // credentials
 export const EMPTY_OUTPUT_MESSAGE = 'The command printed no output.';

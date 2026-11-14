@@ -1,6 +1,6 @@
-import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import type { Check } from '#cli/types/manifests.ts';
+import { DOCS_PATHS } from '#cli/config/manifests.ts';
 
 // command checks
 export const COMMAND_CHECK_DEFAULTS = {

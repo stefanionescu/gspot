@@ -1,19 +1,19 @@
 import { join } from 'node:path';
-
-import {
-    BUILD_SOURCE_FOLDER,
-    FAILED_BUILD_NOTE,
-    PERIPHERY_COMMAND,
-    PERIPHERY_INDEX_STORE_FLAG,
-    PERIPHERY_TOOL,
-    UNUSED_RULE,
-} from '#cli/config/configurations/swift.ts';
-import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
+
+import {
+    UNUSED_RULE,
+    PERIPHERY_TOOL,
+    FAILED_BUILD_NOTE,
+    PERIPHERY_COMMAND,
+    BUILD_SOURCE_FOLDER,
+    PERIPHERY_INDEX_STORE_FLAG,
+} from '#cli/config/configurations/swift.ts';
 
 async function checkPeriphery(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);

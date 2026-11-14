@@ -1,11 +1,9 @@
 import { basename } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { readSuppressionResults } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { test, expect } from 'bun:test';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readSuppressionResults } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const VALE_SUPPRESSIONS = [
     { source: '<!-- vale off -->', suppressed: true, directive: true },

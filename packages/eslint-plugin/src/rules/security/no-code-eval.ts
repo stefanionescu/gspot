@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { EVAL_FUNCTIONS, SCRIPT_URL } from '../../config/security.ts';
-import { isDynamicString } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { isDynamicString } from '../../language/expressions.ts';
+import { SCRIPT_URL, EVAL_FUNCTIONS } from '../../config/security.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getLeftmostText(node: TSESTree.BinaryExpression): string {
     let left: TSESTree.Node = node.left;

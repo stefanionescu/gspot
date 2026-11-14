@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { selectConfigurations } from '#cli/manifests/select.ts';
-import { buildFileMatcher, listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { JEST_CASES, JEST_PATHS, TRACKED_SOURCE } from '#tests/config/repository.ts';
+import { buildFileMatcher, listCoveredFiles } from '#cli/repository/files/selection.ts';
 
 test('files are covered by extension, file name at any depth, tag and glob', () => {
     const configurationsByName = readConfigurations();

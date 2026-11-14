@@ -1,8 +1,7 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { requireTestAssertions } from '#eslint-plugin/rules/assertions/require-test-assertions.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { requireTestAssertions } from '#eslint-plugin/rules/assertions/require-test-assertions.ts';
 
 const root = writePackageFolders({
     cypress: { devDependencies: { cypress: '15.0.0' } },

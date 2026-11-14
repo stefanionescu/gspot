@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { UNDEFINED_NAME } from '../../config/plugin.ts';
-import { getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isOptionalParameter(node: TSESTree.CallExpression, types: TypeReader): boolean {
     const declaration = types.checker.getResolvedSignature(types.map.get(node))?.declaration;

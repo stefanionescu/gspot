@@ -1,16 +1,14 @@
 import { writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-
 import { stringify } from '@decimalturn/toml-patch';
-
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { INDEX_SETTINGS, URL_SCHEME, UV_SETTINGS_FILE } from '#cli/config/tools/installers.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { uvProjectSettingsSchema, uvSettingsSchema } from '#cli/schemas/tools.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
 import type { PythonIndexSettings } from '#cli/types/tools.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { extractUrlPasswords } from '#cli/tools/installers/credentials.ts';
+import { uvSettingsSchema, uvProjectSettingsSchema } from '#cli/schemas/tools.ts';
+import { URL_SCHEME, INDEX_SETTINGS, UV_SETTINGS_FILE } from '#cli/config/tools/installers.ts';
 
 export function writeUvSettings(folder: string, indexes: PythonIndexSettings['settings'], days: number): void {
     const settings = stringify({ ...indexes, 'exclude-newer': `${String(days)} days` });

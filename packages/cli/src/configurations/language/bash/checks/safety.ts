@@ -1,19 +1,20 @@
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ScriptFile } from '#cli/types/configurations/language.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { SAFETY_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
+
 import {
+    SAFETY_RULES,
+    COMMAND_FORMS,
+    RECURSIVE_FLAG,
     ALL_LEVEL_FORMS,
     BASH_FORM_MESSAGES,
     BROAD_KILL_COMMANDS,
-    COMMAND_FORMS,
     IGNORED_FAILURE_MESSAGE,
-    RECURSIVE_FLAG,
     RECURSIVE_REMOVE_MESSAGE,
-    SAFETY_RULES,
 } from '#cli/config/configurations/bash.ts';
-import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { SAFETY_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-import type { ScriptFile } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function findCommandForm(
     command: ScriptFile['commands'][number],

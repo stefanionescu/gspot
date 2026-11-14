@@ -1,15 +1,15 @@
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { ParseCache, TrapScript, ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
-    END_OF_OPTIONS,
-    FORWARDED_ARGUMENTS,
-    STRING_EXPANSION_NODES,
     TRAP_COMMAND,
+    END_OF_OPTIONS,
     TRAP_SOURCE_ROWS,
+    FORWARDED_ARGUMENTS,
     TRAP_STRING_ESCAPES,
+    STRING_EXPANSION_NODES,
 } from '#cli/config/parsers/code.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import type { ParseCache, ScriptSyntax, TrapScript } from '#cli/types/parsers.ts';
 
 function decodeTrapBody(body: Node): { text: string; sourceRows: TrapScript['sourceRows'] } {
     const quoted = body.text.slice(1, -1);

@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { openSession } from '#cli/engine/session.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { test, expect } from 'bun:test';
 import { getTable } from '#cli/settings/tables.ts';
-import { OPENAPI_SCOPE_SETTINGS, PROJECT_CHOICES, PROJECT_SCOPE_CASES } from '#tests/config/settings/parse.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PROJECT_CHOICES, PROJECT_SCOPE_CASES, OPENAPI_SCOPE_SETTINGS } from '#tests/config/settings/parse.ts';
 
 test('OpenAPI stays off without a document and in a scope that removes it', async () => {
     await using sandbox = await createGitSandbox({

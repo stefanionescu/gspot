@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { joinTables } from '#cli/system/tables.ts';
 
 test('joinTables refuses a key that two tables hold', () => {

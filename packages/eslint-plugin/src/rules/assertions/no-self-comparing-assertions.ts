@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { listImportedModules } from '../../language/modules.ts';
-import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
+import { listImportedModules } from '../../language/modules.ts';
 import type { AssertionChain } from '../../types/assertions.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getChain(node: TSESTree.Node): AssertionChain {
     const values: TSESTree.Node[] = [];

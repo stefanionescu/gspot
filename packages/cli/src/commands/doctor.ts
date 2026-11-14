@@ -1,42 +1,42 @@
 import { join } from 'node:path';
 import { styleText } from 'node:util';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import {
-    CI_FILE_SUFFIXES,
-    CI_OFF_NOTES,
-    LABEL_WIDTH,
-    TOOL_STATE_COLORS,
-    VERSION_GAP,
-} from '#cli/config/commands/lookup.ts';
-import { CI_FILES } from '#cli/config/generation/builders.ts';
-import { EXIT_FINDINGS, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { AVAILABLE_TOOL_STATES, MISE_INSTALL_URL, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
-import { findCommandTool, findToolName, listDistinctTools, listToolNames } from '#cli/manifests/tools.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { findGspotPinMismatch, readGspotPin } from '#cli/repository/projects/pin.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
-import { detectCiProvider } from '#cli/repository/setup/read.ts';
 import { readHost } from '#cli/system/environment.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { readHookRunnerStatus } from '#cli/tools/installers/hooks.ts';
-import { findMissingEnvironment } from '#cli/tools/missing.ts';
-import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { lookUpTool } from '#cli/tools/programs/inspect.ts';
+import { CI_FILES } from '#cli/config/generation/builders.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { findMissingEnvironment } from '#cli/tools/missing.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
+import { detectCiProvider } from '#cli/repository/setup/read.ts';
+import { findMisePin, findMissingBuild } from '#cli/tools/pins.ts';
+import type { Session, ToolInspection } from '#cli/types/tools.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { readHookRunnerStatus } from '#cli/tools/installers/hooks.ts';
+import { readGspotPin, findGspotPinMismatch } from '#cli/repository/projects/pin.ts';
+import { MISE_PROGRAM, EXIT_FINDINGS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { findToolName, listToolNames, findCommandTool, listDistinctTools } from '#cli/manifests/tools.ts';
+import { MISE_INSTALL_URL, AVAILABLE_TOOL_STATES, PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+
+import {
+    LABEL_WIDTH,
+    VERSION_GAP,
+    CI_OFF_NOTES,
+    CI_FILE_SUFFIXES,
+    TOOL_STATE_COLORS,
+} from '#cli/config/commands/lookup.ts';
 import type {
     CiState,
-    CommandDefinition,
-    CommandLocation,
+    DoctorTool,
     DoctorReport,
     DoctorStates,
-    DoctorTool,
+    CommandLocation,
+    CommandDefinition,
 } from '#cli/types/commands.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import type { Session, ToolInspection } from '#cli/types/tools.ts';
 
 function formatToolVersion(tool: ToolInspection): string {
     const found = tool.found ?? '';

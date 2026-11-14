@@ -1,39 +1,39 @@
 import { z } from 'zod';
-
 import { CHECK_RUNS } from '#cli/config/manifests.ts';
-import {
-    ALL_LEVEL_SUMMARY,
-    COMMAND_CHECK_ID,
-    DEVICE_NAME,
-    GSPOT_FOLDER_PATH,
-    LEVEL_SUMMARY,
-    NO_CHECK_PATHS_MESSAGE,
-    NO_CHECK_RULE_MESSAGE,
-    SCOPE_PATH_MESSAGES,
-    SETTINGS_EXAMPLES,
-    TABLE_DESCRIPTIONS,
-    TOOL_TIMEOUT_SECONDS_DEFAULT,
-    UNSAFE_CHARACTERS,
-    UNSAFE_PATH_END,
-    WEAKENINGS_CHECK,
-    WEAKENINGS_IGNORE_MESSAGE,
-} from '#cli/config/settings/file.ts';
 import { RESERVED_SEGMENTS } from '#cli/config/system.ts';
-import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
 import { levelSchema } from '#cli/schemas/manifests/fields.ts';
-import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
-import {
-    configurationNameSchema,
-    formatSchema,
-    nonemptyPathsSchema,
-    relativePathSchema,
-    removedConfigurationsSchema,
-} from '#cli/schemas/settings/fields.ts';
 import { hooksSchema } from '#cli/schemas/settings/general.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
-import { ciSchema, importRulesSchema, namingSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
-import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { commandCheckFields } from '#cli/schemas/manifests/checks.ts';
+import { configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
+import { ciSchema, namingSchema, ruleFilesSchema, importRulesSchema } from '#cli/schemas/settings/tables.ts';
+
+import {
+    formatSchema,
+    relativePathSchema,
+    nonemptyPathsSchema,
+    configurationNameSchema,
+    removedConfigurationsSchema,
+} from '#cli/schemas/settings/fields.ts';
+import {
+    DEVICE_NAME,
+    LEVEL_SUMMARY,
+    UNSAFE_PATH_END,
+    COMMAND_CHECK_ID,
+    WEAKENINGS_CHECK,
+    ALL_LEVEL_SUMMARY,
+    GSPOT_FOLDER_PATH,
+    SETTINGS_EXAMPLES,
+    UNSAFE_CHARACTERS,
+    TABLE_DESCRIPTIONS,
+    SCOPE_PATH_MESSAGES,
+    NO_CHECK_RULE_MESSAGE,
+    NO_CHECK_PATHS_MESSAGE,
+    WEAKENINGS_IGNORE_MESSAGE,
+    TOOL_TIMEOUT_SECONDS_DEFAULT,
+} from '#cli/config/settings/file.ts';
 
 function describeTables<Shape extends Record<string, z.ZodType>>(shape: Shape): Shape {
     for (const [name, schema] of Object.entries(shape)) {

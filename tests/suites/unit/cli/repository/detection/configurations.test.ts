@@ -1,21 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { listAlwaysSelected } from '#cli/manifests/select.ts';
-import { detectConditions, detectConfigurations } from '#cli/repository/detection/configurations.ts';
-import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { PYTHON_DEPENDENCY_CASES, TRACKED_SOURCE } from '#tests/config/repository.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
+import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
+import { TRACKED_SOURCE, PYTHON_DEPENDENCY_CASES } from '#tests/config/repository.ts';
+import { detectConditions, detectConfigurations } from '#cli/repository/detection/configurations.ts';
 
 const PRISMA_SCHEMA_CASES = [
     {

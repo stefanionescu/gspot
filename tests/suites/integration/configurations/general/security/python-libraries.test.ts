@@ -1,11 +1,10 @@
-import { describe, expect, test } from 'bun:test';
-
-import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect, describe } from 'bun:test';
 import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 const PYTHON_RULE_SOURCES = {
     django: `import os

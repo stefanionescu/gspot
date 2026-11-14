@@ -1,37 +1,37 @@
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { OCTAL_RADIX, WHITESPACE_RUN, HEXADECIMAL_RADIX } from '#cli/config/system.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
 
+import type {
+    ParseCache,
+    ReaderNames,
+    ParsedLanguage,
+    EnvironmentKind,
+    EnvironmentRead,
+    EnvironmentNames,
+    EnvironmentScope,
+} from '#cli/types/parsers.ts';
 import {
+    OS_MODULE,
+    VARIABLE_NAME,
     EXPANSION_NODES,
+    SWIFT_ENVIRONMENT,
+    MAXIMUM_CODE_POINT,
+    PYTHON_SCOPE_NODES,
+    PYTHON_IMPORT_NODES,
+    PYTHON_LITERAL_NODES,
+    PYTHON_STRING_ESCAPE,
+    PYTHON_STRING_ESCAPES,
+    OS_ENVIRONMENT_MEMBERS,
+    JAVASCRIPT_LITERAL_NODES,
+    PYTHON_DECLARATION_NODES,
+    PYTHON_RAW_STRING_PREFIX,
+    JAVASCRIPT_PROPERTY_NODES,
     JAVASCRIPT_DEFAULT_OPERATORS,
     JAVASCRIPT_ENVIRONMENT_FIELDS,
     JAVASCRIPT_ENVIRONMENT_GETTERS,
-    JAVASCRIPT_LITERAL_NODES,
-    JAVASCRIPT_PROPERTY_NODES,
-    MAXIMUM_CODE_POINT,
-    OS_ENVIRONMENT_MEMBERS,
-    OS_MODULE,
-    PYTHON_DECLARATION_NODES,
-    PYTHON_IMPORT_NODES,
-    PYTHON_LITERAL_NODES,
-    PYTHON_RAW_STRING_PREFIX,
-    PYTHON_SCOPE_NODES,
-    PYTHON_STRING_ESCAPE,
-    PYTHON_STRING_ESCAPES,
-    SWIFT_ENVIRONMENT,
-    VARIABLE_NAME,
 } from '#cli/config/parsers/code.ts';
-import { HEXADECIMAL_RADIX, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
-import type {
-    EnvironmentKind,
-    EnvironmentNames,
-    EnvironmentRead,
-    EnvironmentScope,
-    ParseCache,
-    ParsedLanguage,
-    ReaderNames,
-} from '#cli/types/parsers.ts';
 
 function getCallKey(node: Node, getters: Set<string>): string | undefined {
     const name = node.childForFieldName('function')?.text.replaceAll(WHITESPACE_RUN, '');

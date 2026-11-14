@@ -1,14 +1,12 @@
 import http from 'node:http';
-
-import { expect, spyOn, test } from 'bun:test';
-
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
 
 async function captureDownloadRejection(response: Response): Promise<Error> {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

@@ -1,13 +1,12 @@
-import { stringify } from '@decimalturn/toml-patch';
-import { Ajv2020 } from 'ajv/dist/2020.js';
-import { expect, test } from 'bun:test';
 import type { z } from 'zod';
-
+import { test, expect } from 'bun:test';
+import { Ajv2020 } from 'ajv/dist/2020.js';
+import { stringify } from '@decimalturn/toml-patch';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
-import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/parse.ts';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { PUBLISHED_SCHEMA_CASES } from '#tests/config/settings/parse.ts';
+import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
 
 const settings = buildSettingsReference(readConfigurations().values().toArray());
 

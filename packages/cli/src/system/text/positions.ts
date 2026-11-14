@@ -1,5 +1,5 @@
 import { NOT_LINE_BREAK } from '#cli/config/system.ts';
-import type { TextPosition, TextRange } from '#cli/types/system.ts';
+import type { TextRange, TextPosition } from '#cli/types/system.ts';
 
 export function getPosition(text: string, offset: number): TextPosition {
     const before = text.slice(0, offset);

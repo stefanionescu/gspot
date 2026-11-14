@@ -1,40 +1,41 @@
-import {
-    BANNED_WORD_FORMS,
-    CAMEL_ACRONYM_WORD,
-    CAMEL_WORD,
-    CATEGORY_LABELS,
-    DIGIT,
-    DIGITS_ONLY,
-    LAST_EXTENSION,
-    LOWER_WORD,
-    NAMING_RULES,
-    NUMERIC_WORDS,
-    PASCAL_ACRONYM_WORD,
-    PASCAL_WORD,
-    RUFF_CATEGORIES,
-    SILENT_E,
-    SWIFTLINT_CATEGORIES,
-    TEST_WORD_LIST,
-    TRAILING_Y,
-    UPPER_WORD,
-    VOWEL_SUFFIX,
-    WORD_FORM_CONSONANT,
-    WORD_FORM_SUFFIXES,
-} from '#cli/config/configurations/naming.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
 import { splitWords } from '#cli/configurations/general/naming/words.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
+
 import type {
     BannedWord,
-    CategoryLimits,
-    CheckedIdentifier,
-    CompiledException,
     FileNaming,
     Identifier,
     NamingCase,
+    CategoryLimits,
     NamingSettings,
+    CheckedIdentifier,
+    CompiledException,
 } from '#cli/types/configurations/naming.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
+import {
+    DIGIT,
+    SILENT_E,
+    CAMEL_WORD,
+    LOWER_WORD,
+    TRAILING_Y,
+    UPPER_WORD,
+    DIGITS_ONLY,
+    PASCAL_WORD,
+    NAMING_RULES,
+    VOWEL_SUFFIX,
+    NUMERIC_WORDS,
+    LAST_EXTENSION,
+    TEST_WORD_LIST,
+    CATEGORY_LABELS,
+    RUFF_CATEGORIES,
+    BANNED_WORD_FORMS,
+    CAMEL_ACRONYM_WORD,
+    WORD_FORM_SUFFIXES,
+    PASCAL_ACRONYM_WORD,
+    WORD_FORM_CONSONANT,
+    SWIFTLINT_CATEGORIES,
+} from '#cli/config/configurations/naming.ts';
 
 function isSnakeMigration(name: string): boolean {
     if (!name.endsWith(SQL_EXTENSION)) return false;

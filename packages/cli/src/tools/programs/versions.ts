@@ -1,31 +1,30 @@
-import { realpathSync } from 'node:fs';
-import { basename, dirname, join, relative } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
-
 import semver from 'semver';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { realpathSync } from 'node:fs';
+import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import {
-    DISTRIBUTION_SUFFIX,
-    NO_VERSION,
-    NPM_BIN_FOLDER,
-    PYTHON_LIBRARY_FOLDERS,
-    PYTHON_PACKAGES_FOLDER,
-    STACK_FRAME_LINE,
-    TOOL_ENVIRONMENT,
-    VERSION_FLAG,
-} from '#cli/config/tools/programs.ts';
-import { normalizePythonName, readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
-import { readToolProjectPackage } from '#cli/tools/programs/packages.ts';
-import type { Tool } from '#cli/types/manifests.ts';
+import { join, dirname, basename, relative } from 'node:path';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import type { Files, SpawnResult } from '#cli/types/system.ts';
-import type { InspectedTool, ParsedToolVersion, ToolInspection } from '#cli/types/tools.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { readToolProjectPackage } from '#cli/tools/programs/packages.ts';
+import type { InspectedTool, ToolInspection, ParsedToolVersion } from '#cli/types/tools.ts';
+import { readPackageJson, normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
+
+import {
+    NO_VERSION,
+    VERSION_FLAG,
+    NPM_BIN_FOLDER,
+    STACK_FRAME_LINE,
+    TOOL_ENVIRONMENT,
+    DISTRIBUTION_SUFFIX,
+    PYTHON_LIBRARY_FOLDERS,
+    PYTHON_PACKAGES_FOLDER,
+} from '#cli/config/tools/programs.ts';
 
 function findVersionAbove(files: Files | undefined, root: string, start: string, name: string): string | undefined {
     for (let folder = start; folder !== dirname(folder); folder = dirname(folder)) {

@@ -1,7 +1,7 @@
-import { SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/language.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable, selectFormat } from '#cli/settings/tables.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { SQL_FILES, SQLFLUFF_CAPITALISATION } from '#cli/config/configurations/language.ts';
 
 function buildSqlfluffFile(planned: PlannedConfig): string {
     const format = selectFormat(planned.scope.settings, SQL_FILES);

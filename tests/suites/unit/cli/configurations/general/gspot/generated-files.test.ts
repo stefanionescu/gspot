@@ -1,23 +1,21 @@
-import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GENERATED_FILE_FINDINGS } from '#cli/config/configurations/gspot.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { writeFile } from 'node:fs/promises';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { NPM_CHECK_IGNORES } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { GENERATED_FILE_FINDINGS } from '#cli/config/configurations/gspot.ts';
 
 test('turning rules off reports exactly the stray rule files that install removes', async () => {
     await using sandbox = await createGitSandbox({});

@@ -1,5 +1,5 @@
-import { OWN_FILES_ONLY } from '#cli/config/configurations/structure.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
+import { OWN_FILES_ONLY } from '#cli/config/configurations/structure.ts';
 
 export function listAllowedRules(rules: ImportRule[], index: number): string[] {
     const rule = rules[index] as ImportRule;

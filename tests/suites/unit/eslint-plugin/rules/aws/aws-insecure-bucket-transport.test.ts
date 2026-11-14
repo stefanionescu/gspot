@@ -1,5 +1,5 @@
-import { awsInsecureBucketTransport } from '#eslint-plugin/rules/aws/aws-insecure-bucket-transport.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsInsecureBucketTransport } from '#eslint-plugin/rules/aws/aws-insecure-bucket-transport.ts';
 
 buildRuleTester().run('aws-insecure-bucket-transport', awsInsecureBucketTransport, {
     valid: [

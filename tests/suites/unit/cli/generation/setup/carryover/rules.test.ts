@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('init compares the markdownlint table with what gspot runs', async () => {
     await using sandbox = await createGitSandbox({

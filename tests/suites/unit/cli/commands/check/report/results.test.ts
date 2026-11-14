@@ -1,21 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { formatRunReport } from '#cli/commands/check/report.ts';
-import { FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { stringify } from '@decimalturn/toml-patch';
+import { stripVTControlCharacters } from 'node:util';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { FINDINGS_SHOWN } from '#cli/config/commands/check.ts';
+import { formatRunReport } from '#cli/commands/check/report.ts';
 import { fakeTerminals } from '#tests/setup/system/terminal.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { FAILED_CHECK_REPORT } from '#tests/config/commands/check.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const VERBOSITY_ARGUMENTS = ['check', '--only', 'example/findings,example/passing', '--base', 'HEAD'] as const;
 

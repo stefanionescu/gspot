@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 
 test('a missing OpenAPI document is reported before generation', async () => {
     await using sandbox = await createGitSandbox({

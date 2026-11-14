@@ -1,11 +1,11 @@
+import { createRule } from '../../rule.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     PUBLIC_TEMPORARY_FOLDERS,
-    TEMPORARY_ENVIRONMENT_VARIABLES,
     WINDOWS_TEMPORARY_FOLDERS,
+    TEMPORARY_ENVIRONMENT_VARIABLES,
 } from '../../config/security.ts';
-import { createRule } from '../../rule.ts';
 
 function isPublicTemporaryPath(text: string): boolean {
     const path = text.toLowerCase();

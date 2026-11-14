@@ -1,5 +1,5 @@
-import { noGeneratedKeys } from '#eslint-plugin/rules/react/no-generated-keys.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noGeneratedKeys } from '#eslint-plugin/rules/react/no-generated-keys.ts';
 
 buildRuleTester().run('no-generated-keys', noGeneratedKeys, {
     valid: ['<Row key={row.id} />', '<Row id={Math.random()} />'],

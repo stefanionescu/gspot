@@ -1,19 +1,17 @@
-import { join, sep } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { sep, join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
-import { executableLayout } from '#cli/system/processes/programs.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildPythonToolFiles, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { VULTURE_OUTPUT } from '#tests/config/configurations/python.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeToolExecutables, buildPythonToolFiles } from '#tests/setup/cli/tools.ts';
 
 test('vulture reads every Python file of the scope and reports unused definitions and unreachable code only', async () => {
     await using sandbox = await createGitSandbox({

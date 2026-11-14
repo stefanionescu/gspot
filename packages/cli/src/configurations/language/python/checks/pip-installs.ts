@@ -1,21 +1,22 @@
-import {
-    INSTALL_FILE_SUFFIXES,
-    NO_LOCKFILE_NOTE,
-    PIP_INSTALL,
-    PIP_INSTALL_MESSAGE,
-    PYTHON_RULES,
-    REQUIREMENTS_FILE_MESSAGE,
-    REQUIREMENTS_FOLDER_FILE,
-} from '#cli/config/configurations/python.ts';
-import { REQUIREMENTS_FILE } from '#cli/config/repository/projects.ts';
-import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { CheckStop } from '#cli/system/errors.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { listMatchingLines } from '#cli/system/text/positions.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listMatchingLines } from '#cli/system/text/positions.ts';
+import { REQUIREMENTS_FILE } from '#cli/config/repository/projects.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { PIP_INSTALL_EXPLANATIONS } from '#cli/configurations/language/python/explanations.ts';
+
+import {
+    PIP_INSTALL,
+    PYTHON_RULES,
+    NO_LOCKFILE_NOTE,
+    PIP_INSTALL_MESSAGE,
+    INSTALL_FILE_SUFFIXES,
+    REQUIREMENTS_FOLDER_FILE,
+    REQUIREMENTS_FILE_MESSAGE,
+} from '#cli/config/configurations/python.ts';
 
 function checkPipInstalls(session: Session, planned: PlannedCheck): CheckFinding[] {
     if (

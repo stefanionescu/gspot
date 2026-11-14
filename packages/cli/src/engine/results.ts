@@ -1,31 +1,31 @@
 import { realpathSync } from 'node:fs';
 import { join, relative } from 'node:path';
-
-import {
-    BASE_FLAG,
-    FAILED_STATUSES,
-    FIX_FLAG,
-    GSPOT_CHECK_PREFIX,
-    HOOK_FLAG,
-    INCOMPLETE_STATUSES,
-    ONLY_FLAG,
-    RAN_STATUSES,
-    SHORT_HASH_LENGTH,
-    STAGED_FLAG,
-} from '#cli/config/engine.ts';
-import { GSPOT_CHECK } from '#cli/config/manifests.ts';
-import { listRootPrefixes } from '#cli/engine/outputs/formats.ts';
-import { listCheckedFiles } from '#cli/engine/plan/files.ts';
-import { buildDashSafePath } from '#cli/engine/run/tool-runs/batches.ts';
-import { listConflictedPaths } from '#cli/repository/git/output.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
-import { buildArgumentPath, convertToPosixPath } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { listRootPrefixes } from '#cli/engine/outputs/formats.ts';
+import { listConflictedPaths } from '#cli/repository/git/output.ts';
+import { buildDashSafePath } from '#cli/engine/run/tool-runs/batches.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
-import type { CheckResult, CheckSession, Run, RunOptions } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { buildArgumentPath, convertToPosixPath } from '#cli/system/paths.ts';
+import type { Run, RunOptions, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+
+import {
+    FIX_FLAG,
+    BASE_FLAG,
+    HOOK_FLAG,
+    ONLY_FLAG,
+    STAGED_FLAG,
+    RAN_STATUSES,
+    FAILED_STATUSES,
+    SHORT_HASH_LENGTH,
+    GSPOT_CHECK_PREFIX,
+    INCOMPLETE_STATUSES,
+} from '#cli/config/engine.ts';
 
 const WRITTEN_FILES = Symbol('written files');
 

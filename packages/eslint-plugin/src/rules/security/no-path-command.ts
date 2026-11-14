@@ -1,7 +1,7 @@
-import { EXPLICIT_COMMAND, PATH_COMMAND_METHODS } from '../../config/security.ts';
-import { getLiteralValue } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getLiteralValue } from '../../language/expressions.ts';
+import { EXPLICIT_COMMAND, PATH_COMMAND_METHODS } from '../../config/security.ts';
 
 export const noPathCommand = createRule<[], 'path'>({
     name: 'no-path-command',

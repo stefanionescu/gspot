@@ -1,18 +1,18 @@
 import { join } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
 
 import {
     ANALYZER_RULE,
+    SWIFTLINT_TOOL,
     COMPILER_LOG_FLAG,
     SWIFTLINT_ANALYZE_COMMAND,
-    SWIFTLINT_TOOL,
 } from '#cli/config/configurations/swift.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
-import { runCopiedTool, runSwiftBuild } from '#cli/configurations/language/swift/checks/build.ts';
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function checkSwiftlintAnalyze(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const plan = planSwiftBuild(session, planned);

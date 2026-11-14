@@ -1,28 +1,28 @@
 import { styleText } from 'node:util';
+import { LINE_BREAK } from '#cli/config/system.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { formatScopePrefix } from '#cli/repository/scopes.ts';
+import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
+import { formatCheckedContent } from '#cli/engine/run/progress.ts';
+import { formatCount, formatSeconds } from '#cli/system/text/messages.ts';
+import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import type { Finding, RunReport, CheckResult, CheckStatus } from '#cli/types/engine/run.ts';
 
 import {
-    CANCELED_RUN_MESSAGE,
-    CHECK_STATUS_COLORS,
-    FINDINGS_SHOWN,
     FIX_LABEL,
-    FIX_SENTENCE,
-    INSTALL_REMINDER,
-    NOTE_STATUSES,
     RERUN_LABEL,
+    FIX_SENTENCE,
     SENTENCE_END,
-    STANDARD_INSTALL_HELP,
-    STATUS_LABEL_WIDTH,
+    NOTE_STATUSES,
+    FINDINGS_SHOWN,
+    INSTALL_REMINDER,
     SUMMARY_STATUSES,
+    STATUS_LABEL_WIDTH,
+    CHECK_STATUS_COLORS,
+    CANCELED_RUN_MESSAGE,
+    STANDARD_INSTALL_HELP,
 } from '#cli/config/commands/check.ts';
-import { CODE_MARK } from '#cli/config/commands/help.ts';
-import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
-import { LINE_BREAK } from '#cli/config/system.ts';
-import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
-import { formatCheckedContent } from '#cli/engine/run/progress.ts';
-import { formatScopePrefix } from '#cli/repository/scopes.ts';
-import { formatCount, formatSeconds } from '#cli/system/text/messages.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { CheckResult, CheckStatus, Finding, RunReport } from '#cli/types/engine/run.ts';
 
 function formatUnstagedChanges(report: RunReport): string[] {
     if (report.unstagedChanges === 0) return [];

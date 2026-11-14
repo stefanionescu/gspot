@@ -1,17 +1,17 @@
-import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/rules.ts';
-import { hasCoverageArguments, isCoverageOff } from '#cli/engine/plan/coverage.ts';
-import { hasFilesToCheck } from '#cli/engine/plan/files.ts';
-import { findSystemSkip } from '#cli/engine/plan/skips.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findTool, getTool, listToolNames } from '#cli/manifests/tools.ts';
-import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { isSettingEmpty } from '#cli/settings/values/written.ts';
-import { readHost } from '#cli/system/environment.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import { readHost } from '#cli/system/environment.ts';
+import { findSystemSkip } from '#cli/engine/plan/skips.ts';
+import { hasFilesToCheck } from '#cli/engine/plan/files.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
+import { isSettingEmpty } from '#cli/settings/values/written.ts';
+import { ESLINT_MANIFEST_TOOL } from '#cli/config/tools/rules.ts';
 import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
+import { getTool, findTool, listToolNames } from '#cli/manifests/tools.ts';
+import { isCoverageOff, hasCoverageArguments } from '#cli/engine/plan/coverage.ts';
 
 function isToolUsed(scopes: Scope[], conditions: Tool['when']): boolean {
     return (

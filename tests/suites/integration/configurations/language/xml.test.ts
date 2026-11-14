@@ -1,5 +1,4 @@
 import { test } from 'bun:test';
-
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 

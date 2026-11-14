@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { FUNCTION_NODES } from '../../config/plugin.ts';
+import { createRule } from '../../rule.ts';
 import { COMPONENT_NAME } from '../../config/react.ts';
+import { FUNCTION_NODES } from '../../config/plugin.ts';
+import type { StateHook } from '../../types/utilities.ts';
 import { findEnclosingFunction } from '../../language/functions.ts';
 import { getStateHook, isNamedFunction } from '../../libraries/react.ts';
-import { createRule } from '../../rule.ts';
-import type { StateHook } from '../../types/utilities.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isComponentBody(hook: StateHook, node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     const ancestors = source.getAncestors(node);

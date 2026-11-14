@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
-import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT, WINDOWS_PROCESS_LIMIT } from '#cli/config/engine.ts';
-import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
+import { test, expect } from 'bun:test';
 import type { CheckStop } from '#cli/system/errors.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
+import { UNIX_COMMAND_LIMIT, WINDOWS_COMMAND_LIMIT, WINDOWS_PROCESS_LIMIT } from '#cli/config/engine.ts';
 
 test('Windows batches leave room for quoted paths and the absolute executable path', () => {
     const files = Array.from({ length: 5000 }, (_, index) => `docs/café folder (draft)/page-${String(index)}.md`);

@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-import { LOCAL_PREFIXES, PACKAGE_NAME, WORKSPACE_PROTOCOL } from '../../config/structure.ts';
-import { readPackageFacts } from '../../language/packages.ts';
 import { createRule } from '../../rule.ts';
 import type { FileContext } from '../../types/plugin.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { readPackageFacts } from '../../language/packages.ts';
+import { PACKAGE_NAME, LOCAL_PREFIXES, WORKSPACE_PROTOCOL } from '../../config/structure.ts';
 
 /**
 Tell whether the repository owns a module: a path inside it, or a package that a manifest takes from the workspace.

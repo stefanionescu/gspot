@@ -1,25 +1,23 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { readFile, writeFile } from 'node:fs/promises';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
-import { readGitSetting } from '#cli/repository/git/run.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { MISE_TRUST } from '#tests/config/setup/runner.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspot, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot, spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const UNQUOTED_FINDING_PREFIX = '  scripts/b.sh:2:6  SC2086  ';
 

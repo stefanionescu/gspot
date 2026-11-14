@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/control-flow.ts';
-import { getTypes } from '../../language/checker.ts';
-import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
+import { NEVER_TYPE, SMALL_SWITCH_CASES } from '../../config/control-flow.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getStatementCall(statement: TSESTree.Statement): TSESTree.CallExpression | undefined {
     const isExit =

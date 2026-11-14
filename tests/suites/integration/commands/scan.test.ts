@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { API_TOKEN } from '#tests/config/integration/general.ts';
-import { scanOutputSchema } from '#tests/schemas/setup.ts';
-import { spawnGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { test, expect } from 'bun:test';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { spawnGspot } from '#tests/setup/cli/commands.ts';
+import { scanOutputSchema } from '#tests/schemas/setup.ts';
+import { API_TOKEN } from '#tests/config/integration/general.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('scan installs the tools in its copy, reports a committed secret, and changes nothing', async () => {
     await using sandbox = await createGitSandbox({

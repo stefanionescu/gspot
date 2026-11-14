@@ -1,21 +1,20 @@
-import { readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
+import { test, expect } from 'bun:test';
+import type { GitFile } from '#cli/types/repository.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { symlink, readFile, writeFile } from 'node:fs/promises';
+import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
+import { INDEX_PATH, HASH_FORMATS, NTFS_PROTECTION_OFF } from '#tests/config/repository.ts';
+import { createGitSandbox, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
-    listCommittedPaths,
-    listRevisionFiles,
-    readCommittedTexts,
     readHead,
     writeIndexTree,
+    listRevisionFiles,
+    listCommittedPaths,
+    readCommittedTexts,
 } from '#cli/repository/revisions/files.ts';
-import type { GitFile } from '#cli/types/repository.ts';
-import { HASH_FORMATS, INDEX_PATH, NTFS_PROTECTION_OFF } from '#tests/config/repository.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox, prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
 
 test('unborn history is empty, and a broken HEAD refuses committed history', async () => {
     await using sandbox = await createGitSandbox({});

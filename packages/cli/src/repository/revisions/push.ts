@@ -1,61 +1,61 @@
 import { readFileSync } from 'node:fs';
 import { isDeepStrictEqual } from 'node:util';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { HASH_PATTERN } from '#cli/config/repository/git.ts';
-import {
-    ABSENT_HASH,
-    BRANCHES_PREFIX,
-    DEFAULT_BRANCHES,
-    DELETED_REF_REASON,
-    FORCE_PUSH_MESSAGE,
-    GIT_DIFF_NAMES_ARGUMENTS,
-    GIT_IS_ANCESTOR_ARGUMENTS,
-    GIT_LOG_ARGUMENTS,
-    GIT_PEEL_ARGUMENTS,
-    GIT_REMOTE_ARGUMENTS,
-    GIT_REV_LIST_ARGUMENTS,
-    GIT_ROOT_COMMITS_ARGUMENTS,
-    GIT_TREE_ARGUMENTS,
-    GIT_TREE_NAMES_ARGUMENTS,
-    INVALID_PUSH_INPUT_MESSAGE,
-    MISSING_PUSH_REVISION_MESSAGE,
-    NO_CHANGES_REASON,
-    NO_SETTINGS_REASON,
-    NON_COMMIT_REASON,
-    NOT_FLAG,
-    PEEL_FAILURE_MESSAGE,
-    PEEL_SUFFIX,
-    REMOTES_FLAG,
-    TREE_SUFFIX,
-    UNFETCHED_PUSH_MESSAGE,
-} from '#cli/config/repository/revisions.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { HASH_PATTERN } from '#cli/config/repository/git.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readHead, isShallowClone } from '#cli/repository/revisions/files.ts';
+
 import {
-    buildGitError,
-    readGitLines,
-    readGitPath,
-    readGitPaths,
-    readGitText,
-    runGit,
-} from '#cli/repository/git/run.ts';
-import {
-    findRemoteDefaultBranch,
+    readMergeBase,
     listRemoteRefs,
     readDefaultRef,
-    readMergeBase,
+    findRemoteDefaultBranch,
 } from '#cli/repository/revisions/changes.ts';
-import { isShallowClone, readHead } from '#cli/repository/revisions/files.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text/order.ts';
+import {
+    runGit,
+    readGitPath,
+    readGitText,
+    readGitLines,
+    readGitPaths,
+    buildGitError,
+} from '#cli/repository/git/run.ts';
 import type {
+    PushLine,
     Comparison,
+    PushSearch,
+    PushRevision,
     PushBaseSearch,
     PushedRevisions,
-    PushLine,
-    PushRevision,
-    PushSearch,
 } from '#cli/types/repository.ts';
+import {
+    NOT_FLAG,
+    ABSENT_HASH,
+    PEEL_SUFFIX,
+    TREE_SUFFIX,
+    REMOTES_FLAG,
+    BRANCHES_PREFIX,
+    DEFAULT_BRANCHES,
+    GIT_LOG_ARGUMENTS,
+    NO_CHANGES_REASON,
+    NON_COMMIT_REASON,
+    DELETED_REF_REASON,
+    FORCE_PUSH_MESSAGE,
+    GIT_PEEL_ARGUMENTS,
+    GIT_TREE_ARGUMENTS,
+    NO_SETTINGS_REASON,
+    GIT_REMOTE_ARGUMENTS,
+    PEEL_FAILURE_MESSAGE,
+    GIT_REV_LIST_ARGUMENTS,
+    UNFETCHED_PUSH_MESSAGE,
+    GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_TREE_NAMES_ARGUMENTS,
+    GIT_IS_ANCESTOR_ARGUMENTS,
+    GIT_ROOT_COMMITS_ARGUMENTS,
+    INVALID_PUSH_INPUT_MESSAGE,
+    MISSING_PUSH_REVISION_MESSAGE,
+} from '#cli/config/repository/revisions.ts';
 
 function parsePushLine(line: string): PushLine {
     const [localRef, localHash, remoteRef, remoteHash, ...verbatim] = line.trim().split(WHITESPACE_RUN);

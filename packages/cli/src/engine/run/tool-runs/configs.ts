@@ -1,14 +1,14 @@
-import { CONFIG_PLACEHOLDER, POINTER_PLACEHOLDER } from '#cli/config/engine.ts';
-import { extractConfigName } from '#cli/manifests/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import type { Config } from '#cli/types/manifests.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { extractConfigName } from '#cli/manifests/checks.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { CONFIG_PLACEHOLDER, POINTER_PLACEHOLDER } from '#cli/config/engine.ts';
 
 function listConfigs(planned: PlannedCheck): Config[] {
     const own = planned.scope.configurations

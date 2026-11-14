@@ -1,5 +1,5 @@
-import { noUnsafeSecurityHeaders } from '#eslint-plugin/rules/servers/no-unsafe-security-headers.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnsafeSecurityHeaders } from '#eslint-plugin/rules/servers/no-unsafe-security-headers.ts';
 
 buildRuleTester().run('no-unsafe-security-headers', noUnsafeSecurityHeaders, {
     valid: [

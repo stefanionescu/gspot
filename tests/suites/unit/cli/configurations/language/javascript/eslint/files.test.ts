@@ -1,24 +1,23 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text/order.ts';
+import type { LintFinding } from '#tests/types/setup.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { ScriptFindingCase } from '#tests/types/configurations.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+
 import {
-    EXTENSIONLESS_SCRIPT_CASES,
-    EXTENSIONLESS_SCRIPT_RULES,
-    NESTED_ESLINT_RULES,
+    UNLINTED_FILES,
     NODE_SCRIPT_CASES,
     NODE_SCRIPT_FILES,
     NODE_SCRIPT_RULES,
     NODE_SCRIPT_TABLES,
-    UNLINTED_FILES,
+    NESTED_ESLINT_RULES,
+    EXTENSIONLESS_SCRIPT_CASES,
+    EXTENSIONLESS_SCRIPT_RULES,
 } from '#tests/config/configurations/javascript/eslint-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { ScriptFindingCase } from '#tests/types/configurations.ts';
-import type { LintFinding } from '#tests/types/setup.ts';
 
 const NESTED_ESLINT_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',

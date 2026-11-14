@@ -1,34 +1,33 @@
 import { posix } from 'node:path';
-
-import { CLI_REFERENCE, type CliReference, DOCS_PATHS, formatNameList } from '@gspothq/cli/reference';
-
-import {
-    CHECK_FIX_MESSAGE,
-    CHECK_NEEDS_LABELS,
-    CHECK_RUN_LABELS,
-    CHECKS_HEADING,
-    CHECKS_OPENING,
-    COMMENT_BLIND_ARGUMENTS,
-    HELP_HEADING,
-    LINT_RULES_HEADING,
-    MINOR_HEADING_LEVEL,
-    PURPOSE_HEADING,
-    REFUSED_FORM_LABEL,
-    REFUSED_SUPPRESSION_MESSAGE,
-    SUBSECTION_HEADING_LEVEL,
-    SUPPRESSION_FORMS_HEADING,
-    SUPPRESSIONS_CHECK,
-    TURN_OFF_HEADING,
-} from '#docs/config/reference.ts';
-import {
-    buildReferencePage,
-    formatConfigurationLink,
-    formatSection,
-    formatTable,
-    formatText,
-} from '#docs/reference/markdown.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
 import type { Suppression } from '#docs/types/reference.ts';
+import { DOCS_PATHS, CLI_REFERENCE, formatNameList, type CliReference } from '@gspothq/cli/reference';
+
+import {
+    formatText,
+    formatTable,
+    formatSection,
+    buildReferencePage,
+    formatConfigurationLink,
+} from '#docs/reference/markdown.ts';
+import {
+    HELP_HEADING,
+    CHECKS_HEADING,
+    CHECKS_OPENING,
+    PURPOSE_HEADING,
+    CHECK_RUN_LABELS,
+    TURN_OFF_HEADING,
+    CHECK_FIX_MESSAGE,
+    CHECK_NEEDS_LABELS,
+    LINT_RULES_HEADING,
+    REFUSED_FORM_LABEL,
+    SUPPRESSIONS_CHECK,
+    MINOR_HEADING_LEVEL,
+    COMMENT_BLIND_ARGUMENTS,
+    SUBSECTION_HEADING_LEVEL,
+    SUPPRESSION_FORMS_HEADING,
+    REFUSED_SUPPRESSION_MESSAGE,
+} from '#docs/config/reference.ts';
 
 function formatCheckRequirements(needs: CliReference['checks'][number]['needs']): string {
     const resources = needs.flatMap((need) => (need === 'project-code' ? [] : [CHECK_NEEDS_LABELS[need]]));

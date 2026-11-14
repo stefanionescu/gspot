@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { IMMEDIATE_RETURN_DECLARATION } from '../../config/variables.ts';
-import { getNextStatement } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { getNextStatement } from '../../language/syntax.ts';
+import { IMMEDIATE_RETURN_DECLARATION } from '../../config/variables.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getExitStatement(
     node: TSESTree.VariableDeclaration,

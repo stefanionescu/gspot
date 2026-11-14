@@ -1,5 +1,5 @@
-import { noFixedTestWaits } from '#eslint-plugin/rules/testing/no-fixed-test-waits.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noFixedTestWaits } from '#eslint-plugin/rules/testing/no-fixed-test-waits.ts';
 
 buildRuleTester().run('no-fixed-test-waits', noFixedTestWaits, {
     valid: [

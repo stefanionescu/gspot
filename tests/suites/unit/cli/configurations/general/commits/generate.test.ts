@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { findValueAt } from '#cli/system/tables.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('commitlint refuses inactive scope-case options and keeps them when no scopes are named', async () => {
     const tables = '[tools.commitlint.rules]\nscope-case = ["always", "upper-case"]\n';

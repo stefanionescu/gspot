@@ -1,14 +1,12 @@
-import { chmod, copyFile, cp, mkdir, realpath, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { cp, chmod, mkdir, copyFile, realpath, writeFile } from 'node:fs/promises';
 
 test('javascript/biome checks shebang scripts, TypeScript, and component files in each scope, with the limits of the scope and the language', async () => {
     const nested = 'if (value) { if (value.ready) { if (value.id) return 1; } } return 0;';

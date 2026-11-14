@@ -1,23 +1,23 @@
 import { join } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { svelteFindingSchema, failureMessageSchema } from '#cli/schemas/configurations.ts';
 
 import {
     FAILURE_LINE,
     FINDING_LINE,
-    SVELTE_CHECK_COMMAND,
     SVELTE_CHECK_RULE,
+    SVELTE_CHECK_COMMAND,
     SVELTE_TSCONFIG_FLAG,
 } from '#cli/config/configurations/framework.ts';
-import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { failureMessageSchema, svelteFindingSchema } from '#cli/schemas/configurations.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function parseSvelteCheckFindings(planned: PlannedCheck, stdout: string): CheckFinding[] {
     const lines = stdout.split('\n');

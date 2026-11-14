@@ -1,24 +1,23 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { pathOutputSchema } from '#tests/schemas/setup.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
 import {
-    EXPLAIN_SETTINGS,
     PATH_IGNORE,
+    EXPLAIN_SETTINGS,
     SYNTAX_CHECK_TABLES,
     UNKNOWN_SUBJECT_CASES,
 } from '#tests/config/commands/lookup.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { pathOutputSchema } from '#tests/schemas/setup.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a path explanation names its scope and kind, and shows the checks that the level turns off', async () => {
     await using sandbox = await createGitSandbox({

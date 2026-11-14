@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { getAssignedValue } from './variables.ts';
+import type { CallText, ImportSource } from '../types/plugin.ts';
+import { isCallOf, getMemberRoot, isCalleeNamed, unwrapExpression } from './syntax.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    IMPORT_EQUALS_SELECTOR,
+    NODE_PREFIX,
     IMPORT_SELECTOR,
     MODULE_SEPARATOR,
-    NODE_PREFIX,
     REQUIRE_SELECTOR,
+    IMPORT_EQUALS_SELECTOR,
 } from '../config/plugin.ts';
-import type { CallText, ImportSource } from '../types/plugin.ts';
-import { getMemberRoot, isCalleeNamed, isCallOf, unwrapExpression } from './syntax.ts';
-import { getAssignedValue } from './variables.ts';
 
 const importCache = new WeakMap<TSESLint.SourceCode, ReadonlySet<string>>();
 

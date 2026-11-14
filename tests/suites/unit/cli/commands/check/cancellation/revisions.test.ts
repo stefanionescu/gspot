@@ -1,23 +1,21 @@
 import { existsSync } from 'node:fs';
-import { readdir, readFile, writeFile } from 'node:fs/promises';
-import { delimiter, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
-import { AUTHORED_SCRIPT, SIGNAL_EXITS } from '#tests/config/commands/check.ts';
-import { CHILD_TIMEOUT_SECONDS, SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
-import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
-import { captureChild, limitCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { readdir, readFile, writeFile } from 'node:fs/promises';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { PausedGit, ProcessOutput } from '#tests/types/setup.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { SIGNAL_EXITS, AUTHORED_SCRIPT } from '#tests/config/commands/check.ts';
+import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { BASH_SYNTAX_CHECK, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { SIGNAL_MARKER_OPTION, CHILD_TIMEOUT_SECONDS } from '#tests/config/setup/programs.ts';
+import { waitForExit, waitForFile, captureChild, limitCommand } from '#tests/setup/system/processes.ts';
 
 async function prepareStagedCancellation(root: string): Promise<{ indexed: string; scratch: string }> {
     await createFileTree(root, {

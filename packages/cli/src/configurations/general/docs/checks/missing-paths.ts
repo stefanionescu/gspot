@@ -1,52 +1,52 @@
-import { readdirSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
+import { isTable } from '#cli/system/tables.ts';
+import { statSync, readdirSync } from 'node:fs';
+import type { Session } from '#cli/types/tools.ts';
+import type { ProseLine } from '#cli/types/parsers.ts';
+import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { miseTasksSchema } from '#cli/schemas/configurations.ts';
+import { MISE_FILES } from '#cli/config/configurations/general.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
+import { extractProseLines } from '#cli/parsers/formats/markdown.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import { TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
+import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
+import { escapeGlob, buildPathMatcher } from '#cli/system/patterns.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { listExecutableNames } from '#cli/system/processes/programs.ts';
+import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
+import { getScalarSetting } from '#cli/engine/run/tool-runs/placeholders.ts';
+import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
+import type { PathIndex, TaskNames } from '#cli/types/configurations/general.ts';
+import { includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
 
 import {
     BUN_RUN,
+    MISE_RUN,
+    TASK_FILE,
+    DOCS_RULES,
+    RUN_COMMAND,
     CHANGELOG_FILE,
     COMMAND_FENCES,
-    DOCS_RULES,
     FILE_EXTENSION,
-    MISE_CONFIG_GLOB,
-    MISE_RUN,
     PATH_CHARACTERS,
-    PATH_TOKEN_SKIPS,
-    RELATIVE_PATH_PREFIXES,
-    REMOTE_ARGUMENTS,
-    RUN_COMMAND,
-    TASK_FILE,
     TITLE_ATTRIBUTE,
+    MISE_CONFIG_GLOB,
+    PATH_TOKEN_SKIPS,
+    REMOTE_ARGUMENTS,
     TOKEN_SEPARATORS,
     TRAILING_PUNCTUATION,
+    RELATIVE_PATH_PREFIXES,
 } from '#cli/config/configurations/docs.ts';
-import { MISE_FILES } from '#cli/config/configurations/general.ts';
-import { LEADING_DOT_SLASH } from '#cli/config/engine.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { MISE_TASK_FOLDERS } from '#cli/config/repository/setup.ts';
-import { TRAILING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { NPM_BIN_FOLDER } from '#cli/config/tools/programs.ts';
-import { MISSING_PATH_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { getScalarSetting } from '#cli/engine/run/tool-runs/placeholders.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { extractProseLines } from '#cli/parsers/formats/markdown.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
-import { buildGitignoreMatcher } from '#cli/repository/files/gitignore.ts';
-import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { miseTasksSchema } from '#cli/schemas/configurations.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { includeParentFolders, listEnclosingFolders } from '#cli/system/paths.ts';
-import { buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';
-import { listExecutableNames } from '#cli/system/processes/programs.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type { PathIndex, TaskNames } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { ProseLine } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listGeneratorPaths(planned: PlannedCheck): string[] {
     const paths: string[] = [];

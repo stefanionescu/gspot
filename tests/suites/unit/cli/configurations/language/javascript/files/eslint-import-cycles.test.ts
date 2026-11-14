@@ -1,12 +1,10 @@
-import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
+import { join } from 'node:path';
 import { testdir } from 'testdirs';
-
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect } from 'bun:test';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('the import-cycles config parses TypeScript files and resolves their imports through the projects', async () => {
     await using sandbox = await testdir({

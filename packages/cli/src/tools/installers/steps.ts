@@ -1,11 +1,11 @@
-import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { writeProgress } from '#cli/system/terminal.ts';
-import { formatSeconds } from '#cli/system/text/messages.ts';
-import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 import { runTool } from '#cli/tools/run.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import type { ToolInstall } from '#cli/types/tools.ts';
+import { writeProgress } from '#cli/system/terminal.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { formatSeconds } from '#cli/system/text/messages.ts';
+import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
+import { redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 
 /**
 Format how a process ended: its exit code, or the signal that stopped it.

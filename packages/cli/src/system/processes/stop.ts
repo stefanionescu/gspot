@@ -1,24 +1,23 @@
-import type { ChildProcess } from 'node:child_process';
-import { setTimeout as delay } from 'node:timers/promises';
-
 import { execaSync } from 'execa';
 import { onExit } from 'signal-exit';
+import type { ChildProcess } from 'node:child_process';
+import { setTimeout as delay } from 'node:timers/promises';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import type { ProcessTermination, ProcessTreeControl, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 import {
-    EXIT_CLEANUP_MILLISECONDS,
     FAILED_CODE,
+    TASKKILL_FLAGS,
+    TASKKILL_PROGRAM,
+    TASKKILL_PID_FLAG,
+    TASKKILL_GONE_CODE,
+    STOP_POLL_MILLISECONDS,
     MILLISECONDS_PER_SECOND,
-    OUTPUT_CLOSE_MILLISECONDS,
     PROCESS_CLEANUP_MESSAGE,
     STOP_GRACE_MILLISECONDS,
-    STOP_POLL_MILLISECONDS,
-    TASKKILL_FLAGS,
-    TASKKILL_GONE_CODE,
-    TASKKILL_PID_FLAG,
-    TASKKILL_PROGRAM,
+    EXIT_CLEANUP_MILLISECONDS,
+    OUTPUT_CLOSE_MILLISECONDS,
 } from '#cli/config/system.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import type { CancelableSpawnOptions, ProcessTermination, ProcessTreeControl } from '#cli/types/system.ts';
 
 function isGroupGone(error: Error, child: ChildProcess): boolean {
     const hasExited = child.exitCode !== null || child.signalCode !== null;

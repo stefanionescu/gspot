@@ -1,33 +1,34 @@
-import { FIX_CANCELED_MESSAGE, FIX_ROUNDS } from '#cli/config/engine.ts';
-import { createCopy } from '#cli/engine/copies/files.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { getRequired } from '#cli/system/tables.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { isActive } from '#cli/engine/plan/checks.ts';
-import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/run/tool-runs/check.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { createCopy } from '#cli/engine/copies/files.ts';
+import { findCommandTool } from '#cli/manifests/tools.ts';
+import { readContents } from '#cli/system/files/reads.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findToolPath } from '#cli/tools/programs/inspect.ts';
+import { runToolProcess } from '#cli/engine/run/tool-runs/tool.ts';
+import { listConflictedPaths } from '#cli/repository/git/output.ts';
 import { listCopyFiles } from '#cli/engine/run/tool-runs/configs.ts';
 import { isReportedCrash } from '#cli/engine/run/tool-runs/failures.ts';
-import { runToolProcess } from '#cli/engine/run/tool-runs/tool.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findCommandTool } from '#cli/manifests/tools.ts';
-import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
-import { listConflictedPaths } from '#cli/repository/git/output.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { readContents } from '#cli/system/files/reads.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { findToolPath } from '#cli/tools/programs/inspect.ts';
-import type { FixerPlannedCheck, PlannedCheck } from '#cli/types/engine/plan.ts';
+import { FIX_ROUNDS, FIX_CANCELED_MESSAGE } from '#cli/config/engine.ts';
+import type { PlannedCheck, FixerPlannedCheck } from '#cli/types/engine/plan.ts';
+import type { PathBytes, SpawnResult, FileContents } from '#cli/types/system.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
+import { buildCommandLaunch, selectCommandFolder } from '#cli/engine/run/tool-runs/check.ts';
+
 import type {
-    BuiltInFix,
-    CheckSession,
-    CommandLaunch,
     FixReport,
     FixResult,
     FixRounds,
+    BuiltInFix,
     RunOptions,
+    CheckSession,
+    CommandLaunch,
 } from '#cli/types/engine/run.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import type { FileContents, PathBytes, SpawnResult } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function findFixFailure(planned: PlannedCheck, result: SpawnResult): string | undefined {
     const { check } = planned;

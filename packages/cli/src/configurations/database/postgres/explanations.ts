@@ -1,12 +1,13 @@
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
+
 import {
-    DRIFT_GUARD_RULE,
     FROZEN_RULE,
-    MIGRATION_RULES,
     POLICY_RULES,
+    MIGRATION_RULES,
+    DRIFT_GUARD_RULE,
     ROW_SECURITY_RULE,
 } from '#cli/config/configurations/postgres.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
-import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const EDITED_MIGRATION_EXPLANATIONS = {
     [FROZEN_RULE]: {

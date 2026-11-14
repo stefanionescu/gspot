@@ -1,20 +1,20 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
+import { createRule } from '../../rule.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
+import { getModuleName } from '../../language/modules.ts';
 import { TERMINATING_STATEMENTS } from '../../config/plugin.ts';
-import {
-    GUARD_TESTS,
-    VOLATILE_CALLS,
-    VUE_DEFINE_COMPONENT,
-    VUE_ON_UPDATED,
-    VUE_OPTION_PROPERTIES,
-    VUE_REACTIVE,
-    VUE_REF,
-} from '../../config/vue.ts';
 import { getExpressionValue } from '../../language/expressions.ts';
 import { listFunctionAncestors } from '../../language/functions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { listBodyNodes } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    VUE_REF,
+    GUARD_TESTS,
+    VUE_REACTIVE,
+    VOLATILE_CALLS,
+    VUE_ON_UPDATED,
+    VUE_DEFINE_COMPONENT,
+    VUE_OPTION_PROPERTIES,
+} from '../../config/vue.ts';
 
 function getHookBody(node: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const variable =

@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('javascript/knip keeps only the findings of the files that Git lists', async () => {
     await using sandbox = await createGitSandbox({

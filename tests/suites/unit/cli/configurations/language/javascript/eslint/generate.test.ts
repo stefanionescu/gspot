@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect } from 'bun:test';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test('ESLint skips build output and files marked linguist-generated in .gitattributes', async () => {
     await using sandbox = await testdir({

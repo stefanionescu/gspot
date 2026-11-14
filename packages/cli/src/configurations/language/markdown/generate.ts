@@ -1,13 +1,14 @@
+import { getTable } from '#cli/settings/tables.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+
 import {
+    PRETTIER_STYLE,
+    MARKDOWNLINT_RULES,
     MARKDOWNLINT_ALL_RULES,
     MARKDOWNLINT_PRETTIER_DISABLED,
-    MARKDOWNLINT_RULES,
-    PRETTIER_STYLE,
 } from '#cli/config/configurations/markdown.ts';
-import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildMarkdownlintFile(planned: PlannedConfig): string {
     const isAll = planned.level === 'all';

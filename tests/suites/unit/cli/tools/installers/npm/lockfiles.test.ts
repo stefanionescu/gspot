@@ -1,6 +1,5 @@
-import { describe, expect, test } from 'bun:test';
 import { stringify } from 'yaml';
-
+import { test, expect, describe } from 'bun:test';
 import { isLockfileFresh, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
 
 const ROOT_DEPENDENCIES = [

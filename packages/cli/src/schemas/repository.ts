@@ -1,10 +1,9 @@
-import semver from 'semver';
 import { z } from 'zod';
-
+import semver from 'semver';
 import { GIT_MODES } from '#cli/config/repository/files.ts';
+import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
 import { PUSH_SKIP_REASONS } from '#cli/config/repository/revisions.ts';
-import { LINT_COMMAND_FIXES } from '#cli/config/repository/setup.ts';
 import { configTableSchema, stringValuesSchema } from '#cli/schemas/parsers.ts';
 
 export const gitFileSchema = z.object({

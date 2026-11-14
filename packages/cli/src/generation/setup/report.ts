@@ -1,21 +1,21 @@
 import { styleText } from 'node:util';
+import { formatCount } from '#cli/system/text/messages.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { InitPlan, InitFileRow, CarryoverRow } from '#cli/types/generation.ts';
 
 import {
-    ALWAYS_SELECTED_NOUN,
+    COLUMN_GAP,
+    ORIGIN_WIDTH,
+    CI_OFF_MESSAGE,
     CARRYOVER_GROUPS,
     CARRYOVER_HEADING,
-    CHANGE_LATER_MESSAGE,
-    CI_OFF_MESSAGE,
-    COLUMN_GAP,
-    CONFIGURATION_WIDTH,
     DELETED_RULES_NOTE,
-    LINT_COMMANDS_HEADING,
+    CONFIGURATION_WIDTH,
+    ALWAYS_SELECTED_NOUN,
+    CHANGE_LATER_MESSAGE,
     LINT_FOLDERS_HEADING,
-    ORIGIN_WIDTH,
+    LINT_COMMANDS_HEADING,
 } from '#cli/config/generation/setup.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import type { CarryoverRow, InitFileRow, InitPlan } from '#cli/types/generation.ts';
 
 function formatFileSection(title: string, rows: InitFileRow[]): string[] {
     if (rows.length === 0) return [];

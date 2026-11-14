@@ -1,13 +1,11 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import { SWIFTPM_TARGET_FOLDERS } from '#cli/config/parsers/projects.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import type { ParseCache, SwiftModule } from '#cli/types/parsers.ts';
+import { SWIFTPM_TARGET_FOLDERS } from '#cli/config/parsers/projects.ts';
 
 function findStringArgument(call: Node, label: string): string | undefined {
     const value = listSwiftCallArguments(call)

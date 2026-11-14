@@ -1,14 +1,14 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { listArgumentValues } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    POWERED_BY_FACTORIES,
     POWERED_BY_HEADER,
+    POWERED_BY_FACTORIES,
     POWERED_BY_MIDDLEWARE,
     POWERED_BY_SET_ARGUMENTS,
 } from '../../config/servers.ts';
-import { listArgumentValues } from '../../language/expressions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
 
 function hasHeaderProtection(node: TSESTree.CallExpressionArgument, source: TSESLint.SourceCode): boolean {
     const value = node.type === AST_NODE_TYPES.SpreadElement ? node.argument : node;

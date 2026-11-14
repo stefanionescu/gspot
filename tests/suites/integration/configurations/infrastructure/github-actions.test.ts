@@ -1,16 +1,14 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { GITHUB_WORKFLOW } from '#cli/config/generation/builders.ts';
 import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const COMPOSITE_ACTION = `name: Greet
 inputs:

@@ -1,17 +1,15 @@
-import { symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { detectScopeFolders, findProjectFolder } from '#cli/repository/detection/scopes.ts';
-import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
+import { symlink, writeFile } from 'node:fs/promises';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { PROJECT_FILE_FOLDERS } from '#tests/config/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
+import { findProjectFolder, detectScopeFolders } from '#cli/repository/detection/scopes.ts';
 
 test.each(PROJECT_FILE_FOLDERS)('%s with the project file %s marks the folder %j', (path, pattern, folder) => {
     expect(findProjectFolder(path, pattern)).toBe(folder);

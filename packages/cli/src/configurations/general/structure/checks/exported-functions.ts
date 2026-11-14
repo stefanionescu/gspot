@@ -1,37 +1,36 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
+import { getLimit } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { GrammarName } from '#cli/types/parsers.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { joinScopeSelector } from '#cli/settings/values/paths.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { listApplicableTables } from '#cli/settings/values/written.ts';
+import type { ScriptUse, ExportedFunction } from '#cli/types/configurations/structure.ts';
 
 import {
-    SCRIPT_COUNTED_DECLARATIONS,
-    SCRIPT_FUNCTION_DECLARATIONS,
-    SCRIPT_FUNCTION_VALUES,
+    TEMPLATE_NAME,
     SCRIPT_GRAMMARS,
-    SCRIPT_MODULE_NAME_PARENTS,
     SCRIPT_NAME_NODES,
     SCRIPT_NAMED_NODES,
-    SCRIPT_TYPE_DECLARATIONS,
-    SCRIPT_UNCOUNTED_STATEMENTS,
     TEMPLATE_EXTENSIONS,
+    SCRIPT_FUNCTION_VALUES,
     TEMPLATE_IMPORT_CLAUSE,
-    TEMPLATE_NAME,
     TRIVIAL_FUNCTION_RULES,
+    SCRIPT_TYPE_DECLARATIONS,
+    SCRIPT_MODULE_NAME_PARENTS,
+    SCRIPT_COUNTED_DECLARATIONS,
+    SCRIPT_UNCOUNTED_STATEMENTS,
+    SCRIPT_FUNCTION_DECLARATIONS,
 } from '#cli/config/configurations/structure.ts';
-import { selectGrammar } from '#cli/configurations/syntax.ts';
-import { listCheckFiles } from '#cli/engine/plan/files.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { getLimit } from '#cli/settings/tables.ts';
-import { joinScopeSelector } from '#cli/settings/values/paths.ts';
-import { listApplicableTables } from '#cli/settings/values/written.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ExportedFunction, ScriptUse } from '#cli/types/configurations/structure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 /**
 Count the statements of a JavaScript or TypeScript function as `gspot/no-trivial-functions` counts them: each nested

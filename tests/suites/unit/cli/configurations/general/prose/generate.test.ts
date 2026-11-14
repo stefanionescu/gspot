@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { parse } from 'yaml';
-
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test('your banned headings and the shipped ones reach the heading style once', async () => {
     const style = await buildGeneratedFile(

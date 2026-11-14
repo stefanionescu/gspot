@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { readNamingDefaults } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

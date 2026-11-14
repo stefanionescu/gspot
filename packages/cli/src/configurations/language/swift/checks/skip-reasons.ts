@@ -1,19 +1,19 @@
 import type { Node } from 'web-tree-sitter';
-
-import {
-    DISABLED_TEST_MESSAGE,
-    DISABLED_TEST_RULE,
-    REASON_COMMENT_LINE,
-    REASON_GROUP_INDEX,
-    SKIP_REASON_ARGUMENT,
-    SWIFT_STRING_LITERAL,
-    XCTEST_PREFIX,
-} from '#cli/config/configurations/swift.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
 import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+
+import {
+    XCTEST_PREFIX,
+    DISABLED_TEST_RULE,
+    REASON_GROUP_INDEX,
+    REASON_COMMENT_LINE,
+    SKIP_REASON_ARGUMENT,
+    SWIFT_STRING_LITERAL,
+    DISABLED_TEST_MESSAGE,
+} from '#cli/config/configurations/swift.ts';
 
 function hasReason(reason: Node | undefined): boolean {
     if (reason === undefined || reason.text === 'nil') return false;

@@ -1,19 +1,20 @@
-import { LINT_RULE_LABELS } from '#cli/config/commands/lookup.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
 import { WEAKENINGS_CHECK } from '#cli/config/settings/file.ts';
-import { findRuleCheck, readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
+import { LINT_RULE_LABELS } from '#cli/config/commands/lookup.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { findRuleSetting } from '#cli/settings/validation/rules.ts';
+import type { Check, Configuration } from '#cli/types/manifests.ts';
+import type { Session, RuleExplanation } from '#cli/types/tools.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import type { Explanation, LintRuleExplanation } from '#cli/types/commands.ts';
+import { findRuleCheck, readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
+
 import {
-    buildUnknownRuleError,
     findRuleTool,
     formatIgnoreCommand,
     hasRuleExplanations,
+    buildUnknownRuleError,
 } from '#cli/engine/outputs/rules.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { findRuleSetting } from '#cli/settings/validation/rules.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { Explanation, LintRuleExplanation } from '#cli/types/commands.ts';
-import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { RuleExplanation, Session } from '#cli/types/tools.ts';
 
 function formatRuleOptions(
     { check, configuration }: { check: Check; configuration: Configuration | undefined },

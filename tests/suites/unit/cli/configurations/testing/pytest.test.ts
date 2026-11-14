@@ -1,20 +1,18 @@
-import { readFile } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
 import { join, resolve } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run/checks.ts';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import type { CheckResult } from '#cli/types/engine/run.ts';
-import { COVERAGE_PROJECT_FILES } from '#tests/config/configurations/python.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { COVERAGE_PROJECT_FILES } from '#tests/config/configurations/python.ts';
 
 const COVERAGE_FLAG = '--cov-config=';
 

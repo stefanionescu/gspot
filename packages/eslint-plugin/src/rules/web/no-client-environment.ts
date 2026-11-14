@@ -1,17 +1,17 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    ALLOWED_ENVIRONMENT_NAMES,
-    CLIENT_DIRECTIVE,
-    CLIENT_ENVIRONMENT_OPTIONS_SCHEMA,
-    ENVIRONMENT_GETTER,
-    ENVIRONMENT_HOSTS,
-    ENVIRONMENT_PROPERTY,
-    PUBLIC_PREFIXES,
-    VITE_ENVIRONMENT_NAMES,
-} from '../../config/web.ts';
 import { createRule } from '../../rule.ts';
 import type { ClientEnvironmentOptions } from '../../types/security.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    PUBLIC_PREFIXES,
+    CLIENT_DIRECTIVE,
+    ENVIRONMENT_HOSTS,
+    ENVIRONMENT_GETTER,
+    ENVIRONMENT_PROPERTY,
+    VITE_ENVIRONMENT_NAMES,
+    ALLOWED_ENVIRONMENT_NAMES,
+    CLIENT_ENVIRONMENT_OPTIONS_SCHEMA,
+} from '../../config/web.ts';
 
 function listPropertyReads(property: TSESTree.Property, source: TSESLint.SourceCode): TSESTree.Node[] {
     if (property.value.type !== AST_NODE_TYPES.Identifier) return [property];

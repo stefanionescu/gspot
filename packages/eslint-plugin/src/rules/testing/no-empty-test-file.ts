@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { TEST_DECLARATIONS, TEST_FILE_PATTERN, TITLED_TEST_DECLARATIONS } from '../../config/testing.ts';
 import { createRule } from '../../rule.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { TEST_DECLARATIONS, TEST_FILE_PATTERN, TITLED_TEST_DECLARATIONS } from '../../config/testing.ts';
 
 function getChainName(node: TSESTree.Node): string {
     if (node.type === AST_NODE_TYPES.Identifier) return node.name;

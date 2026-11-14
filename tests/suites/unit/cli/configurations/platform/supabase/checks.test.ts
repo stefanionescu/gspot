@@ -1,24 +1,23 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    AVATARS_BUCKET_CONFIG,
-    SERVICE_KEY_SETTINGS,
-    STORAGE_POLICIES,
-} from '#tests/config/configurations/platform.ts';
-import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
+import {
+    STORAGE_POLICIES,
+    SERVICE_KEY_SETTINGS,
+    AVATARS_BUCKET_CONFIG,
+} from '#tests/config/configurations/platform.ts';
 
 async function prepareDenoSession(root: string) {
     using resources = new DisposableStack();

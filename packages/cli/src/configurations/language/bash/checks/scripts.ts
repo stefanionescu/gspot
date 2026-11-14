@@ -1,11 +1,11 @@
-import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
-import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { remember } from '#cli/system/cache.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { ScriptFile } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
+import type { ScriptFile } from '#cli/types/configurations/language.ts';
 
 const PARSED_SCRIPTS = Symbol('parsed scripts');
 

@@ -1,30 +1,30 @@
 import { realpathSync } from 'node:fs';
-import { relative, resolve } from 'node:path';
+import { resolve, relative } from 'node:path';
+import { isInside } from '#cli/system/paths.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { GIT_PROGRAM } from '#cli/config/system.ts';
+import { decodeGitPaths } from '#cli/repository/git/output.ts';
+import { runProcess, streamProcess } from '#cli/system/processes/run.ts';
+import type { GitLookup, GitEnvironment } from '#cli/types/repository.ts';
+import type { SpawnResult, StdoutReader, CancelableSpawnOptions } from '#cli/types/system.ts';
+import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     COPIES_FOLDER,
-    GIT_COMMAND_CONFIGURATION,
-    GIT_CREATION_COMMANDS,
+    TRAILING_NEWLINE,
     GIT_FLAG_ARGUMENTS,
-    GIT_FOLDER_VARIABLE,
-    GIT_LOCAL_VARIABLES_ARGUMENTS,
-    GIT_NONLOCAL_ENVIRONMENT_NAME,
     GIT_PATH_ARGUMENTS,
     GIT_PATH_VARIABLES,
-    GIT_SETTING_ARGUMENTS,
-    GIT_TOP_LEVEL_ARGUMENTS,
+    GIT_FOLDER_VARIABLE,
     GIT_VARIABLE_PREFIX,
+    GIT_CREATION_COMMANDS,
+    GIT_SETTING_ARGUMENTS,
     GIT_WORK_TREE_VARIABLE,
-    TRAILING_NEWLINE,
+    GIT_TOP_LEVEL_ARGUMENTS,
+    GIT_COMMAND_CONFIGURATION,
+    GIT_LOCAL_VARIABLES_ARGUMENTS,
+    GIT_NONLOCAL_ENVIRONMENT_NAME,
 } from '#cli/config/repository/git.ts';
-import { GIT_PROGRAM } from '#cli/config/system.ts';
-import { decodeGitPaths } from '#cli/repository/git/output.ts';
-import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { isInside } from '#cli/system/paths.ts';
-import { runProcess, streamProcess } from '#cli/system/processes/run.ts';
-import type { GitEnvironment, GitLookup } from '#cli/types/repository.ts';
-import type { CancelableSpawnOptions, SpawnResult, StdoutReader } from '#cli/types/system.ts';
 
 const localVariableReads = new Map<string, Promise<SpawnResult>>();
 

@@ -1,31 +1,30 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import picomatch from 'picomatch';
+import { isDeepStrictEqual } from 'node:util';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 
+import type {
+    ListCounts,
+    EslintReference,
+    EslintFileWriter,
+    EslintBlockFields,
+    EslintCallArgument,
+    PlannedEslintBlock,
+} from '#cli/types/configurations/javascript.ts';
 import {
     EMPTY_LIST,
     ESLINT_INDENT,
+    NAME_SEPARATOR,
+    SHARED_LIST_MARK,
+    PACKAGE_SCOPE_MARK,
+    SHARED_LIST_SUFFIX,
+    GSPOT_PRESET_LEVELS,
     ESLINT_NAMED_IMPORTS,
+    IDENTIFIER_SEPARATOR,
+    SHARED_LIST_REFERENCE,
     ESLINT_PACKAGE_IMPORTERS,
     ESLINT_RUNTIMES_CONSTANT,
-    GSPOT_PRESET_LEVELS,
-    IDENTIFIER_SEPARATOR,
-    NAME_SEPARATOR,
-    PACKAGE_SCOPE_MARK,
-    SHARED_LIST_MARK,
-    SHARED_LIST_REFERENCE,
-    SHARED_LIST_SUFFIX,
 } from '#cli/config/configurations/javascript/eslint.ts';
-import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { joinScopeGlob } from '#cli/repository/scopes.ts';
-import type {
-    EslintBlockFields,
-    EslintCallArgument,
-    EslintFileWriter,
-    EslintReference,
-    ListCounts,
-    PlannedEslintBlock,
-} from '#cli/types/configurations/javascript.ts';
 
 const compiledGlobs = new Map<string, string>();
 

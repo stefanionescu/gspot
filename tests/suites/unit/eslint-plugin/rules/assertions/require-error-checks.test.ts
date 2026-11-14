@@ -1,5 +1,5 @@
-import { requireErrorChecks } from '#eslint-plugin/rules/assertions/require-error-checks.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireErrorChecks } from '#eslint-plugin/rules/assertions/require-error-checks.ts';
 
 buildRuleTester().run('require-error-checks', requireErrorChecks, {
     valid: [

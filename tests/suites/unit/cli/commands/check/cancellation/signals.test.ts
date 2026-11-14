@@ -1,17 +1,15 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
-import { CHILD_TIMEOUT_SECONDS, GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { spawnCommand, waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CANCELLATION_REPORT_CASES } from '#tests/config/commands/check.ts';
+import { waitForExit, waitForFile, spawnCommand } from '#tests/setup/system/processes.ts';
+import { GSPOT_ENVIRONMENT, CHILD_TIMEOUT_SECONDS } from '#tests/config/setup/programs.ts';
 
 test.skipIf(isWindows).each(CANCELLATION_REPORT_CASES)(
     'check passes $signal to a running tool and reports the run as canceled in $format',

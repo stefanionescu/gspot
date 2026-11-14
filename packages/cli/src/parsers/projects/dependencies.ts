@@ -1,38 +1,38 @@
 import { posix } from 'node:path';
-
-import {
-    GIT_SUFFIX,
-    INLINE_COMMENT,
-    JAVASCRIPT_RUNTIMES,
-    LINE_CONTINUATION,
-    PACKAGE_JSON,
-    PACKAGE_SWIFT,
-    PIPFILE,
-    PYPROJECT_TOML,
-    PYTEST_TABLE,
-    PYTHON_NAME_SEPARATORS,
-    REQUIREMENT_NAME,
-    REQUIREMENT_NAME_END,
-    REQUIREMENTS_TXT,
-    RUNTIME_COMMAND,
-} from '#cli/config/parsers/projects.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { packageJsonSchema, pipfileSchema, pyprojectSchema } from '#cli/schemas/parsers.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
+import { pipfileSchema, pyprojectSchema, packageJsonSchema } from '#cli/schemas/parsers.ts';
+
 import type {
+    Pyproject,
+    PackageJson,
     Dependencies,
     DependencyFile,
-    DependencyFileParser,
-    PackageJson,
-    Pyproject,
     PythonDependency,
+    DependencyFileParser,
 } from '#cli/types/parsers.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import {
+    PIPFILE,
+    GIT_SUFFIX,
+    PACKAGE_JSON,
+    PYTEST_TABLE,
+    PACKAGE_SWIFT,
+    INLINE_COMMENT,
+    PYPROJECT_TOML,
+    RUNTIME_COMMAND,
+    REQUIREMENT_NAME,
+    REQUIREMENTS_TXT,
+    LINE_CONTINUATION,
+    JAVASCRIPT_RUNTIMES,
+    REQUIREMENT_NAME_END,
+    PYTHON_NAME_SEPARATORS,
+} from '#cli/config/parsers/projects.ts';
 
 function parseRequirementName(requirement: string): string | undefined {
     const trimmed = requirement.trim();

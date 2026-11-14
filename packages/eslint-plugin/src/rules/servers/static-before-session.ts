@@ -1,16 +1,16 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { listArgumentValues } from '../../language/expressions.ts';
+import type { MemberCall, FunctionNode } from '../../types/plugin.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     EXPRESS_MODULE,
-    INJECTED_APPLICATION,
+    STATIC_MIDDLEWARE,
     MIDDLEWARE_SELECTOR,
     SESSION_MIDDLEWARES,
-    STATIC_MIDDLEWARE,
+    INJECTED_APPLICATION,
 } from '../../config/servers.ts';
-import { listArgumentValues } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
-import type { FunctionNode, MemberCall } from '../../types/plugin.ts';
 
 function findInjectedApplication(node: FunctionNode): TSESTree.Identifier | undefined {
     const { parent } = node;

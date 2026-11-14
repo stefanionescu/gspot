@@ -1,20 +1,18 @@
-import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import executables from 'which';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { createFileTree } from 'testdirs';
+import { writeFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const DATABASE_SCHEMAS = ['public', 'private', 'audit'] as const;
 

@@ -1,18 +1,16 @@
-import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { format } from 'prettier';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
-import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGspotProject, isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import type { GspotProject } from '#tests/types/setup.ts';
+import { pushOutputSchema } from '#tests/schemas/setup.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { OFFLINE_ENVIRONMENT } from '#tests/config/setup/programs.ts';
+import { createGspotProject, isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 const PAGE_FILE = 'src/plugin-page.ts';
 

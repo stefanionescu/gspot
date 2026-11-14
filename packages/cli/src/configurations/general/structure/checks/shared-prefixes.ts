@@ -1,26 +1,26 @@
 import { posix } from 'node:path';
-
-import {
-    COMPANION_SUFFIX,
-    GSPOT_FIXED_NAMES,
-    HOOK_FOLDERS,
-    INDEX_BASE_NAMES,
-    SHARED_PREFIX_RULE,
-    SPEC_SUFFIX,
-    TYPE_FILE_CASE,
-} from '#cli/config/configurations/structure.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { splitWords } from '#cli/configurations/general/naming/words.ts';
+import type { FolderChild } from '#cli/types/configurations/structure.ts';
 import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
 import { listNamedFiles } from '#cli/configurations/general/naming/checks/source-names.ts';
-import { splitWords } from '#cli/configurations/general/naming/words.ts';
-import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/tables.ts';
+import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 import { extractBaseName, extractExtension, extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
-import type { FolderChild } from '#cli/types/configurations/structure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+
+import {
+    SPEC_SUFFIX,
+    HOOK_FOLDERS,
+    TYPE_FILE_CASE,
+    COMPANION_SUFFIX,
+    INDEX_BASE_NAMES,
+    GSPOT_FIXED_NAMES,
+    SHARED_PREFIX_RULE,
+} from '#cli/config/configurations/structure.ts';
 
 function hasKindSuffix(name: string, kinds: Set<string>): boolean {
     const extension = extractExtension(name);

@@ -1,10 +1,9 @@
 import { enableCompileCache } from 'node:module';
-
-import { FATAL_ERROR_EVENTS, JSON_FLAG, PROCESS_ARGUMENTS_START, VERBOSE_FLAG } from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { validateRuntimeVersion } from '#cli/system/package/runtime.ts';
-import { printError, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
+import { printError, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
+import { JSON_FLAG, VERBOSE_FLAG, FATAL_ERROR_EVENTS, PROCESS_ARGUMENTS_START } from '#cli/config/main.ts';
 
 enableCompileCache();
 

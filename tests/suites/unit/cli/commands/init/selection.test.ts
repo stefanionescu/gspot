@@ -1,22 +1,20 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { listAlwaysSelected } from '#cli/manifests/select.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { initOutputSchema } from '#tests/schemas/setup.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import * as installers from '#cli/tools/installers/install.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { initOutputSchema } from '#tests/schemas/setup.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
 import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 const TOOL_ONLY_PACKAGE = '{"private":true,"devDependencies":{"prettier":"3.8.1"}}\n';
 

@@ -1,39 +1,39 @@
-import { accessSync, constants, existsSync, realpathSync } from 'node:fs';
-import { isAbsolute, relative, resolve } from 'node:path';
-
-import { formatAnnotations } from '#cli/commands/check/annotations.ts';
-import { runPushCheck } from '#cli/commands/check/push.ts';
-import { runStagedCheck } from '#cli/commands/check/staged.ts';
-import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import {
-    CHECK_INPUT_HOOKS,
-    CHECK_STAGES,
-    CHECK_STOPPED_MESSAGE,
-    COMMIT_FILE_MESSAGE,
-    EMPTY_CHECKS_MESSAGE,
-    GIT_STAGED_SETTINGS_ARGUMENTS,
-    HOOK_REFUSAL_REASONS,
-    PUSH_STDIN_MESSAGE,
-} from '#cli/config/commands/check.ts';
-import { BASE_OPTION, HOOK_OPTION, ONLY_OPTION, SKIP_OPTION } from '#cli/config/commands/help.ts';
-import { BASE_FLAG, FIX_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
-import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { readGitText } from '#cli/repository/git/run.ts';
-import { parseSettings } from '#cli/settings/parse.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
+import { readGitText } from '#cli/repository/git/run.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { runCancelableCommand } from '#cli/system/processes/signals.ts';
-import { readPushInput, rewriteProgress } from '#cli/system/terminal.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { resolve, relative, isAbsolute } from 'node:path';
+import { runPushCheck } from '#cli/commands/check/push.ts';
+import { runTreeCheck } from '#cli/commands/check/tree.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
+import { runStagedCheck } from '#cli/commands/check/staged.ts';
+import { formatAnnotations } from '#cli/commands/check/annotations.ts';
+import { runCancelableCommand } from '#cli/system/processes/signals.ts';
+import { FIX_FLAG, BASE_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+import { readPushInput, rewriteProgress } from '#cli/system/terminal.ts';
+import { constants, accessSync, existsSync, realpathSync } from 'node:fs';
+import { BASE_OPTION, HOOK_OPTION, ONLY_OPTION, SKIP_OPTION } from '#cli/config/commands/help.ts';
+
 import type {
-    CheckCommandJson,
     CheckFlags,
     CheckOptions,
-    CommandDefinition,
     CommandLocation,
+    CheckCommandJson,
+    CommandDefinition,
 } from '#cli/types/commands.ts';
-import type { CommandResult } from '#cli/types/system.ts';
+import {
+    CHECK_STAGES,
+    CHECK_INPUT_HOOKS,
+    PUSH_STDIN_MESSAGE,
+    COMMIT_FILE_MESSAGE,
+    EMPTY_CHECKS_MESSAGE,
+    HOOK_REFUSAL_REASONS,
+    CHECK_STOPPED_MESSAGE,
+    GIT_STAGED_SETTINGS_ARGUMENTS,
+} from '#cli/config/commands/check.ts';
 
 function assertHookFlags(flags: CheckFlags, hook: NonNullable<CheckFlags['hook']>): void {
     const list = [

@@ -1,24 +1,24 @@
-import { expect, test } from 'bun:test';
-
-import { DOCKERIGNORE_PATTERNS } from '#cli/config/configurations/docker.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { DOCKERIGNORE_PATTERNS } from '#cli/config/configurations/docker.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
 import {
+    TRIVY_REPORT,
+    NGINX_COMPOSE,
     COMPOSE_SOURCES,
     DOCKERIGNORE_CASES,
-    NGINX_COMPOSE,
     TRIVY_IMAGE_FINDINGS,
     TRIVY_REGISTRY_FAILURE,
-    TRIVY_REPORT,
 } from '#tests/config/configurations/docker.ts';
-import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function scanImages(root: string, stdout: string, resources: DisposableStack) {
     const session = await openFakeToolSession(root, ['trivy'], resources);

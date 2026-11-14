@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { validateRuntimeVersion } from '#cli/system/package/runtime.ts';
+import { test, expect } from 'bun:test';
 import { CLI_BIN } from '#tests/setup/cli/commands.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { validateRuntimeVersion } from '#cli/system/package/runtime.ts';
 
 test('an unsupported runtime honors JSON before loading commands', async () => {
     await using sandbox = await testdir();

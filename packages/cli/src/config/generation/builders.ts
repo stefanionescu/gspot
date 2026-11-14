@@ -1,13 +1,14 @@
 import { BASE_FLAG } from '#cli/config/engine.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
 import { GSPOT_CHECK, GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GENERATED_HEADER_MARK } from '#cli/config/repository/files.ts';
+
 import {
-    type CI_PROVIDERS,
-    GITHUB_WORKFLOWS_FOLDER,
     GITLAB_CI_FOLDER,
     LFS_GUARD_PREFIX,
+    type CI_PROVIDERS,
+    GITHUB_WORKFLOWS_FOLDER,
 } from '#cli/config/repository/setup.ts';
-import { NODE_PROGRAM } from '#cli/config/system.ts';
 
 // agent rule files
 export const ALL_LEVEL_MARKER = '<!-- level: all -->';

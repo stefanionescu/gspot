@@ -1,22 +1,23 @@
+import type { Session } from '#cli/types/tools.ts';
+import { GSPOT_ADD } from '#cli/config/manifests.ts';
 import { CODE_MARK } from '#cli/config/commands/help.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
+import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
+import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { formatDetectionConditions } from '#cli/manifests/reference.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import type { Explanation, ConfigurationExplanation } from '#cli/types/commands.ts';
+
 import {
+    TOOL_PINS,
     DETECTED_BY,
+    TEST_FILES_MESSAGE,
     ESLINT_FILES_MESSAGE,
     LANGUAGE_FILES_MESSAGE,
     PRETTIER_FILES_MESSAGE,
-    TEST_FILES_MESSAGE,
-    TOOL_PINS,
 } from '#cli/config/commands/lookup.ts';
-import { GSPOT_ADD } from '#cli/config/manifests.ts';
-import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
-import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { formatDetectionConditions } from '#cli/manifests/reference.ts';
-import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { listRemovedConfigurations } from '#cli/settings/scopes.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { ConfigurationExplanation, Explanation } from '#cli/types/commands.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listConfigurationRemovals(session: Session | undefined, name: string): ConfigurationExplanation['removed'] {
     return (session === undefined ? [] : listRemovedConfigurations(session.settings))

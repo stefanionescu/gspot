@@ -1,34 +1,34 @@
 import { lstatSync } from 'node:fs';
-import { basename, dirname, join } from 'node:path';
-
-import { INSTALLED_TOOL_FOLDERS, LEADING_PATH_SEGMENTS, TEMPORARY_FILE_NAME } from '#cli/config/generation/files.ts';
+import { join, dirname, basename } from 'node:path';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
-import { EXECUTABLE_FILE, GSPOT_FOLDER, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { readHooks } from '#cli/repository/setup/read.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import { installHooks } from '#cli/tools/installers/hooks.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
 import { VALE_TEMPORARY_NAME } from '#cli/config/tools/vale.ts';
-import { listOwnablePaths } from '#cli/generation/configs/paths.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 import { isGspotOwned } from '#cli/repository/files/ownership.ts';
+import { listOwnablePaths } from '#cli/generation/configs/paths.ts';
+import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { readGspotGeneratedPatterns } from '#cli/repository/git/attributes.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import type { ApplyReport, GeneratedWritePlans } from '#cli/types/generation.ts';
+import { GSPOT_FOLDER, EXECUTABLE_FILE, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { TEMPORARY_FILE_NAME, LEADING_PATH_SEGMENTS, INSTALLED_TOOL_FOLDERS } from '#cli/config/generation/files.ts';
+
 import {
     planBlock,
-    planManagedKeys,
-    planRemovals,
-    planReplacements,
     writePlans,
+    planRemovals,
+    planManagedKeys,
+    planReplacements,
 } from '#cli/repository/files/writes.ts';
-import { readGspotGeneratedPatterns } from '#cli/repository/git/attributes.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { readHooks } from '#cli/repository/setup/read.ts';
-import { openFiles, walkFiles } from '#cli/system/files/open.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
-import { installHooks } from '#cli/tools/installers/hooks.ts';
-import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import type { ApplyReport, GeneratedWritePlans } from '#cli/types/generation.ts';
-import type { Repository } from '#cli/types/repository.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
-import type { Generation, Session } from '#cli/types/tools.ts';
 
 function isTemporaryPath(path: string): boolean {
     if (TEMPORARY_FILE_NAME.test(basename(path))) return true;

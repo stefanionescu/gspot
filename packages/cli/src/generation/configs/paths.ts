@@ -1,13 +1,13 @@
-import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/builders.ts';
-import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';
-import { isPointerInherited, listPointerPaths } from '#cli/generation/configs/pointers.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { compareText } from '#cli/system/text/order.ts';
+import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { Config } from '#cli/types/manifests.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { GITHUB_WORKFLOW, GITLAB_WORKFLOW } from '#cli/config/generation/builders.ts';
+import { listPointerPaths, isPointerInherited } from '#cli/generation/configs/pointers.ts';
 
 /**
 List the place where gspot writes a config from a source, when that place is outside the gspot folder.

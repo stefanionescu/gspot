@@ -1,23 +1,22 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
+import { GspotError } from '#cli/system/errors.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
-import { NODE_PROGRAM } from '#cli/config/system.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
 import {
-    findGspotPinMismatch,
-    readGspotPin,
     readMisePin,
+    readGspotPin,
     writeMisePin,
     writePackagePin,
+    findGspotPinMismatch,
 } from '#cli/repository/projects/pin.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the pin keeps the indentation of package.json', async () => {
     await using sandbox = await createGitSandbox({ 'package.json': '{\n    "name": "example"\n}\n' });

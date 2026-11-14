@@ -1,12 +1,12 @@
-import { expect, test } from 'bun:test';
-
-import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
+import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
+
 import {
-    QUALIFIED_FUNCTION_DECLARATION,
-    QUALIFIED_SQL_NAMES,
     SQL_DECLARATIONS,
     SQL_SOURCE_NAMES,
+    QUALIFIED_SQL_NAMES,
+    QUALIFIED_FUNCTION_DECLARATION,
 } from '#tests/config/configurations/naming/languages.ts';
 
 test('every SQL name comes with its category and line', async () => {

@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text/order.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

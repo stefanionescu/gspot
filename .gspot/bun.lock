@@ -10,7 +10,7 @@
         "@commitlint/cli": "21.2.3",
         "@emnapi/runtime": "1.11.3",
         "@eslint/js": "10.0.1",
-        "@gspothq/eslint-plugin": "0.3.0",
+        "@gspothq/eslint-plugin": "0.3.1",
         "ajv": "8.20.0",
         "eslint": "10.13.0",
         "eslint-config-prettier": "10.1.8",
@@ -208,7 +208,7 @@
 
     "@eslint/plugin-kit": ["@eslint/plugin-kit@0.7.3", "", { "dependencies": { "@eslint/core": "^1.2.1", "levn": "^0.4.1" } }, "sha512-IkO+/KEUvwbVpiURZg+P7zF74z5Jxe0UgJxVni+RtoHQ6IZieXaO02kmadomap/q+l6bc/jdPGGqTjhuZnuz1Q=="],
 
-    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.3.0", "", { "dependencies": { "@eslint-community/regexpp": "^4.12.2", "@typescript-eslint/utils": "^8.70.0", "picomatch": "^4.0.7" }, "peerDependencies": { "@typescript-eslint/eslint-plugin": "^8.71.0", "eslint": ">=10.13.0" }, "optionalPeers": ["@typescript-eslint/eslint-plugin"] }, "sha512-K2hgnRl2xoS+sDcgTlG/X3fZc/IuU9LULsDH3g8uUvxM3jdNbagJa3OSiQVf/CWFGUF8uZ6v7mdqBgrHfY8xXg=="],
+    "@gspothq/eslint-plugin": ["@gspothq/eslint-plugin@0.3.1", "", { "dependencies": { "@eslint-community/regexpp": "^4.12.2", "@typescript-eslint/utils": "^8.70.0", "picomatch": "^4.0.7" }, "peerDependencies": { "@typescript-eslint/eslint-plugin": "^8.71.0", "eslint": ">=10.13.0" }, "optionalPeers": ["@typescript-eslint/eslint-plugin"] }, "sha512-CAZALaIiZe+Rs9Mu1AS8D84uteHRAj752NUpS/TcPBwu968D5PYhLs7/uYSw6ZT9wPDA5WCB9HXamiwcIIEsBw=="],
 
     "@html-validate/stylish": ["@html-validate/stylish@6.1.0", "", {}, "sha512-ceNvF6/5hgvw/OrxXtdl2KurRVLN/Q/OkD/qminRRY/IIERmVaqJOpDF1nhRZMrOG/vyKKW0+Nxw6lSoHUP4Ow=="],
 

@@ -1,5 +1,5 @@
-import { noOverflowingTestTimeout } from '#eslint-plugin/rules/testing/no-overflowing-test-timeout.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noOverflowingTestTimeout } from '#eslint-plugin/rules/testing/no-overflowing-test-timeout.ts';
 
 buildRuleTester().run('no-overflowing-test-timeout', noOverflowingTestTimeout, {
     valid: [

@@ -1,10 +1,10 @@
-import { DEFINER_SEARCH_PATH_RULE, SECURITY_DEFINER_MESSAGE } from '#cli/config/configurations/postgres.ts';
-import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
+import { DEFINER_SEARCH_PATH_RULE, SECURITY_DEFINER_MESSAGE } from '#cli/config/configurations/postgres.ts';
 
 async function checkDefinerSearchPath(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const { functions } = buildDatabaseSchema(await readParsedMigrations(session, planned));

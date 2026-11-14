@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
-import { getQualifiedName } from './modules.ts';
 import { unwrapExpression } from './syntax.ts';
+import { getQualifiedName } from './modules.ts';
 import { getAssignedValue } from './variables.ts';
+import { COLLECTION_TYPE_NAMES } from '../config/collections.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export function getExpressionValue(
     node: TSESTree.Node | undefined,

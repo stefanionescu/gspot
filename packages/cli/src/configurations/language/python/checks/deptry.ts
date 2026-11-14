@@ -1,32 +1,32 @@
 import { join, posix } from 'node:path';
-
+import { getTool } from '#cli/manifests/tools.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
+import { UV_FLAGS } from '#cli/config/tools/installers.ts';
+import { deptrySchema } from '#cli/schemas/configurations.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { UV_PROGRAM, GSPOT_FOLDER } from '#cli/config/system.ts';
+import type { VersionedInstaller } from '#cli/types/manifests.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
+import type { DeptryProject } from '#cli/types/configurations/language.ts';
 import { PATH_SEPARATOR_PATTERN } from '#cli/config/configurations/language.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+
 import {
     DEPTRY_COMMAND,
-    DEPTRY_EXCLUDE_FLAG,
-    DEPTRY_FIRST_PARTY_FLAG,
-    NO_PYPROJECT_NOTE,
-    PROJECT_NAME_SEPARATORS,
-    PYTHON_SOURCE_FOLDER,
     UV_RUN_ARGUMENTS,
+    NO_PYPROJECT_NOTE,
+    DEPTRY_EXCLUDE_FLAG,
+    PYTHON_SOURCE_FOLDER,
+    DEPTRY_FIRST_PARTY_FLAG,
+    PROJECT_NAME_SEPARATORS,
 } from '#cli/config/configurations/python.ts';
-import { PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
-import { GSPOT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
-import { UV_FLAGS } from '#cli/config/tools/installers.ts';
-import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { deptrySchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { escapeRegExp } from '#cli/system/patterns.ts';
-import type { DeptryProject } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import type { VersionedInstaller } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listFirstPartyPackages(session: Session, planned: PlannedCheck, project: DeptryProject): string[] {
     const sources = joinScope(planned.scope.path, PYTHON_SOURCE_FOLDER);

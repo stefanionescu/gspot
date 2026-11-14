@@ -1,27 +1,25 @@
-import { existsSync } from 'node:fs';
-import { dirname, join, posix, relative, resolve } from 'node:path';
-
-import { InvalidMonorepoError, LernaTool, PnpmTool, RushTool } from '@manypkg/tools';
-import { globSync } from 'tinyglobby';
 import { YAMLError } from 'yaml';
-
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { LERNA_FILE, PNPM_WORKSPACE_FILE, RUSH_FILE } from '#cli/config/repository/projects.ts';
-import { FOLDER_CONTENTS } from '#cli/config/system.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { workspaceGlobsSchema } from '#cli/schemas/repository.ts';
+import { existsSync } from 'node:fs';
+import { globSync } from 'tinyglobby';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
-import { findContainedPath, readText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { FOLDER_CONTENTS } from '#cli/config/system.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { isInScope, joinScope } from '#cli/repository/scopes.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { workspaceGlobsSchema } from '#cli/schemas/repository.ts';
+import { join, posix, dirname, resolve, relative } from 'node:path';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { readText, findContainedPath } from '#cli/system/files/reads.ts';
+import { PnpmTool, RushTool, LernaTool, InvalidMonorepoError } from '@manypkg/tools';
+import { listSourceFiles, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { RUSH_FILE, LERNA_FILE, PNPM_WORKSPACE_FILE } from '#cli/config/repository/projects.ts';
+import { convertToPosixPath, extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 
 /**
 List the folders that workspace globs match and that hold a package.json, as the workspace tools do. gspot reads each

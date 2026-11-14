@@ -1,41 +1,41 @@
 import type { z } from 'zod';
-
-import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/check.ts';
-import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import type {
-    checkExplanationSchema,
-    checkIgnoreSchema,
-    ciStateSchema,
-    configurationExplanationSchema,
-    configurationsListSchema,
-    doctorReportSchema,
-    doctorToolSchema,
-    initReportSchema,
-    installReportSchema,
-    lintRuleExplanationSchema,
-    pathExplanationSchema,
-    pushReportSchema,
-    scanCategorySchema,
-    scanReportSchema,
-    settingExplanationSchema,
-    settingsEditReportSchema,
-    settingsListSchema,
-} from '#cli/schemas/commands.ts';
-import type { RunSelection, SessionOptions, StageFilter } from '#cli/types/engine/plan.ts';
+import type { Session } from '#cli/types/tools.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
+import type { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { CHECK_INPUT_HOOKS } from '#cli/config/commands/check.ts';
 import type { CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
-import type { PushedRevisions, RepositoryListing, UntrackedFiles } from '#cli/types/repository.ts';
+import type { RunCache, CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
+import type { StageFilter, RunSelection, SessionOptions } from '#cli/types/engine/plan.ts';
+import type { UntrackedFiles, PushedRevisions, RepositoryListing } from '#cli/types/repository.ts';
+
 import type {
-    InheritedSetting,
     Level,
-    ParsedSettingValue,
     Setting,
     Settings,
-    SettingsFile,
     TomlTable,
+    SettingsFile,
+    InheritedSetting,
+    ParsedSettingValue,
 } from '#cli/types/settings.ts';
-import type { CanceledCommandJson, CommandResult, RunCache } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type {
+    ciStateSchema,
+    doctorToolSchema,
+    initReportSchema,
+    pushReportSchema,
+    scanReportSchema,
+    checkIgnoreSchema,
+    doctorReportSchema,
+    scanCategorySchema,
+    settingsListSchema,
+    installReportSchema,
+    pathExplanationSchema,
+    checkExplanationSchema,
+    configurationsListSchema,
+    settingExplanationSchema,
+    settingsEditReportSchema,
+    lintRuleExplanationSchema,
+    configurationExplanationSchema,
+} from '#cli/schemas/commands.ts';
 
 export type CommandLocation = { readonly root: string; readonly cwd: string };
 

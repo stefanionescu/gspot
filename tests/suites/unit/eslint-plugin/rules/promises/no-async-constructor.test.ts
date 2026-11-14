@@ -1,5 +1,5 @@
-import { noAsyncConstructor } from '#eslint-plugin/rules/promises/no-async-constructor.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noAsyncConstructor } from '#eslint-plugin/rules/promises/no-async-constructor.ts';
 
 buildTypedRuleTester().run('no-async-constructor', noAsyncConstructor, {
     valid: [

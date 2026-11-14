@@ -1,7 +1,7 @@
-import { FIXER_ERROR_PREFIX, UNCHANGED_FIX_MESSAGE } from '#cli/config/commands/check.ts';
 import { printWarning } from '#cli/system/terminal.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
 import type { FixReport } from '#cli/types/engine/run.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import { FIXER_ERROR_PREFIX, UNCHANGED_FIX_MESSAGE } from '#cli/config/commands/check.ts';
 
 export function printFailedFixers(fixes: FixReport, { verbose }: { verbose: boolean }): void {
     for (const result of fixes.results) {

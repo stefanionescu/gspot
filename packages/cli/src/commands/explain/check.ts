@@ -1,17 +1,17 @@
-import { CODE_MARK } from '#cli/config/commands/help.ts';
-import { REPOSITORY_COMMAND, RUN_IN_COPY_MESSAGE, SELECTED_YES_MESSAGE } from '#cli/config/commands/lookup.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { describeCheck } from '#cli/engine/reference.ts';
-import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { findCheck } from '#cli/manifests/checks.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import type { Session, ScopeCheck } from '#cli/types/tools.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { isConfigurationSelected } from '#cli/settings/scopes.ts';
-import { formatArgumentSelector } from '#cli/settings/values/paths.ts';
-import { quoteArgument, quoteCommand } from '#cli/system/text/quoting.ts';
-import type { CheckExplanation, CheckIgnore, Explanation } from '#cli/types/commands.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { ScopeCheck, Session } from '#cli/types/tools.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { formatArgumentSelector } from '#cli/settings/values/paths.ts';
+import { quoteCommand, quoteArgument } from '#cli/system/text/quoting.ts';
+import type { CheckIgnore, Explanation, CheckExplanation } from '#cli/types/commands.ts';
+import { REPOSITORY_COMMAND, RUN_IN_COPY_MESSAGE, SELECTED_YES_MESSAGE } from '#cli/config/commands/lookup.ts';
 
 function listCheckIgnores(session: Session | undefined, checkId: string, cwd: string): CheckIgnore[] {
     if (session === undefined) return [];

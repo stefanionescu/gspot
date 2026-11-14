@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-
-import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { openJsonFile, parseJsonFile } from '#cli/parsers/formats/json.ts';
 
 test('a JSON syntax error names its line and column in package.json', () => {
     expect(() => parseJsonFile('package.json', '{')).toThrow(

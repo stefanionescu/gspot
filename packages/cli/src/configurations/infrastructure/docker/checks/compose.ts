@@ -1,21 +1,20 @@
 import { posix } from 'node:path';
-
-import { COMPOSE_CHECK, COMPOSE_FILE_FLAG, COMPOSE_OVERRIDE, DOCKERIGNORE } from '#cli/config/configurations/docker.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
 import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { composeSchema } from '#cli/schemas/configurations.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
 import { DOCKERFILE_NAME } from '#cli/config/repository/files.ts';
 import { YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
-import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { composeSchema } from '#cli/schemas/configurations.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { ComposeDeclaration, ComposeDocuments, ComposeFiles } from '#cli/types/configurations/infrastructure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { ComposeFiles, ComposeDocuments, ComposeDeclaration } from '#cli/types/configurations/infrastructure.ts';
+import { DOCKERIGNORE, COMPOSE_CHECK, COMPOSE_OVERRIDE, COMPOSE_FILE_FLAG } from '#cli/config/configurations/docker.ts';
 
 function listComposeFiles(files: TrackedFile[]): ComposeFiles[] {
     const groups = new Map<string, ComposeFiles>();

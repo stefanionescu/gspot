@@ -1,5 +1,4 @@
 import { spyOn } from 'bun:test';
-
 import type { TerminalCapture } from '#tests/types/setup.ts';
 
 export function captureTerminal(): TerminalCapture {

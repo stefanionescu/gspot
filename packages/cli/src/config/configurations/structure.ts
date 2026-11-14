@@ -1,8 +1,8 @@
-import { TYPE_NODES } from '#cli/config/configurations/general.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { FOREIGN_HOOK_FOLDERS, KEPT_DOT_FILE } from '#cli/config/repository/setup.ts';
 import type { ParsedLanguage } from '#cli/types/parsers.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { TYPE_NODES } from '#cli/config/configurations/general.ts';
+import { KEPT_DOT_FILE, FOREIGN_HOOK_FOLDERS } from '#cli/config/repository/setup.ts';
 
 // bare-blocks check
 export const BARE_BLOCK_MESSAGE =

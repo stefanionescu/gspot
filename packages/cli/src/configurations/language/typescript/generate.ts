@@ -1,13 +1,14 @@
-import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/shared.ts';
-import {
-    DEFAULT_PROJECT_FILE_LIMIT,
-    DEFAULT_PROJECT_LIMIT_OPTION,
-    TYPESCRIPT_RULES,
-    TYPESCRIPT_TEST_RULES,
-} from '#cli/config/configurations/typescript.ts';
 import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { ASTRO_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
+import { ASTRO_FILES, ASTRO_SCRIPT_FILES } from '#cli/config/configurations/shared.ts';
+import type { EslintScope, EslintBlockBuilder, ConfigurationBlocks } from '#cli/types/configurations/javascript.ts';
+
+import {
+    TYPESCRIPT_RULES,
+    TYPESCRIPT_TEST_RULES,
+    DEFAULT_PROJECT_FILE_LIMIT,
+    DEFAULT_PROJECT_LIMIT_OPTION,
+} from '#cli/config/configurations/typescript.ts';
 
 function buildTypescriptBlocks(
     scope: Pick<EslintScope, 'eslintFiles' | 'projects' | 'defaultProjectFiles' | 'settings'>,

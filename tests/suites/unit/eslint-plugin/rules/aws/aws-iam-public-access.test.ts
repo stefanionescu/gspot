@@ -1,5 +1,5 @@
-import { awsIamPublicAccess } from '#eslint-plugin/rules/aws/aws-iam-public-access.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsIamPublicAccess } from '#eslint-plugin/rules/aws/aws-iam-public-access.ts';
 
 buildRuleTester().run('aws-iam-public-access', awsIamPublicAccess, {
     valid: [

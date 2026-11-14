@@ -1,20 +1,18 @@
 import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { createFileTree } from 'testdirs';
 import { writeFile } from 'node:fs/promises';
 import { join, toNamespacedPath } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const JSCPD_SCOPE_FINDINGS = [
     {

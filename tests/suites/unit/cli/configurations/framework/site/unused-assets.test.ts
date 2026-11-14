@@ -1,14 +1,12 @@
-import { unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { GLOB_ASSET_CASES } from '#tests/config/configurations/framework.ts';
+import { test, expect } from 'bun:test';
+import { unlink } from 'node:fs/promises';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { GLOB_ASSET_CASES } from '#tests/config/configurations/framework.ts';
 
 async function prepareAssetRepository(resources: AsyncDisposableStack, files: Record<string, string>): Promise<string> {
     const sandbox = resources.use(

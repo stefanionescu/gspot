@@ -1,5 +1,5 @@
-import { preferReadonlyStatic } from '#eslint-plugin/rules/types/prefer-readonly-static.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferReadonlyStatic } from '#eslint-plugin/rules/types/prefer-readonly-static.ts';
 
 buildRuleTester().run('prefer-readonly-static', preferReadonlyStatic, {
     valid: [

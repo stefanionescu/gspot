@@ -1,5 +1,5 @@
-import { noLeakedJsxNumber } from '#eslint-plugin/rules/react/no-leaked-jsx-number.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noLeakedJsxNumber } from '#eslint-plugin/rules/react/no-leaked-jsx-number.ts';
 
 buildTypedRuleTester().run('no-leaked-jsx-number', noLeakedJsxNumber, {
     valid: ['declare const name: string;\nexport const view = <div>{name && <b />}</div>;'],

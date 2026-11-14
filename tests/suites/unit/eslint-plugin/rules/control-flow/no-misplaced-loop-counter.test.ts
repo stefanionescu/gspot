@@ -1,5 +1,5 @@
-import { noMisplacedLoopCounter } from '#eslint-plugin/rules/control-flow/no-misplaced-loop-counter.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noMisplacedLoopCounter } from '#eslint-plugin/rules/control-flow/no-misplaced-loop-counter.ts';
 
 buildRuleTester().run('no-misplaced-loop-counter', noMisplacedLoopCounter, {
     valid: [

@@ -1,27 +1,25 @@
-import { existsSync } from 'node:fs';
-import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run/checks.ts';
+import { getTool } from '#cli/manifests/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/configurations/infrastructure.ts';
-import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run/checks.ts';
 import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/configurations/infrastructure.ts';
 
 const ACTIONLINT_TOOLS = ['actionlint', 'shellcheck'];
 

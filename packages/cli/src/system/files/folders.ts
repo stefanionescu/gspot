@@ -1,11 +1,9 @@
-import { lstatSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
-
 import picomatch from 'picomatch';
 import { globSync } from 'tinyglobby';
-
-import { DRIVE_LETTER, GLOB_EXCLUDE, PARENT_SEGMENT } from '#cli/config/system.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { statSync, lstatSync, readdirSync } from 'node:fs';
+import { DRIVE_LETTER, GLOB_EXCLUDE, PARENT_SEGMENT } from '#cli/config/system.ts';
 
 function hasSymlinkPrefix(folder: string, pattern: string): boolean {
     const { base } = picomatch.scan(pattern);

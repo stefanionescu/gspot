@@ -1,15 +1,13 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { BASH_SAFETY_SAMPLE, COMMAND_SAFETY_CASES } from '#tests/config/configurations/bash.ts';
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BASH_SAFETY_SAMPLE, COMMAND_SAFETY_CASES } from '#tests/config/configurations/bash.ts';
 
 test('safety leaves a removal of a mktemp variable alone, and a function that shares a name with a command', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,30 +1,29 @@
 import { existsSync } from 'node:fs';
-import { chmod, readFile, readlink, stat, symlink, writeFile } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { planSandboxInit, applySandboxInit } from '#tests/setup/cli/commands.ts';
+import { GOOGLE_PYPROJECT, CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { stat, chmod, symlink, readFile, readlink, writeFile } from 'node:fs/promises';
+
 import {
     INVALID_CSS,
+    SHARED_SETUP_CONFIG,
     REPLACED_CONFIG_DELETIONS,
     REPLACED_PYPROJECT_TABLES,
-    SHARED_SETUP_CONFIG,
     STYLELINT_REPLACEMENT_CASES,
 } from '#tests/config/generation/setup.ts';
-import { CLEAN_BASH_SCRIPT, GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
-import { applySandboxInit, planSandboxInit } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function assertFileKept(root: string, path: string, previous: string): Promise<void> {
     expect(await readFile(join(root, path), 'utf8')).toBe(previous);

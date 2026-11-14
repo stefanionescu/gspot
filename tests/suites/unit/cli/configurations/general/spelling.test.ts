@@ -1,8 +1,7 @@
+import { test, expect } from 'bun:test';
 import { parse, stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test('typos.toml writes allowed words and ignored paths as TOML strings that add no table', async () => {
     const words = ['café', "apostrophe'word", 'long-term'];

@@ -1,8 +1,6 @@
-import { basename, parse } from 'node:path';
-
-import { mock, type Mock, spyOn } from 'bun:test';
 import executables from 'which';
-
+import { parse, basename } from 'node:path';
+import { mock, spyOn, type Mock } from 'bun:test';
 import { GIT_PROGRAM } from '#cli/config/system.ts';
 import * as processes from '#cli/system/processes/run.ts';
 import type { runProcess } from '#cli/system/processes/run.ts';

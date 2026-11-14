@@ -1,21 +1,20 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { createFileTree, type DirectoryJSON, testdir, type TestdirResult } from 'testdirs';
-
+import { readFile, writeFile } from 'node:fs/promises';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+
 import {
-    BASH_SYNTAX_PUSH_CHECK,
-    CHANGED_CONTEXT,
+    PUSH_CONTENT,
     HOOKS_SETTINGS,
     LFS_ATTRIBUTES,
-    NESTED_SCOPE_FILES,
-    PUSH_CONTENT,
-    TEAMS_MIGRATION_PATH,
+    CHANGED_CONTEXT,
     TEAMS_TABLE_SQL,
+    NESTED_SCOPE_FILES,
+    TEAMS_MIGRATION_PATH,
+    BASH_SYNTAX_PUSH_CHECK,
 } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 export async function readPushWorkingTree(root: string): Promise<{ head: string; settings: string; changed: string }> {
     return {

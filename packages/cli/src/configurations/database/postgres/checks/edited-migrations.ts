@@ -1,21 +1,22 @@
-import {
-    DRIFT_GUARD_MESSAGE,
-    DRIFT_GUARD_RULE,
-    FROZEN_EDIT_MESSAGE,
-    FROZEN_RULE,
-} from '#cli/config/configurations/postgres.ts';
-import {
-    extractForwardText,
-    listUnfrozenMigrations,
-    readCommittedMigrations,
-    readParsedMigrations,
-} from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
 import { listNodeFields } from '#cli/parsers/code/sql.ts';
+import type { SqlStatement } from '#cli/types/parsers.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { SqlStatement } from '#cli/types/parsers.ts';
+import { EDITED_MIGRATION_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
+
+import {
+    FROZEN_RULE,
+    DRIFT_GUARD_RULE,
+    DRIFT_GUARD_MESSAGE,
+    FROZEN_EDIT_MESSAGE,
+} from '#cli/config/configurations/postgres.ts';
+import {
+    extractForwardText,
+    readParsedMigrations,
+    listUnfrozenMigrations,
+    readCommittedMigrations,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 function hasDriftGuard(statement: SqlStatement): boolean {
     if (statement.kind === 'IndexStmt')

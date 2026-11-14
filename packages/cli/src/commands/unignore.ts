@@ -1,19 +1,20 @@
-import { buildUnchangedResult, formatIgnoreSubject, readEditContext, writeSettingsEdit } from '#cli/commands/edits.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { removeIgnores } from '#cli/settings/toml/edit.ts';
+import type { IgnoreRecord } from '#cli/types/settings.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { assertCheckExists } from '#cli/manifests/checks.ts';
+import { buildArgumentPaths } from '#cli/settings/values/paths.ts';
+import { RULE_OPTION, PATHS_OPTION } from '#cli/config/commands/help.ts';
+import { formatCount, formatNameList } from '#cli/system/text/messages.ts';
+import type { IgnoreFlags, IgnoreTarget, IgnoreOptions, CommandDefinition } from '#cli/types/commands.ts';
+import { readEditContext, writeSettingsEdit, formatIgnoreSubject, buildUnchangedResult } from '#cli/commands/edits.ts';
+
 import {
     BARE_UNIGNORE_MESSAGE,
     NO_CHECK_IGNORE_TEXTS,
     RULE_WITHOUT_CHECK_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import { PATHS_OPTION, RULE_OPTION } from '#cli/config/commands/help.ts';
-import { assertCheckExists } from '#cli/manifests/checks.ts';
-import { removeIgnores } from '#cli/settings/toml/edit.ts';
-import { buildArgumentPaths } from '#cli/settings/values/paths.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { formatCount, formatNameList } from '#cli/system/text/messages.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { CommandDefinition, IgnoreFlags, IgnoreOptions, IgnoreTarget } from '#cli/types/commands.ts';
-import type { IgnoreRecord } from '#cli/types/settings.ts';
-import type { CommandResult } from '#cli/types/system.ts';
 
 function formatIgnoreTarget(options: Pick<IgnoreOptions, 'check' | 'rule' | 'paths'>): IgnoreTarget {
     if (options.check === undefined) return NO_CHECK_IGNORE_TEXTS;

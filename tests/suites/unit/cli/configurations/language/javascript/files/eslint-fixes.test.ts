@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect } from 'bun:test';
 import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('the fix of an indented documentation comment leaves no line of spaces', async () => {
     await using sandbox = await testdir({

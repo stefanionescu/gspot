@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import type { TypeReader, CheckedType } from '../../types/plugin.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     ABSORBING_TYPES,
     EMPTY_TYPE_NAMES,
+    LITERAL_UNION_SIZE,
     INTERFACE_DECLARATION,
     LITERAL_UNION_MEMBERS,
-    LITERAL_UNION_SIZE,
 } from '../../config/types.ts';
-import { getTypes } from '../../language/checker.ts';
-import { createRule } from '../../rule.ts';
-import type { CheckedType, TypeReader } from '../../types/plugin.ts';
 
 function hasMembers(type: CheckedType, types: TypeReader): boolean {
     if (EMPTY_TYPE_NAMES.has(types.checker.typeToString(type))) return false;

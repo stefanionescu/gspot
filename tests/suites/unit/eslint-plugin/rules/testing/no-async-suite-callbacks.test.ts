@@ -1,7 +1,6 @@
 import { join } from 'node:path';
-
-import { noAsyncSuiteCallbacks } from '#eslint-plugin/rules/testing/no-async-suite-callbacks.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noAsyncSuiteCallbacks } from '#eslint-plugin/rules/testing/no-async-suite-callbacks.ts';
 
 const root = writePackageFolders({ mocha: { devDependencies: { mocha: '11.0.0' } }, plain: {} });
 const filename = join(root, 'mocha/a.test.ts');

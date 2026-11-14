@@ -1,15 +1,13 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/general.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/general.ts';
 
 const CLEAN_SVELTE =
     '<script lang="ts">\n    const { name }: { name: string } = $props();\n</script>\n\n<p>{name}</p>\n';

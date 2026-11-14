@@ -1,20 +1,21 @@
+import { getTable } from '#cli/settings/tables.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { readNamingDefaults } from '#cli/manifests/read.ts';
+import { CATEGORY_PARENTS } from '#cli/config/settings/values.ts';
+import { listApplicableTables } from '#cli/settings/values/written.ts';
+import { splitWords } from '#cli/configurations/general/naming/words.ts';
+import type { Scope, Settings, ScopeSettings } from '#cli/types/settings.ts';
 import { SHARED_NAMING_LANGUAGES } from '#cli/config/configurations/naming.ts';
 import { NAMING_LANGUAGES, NAMING_TABLE_CATEGORIES } from '#cli/config/settings/tables.ts';
-import { CATEGORY_PARENTS } from '#cli/config/settings/values.ts';
-import { splitWords } from '#cli/configurations/general/naming/words.ts';
-import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { listApplicableTables } from '#cli/settings/values/written.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
+
 import type {
     BannedWord,
-    CompiledException,
     NamingCase,
-    NamingException,
     NamingSettings,
+    NamingException,
+    CompiledException,
     ParsedNamingLanguageFields,
 } from '#cli/types/configurations/naming.ts';
-import type { Scope, ScopeSettings, Settings } from '#cli/types/settings.ts';
 
 function compileException(exception: NamingException): CompiledException {
     const [languages, categories, allowedNames] = [

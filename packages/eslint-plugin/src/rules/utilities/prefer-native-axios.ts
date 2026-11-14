@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { AXIOS_CANCEL_TOKEN, AXIOS_CONFIG_POSITIONS, AXIOS_DEPRECATIONS } from '../../config/utilities.ts';
-import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { AXIOS_CANCEL_TOKEN, AXIOS_DEPRECATIONS, AXIOS_CONFIG_POSITIONS } from '../../config/utilities.ts';
 
 function listCancelTokens(node: TSESTree.CallExpression, name: string): TSESTree.Property[] {
     const configs = (AXIOS_CONFIG_POSITIONS.get(name) ?? []).map((position) => node.arguments[position]);

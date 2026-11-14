@@ -1,11 +1,11 @@
+import type { Session } from '#cli/types/tools.ts';
+import { buildBaseResult } from '#cli/engine/results.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { FAILED_STATUSES, INCOMPLETE_STATUSES, NO_FILES_MESSAGE, REPORT_STAGES } from '#cli/config/engine.ts';
 import { EXIT_ERROR, EXIT_FINDINGS } from '#cli/config/system.ts';
 import { formatExplainCommand } from '#cli/engine/outputs/rules.ts';
-import { buildBaseResult } from '#cli/engine/results.ts';
 import { listUnparsedDependencyFiles } from '#cli/repository/projects/dependencies.ts';
-import type { CheckResult, FinishedRun, FixReport, RunOptions, RunReport } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { FixReport, RunReport, RunOptions, CheckResult, FinishedRun } from '#cli/types/engine/run.ts';
+import { REPORT_STAGES, FAILED_STATUSES, NO_FILES_MESSAGE, INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
 
 function listFailedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
     const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);

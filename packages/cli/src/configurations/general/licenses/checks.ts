@@ -1,39 +1,38 @@
-import { join, posix } from 'node:path';
-
 import semver from 'semver';
+import { join, posix } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { findSettingLine } from '#cli/settings/toml/text.ts';
+import { readSettingsText } from '#cli/settings/toml/file.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { assertShippedCheck } from '#cli/engine/plan/checks.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { buildRootRelativePath } from '#cli/engine/outputs/formats.ts';
+import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
+import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
+import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/patterns.ts';
+import type { PlannedCheck, ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import type { LockedPackage, AllowedPackage } from '#cli/types/configurations/general.ts';
+import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
 
 import {
     ANY_VERSION,
-    EMPTY_SCAN_MESSAGE,
     LICENSE_RULES,
+    OSV_SCANNER_NAME,
     OSV_FINDINGS_CODE,
-    OSV_LICENSE_COMMAND,
     OSV_LICENSES_FLAG,
     OSV_LOCKFILE_FLAG,
+    EMPTY_SCAN_MESSAGE,
+    OSV_LICENSE_COMMAND,
     OSV_PYTHON_ECOSYSTEM,
-    OSV_SCANNER_NAME,
 } from '#cli/config/configurations/general.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { LICENSE_EXPLANATIONS } from '#cli/configurations/general/licenses/explanations.ts';
-import { buildRootRelativePath } from '#cli/engine/outputs/formats.ts';
-import { assertShippedCheck } from '#cli/engine/plan/checks.ts';
-import { listCheckedFiles } from '#cli/engine/plan/files.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
-import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { osvLicenseReportSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { readSettingsText } from '#cli/settings/toml/file.ts';
-import { findSettingLine } from '#cli/settings/toml/text.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/patterns.ts';
-import type { AllowedPackage, LockedPackage } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck, ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function readLockedPackages(session: CheckSession, planned: PlannedCheck): Promise<LockedPackage[]> {
     const { allowed } = getTable(planned.scope.settings, 'licenses');

@@ -1,10 +1,11 @@
+import type { EslintScope, EslintBlockBuilder, ConfigurationBlocks } from '#cli/types/configurations/javascript.ts';
+
 import {
-    TESTING_LIBRARY_DEFAULT_PRESET,
-    TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_SCOPE,
+    TESTING_LIBRARY_PRESETS,
     TESTING_LIBRARY_SETTINGS,
+    TESTING_LIBRARY_DEFAULT_PRESET,
 } from '#cli/config/configurations/library.ts';
-import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
 
 function buildTestingLibraryBlocks(scope: Pick<EslintScope, 'eslintFiles' | 'dependencies'>): ConfigurationBlocks {
     const { eslintFiles, dependencies: scopeDependencies } = scope;

@@ -1,8 +1,7 @@
 import { homedir } from 'node:os';
-import { isAbsolute, join } from 'node:path';
-
-import { CACHE_FOLDER_MESSAGE, CACHE_FOLDER_NAME, OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { join, isAbsolute } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { CACHE_FOLDER_NAME, OPERATING_SYSTEMS, CACHE_FOLDER_MESSAGE } from '#cli/config/system.ts';
 
 function readSystemCacheFolder(): string | undefined {
     if (process.platform === 'win32') return readEnvironmentVariable('LOCALAPPDATA');

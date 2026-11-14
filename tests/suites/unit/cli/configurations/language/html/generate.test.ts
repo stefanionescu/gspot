@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
-import { type ConfigData, HtmlValidate } from 'html-validate';
 import { parse } from 'jsonc-parser';
-
-import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { HtmlValidate, type ConfigData } from 'html-validate';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test.each(['html/html-validate', 'site/html-validate'])(
     'an ignore for %s turns valid-id off only in its own html-validate file',

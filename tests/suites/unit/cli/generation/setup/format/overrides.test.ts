@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { getTable } from '#cli/settings/tables.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { getTable } from '#cli/settings/tables.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';

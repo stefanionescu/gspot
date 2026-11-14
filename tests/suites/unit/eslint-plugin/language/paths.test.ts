@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { findPathInRoot } from '#eslint-plugin/language/paths.ts';
 
 test('a root setting that is not a string counts as unset', () => {

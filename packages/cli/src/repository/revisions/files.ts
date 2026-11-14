@@ -1,32 +1,32 @@
-import { copyFileSync, existsSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { GIT_INDEX_FILES_ARGUMENTS, GITLINK_MODE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
-import { INDEX_LINE, TRAILING_NEWLINE, TREE_LINE } from '#cli/config/repository/git.ts';
-import {
-    CRLF_INDEX_LINE,
-    GIT_BLOBS_ARGUMENTS,
-    GIT_CHANGED_PATHS_ARGUMENTS,
-    GIT_COMMITTED_PATHS_ARGUMENTS,
-    GIT_HEAD_ARGUMENTS,
-    GIT_LINE_ENDINGS_ARGUMENTS,
-    GIT_LS_TREE_ARGUMENTS,
-    GIT_SETUP_FILES_ARGUMENTS,
-    GIT_SHALLOW_ARGUMENTS,
-    GIT_SYMBOLIC_HEAD_ARGUMENTS,
-    GIT_WRITE_TREE_ARGUMENTS,
-    PRIVATE_INDEX_FILE,
-    READ_COMMITTED_MESSAGE,
-    SETUP_PATHS,
-    UNREADABLE_HISTORY_MESSAGE,
-} from '#cli/config/repository/revisions.ts';
-import { decodeGitPaths, parseGitBlobs, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
-import { readGitPath, readGitPaths, readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
-import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { existsSync, copyFileSync } from 'node:fs';
 import { getRequired } from '#cli/system/tables.ts';
 import type { GitFile, Revision } from '#cli/types/repository.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { gitFileSchema, gitIndexFileSchema } from '#cli/schemas/repository.ts';
+import { TREE_LINE, INDEX_LINE, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
+import { GITLINK_MODE, SYMLINK_MODE, GIT_INDEX_FILES_ARGUMENTS } from '#cli/config/repository/files.ts';
+import { runGit, readGitPath, readGitText, runGitBytes, readGitPaths } from '#cli/repository/git/run.ts';
+import { parseGitBlobs, decodeGitPaths, parseListingLine, stripIndexStages } from '#cli/repository/git/output.ts';
+
+import {
+    SETUP_PATHS,
+    CRLF_INDEX_LINE,
+    GIT_HEAD_ARGUMENTS,
+    PRIVATE_INDEX_FILE,
+    GIT_BLOBS_ARGUMENTS,
+    GIT_LS_TREE_ARGUMENTS,
+    GIT_SHALLOW_ARGUMENTS,
+    READ_COMMITTED_MESSAGE,
+    GIT_WRITE_TREE_ARGUMENTS,
+    GIT_SETUP_FILES_ARGUMENTS,
+    GIT_LINE_ENDINGS_ARGUMENTS,
+    UNREADABLE_HISTORY_MESSAGE,
+    GIT_CHANGED_PATHS_ARGUMENTS,
+    GIT_SYMBOLIC_HEAD_ARGUMENTS,
+    GIT_COMMITTED_PATHS_ARGUMENTS,
+} from '#cli/config/repository/revisions.ts';
 
 export async function listRevisionFiles(
     root: string,

@@ -1,14 +1,14 @@
-import { appendFileSync, existsSync, renameSync, rmSync } from 'node:fs';
-import { dirname, resolve } from 'node:path';
 import { parseArgs } from 'node:util';
-
+import { dirname, resolve } from 'node:path';
+import { splitAssignment } from '#tests/setup/system/programs.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { rmSync, existsSync, renameSync, appendFileSync } from 'node:fs';
+
 import {
     FAKE_TOOL_OPTIONS,
     POLL_INTERVAL_MILLISECONDS,
     WAIT_INTERVAL_MILLISECONDS,
 } from '#tests/config/setup/programs.ts';
-import { splitAssignment } from '#tests/setup/system/programs.ts';
 
 const { values, positionals } = parseArgs({ options: FAKE_TOOL_OPTIONS, allowPositionals: true, strict: false });
 const option = Object.fromEntries(

@@ -1,18 +1,18 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { listCdkTableIssues } from '../../libraries/aws.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getOptionValue, listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
 
 import {
-    REQUIRED_TLS_FLAGS,
-    SECURE_PROTOCOLS,
     TLS_CHECKS,
-    TLS_CONSTANTS_MODULES,
-    TLS_VERSION_OPTIONS,
-    WEAK_SSL_OPTION_ARGUMENTS,
+    SECURE_PROTOCOLS,
     WEAK_TLS_VERSIONS,
+    REQUIRED_TLS_FLAGS,
+    TLS_VERSION_OPTIONS,
+    TLS_CONSTANTS_MODULES,
+    WEAK_SSL_OPTION_ARGUMENTS,
 } from '../../config/networks.ts';
-import { getOptionProperties, getOptionValue, listOptionLiterals } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { listCdkTableIssues } from '../../libraries/aws.ts';
-import { createRule } from '../../rule.ts';
 
 function listFlags(source: Readonly<TSESLint.SourceCode>, node: TSESTree.Node): Array<string | null> {
     if (node.type === AST_NODE_TYPES.BinaryExpression)

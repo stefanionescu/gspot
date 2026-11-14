@@ -1,19 +1,19 @@
-import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
-import { EMPTY_JSON_TEXT, TOML_BARE_KEY, TRAILING_BLANK_LINE } from '#cli/config/repository/files.ts';
-import { TOML_EXTENSION } from '#cli/config/repository/setup.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { EditableFile } from '#cli/types/parsers.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { openJsonFile } from '#cli/parsers/formats/json.ts';
-import { findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { decodeUtf8File } from '#cli/system/files/reads.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
+import { deleteEmptyFolders } from '#cli/system/files/open.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
+import { LEADING_NEWLINE } from '#cli/config/parsers/formats.ts';
+import { TOML_EXTENSION } from '#cli/config/repository/setup.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml/edit.ts';
 import { isGspotOwned } from '#cli/repository/files/ownership.ts';
 import { readGspotGeneratedPatterns } from '#cli/repository/git/attributes.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
-import { deleteEmptyFolders } from '#cli/system/files/open.ts';
-import { decodeUtf8File } from '#cli/system/files/reads.ts';
-import type { EditableFile } from '#cli/types/parsers.ts';
-import type { ManagedKeys, ReplacementRequest, WritePlan } from '#cli/types/repository.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
+import { replaceBlock, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
+import type { WritePlan, ManagedKeys, ReplacementRequest } from '#cli/types/repository.ts';
+import { TOML_BARE_KEY, EMPTY_JSON_TEXT, TRAILING_BLANK_LINE } from '#cli/config/repository/files.ts';
 
 function openManagedKeysFile(path: string, onDisk: FileContents | undefined, keys: ManagedKeys['keys']): EditableFile {
     const text = onDisk === undefined ? undefined : decodeUtf8File(path, onDisk.bytes);

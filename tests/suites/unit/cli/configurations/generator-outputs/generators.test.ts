@@ -1,19 +1,17 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run/checks.ts';
 
 const GENERATOR_CASES = [
     { configuration: 'drizzle', check: 'drizzle/stale-migrations', output: 'migrations/0000_initial.sql', tables: '' },

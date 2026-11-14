@@ -1,28 +1,28 @@
-import { AST_NODE_TYPES, AST_TOKEN_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import { findFunction } from '../../language/functions.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { findAssignedVariable } from '../../language/variables.ts';
+import type { MemberCall, TypeReader, FunctionNode } from '../../types/plugin.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
-    ADD_LISTENER_SELECTOR,
-    ANY_TARGET_ORIGIN,
-    COMPARED_EVENT_DEPTH,
-    COMPARED_ORIGIN_DEPTH,
-    DOM_LIBRARY_FILE,
-    JQUERY_EVENT_MEMBER,
+    WINDOW_TOKEN,
     MESSAGE_EVENT,
-    MESSAGE_LISTENER_PROPERTY,
-    ON_MESSAGE_SELECTOR,
     ORIGIN_MEMBER,
-    POST_MESSAGE_SELECTOR,
     UNTYPED_TYPES,
     WINDOW_MEMBERS,
+    DOM_LIBRARY_FILE,
     WINDOW_RECEIVERS,
-    WINDOW_TOKEN,
+    ANY_TARGET_ORIGIN,
+    JQUERY_EVENT_MEMBER,
+    ON_MESSAGE_SELECTOR,
+    COMPARED_EVENT_DEPTH,
+    ADD_LISTENER_SELECTOR,
+    COMPARED_ORIGIN_DEPTH,
+    POST_MESSAGE_SELECTOR,
+    MESSAGE_LISTENER_PROPERTY,
 } from '../../config/web.ts';
-import { getTypes } from '../../language/checker.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { findFunction } from '../../language/functions.ts';
-import { findAssignedVariable } from '../../language/variables.ts';
-import { createRule } from '../../rule.ts';
-import type { FunctionNode, MemberCall, TypeReader } from '../../types/plugin.ts';
 
 function isInIfStatement(node: TSESTree.Node): boolean {
     let ancestor = node.parent;

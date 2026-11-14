@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { openSession } from '#cli/engine/session.ts';
-import { getLimit, getTable, listIgnoredRules, listIgnores } from '#cli/settings/tables.ts';
+import { test, expect } from 'bun:test';
 import type { Scope } from '#cli/types/settings.ts';
-import { NESTED_SCOPE_SETTINGS, POSTGRES_SCOPE_SETTINGS } from '#tests/config/settings/parse.ts';
+import { openSession } from '#cli/engine/session.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getLimit, getTable, listIgnores, listIgnoredRules } from '#cli/settings/tables.ts';
+import { NESTED_SCOPE_SETTINGS, POSTGRES_SCOPE_SETTINGS } from '#tests/config/settings/parse.ts';
 
 async function readNestedScopes(): Promise<Scope[]> {
     await using sandbox = await createGitSandbox({

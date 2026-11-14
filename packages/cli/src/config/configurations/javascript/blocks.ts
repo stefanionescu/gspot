@@ -1,6 +1,6 @@
 import { REACT_FILES } from '#cli/config/configurations/shared.ts';
 import { VAGUE_TEST_TITLE_WORDS } from '#cli/config/configurations/testing.ts';
-import type { PluginRuleBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
+import type { SelectorPaths, PluginRuleBlock } from '#cli/types/configurations/javascript.ts';
 
 // package-json block
 export const PACKAGE_JSON_PATTERN = '**/package.json';

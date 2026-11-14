@@ -1,8 +1,7 @@
 import { readFileSync } from 'node:fs';
-
-import { CHANGELOG_TITLE, TABLE_HEADING_LEVEL } from '#docs/config/reference.ts';
-import { buildReferencePage } from '#docs/reference/markdown.ts';
 import type { ReferencePage } from '#docs/types/pages.ts';
+import { buildReferencePage } from '#docs/reference/markdown.ts';
+import { CHANGELOG_TITLE, TABLE_HEADING_LEVEL } from '#docs/config/reference.ts';
 
 export function buildChangelogPage(): ReferencePage {
     const changelog = readFileSync(new URL('../../../CHANGELOG.md', import.meta.url), 'utf8');

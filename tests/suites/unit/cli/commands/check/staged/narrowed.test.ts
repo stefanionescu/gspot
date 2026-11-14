@@ -1,14 +1,12 @@
-import { appendFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { compareText } from '#cli/system/text/order.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
+import { rm, writeFile, appendFile } from 'node:fs/promises';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 const CHECKS = 'docs/missing-paths,bash/unread-arguments';
 

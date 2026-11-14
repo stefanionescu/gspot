@@ -1,5 +1,5 @@
-import { requireMemoizeKey } from '#eslint-plugin/rules/utilities/require-memoize-key.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireMemoizeKey } from '#eslint-plugin/rules/utilities/require-memoize-key.ts';
 
 buildRuleTester().run('require-memoize-key', requireMemoizeKey, {
     valid: [

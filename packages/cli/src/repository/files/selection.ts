@@ -1,11 +1,11 @@
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { listPathTags } from '#cli/repository/files/tags.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { buildFilenameMatcher, buildPathMatcher, escapeGlob } from '#cli/system/patterns.ts';
+import { listPathTags } from '#cli/repository/files/tags.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { CoverageScope, TrackedFile } from '#cli/types/repository.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import type { TrackedFile, CoverageScope } from '#cli/types/repository.ts';
+import { escapeGlob, buildPathMatcher, buildFilenameMatcher } from '#cli/system/patterns.ts';
 
 function buildCoverageMatcher(
     table: Configuration['files'],

@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { formatInitPlan } from '#cli/generation/setup/report.ts';
+import { test, expect } from 'bun:test';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
+import { formatInitPlan } from '#cli/generation/setup/report.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const WORKSPACE_PYTHON_FILES = {

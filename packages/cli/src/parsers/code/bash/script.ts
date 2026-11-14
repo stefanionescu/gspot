@@ -1,17 +1,17 @@
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listScriptForms } from '#cli/parsers/code/bash/forms.ts';
+import { parseBashFunctions } from '#cli/parsers/code/bash/functions.ts';
+import { blankText, replaceRanges } from '#cli/system/text/positions.ts';
+import { listTemporaryPaths } from '#cli/parsers/code/bash/temporary-paths.ts';
+import type { ParseCache, NumberedLine, ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
+    parseTrapScripts,
     buildCommandCalls,
     listScriptCommands,
     listSwallowedLines,
-    parseTrapScripts,
 } from '#cli/parsers/code/bash/commands.ts';
-import { listScriptForms } from '#cli/parsers/code/bash/forms.ts';
-import { parseBashFunctions } from '#cli/parsers/code/bash/functions.ts';
-import { listTemporaryPaths } from '#cli/parsers/code/bash/temporary-paths.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { blankText, replaceRanges } from '#cli/system/text/positions.ts';
-import type { NumberedLine, ParseCache, ScriptSyntax } from '#cli/types/parsers.ts';
 
 function listCommandNodes(root: Node): Node[] {
     return root

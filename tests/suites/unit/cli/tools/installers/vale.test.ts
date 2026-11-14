@@ -1,23 +1,21 @@
-import { existsSync, utimesSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { readFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
+import { existsSync, utimesSync } from 'node:fs';
+import { getTool } from '#cli/manifests/tools.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
-import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { hasValePackages, installValePackages } from '#cli/tools/installers/vale.ts';
+import { VALE_PACKAGE_FOLDERS, VALE_PACKAGE_RELEASES } from '#cli/config/tools/vale.ts';
+import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 
 async function writeValeProgram(root: string): Promise<string> {
     const tool = getTool(readConfigurations().values(), 'vale');

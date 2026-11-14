@@ -1,33 +1,33 @@
 import { realpathSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-
+import { remember } from '#cli/system/cache.ts';
+import { isInside } from '#cli/system/paths.ts';
+import { listMisePins } from '#cli/tools/pins.ts';
+import { join, dirname, relative } from 'node:path';
+import { openFiles } from '#cli/system/files/open.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
+import { buildMiseInstall } from '#cli/tools/projects.ts';
+import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 import { GSPOT_PATHS, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, LINE_BREAK, MISE_PROGRAM } from '#cli/config/system.ts';
+import { LINE_BREAK, GSPOT_FOLDER, MISE_PROGRAM } from '#cli/config/system.ts';
+import { TOOL_ENVIRONMENT, PYTHON_EXECUTABLE } from '#cli/config/tools/programs.ts';
+import type { MiseTrust, MiseBinPaths, ToolLookupSession } from '#cli/types/tools.ts';
+
 import {
-    MISE_BIN_PATHS_ARGUMENTS,
-    MISE_CEILING_PATHS_VARIABLE,
+    MISE_WHICH,
     MISE_CONFIG_NAMES,
-    MISE_CONFIG_PREFIXES,
     MISE_PROJECT_FILES,
+    MISE_CONFIG_PREFIXES,
     MISE_PROJECT_MESSAGE,
+    MISE_BIN_PATHS_ARGUMENTS,
     MISE_STALE_PROJECT_MESSAGE,
     MISE_TOOL_SOURCE_ARGUMENTS,
+    MISE_CEILING_PATHS_VARIABLE,
     MISE_TRUSTED_PATHS_VARIABLE,
-    MISE_WHICH,
 } from '#cli/config/tools/mise.ts';
-import { PYTHON_EXECUTABLE, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { miseToolSourcesSchema } from '#cli/schemas/tools.ts';
-import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { remember } from '#cli/system/cache.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { isInside } from '#cli/system/paths.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
-import { listMisePins } from '#cli/tools/pins.ts';
-import { buildMiseInstall } from '#cli/tools/projects.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
-import type { MiseBinPaths, MiseTrust, ToolLookupSession } from '#cli/types/tools.ts';
 
 const MISE_FOLDERS = Symbol('mise folders');
 

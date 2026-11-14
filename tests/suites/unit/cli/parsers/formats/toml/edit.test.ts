@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-
-import { openTomlFile } from '#cli/parsers/formats/toml/edit.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { openTomlFile } from '#cli/parsers/formats/toml/edit.ts';
 
 test('adding a root key keeps the leading comments on their table', () => {
     const document = openTomlFile(

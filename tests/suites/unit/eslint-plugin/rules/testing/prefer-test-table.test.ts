@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-
 import { preferTestTable } from '#eslint-plugin/rules/testing/prefer-test-table.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

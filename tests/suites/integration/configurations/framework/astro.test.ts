@@ -1,15 +1,13 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/general.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { test, expect } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
 import { doctorOutputSchema } from '#tests/schemas/setup.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { ANSWER_MODULE, COMPONENT_TSCONFIG } from '#tests/config/integration/general.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const ASTRO_PAGE = `---
 const title: string = 'Home';

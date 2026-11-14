@@ -1,6 +1,5 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { selectStartRunner } from '#cli/repository/projects/runner.ts';
 
 test('the pnpm install of gspot names the workspace root, because pnpm refuses a plain add there', async () => {

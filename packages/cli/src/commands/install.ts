@@ -1,20 +1,21 @@
+import { openSession } from '#cli/engine/session.ts';
+import { EXIT_FINDINGS } from '#cli/config/system.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { installTools } from '#cli/tools/installers/install.ts';
+import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
+import { listGeneratedChangeLines } from '#cli/generation/report.ts';
+import { runCancelableCommand } from '#cli/system/processes/signals.ts';
+import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands.ts';
+
 import {
     FILES_CHANGED_MESSAGE,
-    INSTALLATION_STOPPED_MESSAGE,
     TOOLS_CHANGED_MESSAGE,
-    TOOLS_INSTALLED_MESSAGE,
     TOOLS_MISSING_MESSAGE,
+    TOOLS_INSTALLED_MESSAGE,
+    INSTALLATION_STOPPED_MESSAGE,
 } from '#cli/config/commands/setup.ts';
-import { EXIT_FINDINGS } from '#cli/config/system.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { listGeneratedChangeLines } from '#cli/generation/report.ts';
-import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { runCancelableCommand } from '#cli/system/processes/signals.ts';
-import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, InstallCommandJson } from '#cli/types/commands.ts';
-import type { CommandResult } from '#cli/types/system.ts';
 
 async function runInstallCommand(root: string, cancelSignal: AbortSignal): Promise<CommandResult<InstallCommandJson>> {
     const session = await openSession(root, { cancelSignal });

@@ -1,6 +1,6 @@
+import { createRule } from '../../rule.ts';
 import { TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
 import { getOptionValue, listOptionLiterals } from '../../language/expressions.ts';
-import { createRule } from '../../rule.ts';
 
 export const unverifiedCertificate = createRule<[], 'unverified'>({
     name: 'unverified-certificate',

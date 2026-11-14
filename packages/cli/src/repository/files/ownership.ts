@@ -1,8 +1,8 @@
-import { GENERATED_HEADER_LINE, HEADER_LINES_CHECKED } from '#cli/config/repository/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { isInside } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { Files } from '#cli/types/system.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { HEADER_LINES_CHECKED, GENERATED_HEADER_LINE } from '#cli/config/repository/files.ts';
 
 export function isGspotPath(path: string): boolean {
     return path.startsWith(`${GSPOT_FOLDER}/`);

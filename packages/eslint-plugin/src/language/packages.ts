@@ -1,12 +1,10 @@
-import { existsSync, readFileSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-
-import type { TSESLint } from '@typescript-eslint/utils';
-
-import { DEPENDENCY_FIELDS, PACKAGE_MANIFEST, REPOSITORY_MARKER } from '../config/plugin.ts';
-import type { FileContext, PackageFacts } from '../types/plugin.ts';
-import { listImportedModules } from './modules.ts';
+import { join, dirname } from 'node:path';
 import { getRootFolder } from './paths.ts';
+import { listImportedModules } from './modules.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import type { TSESLint } from '@typescript-eslint/utils';
+import type { FileContext, PackageFacts } from '../types/plugin.ts';
+import { PACKAGE_MANIFEST, DEPENDENCY_FIELDS, REPOSITORY_MARKER } from '../config/plugin.ts';
 
 const manifestCache = new WeakMap<TSESLint.SourceCode, PackageFacts>();
 

@@ -1,11 +1,10 @@
-import { basename, dirname } from 'node:path';
-
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
-import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
-import { osvScannerReportSchema } from '#cli/schemas/engine.ts';
+import { dirname, basename } from 'node:path';
 import { findText } from '#cli/system/files/reads.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
+import { osvScannerReportSchema } from '#cli/schemas/engine.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
+import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
 import type { OsvPackage, ToolOutput } from '#cli/types/engine/tool-runs.ts';
 
 /**

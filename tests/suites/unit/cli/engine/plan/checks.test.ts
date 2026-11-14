@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { RunSelection } from '#cli/types/engine/plan.ts';
-import { SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/plan.ts';
+import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { SCOPE_WIDE_IGNORE_CASES } from '#tests/config/engine/plan.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a check takes no file of another selected language in its scope', async () => {

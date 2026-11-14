@@ -1,10 +1,9 @@
 import type { z } from 'zod';
-
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 
 /**
 Read the pyproject.toml of a scope.

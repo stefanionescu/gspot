@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { FUNCTION_NODES, MODULE_DECLARATION_NODES, UNWRAPPABLE_NODES } from '../config/plugin.ts';
 import type { CounterUpdate } from '../types/plugin.ts';
+import { FUNCTION_NODES, UNWRAPPABLE_NODES, MODULE_DECLARATION_NODES } from '../config/plugin.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const isModuleDeclaration = ASTUtils.isNodeOfTypes(MODULE_DECLARATION_NODES.map((type) => AST_NODE_TYPES[type]));
 

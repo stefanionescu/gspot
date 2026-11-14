@@ -1,42 +1,41 @@
-import { dirname, relative } from 'node:path/posix';
-
 import { stringify } from 'yaml';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { dirname, relative } from 'node:path/posix';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { VALE_PACKAGES, VALE_STYLES_PATH, VALE_PACKAGE_URLS } from '#cli/config/tools/vale.ts';
 
 import {
-    ACRONYM_DEFINITION_PATTERN,
-    ACRONYM_MESSAGE,
-    ACRONYM_NAME,
-    ACRONYM_PATTERN,
     ACRONYMS,
-    ALL_FILES_SECTION,
-    BANNED_HEADING_MESSAGE,
-    BANNED_HEADINGS,
+    VOCAB_LINE,
+    ACRONYM_NAME,
     BLOCK_IGNORES,
-    DIGIT_WORD_PATTERN,
-    FILE_NAME_PATTERN,
-    HEADING_CASE_STYLE,
     LENGTH_STYLES,
-    MARKUP_RULES_COMMENT,
+    TERMS_MESSAGE,
+    TOKEN_IGNORES,
     MIN_ALERT_LINE,
     NO_STYLES_LINE,
     PROSE_GRAMMARS,
-    STYLES_PATH_COMMENT,
-    TERMS_MESSAGE,
-    TOKEN_IGNORES,
-    VALE_COMMENT_RULES,
+    VALE_OFF_RULES,
+    ACRONYM_MESSAGE,
+    ACRONYM_PATTERN,
+    BANNED_HEADINGS,
+    ALL_FILES_SECTION,
+    FILE_NAME_PATTERN,
     VALE_MARKUP_FILES,
     VALE_MARKUP_RULES,
-    VALE_OFF_RULES,
+    DIGIT_WORD_PATTERN,
+    HEADING_CASE_STYLE,
+    VALE_COMMENT_RULES,
     VALE_REGEX_SYMBOLS,
+    STYLES_PATH_COMMENT,
     VALE_SKIPPED_SCOPES,
-    VOCAB_LINE,
+    MARKUP_RULES_COMMENT,
+    BANNED_HEADING_MESSAGE,
+    ACRONYM_DEFINITION_PATTERN,
 } from '#cli/config/configurations/prose.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { VALE_PACKAGE_URLS, VALE_PACKAGES, VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listExceptions(words: string[]): string[] {
     return [...new Set([...words, ...ACRONYMS])]

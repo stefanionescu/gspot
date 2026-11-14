@@ -1,12 +1,12 @@
-import { CLIENT_ENVIRONMENT_RULE } from '#cli/config/configurations/javascript/blocks.ts';
-import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { joinScopeSelector } from '#cli/settings/values/paths.ts';
-import { escapeGlob } from '#cli/system/patterns.ts';
-import type { EslintRuleBlock } from '#cli/types/configurations/javascript.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import { joinScopeSelector } from '#cli/settings/values/paths.ts';
+import type { EslintRuleBlock } from '#cli/types/configurations/javascript.ts';
+import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import { CLIENT_ENVIRONMENT_RULE } from '#cli/config/configurations/javascript/blocks.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
 
 function listManifestRuleBlocks(scope: Scope, excluded: string[], dependencyNames: string[]): EslintRuleBlock[] {
     const tables = scope.configurations.map(({ eslint }) => eslint);

@@ -1,8 +1,7 @@
 import { posix } from 'node:path';
-
+import { GspotError } from '#cli/system/errors.ts';
 import { ROOT_RUNS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { formatSimilarNames } from '#cli/system/text/messages.ts';
 import type { Check, Configuration, ConfigurationCheck } from '#cli/types/manifests.ts';
 

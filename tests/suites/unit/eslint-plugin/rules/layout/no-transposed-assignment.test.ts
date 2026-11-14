@@ -1,5 +1,5 @@
-import { noTransposedAssignment } from '#eslint-plugin/rules/layout/no-transposed-assignment.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noTransposedAssignment } from '#eslint-plugin/rules/layout/no-transposed-assignment.ts';
 
 buildRuleTester().run('no-transposed-assignment', noTransposedAssignment, {
     valid: ['count = +increment;', 'count=+increment;', 'count = (+ value);', 'count = ~ value;', 'count += + value;'],

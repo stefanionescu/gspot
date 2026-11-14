@@ -1,16 +1,16 @@
-import { lstatSync, mkdtempSync, realpathSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { printWarning } from '#cli/system/terminal.ts';
+import { isProcessRunning } from '#cli/system/processes/stop.ts';
+import type { Files, TemporaryFolder } from '#cli/types/system.ts';
+import { rmSync, lstatSync, mkdtempSync, realpathSync } from 'node:fs';
 
 import {
     MILLISECONDS_PER_DAY,
+    TEMPORARY_STALE_DAYS,
     TEMPORARY_FILE_PREFIX,
     TEMPORARY_REMOVAL_OPTIONS,
-    TEMPORARY_STALE_DAYS,
 } from '#cli/config/system.ts';
-import { isProcessRunning } from '#cli/system/processes/stop.ts';
-import { printWarning } from '#cli/system/terminal.ts';
-import type { Files, TemporaryFolder } from '#cli/types/system.ts';
 
 function isStaleTemporaryPath(path: string, pid: string | undefined): boolean {
     if (pid !== undefined) return !isProcessRunning(Number(pid));

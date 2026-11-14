@@ -1,24 +1,22 @@
-import { existsSync } from 'node:fs';
-import { readFile, symlink, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { getTool } from '#cli/manifests/tools.ts';
+import { testdir, createFileTree } from 'testdirs';
+import type { Tool } from '#cli/types/manifests.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { formatUnavailableNote, inspectTool } from '#cli/tools/programs/inspect.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { buildProgramPin, buildToolSearch, buildVenvExecutablePath, fakeNpmPackage } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { unlink, symlink, readFile } from 'node:fs/promises';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 import { linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { inspectTool, formatUnavailableNote } from '#cli/tools/programs/inspect.ts';
+import { fakeNpmPackage, buildProgramPin, buildToolSearch, buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
 
 test('tool inspection finds the project compiler, and the repository compiler from a copy', async () => {
     await using sandbox = await testdir({

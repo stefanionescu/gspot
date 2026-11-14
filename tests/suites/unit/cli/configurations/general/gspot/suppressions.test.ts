@@ -1,20 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { afterAll, beforeAll, describe, expect, test } from 'bun:test';
-
+import { writeFile } from 'node:fs/promises';
 import type { Finding } from '#cli/types/engine/run.ts';
-import {
-    JSX_COMMENTS,
-    LIMIT_SUPPRESSION_CASES,
-    QUOTED_ESLINT_COMMENTS,
-    SUPPRESSION_REASON_CASES,
-    SUPPRESSION_REASONS,
-    SUPPRESSION_SYNTAX_CASES,
-} from '#tests/config/configurations/gspot.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect, afterAll, describe, beforeAll } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+import {
+    JSX_COMMENTS,
+    SUPPRESSION_REASONS,
+    QUOTED_ESLINT_COMMENTS,
+    LIMIT_SUPPRESSION_CASES,
+    SUPPRESSION_REASON_CASES,
+    SUPPRESSION_SYNTAX_CASES,
+} from '#tests/config/configurations/gspot.ts';
 
 test.each([...SUPPRESSION_REASONS])(
     'the $configuration suppression $bare needs a reason and passes with one',

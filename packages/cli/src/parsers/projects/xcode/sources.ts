@@ -1,16 +1,16 @@
 import { posix } from 'node:path';
-
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import type { PbxElement, TargetFolder, XcodeProject, ProjectSources } from '#cli/types/parsers.ts';
+import { getElement, parsePbxproj, buildProjectParseError } from '#cli/parsers/projects/xcode/document.ts';
+
 import {
+    PBXPROJ_SUFFIX,
+    SETTING_REFERENCE,
     GROUP_CYCLE_MESSAGE,
     MISSING_FILE_REF_MESSAGE,
     MISSING_MAIN_GROUP_MESSAGE,
-    PBXPROJ_SUFFIX,
-    SETTING_REFERENCE,
 } from '#cli/config/parsers/projects.ts';
-import { buildProjectParseError, getElement, parsePbxproj } from '#cli/parsers/projects/xcode/document.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
-import type { PbxElement, ProjectSources, TargetFolder, XcodeProject } from '#cli/types/parsers.ts';
 
 function buildParentGroups(elements: Record<string, PbxElement>): Map<string, string> {
     const parents = new Map<string, string>();

@@ -1,5 +1,5 @@
-import { noAdjacentMultilineIf } from '#eslint-plugin/rules/layout/no-adjacent-multiline-if.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noAdjacentMultilineIf } from '#eslint-plugin/rules/layout/no-adjacent-multiline-if.ts';
 
 buildRuleTester().run('no-adjacent-multiline-if', noAdjacentMultilineIf, {
     valid: [

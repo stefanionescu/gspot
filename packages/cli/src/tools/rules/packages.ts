@@ -1,26 +1,26 @@
-import { readFileSync, realpathSync } from 'node:fs';
-import { createRequire } from 'node:module';
-import { dirname, join, relative, resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    ESLINT_BUILTIN_RULES,
-    ESLINT_MANIFEST_TOOL,
-    INSTALL_FOR_RULES_MESSAGE,
-    MARKDOWNLINT_RULE_DESCRIPTION,
-    MARKDOWNLINT_RULE_SCHEMA,
-    STYLELINT_MANIFEST_TOOL,
-    UNDEFINED_NAME_FIX,
-} from '#cli/config/tools/rules.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
+import { createRequire } from 'node:module';
 import { isInside } from '#cli/system/paths.ts';
 import { findValueAt } from '#cli/system/tables.ts';
-import { extractRulePrefix, findRulePage, findRulePlugin } from '#cli/tools/rules/pages.ts';
+import { readFileSync, realpathSync } from 'node:fs';
+import { findText } from '#cli/system/files/reads.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { RuleExplanation } from '#cli/types/tools.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { join, dirname, resolve, relative } from 'node:path';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { installedRulesSchema, ruleDocumentationSchema } from '#cli/schemas/tools.ts';
+import { findRulePage, findRulePlugin, extractRulePrefix } from '#cli/tools/rules/pages.ts';
+
+import {
+    UNDEFINED_NAME_FIX,
+    ESLINT_BUILTIN_RULES,
+    ESLINT_MANIFEST_TOOL,
+    STYLELINT_MANIFEST_TOOL,
+    MARKDOWNLINT_RULE_SCHEMA,
+    INSTALL_FOR_RULES_MESSAGE,
+    MARKDOWNLINT_RULE_DESCRIPTION,
+} from '#cli/config/tools/rules.ts';
 
 function findInstalledToolPath(root: string, specifier: string, subpath?: string): string | undefined {
     let path: string | undefined;

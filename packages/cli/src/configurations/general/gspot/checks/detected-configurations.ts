@@ -1,12 +1,12 @@
-import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { stripIgnoredFiles } from '#cli/engine/plan/files.ts';
-import { listDetectedAdditions } from '#cli/repository/detection/proposals.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { stripIgnoredFiles } from '#cli/engine/plan/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { listDetectedAdditions } from '#cli/repository/detection/proposals.ts';
 
 function formatDetection({ name, checks }: Configuration): string {
     if (checks.length > 0) return `No check reads ${name}`;

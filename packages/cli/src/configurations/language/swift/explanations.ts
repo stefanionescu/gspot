@@ -1,5 +1,5 @@
-import { COVERAGE_RULE, FAILED_TEST_RULE, SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { COVERAGE_RULE, FAILED_TEST_RULE, SWIFT_SECURITY_RULES } from '#cli/config/configurations/swift.ts';
 
 export const SWIFT_SECURITY_EXPLANATIONS = {
     [SWIFT_SECURITY_RULES.keychain]: {

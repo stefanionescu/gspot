@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { DEBUG_MIDDLEWARE, MIDDLEWARE_SELECTOR } from '../../config/servers.ts';
-import { listArgumentValues } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { listArgumentValues } from '../../language/expressions.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { DEBUG_MIDDLEWARE, MIDDLEWARE_SELECTOR } from '../../config/servers.ts';
 
 export const noProductionDebug = createRule<[], 'debugMiddleware'>({
     name: 'no-production-debug',

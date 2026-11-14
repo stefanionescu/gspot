@@ -1,5 +1,5 @@
-import { noGlobalsShadowing } from '#eslint-plugin/rules/variables/no-globals-shadowing.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noGlobalsShadowing } from '#eslint-plugin/rules/variables/no-globals-shadowing.ts';
 
 buildRuleTester().run('no-globals-shadowing', noGlobalsShadowing, {
     valid: ['let undefined;', 'function read(undefined) {}', 'const window = 1;', 'Math.limit = 1;'],

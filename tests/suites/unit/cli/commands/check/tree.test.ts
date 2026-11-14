@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { installHooks } from '#cli/tools/installers/hooks.ts';
-import { BASH_SYNTAX_PUSH_CHECK, HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { HOOKS_SETTINGS, BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 
 test('check warns once for missing hooks, skips the warning for pre-push, and stops warning once the hooks run', async () => {
     await using sandbox = await createGitSandbox({

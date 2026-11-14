@@ -1,22 +1,21 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import type { z } from 'zod';
-
-import {
-    ADD_REASON_MESSAGE,
-    COVERAGE_LINES_SETTING,
-    EMPTY_REASON,
-    REASON_WORDS_MIN,
-    REMOVAL_REASON_SUGGESTION,
-    REMOVED_CONFIGURATIONS,
-    SWIFT_TARGET_MESSAGE,
-} from '#cli/config/settings/validation.ts';
+import { isDeepStrictEqual } from 'node:util';
+import { isTable } from '#cli/system/tables.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { findChildSchema } from '#cli/settings/lookup.ts';
 import { getSettingValue } from '#cli/settings/values/inherit.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
-import type { AvailableSettings, ReasonRequirement, Setting, Settings, SettingsError } from '#cli/types/settings.ts';
+import type { Setting, Settings, SettingsError, AvailableSettings, ReasonRequirement } from '#cli/types/settings.ts';
+
+import {
+    EMPTY_REASON,
+    REASON_WORDS_MIN,
+    ADD_REASON_MESSAGE,
+    SWIFT_TARGET_MESSAGE,
+    COVERAGE_LINES_SETTING,
+    REMOVED_CONFIGURATIONS,
+    REMOVAL_REASON_SUGGESTION,
+} from '#cli/config/settings/validation.ts';
 
 function isLimitWeakening(direction: Exclude<ReasonRequirement, 'adding'>, value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

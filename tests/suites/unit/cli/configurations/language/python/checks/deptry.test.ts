@@ -1,19 +1,17 @@
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { executableLayout } from '#cli/system/processes/programs.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as processes from '#cli/system/processes/run.ts';
-import { DEPTRY_SCOPE_PATHS } from '#tests/config/configurations/python.ts';
-import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildPythonToolFiles } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { DEPTRY_SCOPE_PATHS } from '#tests/config/configurations/python.ts';
 
 async function runFakeDeptry(root: string) {
     using resources = new DisposableStack();

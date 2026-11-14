@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
-
-import { PLACEHOLDER_DOCSTRING_CASES } from '#tests/config/configurations/python.ts';
-import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
+import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { GOOGLE_PYPROJECT } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PLACEHOLDER_DOCSTRING_CASES } from '#tests/config/configurations/python.ts';
 
 const CLEAN_PYTHON_MODULE = `"""Prices."""
 

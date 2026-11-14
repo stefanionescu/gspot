@@ -1,19 +1,18 @@
-import { relative } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { relative } from 'node:path';
+import { test, expect } from 'bun:test';
+import { stringify } from '@decimalturn/toml-patch';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import {
-    FRAMEWORK_RUNTIME_CASES,
-    PROCESS_UNDEFINED_MESSAGE,
-    RUNTIME_OVERRIDE_SETTINGS,
-    RUNTIME_OVERRIDE_TABLES,
-    WINDOW_UNDEFINED_MESSAGE,
-} from '#tests/config/configurations/javascript/overrides.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, readEslintRules } from '#tests/setup/eslint/lint.ts';
+
+import {
+    FRAMEWORK_RUNTIME_CASES,
+    RUNTIME_OVERRIDE_TABLES,
+    WINDOW_UNDEFINED_MESSAGE,
+    PROCESS_UNDEFINED_MESSAGE,
+    RUNTIME_OVERRIDE_SETTINGS,
+} from '#tests/config/configurations/javascript/overrides.ts';
 
 test('a browser override gets no Node.js globals and no Node.js rules, and other files keep both', async () => {
     await using sandbox = await testdir({

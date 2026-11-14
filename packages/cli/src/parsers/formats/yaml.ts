@@ -1,10 +1,9 @@
-import { LineCounter, parse, parseAllDocuments } from 'yaml';
 import type { z } from 'zod';
-
-import { MESSAGE_END, YAML_OPTIONS, YAML_POSITION_OPTIONS } from '#cli/config/parsers/formats.ts';
-import { parseFileFields } from '#cli/parsers/validation.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { PositionedYaml } from '#cli/types/parsers.ts';
+import { parseFileFields } from '#cli/parsers/validation.ts';
+import { parse, LineCounter, parseAllDocuments } from 'yaml';
+import { MESSAGE_END, YAML_OPTIONS, YAML_POSITION_OPTIONS } from '#cli/config/parsers/formats.ts';
 
 export function parseYamlFile(path: string, text: string): unknown;
 

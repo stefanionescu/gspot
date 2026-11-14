@@ -1,14 +1,14 @@
 import type { Node } from 'web-tree-sitter';
-
 import { TYPE_NODES } from '#cli/config/configurations/general.ts';
+import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
+import type { Identifier, NamedCategory, FileIdentifiers } from '#cli/types/configurations/naming.ts';
+
 import {
     MEMBER_PARENTS,
     OBJC_ATTRIBUTE,
     OBJC_CALLBACK_PREFIX,
     SWIFT_CALLABLE_NODES,
 } from '#cli/config/configurations/naming.ts';
-import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
-import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/naming.ts';
 
 function addTypes(found: FileIdentifiers, syntaxRoot: Node): void {
     const declarations = syntaxRoot.descendantsOfType([...TYPE_NODES]);

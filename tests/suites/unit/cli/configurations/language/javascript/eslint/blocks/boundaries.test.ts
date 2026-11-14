@@ -1,27 +1,26 @@
-import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
+import { unlink, readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+
 import {
-    COMPONENT_IMPORT_CASES,
-    IMPORT_RULE_CASES,
-    IMPORT_RULE_FILES,
-    IMPORT_RULE_TABLES,
-    STYLESHEET_IMPORT_CASES,
-    TEST_IMPORT_CASES,
-    TEST_IMPORT_RULE_TABLES,
+    TRPC_TYPES,
     TRPC_IMPORTS,
     TRPC_MODULES,
-    TRPC_TYPES,
+    IMPORT_RULE_CASES,
+    IMPORT_RULE_FILES,
+    TEST_IMPORT_CASES,
+    IMPORT_RULE_TABLES,
+    COMPONENT_IMPORT_CASES,
+    STYLESHEET_IMPORT_CASES,
+    TEST_IMPORT_RULE_TABLES,
 } from '#tests/config/configurations/javascript/blocks.ts';
-import { APP_SCOPE_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test.each(COMPONENT_IMPORT_CASES)(
     '$configuration component imports obey their import rule',

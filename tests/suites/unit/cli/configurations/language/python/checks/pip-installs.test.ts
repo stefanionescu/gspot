@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { REQUIREMENTS_FILE_FINDINGS } from '#tests/config/configurations/python.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { REQUIREMENTS_FILE_FINDINGS } from '#tests/config/configurations/python.ts';
 
 test('a requirements file is reported only in a scope with a lockfile', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,11 +1,9 @@
 import { posix } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { findLockedPackageLine, readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
 import { LOCKED_VERSION_CASES } from '#tests/config/parsers/formats.ts';
+import { readLockedVersions, findLockedPackageLine } from '#cli/parsers/projects/lockfiles.ts';
 
 const PACKAGE_LINE_CASES = [
     {

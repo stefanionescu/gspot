@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { isMacos } from '#tests/setup/system/platform.ts';
 import { redirectCacheFolder } from '#tests/setup/cli/checks.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isMacos } from '#tests/setup/system/platform.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const XCTEST_COVERAGE_SOURCE = `func first() -> Int {
     return 1

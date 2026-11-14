@@ -1,27 +1,26 @@
 import { existsSync } from 'node:fs';
-import { writeFile } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
 import { join, parse } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import {
-    installNpmToolProject,
-    installPythonToolProjects,
-    isEveryEnvironmentReady,
-    listStaleLockfiles,
-} from '#cli/tools/installers/projects.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { listNpmProjectPins } from '#cli/tools/pins.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+
+import {
+    listStaleLockfiles,
+    installNpmToolProject,
+    isEveryEnvironmentReady,
+    installPythonToolProjects,
+} from '#cli/tools/installers/projects.ts';
 
 function buildNpmLockfile(packageManager: 'bun' | 'npm', pins: Record<string, string>): string {
     const entries = Object.entries(pins);

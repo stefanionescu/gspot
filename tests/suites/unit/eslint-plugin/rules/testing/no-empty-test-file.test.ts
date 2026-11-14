@@ -1,5 +1,5 @@
-import { noEmptyTestFile } from '#eslint-plugin/rules/testing/no-empty-test-file.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyTestFile } from '#eslint-plugin/rules/testing/no-empty-test-file.ts';
 
 buildRuleTester().run('no-empty-test-file', noEmptyTestFile, {
     valid: [

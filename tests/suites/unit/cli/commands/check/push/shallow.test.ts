@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import type { CommandFailureJson } from '#cli/types/system.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { writeFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import type { CommandFailureJson } from '#cli/types/system.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 
 test('a pre-push check in a shallow clone refuses commits/commitlint-pushed and names git fetch --unshallow', async () => {
     await using sandbox = await testdir();

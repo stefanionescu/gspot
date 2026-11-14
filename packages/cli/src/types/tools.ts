@@ -1,28 +1,28 @@
 import type { z } from 'zod';
-
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import type { LOCKFILES } from '#cli/config/parsers/projects.ts';
 import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
+import type { Files, RunCache, CancelableSpawnOptions } from '#cli/types/system.ts';
+import type { Tool, Check, Configuration, ToolInstallers } from '#cli/types/manifests.ts';
+
 import type {
-    bunPackageSchema,
-    installResultSchema,
-    miseLockfileSchema,
-    ruleExplanationSchema,
-    toolInspectionSchema,
-    uvLockfileSchema,
-    uvProjectSettingsSchema,
-} from '#cli/schemas/tools.ts';
-import type { Check, Configuration, Tool, ToolInstallers } from '#cli/types/manifests.ts';
-import type {
-    ManagedKeys,
-    PackageManager,
-    PackageManagerCommand,
-    PackageManagerPin,
     Repository,
+    ManagedKeys,
     StartRunner,
+    PackageManager,
+    PackageManagerPin,
+    PackageManagerCommand,
     ToolPackageManagerName,
 } from '#cli/types/repository.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { CancelableSpawnOptions, Files, RunCache } from '#cli/types/system.ts';
+import type {
+    bunPackageSchema,
+    uvLockfileSchema,
+    miseLockfileSchema,
+    installResultSchema,
+    toolInspectionSchema,
+    ruleExplanationSchema,
+    uvProjectSettingsSchema,
+} from '#cli/schemas/tools.ts';
 
 export type Host = { platform: string; arch: string };
 

@@ -1,28 +1,27 @@
 import { readFileSync } from 'node:fs';
-
+import plugin from '#eslint-plugin/plugin.ts';
+import type { ReferencePage } from '#docs/types/pages.ts';
+import { TOPICS } from '#eslint-plugin/registry/topics.ts';
+import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
 import { compareText, formatNameList } from '@gspothq/cli/reference';
+import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
-    DEFAULT_OPTION_DESCRIPTION,
-    ESLINT_FIX_MESSAGE,
-    HELP_HEADING,
-    NO_CONFIG_MESSAGE,
     PLUGIN_PATH,
-    PURPOSE_HEADING,
-    REFERENCE_FOLDERS,
-    SCHEMA_TYPE_LABELS,
+    HELP_HEADING,
     SENTENCE_END,
-    SUBSECTION_HEADING_LEVEL,
-    TABLE_HEADING_LEVEL,
     TOPIC_LABELS,
+    PURPOSE_HEADING,
+    NO_CONFIG_MESSAGE,
+    REFERENCE_FOLDERS,
+    ESLINT_FIX_MESSAGE,
+    SCHEMA_TYPE_LABELS,
+    TABLE_HEADING_LEVEL,
+    SUBSECTION_HEADING_LEVEL,
     TYPE_INFORMATION_MESSAGE,
+    DEFAULT_OPTION_DESCRIPTION,
 } from '#docs/config/reference.ts';
-import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
-import pluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import { PLUGIN_PREFIX } from '#eslint-plugin/config/plugin.ts';
-import plugin from '#eslint-plugin/plugin.ts';
-import { TOPICS } from '#eslint-plugin/registry/topics.ts';
 
 function formatPluginPresets(): string {
     const presets = Object.entries(plugin.configs).map(([name, config]) => {

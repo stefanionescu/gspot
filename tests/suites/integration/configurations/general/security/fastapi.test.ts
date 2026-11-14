@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { describe, expect, test } from 'bun:test';
-
-import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { writeFile } from 'node:fs/promises';
+import { test, expect, describe } from 'bun:test';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 const FASTAPI_PROJECT = `[project]
 name = "example"

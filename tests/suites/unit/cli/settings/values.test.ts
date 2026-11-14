@@ -1,20 +1,18 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { parseSettings } from '#cli/settings/parse.ts';
+import { writeFile } from 'node:fs/promises';
 import { getTable } from '#cli/settings/tables.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { validateKeys } from '#cli/settings/validation/keys.ts';
 import { getSettingValue } from '#cli/settings/values/inherit.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { POSTGRES_ORIGIN, PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/parse.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { POSTGRES_ORIGIN, PURGECSS_SAFELIST_TABLES } from '#tests/config/settings/parse.ts';
 
 test('an empty PurgeCSS safelist is inherited, and a scope value applies to its children', async () => {
     await using sandbox = await createGitSandbox({});

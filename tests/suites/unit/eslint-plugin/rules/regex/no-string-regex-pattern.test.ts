@@ -1,5 +1,5 @@
-import { noStringRegexPattern } from '#eslint-plugin/rules/regex/no-string-regex-pattern.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noStringRegexPattern } from '#eslint-plugin/rules/regex/no-string-regex-pattern.ts';
 
 buildTypedRuleTester().run('no-string-regex-pattern', noStringRegexPattern, {
     valid: [

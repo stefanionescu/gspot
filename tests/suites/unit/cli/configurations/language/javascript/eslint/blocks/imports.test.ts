@@ -1,12 +1,10 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { HOST_MODULE, IMPORT_CASES, IMPORT_FILES } from '#tests/config/configurations/javascript/plugins.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { HOST_MODULE, IMPORT_CASES, IMPORT_FILES } from '#tests/config/configurations/javascript/plugins.ts';
 
 test('a bundler scope drops only code suffixes, and its Node scripts keep every suffix', async () => {
     await using sandbox = await testdir({

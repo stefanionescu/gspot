@@ -1,21 +1,19 @@
 import { readFileSync } from 'node:fs';
-
-import { fromMarkdown } from 'mdast-util-from-markdown';
-
-import { ALL_LEVEL_MARKER, BLANK_LINE } from '#cli/config/generation/builders.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { listRuleFiles } from '#cli/manifests/read.ts';
-import { detectConditions } from '#cli/repository/detection/configurations.ts';
-import { getRootScope, listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { isRuleFileExcluded } from '#cli/settings/values/paths.ts';
-import { buildAssetPath } from '#cli/system/package/assets.ts';
-import type { RuleFile, RuleSection } from '#cli/types/generation.ts';
-import type { Configuration, ShippedRule } from '#cli/types/manifests.ts';
-import type { SourcePosition } from '#cli/types/parsers.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { Repository } from '#cli/types/repository.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { SourcePosition } from '#cli/types/parsers.ts';
+import { buildAssetPath } from '#cli/system/package/assets.ts';
+import { isRuleFileExcluded } from '#cli/settings/values/paths.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
+import type { RuleFile, RuleSection } from '#cli/types/generation.ts';
+import type { ShippedRule, Configuration } from '#cli/types/manifests.ts';
+import { detectConditions } from '#cli/repository/detection/configurations.ts';
+import { BLANK_LINE, ALL_LEVEL_MARKER } from '#cli/config/generation/builders.ts';
+import { getRootScope, listSelectedConfigurations } from '#cli/settings/scopes.ts';
 
 function listConfigurationRules(configurations: Configuration[], repository: Repository): ShippedRule[] {
     const conditions = configurations.flatMap((configuration) => Object.values(configuration.rules));

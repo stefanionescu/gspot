@@ -1,6 +1,5 @@
-import { expect, test } from 'bun:test';
-
-import { joinScopeGlob, listOwnFiles } from '#cli/repository/scopes.ts';
+import { test, expect } from 'bun:test';
+import { listOwnFiles, joinScopeGlob } from '#cli/repository/scopes.ts';
 
 test('joinScopeGlob escapes the glob characters of the scope path', () => {
     expect(joinScopeGlob('app[1]', '**/*.ts')).toBe(String.raw`app\[1\]/**/*.ts`);

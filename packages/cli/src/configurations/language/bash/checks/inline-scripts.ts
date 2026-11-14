@@ -1,8 +1,8 @@
-import { RUNTIME_EMBED_RULE, RUNTIME_EMBEDS } from '#cli/config/configurations/bash.ts';
-import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { RUNTIME_EMBEDS, RUNTIME_EMBED_RULE } from '#cli/config/configurations/bash.ts';
 
 async function checkBashInlineScripts(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);

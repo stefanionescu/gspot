@@ -1,19 +1,20 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-import {
-    BIN_FOLDER_START,
-    COMMIT_MESSAGE_PATH_LINES,
-    HOOK_PROGRAM_MISSING,
-    LFS_MISSING_GUARD,
-    PUSH_INPUT_REPLAY,
-    PUSH_INPUT_SAVE,
-    YARN_PNP_FILE,
-} from '#cli/config/generation/builders.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { HOOK_SHEBANG, LFS_HOOKS } from '#cli/config/repository/setup.ts';
-import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
 import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { StartRunner } from '#cli/types/repository.ts';
-import type { GeneratedFile, HookName } from '#cli/types/tools.ts';
+import { HOOK_CHECKS } from '#cli/config/tools/installers.ts';
+import type { HookName, GeneratedFile } from '#cli/types/tools.ts';
+import { LFS_HOOKS, HOOK_SHEBANG } from '#cli/config/repository/setup.ts';
+
+import {
+    YARN_PNP_FILE,
+    PUSH_INPUT_SAVE,
+    BIN_FOLDER_START,
+    LFS_MISSING_GUARD,
+    PUSH_INPUT_REPLAY,
+    HOOK_PROGRAM_MISSING,
+    COMMIT_MESSAGE_PATH_LINES,
+} from '#cli/config/generation/builders.ts';
 
 function buildInstallGuard(name: Exclude<StartRunner['name'], 'mise'>): string {
     const pnp = name === 'yarn' ? `test -f ${YARN_PNP_FILE} || ` : '';

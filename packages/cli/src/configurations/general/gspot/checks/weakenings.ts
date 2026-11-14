@@ -1,28 +1,28 @@
 import { isDeepStrictEqual } from 'node:util';
+import { isTable } from '#cli/system/tables.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { parseAcceptedSettings } from '#cli/settings/parse.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import type { Weakening } from '#cli/types/configurations/general.ts';
+import { listAllowedRules } from '#cli/configurations/import-rules.ts';
+import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
+import type { Settings, IgnoreRecord, SettingsTable } from '#cli/types/settings.ts';
+import { listWrittenKeys, listSettingsTables } from '#cli/settings/values/written.ts';
+import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
+import type { CheckCode, CheckSession, BuiltInCheckResult } from '#cli/types/engine/run.ts';
+import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
 
 import {
     EVERY_CHECK,
-    SHIPPED_ESLINT_RULES,
     WEAKENING_FIXES,
-    WEAKENING_IGNORE_HELP,
     WEAKENING_RULES,
+    SHIPPED_ESLINT_RULES,
+    WEAKENING_IGNORE_HELP,
 } from '#cli/config/configurations/gspot.ts';
-import { LEVELS } from '#cli/config/manifests.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { WEAKENING_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { listAllowedRules } from '#cli/configurations/import-rules.ts';
-import { readCommittedTexts } from '#cli/repository/revisions/files.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { parseAcceptedSettings } from '#cli/settings/parse.ts';
-import { listRemovedConfigurations, selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { getSettingValue } from '#cli/settings/values/inherit.ts';
-import { listSettingsTables, listWrittenKeys } from '#cli/settings/values/written.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type { Weakening } from '#cli/types/configurations/general.ts';
-import type { BuiltInCheckResult, CheckCode, CheckSession } from '#cli/types/engine/run.ts';
-import type { IgnoreRecord, Settings, SettingsTable } from '#cli/types/settings.ts';
 
 function listIgnoreWeakenings(base: IgnoreRecord[], head: IgnoreRecord[]): Weakening[] {
     return head.flatMap((record) => {

@@ -1,8 +1,7 @@
 import { renameSync } from 'node:fs';
 import { parseArgs } from 'node:util';
-
-import { PAUSING_GIT_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 import { splitProgramArguments } from '#tests/setup/system/programs.ts';
+import { PAUSING_GIT_OPTIONS, WAIT_INTERVAL_MILLISECONDS } from '#tests/config/setup/programs.ts';
 
 const { own, call } = splitProgramArguments();
 const { values } = parseArgs({ args: own, options: PAUSING_GIT_OPTIONS });

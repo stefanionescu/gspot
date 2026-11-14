@@ -1,5 +1,4 @@
-import { isDeepStrictEqual, parseArgs } from 'node:util';
-
+import { parseArgs, isDeepStrictEqual } from 'node:util';
 import { EXPECT_ARGUMENTS_OPTIONS } from '#tests/config/setup/programs.ts';
 
 const { values, positionals } = parseArgs({ options: EXPECT_ARGUMENTS_OPTIONS, allowPositionals: true });

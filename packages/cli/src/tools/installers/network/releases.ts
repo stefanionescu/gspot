@@ -1,15 +1,16 @@
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { prepareProxy } from '#cli/tools/installers/network/downloads.ts';
+import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
+import type { PackagePins, ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 import { MILLISECONDS_PER_DAY, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+
 import {
     NOT_FOUND_STATUS,
-    NPM_DEFAULT_REGISTRY,
     NPM_SETTING_PREFIX,
+    NPM_DEFAULT_REGISTRY,
     PYTHON_DEFAULT_INDEX_ORIGIN,
 } from '#cli/config/tools/installers.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { npmReleaseSchema, pypiReleaseSchema } from '#cli/schemas/tools.ts';
-import { prepareProxy } from '#cli/tools/installers/network/downloads.ts';
-import type { PackagePins, ToolInstall, ToolRelease } from '#cli/types/tools.ts';
 
 /**
 Read the registry page of a release. A registry that gspot cannot reach, or that does not answer in time, gives no

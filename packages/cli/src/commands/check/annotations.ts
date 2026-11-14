@@ -1,14 +1,14 @@
 import { randomUUID } from 'node:crypto';
+import { print } from '#cli/system/terminal.ts';
+import type { CheckCommandJson } from '#cli/types/commands.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 
 import {
     ANNOTATION_ESCAPES,
+    GITHUB_ANNOTATION_LIMIT,
     ANNOTATION_MESSAGE_CHARACTERS,
     ANNOTATION_PROPERTY_CHARACTERS,
-    GITHUB_ANNOTATION_LIMIT,
 } from '#cli/config/commands/check.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { print } from '#cli/system/terminal.ts';
-import type { CheckCommandJson } from '#cli/types/commands.ts';
 
 /**
 Format one GitHub error annotation per finding, up to the number of error annotations that GitHub shows for one step.

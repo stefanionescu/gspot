@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { PROMISE_NAME, SETTLE_ACTIONS } from '../../config/functions.ts';
 import { createRule } from '../../rule.ts';
+import { PROMISE_NAME, SETTLE_ACTIONS } from '../../config/functions.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSoleExpression(body: TSESTree.Node): TSESTree.Node | undefined {
     if (body.type !== AST_NODE_TYPES.BlockStatement) return body;

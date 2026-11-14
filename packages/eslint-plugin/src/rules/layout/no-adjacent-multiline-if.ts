@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { listSiblingStatements } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { listSiblingStatements } from '../../language/syntax.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getPrecedingIf(node: TSESTree.IfStatement): TSESTree.IfStatement | undefined {
     const statements = listSiblingStatements(node);

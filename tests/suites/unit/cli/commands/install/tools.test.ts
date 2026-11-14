@@ -1,27 +1,25 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, type TestdirResult } from 'testdirs';
-
-import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/setup.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
+import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import * as processes from '#cli/system/processes/run.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import { installOutputSchema } from '#tests/schemas/setup.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import * as processes from '#cli/system/processes/run.ts';
+import { installOutputSchema } from '#tests/schemas/setup.ts';
+import { createFileTree, type TestdirResult } from 'testdirs';
+import * as installers from '#cli/tools/installers/install.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { TOOLS_MISSING_MESSAGE } from '#cli/config/commands/setup.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function createMarkdownSandbox(): Promise<TestdirResult> {
     const sandbox = await createGitSandbox({

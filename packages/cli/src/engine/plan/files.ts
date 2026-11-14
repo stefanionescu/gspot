@@ -1,20 +1,19 @@
 import { isUtf8 } from 'node:buffer';
-
-import { FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
-import { SETTINGS_FILE, SYMLINK_MODE } from '#cli/config/repository/files.ts';
-import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
-import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
-import { isInScope, isOutsideChildScopes, joinScope, listNestedScopes, selectScope } from '#cli/repository/scopes.ts';
-import { getTable, listIgnores } from '#cli/settings/tables.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { PlanInventory, PlannedCheck, PlannedScope, RunSelection } from '#cli/types/engine/plan.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { getTable, listIgnores } from '#cli/settings/tables.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import type { ScopeCheck, SessionBase } from '#cli/types/tools.ts';
+import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
+import { SYMLINK_MODE, SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { FILES_PLACEHOLDER, IGNORED_PATHS_MESSAGE } from '#cli/config/engine.ts';
+import { listCoveredFiles, listCoveredPaths } from '#cli/repository/files/selection.ts';
+import type { PlannedCheck, PlannedScope, RunSelection, PlanInventory } from '#cli/types/engine/plan.ts';
+import { isInScope, joinScope, selectScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
 
 function listScopeFiles(planned: PlannedScope, scopePath: string, runs: Check['runs']): TrackedFile[] {
     const { inventory, session, children } = planned;

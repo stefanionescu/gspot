@@ -1,8 +1,6 @@
-import { readFile } from 'node:fs/promises';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
 
 test('a Bun run reads the release age from the bunfig.toml that it gets with --config', async () => {

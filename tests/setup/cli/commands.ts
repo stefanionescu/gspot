@@ -1,26 +1,24 @@
-import { join } from 'node:path';
-import { Readable } from 'node:stream';
-import { parseArgs } from 'node:util';
-
-import { parse } from '@decimalturn/toml-patch';
-import { expect } from 'bun:test';
 import type { z } from 'zod';
-
-import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import { join } from 'node:path';
+import { expect } from 'bun:test';
+import { parseArgs } from 'node:util';
+import { Readable } from 'node:stream';
 import { runProgram } from '#cli/main.ts';
+import { parse } from '@decimalturn/toml-patch';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
-import type { CheckResult, RunReport } from '#cli/types/engine/run.ts';
-import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import type { Level, TomlTable } from '#cli/types/settings.ts';
-import type { CancelableSpawnOptions, CommandFailureJson, ErrorCode } from '#cli/types/system.ts';
+import { captureTerminal } from '#tests/setup/system/terminal.ts';
 import { GSPOT_ENVIRONMENT } from '#tests/config/setup/programs.ts';
 import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import type { RunReport, CheckResult } from '#cli/types/engine/run.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
-import { captureTerminal } from '#tests/setup/system/terminal.ts';
-import type { FindingRow, ProcessOutput, Sandbox, StdinOptions } from '#tests/types/setup.ts';
+import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
+import type { Sandbox, FindingRow, StdinOptions, ProcessOutput } from '#tests/types/setup.ts';
+import type { ErrorCode, CommandFailureJson, CancelableSpawnOptions } from '#cli/types/system.ts';
 
 export const CLI_BIN = join(REPOSITORY_ROOT, 'packages/cli/src/bin.ts');
 

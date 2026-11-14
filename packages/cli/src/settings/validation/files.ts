@@ -1,15 +1,15 @@
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { LINK_REFUSAL } from '#cli/config/system.ts';
-import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { isRuleFileExcluded, joinScopeSelector } from '#cli/settings/values/paths.ts';
-import { listSettingsTables } from '#cli/settings/values/written.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { formatCodeList, formatSimilarNames } from '#cli/system/text/messages.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
-import type { Settings, SettingsError } from '#cli/types/settings.ts';
 import type { Files } from '#cli/types/system.ts';
+import { LINK_REFUSAL } from '#cli/config/system.ts';
+import type { KeyPath } from '#cli/types/parsers.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
+import type { Settings, SettingsError } from '#cli/types/settings.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { formatCodeList, formatSimilarNames } from '#cli/system/text/messages.ts';
+import { joinScopeSelector, isRuleFileExcluded } from '#cli/settings/values/paths.ts';
 
 function readPathStats(files: Files, path: string): ReturnType<Files['findStats']> | Error {
     try {

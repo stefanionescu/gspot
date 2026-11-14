@@ -1,13 +1,12 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a check that reports a file of its own and the files that gspot writes keeps the findings outside the gspot files', async () => {
     const lines = [

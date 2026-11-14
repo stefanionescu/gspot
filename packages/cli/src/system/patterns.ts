@@ -1,14 +1,13 @@
 import { posix } from 'node:path';
-
 import picomatch from 'picomatch';
 
 import {
-    FOLDER_CONTENTS,
     GLOB_EXCLUDE,
     GLOB_EXCLUSION,
+    TRAILING_SLASH,
+    FOLDER_CONTENTS,
     GLOB_SPECIAL_CHARACTERS,
     REGEXP_SYNTAX_CHARACTERS,
-    TRAILING_SLASH,
 } from '#cli/config/system.ts';
 
 const matcherCache = new Map<string, (path: string) => boolean>();

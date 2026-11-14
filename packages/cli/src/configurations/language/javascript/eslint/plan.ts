@@ -1,35 +1,35 @@
+import type { Session } from '#cli/types/tools.ts';
 import { basename, relative } from 'node:path/posix';
-
-import { BOUNDARY_FOLDERS_CONSTANT, DEFAULT_PROJECT_FILES } from '#cli/config/configurations/javascript/eslint.ts';
-import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
-import { BASE_RULES } from '#cli/config/configurations/javascript/rules.ts';
-import { NODE_SHEBANG_TAG } from '#cli/config/configurations/shared.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
-import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/blocks/runtimes.ts';
-import {
-    buildExtensionGlob,
-    buildFilePatterns,
-    splitGlobs,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import { joinScopeSelector } from '#cli/settings/values/paths.ts';
 import { listSettingsTables } from '#cli/settings/values/written.ts';
+import type { Config, Configuration } from '#cli/types/manifests.ts';
+import { NODE_SHEBANG_TAG } from '#cli/config/configurations/shared.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import type { PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { BASE_RULES } from '#cli/config/configurations/javascript/rules.ts';
 import { convertToPosixPath, extractParentFolder } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
+import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
+import { buildRuntimes } from '#cli/configurations/language/javascript/eslint/blocks/runtimes.ts';
+import { buildScopeLimitRules } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
+import { listImportBoundaryFolders } from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
+import { DEFAULT_PROJECT_FILES, BOUNDARY_FOLDERS_CONSTANT } from '#cli/config/configurations/javascript/eslint.ts';
+
 import type {
     EslintRuleOptions,
     PlannedEslintFile,
     ScopeEslintSettings,
 } from '#cli/types/configurations/javascript.ts';
-import type { PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { Config, Configuration } from '#cli/types/manifests.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    splitGlobs,
+    buildFilePatterns,
+    buildExtensionGlob,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function listContributingConfigurations(scopes: Scope[], scope: Scope, config: Config): Configuration[] {
     if (config.per_scope) return scope.configurations;

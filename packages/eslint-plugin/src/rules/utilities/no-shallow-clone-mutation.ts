@@ -1,19 +1,19 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import type { Isolation } from '../../types/utilities.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getAssignedValue } from '../../language/variables.ts';
+import { listFunctionAncestors } from '../../language/functions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { haveSameTokens, unwrapExpression, listSiblingStatements } from '../../language/syntax.ts';
 
 import {
     CLONE_ADVICE,
-    DEEP_CLONE_NAMES,
     MUTATING_CALL,
+    DEEP_CLONE_NAMES,
     NESTED_MEMBER_DEPTH,
     SHALLOW_CLONE_NAMES,
     STRUCTURED_CLONE_NAME,
 } from '../../config/utilities.ts';
-import { listFunctionAncestors } from '../../language/functions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { haveSameTokens, listSiblingStatements, unwrapExpression } from '../../language/syntax.ts';
-import { getAssignedValue } from '../../language/variables.ts';
-import { createRule } from '../../rule.ts';
-import type { Isolation } from '../../types/utilities.ts';
 
 function getNestedMemberRoot(node: TSESTree.Node): TSESTree.Identifier | undefined {
     let value = unwrapExpression(node);

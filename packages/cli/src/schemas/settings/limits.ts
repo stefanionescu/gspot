@@ -1,9 +1,8 @@
 import { z } from 'zod';
-
-import { BIOME_COMPLEXITY_MAX } from '#cli/config/settings/tables.ts';
 import { LIMIT_READERS } from '#cli/manifests/limits.ts';
-import { allowReasonedValue, nonnegativeIntegerSchema } from '#cli/schemas/settings/fields.ts';
+import { BIOME_COMPLEXITY_MAX } from '#cli/config/settings/tables.ts';
 import type { LanguageLimitField, LanguageLimitSchemas } from '#cli/types/settings.ts';
+import { allowReasonedValue, nonnegativeIntegerSchema } from '#cli/schemas/settings/fields.ts';
 
 function addLimitLanguages<Fields extends Record<string, z.ZodType>>(fields: Fields): Fields {
     for (const [field, schema] of Object.entries(fields)) {

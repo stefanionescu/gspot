@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
+import { test, expect } from 'bun:test';
 import type { CheckResult } from '#cli/types/engine/run.ts';
+import { mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
 
 test('a result from a copy names repository paths in its command and its note', () => {
     const base: CheckResult = {

@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
+import { createRule } from '../../rule.ts';
 import { SPLICE_METHOD } from '../../config/control-flow.ts';
 import { listCounterUpdates } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isInLoopUpdate(identifier: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
     const chain = [...ancestors, identifier];

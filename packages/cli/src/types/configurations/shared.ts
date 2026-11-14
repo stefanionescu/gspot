@@ -1,10 +1,10 @@
-import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
+import type { Session, GeneratedFile } from '#cli/types/tools.ts';
 import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
 import type { Check, Config, Configuration } from '#cli/types/manifests.ts';
-import type { ParsedTsconfig, SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';
-import type { Level, Scope } from '#cli/types/settings.ts';
-import type { RunCache } from '#cli/types/system.ts';
-import type { GeneratedFile, Session } from '#cli/types/tools.ts';
+import type { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
+import type { SqlStatement, SqlNodeFields, ParsedTsconfig } from '#cli/types/parsers.ts';
 
 export type ConfigOwner = { session: Session; scope: Scope; configuration: Configuration };
 

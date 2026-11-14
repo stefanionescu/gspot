@@ -1,11 +1,12 @@
-import {
-    BASH_FORM_MESSAGES,
-    type COUNT_LIMITS,
-    SAFETY_RULES,
-    SCRIPT_LAYOUT_RULES,
-} from '#cli/config/configurations/bash.ts';
 import type { BashForm } from '#cli/types/parsers.ts';
 import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
+
+import {
+    SAFETY_RULES,
+    type COUNT_LIMITS,
+    BASH_FORM_MESSAGES,
+    SCRIPT_LAYOUT_RULES,
+} from '#cli/config/configurations/bash.ts';
 
 export const FUNCTION_SIZE_EXPLANATIONS = {
     'function-lines': {

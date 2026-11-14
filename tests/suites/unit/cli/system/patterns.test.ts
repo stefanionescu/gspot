@@ -1,6 +1,5 @@
-import { expect, test } from 'bun:test';
-
-import { buildFilenameMatcher, buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
+import { test, expect } from 'bun:test';
+import { escapeRegExp, buildPathMatcher, buildFilenameMatcher } from '#cli/system/patterns.ts';
 
 test('a path selector crosses folders with ** and negates with !', () => {
     const isSelected = buildPathMatcher(['scripts/**', '!scripts/vendor/**']);

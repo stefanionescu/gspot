@@ -1,19 +1,19 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    CONCRETE_TEST_MODIFIERS,
-    GLOBAL_TEST_BLOCKERS,
-    SIMILAR_TEST_LIMITS,
-    SIMILAR_TEST_MODULES,
-    SIMILAR_TEST_NAMES,
-    SIMILAR_TEST_ORIGINS,
-} from '../../config/testing.ts';
-import { listImportedModules } from '../../language/modules.ts';
-import { isModuleUsed } from '../../language/packages.ts';
+import { createRule } from '../../rule.ts';
 import { listChildren } from '../../language/syntax.ts';
 import { getTestCall } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
-import type { SimilarTest, TestCall } from '../../types/testing.ts';
+import { isModuleUsed } from '../../language/packages.ts';
+import { listImportedModules } from '../../language/modules.ts';
+import type { TestCall, SimilarTest } from '../../types/testing.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    SIMILAR_TEST_NAMES,
+    SIMILAR_TEST_LIMITS,
+    GLOBAL_TEST_BLOCKERS,
+    SIMILAR_TEST_MODULES,
+    SIMILAR_TEST_ORIGINS,
+    CONCRETE_TEST_MODIFIERS,
+} from '../../config/testing.ts';
 
 function mapLiterals(node: TSESTree.Node, source: TSESLint.SourceCode, literals: Map<number, TSESTree.Literal>): void {
     const isParameter = node.type === AST_NODE_TYPES.Literal && typeof node.value !== 'object';

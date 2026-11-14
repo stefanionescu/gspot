@@ -1,15 +1,15 @@
-import { runTreeCheck } from '#cli/commands/check/tree.ts';
-import { NOTHING_STAGED_MESSAGE, STAGE_SETUP_MESSAGE, UNSTAGED_TOOLS_NOTE } from '#cli/config/commands/check.ts';
-import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { buildEmptyRunReport } from '#cli/engine/run/report.ts';
-import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { listUnstagedSetupPaths, writeIndexTree } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
-import type { CheckCommandJson, CheckOptions } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import { runTreeCheck } from '#cli/commands/check/tree.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { buildEmptyRunReport } from '#cli/engine/run/report.ts';
+import { TOOL_PROJECT_FILES } from '#cli/config/generation/files.ts';
+import { readTreeStatus } from '#cli/repository/revisions/changes.ts';
+import type { CheckOptions, CheckCommandJson } from '#cli/types/commands.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
+import { writeIndexTree, listUnstagedSetupPaths } from '#cli/repository/revisions/files.ts';
+import { STAGE_SETUP_MESSAGE, UNSTAGED_TOOLS_NOTE, NOTHING_STAGED_MESSAGE } from '#cli/config/commands/check.ts';
 
 async function assertSetupStaged(root: string, cancelSignal: AbortSignal): Promise<void> {
     const unstaged = await listUnstagedSetupPaths(root, cancelSignal);

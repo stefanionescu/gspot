@@ -1,5 +1,5 @@
-import { noWeakKeys } from '#eslint-plugin/rules/cryptography/no-weak-keys.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noWeakKeys } from '#eslint-plugin/rules/cryptography/no-weak-keys.ts';
 
 buildRuleTester().run('no-weak-keys', noWeakKeys, {
     valid: [

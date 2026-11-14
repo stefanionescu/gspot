@@ -1,5 +1,5 @@
-import { noTryPromise } from '#eslint-plugin/rules/promises/no-try-promise.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noTryPromise } from '#eslint-plugin/rules/promises/no-try-promise.ts';
 
 buildTypedRuleTester().run('no-try-promise', noTryPromise, {
     valid: [

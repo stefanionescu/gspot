@@ -1,24 +1,23 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
 
 import {
-    PRIVATE_SWIFT_VISIBILITIES,
-    SWIFT_ATTRIBUTE_NODE,
-    SWIFT_CALL_NODE,
-    SWIFT_IDENTIFIER_NODE,
-    SWIFT_IMPORT_NODE,
-    SWIFT_IMPORT_TAG,
-    SWIFT_TAG_WORDS,
-    SWIFT_TEST_ATTRIBUTES,
-    SWIFT_TEST_MODULES,
     SWIFT_TEST_TAG,
-    SWIFT_TEST_TARGET_CALLS,
-    SWIFT_TEST_TARGET_TAG,
+    SWIFT_CALL_NODE,
+    SWIFT_TAG_WORDS,
     SWIFT_TYPE_NODE,
+    SWIFT_IMPORT_TAG,
+    SWIFT_IMPORT_NODE,
+    SWIFT_TEST_MODULES,
+    SWIFT_ATTRIBUTE_NODE,
+    SWIFT_IDENTIFIER_NODE,
+    SWIFT_TEST_ATTRIBUTES,
+    SWIFT_TEST_TARGET_TAG,
+    SWIFT_TEST_TARGET_CALLS,
+    PRIVATE_SWIFT_VISIBILITIES,
 } from '#cli/config/parsers/code.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
 
 /**
 Identify Swift imports, test declarations, and package targets without matching comment or string text.

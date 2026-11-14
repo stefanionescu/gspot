@@ -1,25 +1,25 @@
-import { decodeHTMLAttribute } from 'entities';
 import type { Node } from 'web-tree-sitter';
+import { decodeHTMLAttribute } from 'entities';
+import type { Session } from '#cli/types/tools.ts';
+import type { SourceTree } from '#cli/types/parsers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
+import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
 
 import {
-    ACTIVE_DOCUMENT_TYPES,
-    DOCUMENT_URL_ATTRIBUTES,
-    EVENT_ATTRIBUTE,
-    EXECUTABLE_SCRIPT_TYPES,
     HTML_RULES,
-    INLINE_SCRIPT_MESSAGE,
-    RELATIVE_URL_BASE,
     SCRIPT_SCHEMES,
-    SURROUNDING_QUOTES,
     URL_ATTRIBUTES,
+    EVENT_ATTRIBUTE,
+    RELATIVE_URL_BASE,
+    SURROUNDING_QUOTES,
+    ACTIVE_DOCUMENT_TYPES,
+    INLINE_SCRIPT_MESSAGE,
+    DOCUMENT_URL_ATTRIBUTES,
+    EXECUTABLE_SCRIPT_TYPES,
 } from '#cli/config/configurations/html.ts';
-import { HTML_EXPLANATIONS } from '#cli/configurations/language/html/explanations.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import type { MarkupAttribute } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { SourceTree } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listElementAttributes(element: Node): MarkupAttribute[] {
     const tag = element.namedChildren.find((child) => child.type === 'start_tag' || child.type === 'self_closing_tag');

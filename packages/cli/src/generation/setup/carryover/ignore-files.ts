@@ -1,18 +1,18 @@
 import { posix } from 'node:path';
-
-import {
-    CARRYOVER_ROW_START,
-    COMMENT_PATTERN,
-    IGNORE_FILES,
-    IGNORE_REASON_START,
-} from '#cli/config/generation/setup.ts';
-import { LEADING_SLASH, LINE_BREAK, TRAILING_SLASH } from '#cli/config/system.ts';
-import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
+import { LINE_BREAK, LEADING_SLASH, TRAILING_SLASH } from '#cli/config/system.ts';
+
+import {
+    IGNORE_FILES,
+    COMMENT_PATTERN,
+    CARRYOVER_ROW_START,
+    IGNORE_REASON_START,
+} from '#cli/config/generation/setup.ts';
 
 function convertIgnoreFile(path: string, text: string, tracked: string[]): { paths: string[]; dropped: string[] } {
     const folder = posix.dirname(path) === '.' ? '' : posix.dirname(path);

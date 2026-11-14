@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-
-import { parseYamlFile, parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { parseYamlFile, parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
 
 test('YAML files resolve merge keys before returning the document', () => {
     expect(parseYamlFile('compose.yaml', 'base: &base {name: example}\ncopy: {<<: *base}\n')).toStrictEqual({

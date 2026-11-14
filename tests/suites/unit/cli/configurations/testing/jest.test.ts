@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
-
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the jest pattern of a nested scope escapes its regex characters', async () => {
     await using sandbox = await createGitSandbox({

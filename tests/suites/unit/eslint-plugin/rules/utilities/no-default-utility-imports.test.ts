@@ -1,7 +1,6 @@
 import { join } from 'node:path';
-
-import { noDefaultUtilityImports } from '#eslint-plugin/rules/utilities/no-default-utility-imports.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noDefaultUtilityImports } from '#eslint-plugin/rules/utilities/no-default-utility-imports.ts';
 
 const root = writePackageFolders({
     modern: { dependencies: { lodash: '^4.17.21', rxjs: '~7.8.0', validator: '*' } },

@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { runChecks } from '#cli/engine/run/checks.ts';
-import { prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('swift/periphery skips when the build fails', async () => {
     await using sandbox = await createGitSandbox({});

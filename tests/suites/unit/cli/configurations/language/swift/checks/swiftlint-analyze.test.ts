@@ -1,16 +1,14 @@
-import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import * as processes from '#cli/system/processes/run.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { ANALYZER_EXIT_CASES } from '#tests/config/configurations/swift.ts';
 import { getBuiltInCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
 
 test.each([...ANALYZER_EXIT_CASES])(
     'analyzer: build exit $buildCode and analyzer exit $analyzerCode report the failed stage',

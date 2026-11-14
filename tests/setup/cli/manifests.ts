@@ -1,8 +1,7 @@
 import { stringify } from '@decimalturn/toml-patch';
-
 import { listChecksById } from '#cli/manifests/checks.ts';
-import { parseConfigurations, readConfigurations } from '#cli/manifests/read.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
+import { readConfigurations, parseConfigurations } from '#cli/manifests/read.ts';
 
 export function buildConfiguration(name: string, { tables }: { tables: string }): Configuration {
     const header = stringify({

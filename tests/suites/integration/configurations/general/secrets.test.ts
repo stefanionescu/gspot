@@ -1,21 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
 import { compareText } from '#cli/system/text/order.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
-import { API_TOKEN } from '#tests/config/integration/general.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { API_TOKEN } from '#tests/config/integration/general.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import type { GitleaksHistory } from '#tests/types/integration.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import type { GitleaksHistory } from '#tests/types/integration.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const AWS_KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
 

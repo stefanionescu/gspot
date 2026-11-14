@@ -1,5 +1,5 @@
-import { requireCsrfMiddleware } from '#eslint-plugin/rules/servers/require-csrf-middleware.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireCsrfMiddleware } from '#eslint-plugin/rules/servers/require-csrf-middleware.ts';
 
 buildRuleTester().run('require-csrf-middleware', requireCsrfMiddleware, {
     valid: [

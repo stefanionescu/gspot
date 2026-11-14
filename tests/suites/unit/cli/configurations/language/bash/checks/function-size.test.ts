@@ -1,14 +1,12 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { BASH_SIZE_CASES, COUNTED_LOOPS } from '#tests/config/configurations/bash.ts';
-import { BASH_HEADER } from '#tests/config/setup/languages.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_HEADER } from '#tests/config/setup/languages.ts';
+import type { SizeCase } from '#tests/types/configurations.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import type { SizeCase } from '#tests/types/configurations.ts';
+import { COUNTED_LOOPS, BASH_SIZE_CASES } from '#tests/config/configurations/bash.ts';
 
 function buildNestedConditions(depth: number): string {
     const opening = Array.from({ length: depth }, (_, index) => `${' '.repeat(4 * (index + 1))}if [[ -n "$1" ]]; then`);

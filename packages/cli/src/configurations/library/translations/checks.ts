@@ -1,33 +1,32 @@
 import { posix } from 'node:path';
-
-import {
-    type MessageFormatElement,
-    parse,
-    type PluralElement,
-    type SelectElement,
-    TYPE,
-} from '@formatjs/icu-messageformat-parser';
-import { findNodeAtLocation, parseTree } from 'jsonc-parser/lib/esm/main.js';
-
-import {
-    ARGUMENT_FORMATS,
-    EMPTY_MESSAGE,
-    PLURAL_FORMAT,
-    TRANSLATION_RULES,
-} from '#cli/config/configurations/library.ts';
-import { MESSAGE_FILE_SUFFIX } from '#cli/config/settings/detected.ts';
-import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { messagesSchema } from '#cli/schemas/configurations.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
-import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/library.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { messagesSchema } from '#cli/schemas/configurations.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { MESSAGE_FILE_SUFFIX } from '#cli/config/settings/detected.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { parseTree, findNodeAtLocation } from 'jsonc-parser/lib/esm/main.js';
+import type { MessageFiles, ParsedMessage } from '#cli/types/configurations/library.ts';
+import { TRANSLATION_EXPLANATIONS } from '#cli/configurations/library/translations/explanations.ts';
+
+import {
+    EMPTY_MESSAGE,
+    PLURAL_FORMAT,
+    ARGUMENT_FORMATS,
+    TRANSLATION_RULES,
+} from '#cli/config/configurations/library.ts';
+import {
+    TYPE,
+    parse,
+    type PluralElement,
+    type SelectElement,
+    type MessageFormatElement,
+} from '@formatjs/icu-messageformat-parser';
 
 function flattenMessages(value: unknown, prefix = ''): Map<string, string> {
     if (value === null || typeof value !== 'object') return new Map();

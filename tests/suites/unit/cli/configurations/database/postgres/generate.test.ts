@@ -1,18 +1,18 @@
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
+import { findValueAt } from '#cli/system/tables.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import {
-    CHILD_MIGRATIONS,
-    CHILD_POSTGRES_SCOPE_TABLES,
-    SQUAWK_MIGRATION_FILES,
-} from '#tests/config/configurations/database.ts';
-import { buildGeneratedFile, getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
+import { getConfigPath, getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+
+import {
+    CHILD_MIGRATIONS,
+    SQUAWK_MIGRATION_FILES,
+    CHILD_POSTGRES_SCOPE_TABLES,
+} from '#tests/config/configurations/database.ts';
 
 test('Squawk skips migrations through version 9007199254740992 without rounding', async () => {
     const text = await buildGeneratedFile(

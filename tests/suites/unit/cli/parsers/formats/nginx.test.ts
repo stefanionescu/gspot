@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { parseNginxDirectives } from '#cli/parsers/formats/nginx.ts';
 
 const NGINX_DIRECTIVE_CASES: Array<{ source: string; expected: Array<[string, ...string[]]> }> = [

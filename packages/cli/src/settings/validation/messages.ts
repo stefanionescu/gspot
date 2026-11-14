@@ -1,19 +1,19 @@
 import { z } from 'zod';
-
-import { NO_CHECK_PATHS_MESSAGE, RECORD_PATHS_MESSAGE, SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/file.ts';
-import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import {
-    findSchemaAt,
-    getSettingType,
-    RECORD_FIELDS,
-    unwrapSchemaPipes,
-    unwrapSettingInput,
-} from '#cli/settings/lookup.ts';
-import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { findValueAt } from '#cli/system/tables.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
 import type { KeyPath, TomlSyntax } from '#cli/types/parsers.ts';
+import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import type { Setting, SettingsError } from '#cli/types/settings.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { RECORD_PATHS_MESSAGE, NO_CHECK_PATHS_MESSAGE, SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/file.ts';
+
+import {
+    findSchemaAt,
+    RECORD_FIELDS,
+    getSettingType,
+    unwrapSchemaPipes,
+    unwrapSettingInput,
+} from '#cli/settings/lookup.ts';
 
 function formatValueAdvice(
     schema: z.ZodType | undefined,

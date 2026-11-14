@@ -1,20 +1,18 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const DIALECT_SOURCES = {
     'posix.sh': String.raw`#!/bin/sh

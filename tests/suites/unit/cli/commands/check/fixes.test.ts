@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { formatFixes } from '#cli/commands/check/fixes.ts';
 
 test('the fix report names the conflicted and the broken files', () => {

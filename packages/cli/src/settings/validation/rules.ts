@@ -1,5 +1,5 @@
-import { SETTING_RULES } from '#cli/config/settings/validation.ts';
 import { LIMIT_SETTING_RULES } from '#cli/manifests/limits.ts';
+import { SETTING_RULES } from '#cli/config/settings/validation.ts';
 import { listSettingsTables } from '#cli/settings/values/written.ts';
 import type { Settings, SettingsError, WrittenScopeTable } from '#cli/types/settings.ts';
 

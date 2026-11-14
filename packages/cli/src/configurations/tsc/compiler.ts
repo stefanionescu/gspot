@@ -1,26 +1,25 @@
 import { join } from 'node:path';
-
 import type ts from 'typescript';
+import { remember } from '#cli/system/cache.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { buildBaseResult } from '#cli/engine/results.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { TypeScriptProject } from '#cli/types/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { writeScopeTsconfig, listEnforcedTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
 
 import {
-    PARENT_TSCONFIG_SKIP,
     TSBUILDINFO_FLAG,
     TSC_BUILD_COMMAND,
     TSC_PROJECT_COMMAND,
-    TSC_UNFORMATTED_OUTPUT,
+    PARENT_TSCONFIG_SKIP,
     TSCONFIG_TSBUILDINFO,
+    TSC_UNFORMATTED_OUTPUT,
 } from '#cli/config/configurations/shared.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { listEnforcedTsconfigOptions, writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { buildBaseResult } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { remember } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import type { TypeScriptProject } from '#cli/types/parsers.ts';
-import type { RunCache } from '#cli/types/system.ts';
 
 const CHECKED_PROJECTS = Symbol('checked projects');
 

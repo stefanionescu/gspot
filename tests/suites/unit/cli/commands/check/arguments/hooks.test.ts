@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the commit-msg selector keeps the message stage, reads the file after --, and reads the staged settings', async () => {
     await using sandbox = await createGitSandbox({

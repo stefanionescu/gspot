@@ -1,8 +1,6 @@
-import { join, resolve } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-
+import { join, resolve } from 'node:path';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
 

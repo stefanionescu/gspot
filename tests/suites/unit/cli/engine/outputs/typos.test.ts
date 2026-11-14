@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { test, expect } from 'bun:test';
 import type { CheckStop } from '#cli/system/errors.ts';
-import { TYPO_REPORT, TYPOS_FINDING_CASES } from '#tests/config/engine/outputs.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { TYPO_REPORT, TYPOS_FINDING_CASES } from '#tests/config/engine/outputs.ts';
 
 test('typos refuses a report of a missing source', async () => {
     const output = { ...TYPO_REPORT, path: 'missing.txt' };

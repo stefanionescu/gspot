@@ -1,17 +1,15 @@
-import { symlink, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { listRepositoryFiles } from '#cli/repository/read.ts';
+import { test, expect } from 'bun:test';
+import { unlink, symlink } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the repository file list leaves out a link to a file outside the repository', async () => {
     await using sandbox = await testdir({

@@ -1,22 +1,23 @@
-import {
-    COMMONJS_FILES,
-    COMMONJS_PACKAGE_TYPE,
-    ESLINT_BROWSER_CONFIGURATIONS,
-    NODE_RUNTIMES,
-    RUNTIME_GLOBALS,
-    TYPELESS_JAVASCRIPT_FILES,
-} from '#cli/config/configurations/javascript/blocks.ts';
-import { NODE_RULES, NON_NODE_RULES } from '#cli/config/configurations/javascript/rules.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
 import { ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
-import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { findNearestPackageJson } from '#cli/repository/projects/dependencies.ts';
+import { isInScope, joinScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
-import { findNearestPackageJson } from '#cli/repository/projects/dependencies.ts';
-import { compareScopeDepth, isInScope, joinScope } from '#cli/repository/scopes.ts';
-import { escapeGlob } from '#cli/system/patterns.ts';
-import type { ConfigurationBlocks, EslintFiles, EslintRuntime } from '#cli/types/configurations/javascript.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import type { Scope } from '#cli/types/settings.ts';
+import { NODE_RULES, NON_NODE_RULES } from '#cli/config/configurations/javascript/rules.ts';
+import { NEXTJS_CONFIGURATION, REACT_NATIVE_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import type { EslintFiles, EslintRuntime, ConfigurationBlocks } from '#cli/types/configurations/javascript.ts';
+
+import {
+    NODE_RUNTIMES,
+    COMMONJS_FILES,
+    RUNTIME_GLOBALS,
+    COMMONJS_PACKAGE_TYPE,
+    TYPELESS_JAVASCRIPT_FILES,
+    ESLINT_BROWSER_CONFIGURATIONS,
+} from '#cli/config/configurations/javascript/blocks.ts';
 
 function selectFrameworkRuntime(configurations: string[]): string | undefined {
     if (configurations.includes(REACT_NATIVE_CONFIGURATION)) return 'react-native';

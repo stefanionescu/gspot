@@ -1,35 +1,35 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import type { FileContext } from '../../types/plugin.ts';
+import { isLocatorQuery } from '../../libraries/testing.ts';
+import { requiresVersion } from '../../language/versions.ts';
+import { readPackageFacts } from '../../language/packages.ts';
+import { readAssertion } from '../../libraries/assertions.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
+import type { MatcherSuggestion, ComparisonAssertion } from '../../types/assertions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    ASSERT_MESSAGE_INDEX,
-    BARE_RECEIVERS,
+    VALUE_KINDS,
+    NUMERIC_NAME,
     BOOLEAN_KINDS,
-    INVERTED_OPERATORS,
-    JASMINE_SIZE_VERSION,
-    JASMINE_VERSION_PACKAGES,
-    LOCATOR_REFINEMENTS,
+    NULLISH_KINDS,
+    OPERAND_KINDS,
+    TEXT_RECEIVER,
+    BARE_RECEIVERS,
     LOCATOR_STATES,
     LOCATOR_VALUES,
-    MATCHER_FAMILIES,
-    MATCHER_TEMPLATES,
-    NULLISH_KINDS,
-    NUMERIC_MATCHERS,
-    NUMERIC_NAME,
-    OPERAND_KINDS,
-    STRICT_EQUALITY_OPERATORS,
     TEMPLATE_FIELD,
-    TEXT_RECEIVER,
-    VALUE_KINDS,
+    MATCHER_FAMILIES,
+    NUMERIC_MATCHERS,
+    MATCHER_TEMPLATES,
+    INVERTED_OPERATORS,
+    LOCATOR_REFINEMENTS,
+    ASSERT_MESSAGE_INDEX,
+    JASMINE_SIZE_VERSION,
+    JASMINE_VERSION_PACKAGES,
+    STRICT_EQUALITY_OPERATORS,
 } from '../../config/assertions/matchers.ts';
-import { NUMERIC_SIGNS, NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { readPackageFacts } from '../../language/packages.ts';
-import { requiresVersion } from '../../language/versions.ts';
-import { readAssertion } from '../../libraries/assertions.ts';
-import { isLocatorQuery } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
-import type { ComparisonAssertion, MatcherSuggestion } from '../../types/assertions.ts';
-import type { FileContext } from '../../types/plugin.ts';
 
 function getOperand(node: TSESTree.Node, source: TSESLint.SourceCode): string {
     const text = source.getText(node);

@@ -1,15 +1,13 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
 import { SWIFT_CHECK } from '#tests/config/e2e.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { initSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGspotProject } from '#tests/setup/sandboxes/projects/gspot.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 test('init replaces formatter files, keeps authored notes and CLAUDE.md, and check reports findings until each fix', async () => {
     await using sandbox = await createGspotProject();

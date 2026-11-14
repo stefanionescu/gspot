@@ -1,10 +1,9 @@
-import type { TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
-
-import { RESTRICTED_SYNTAX_OPTIONS_SCHEMA } from '../../config/structure.ts';
-import { findPathInRoot } from '../../language/paths.ts';
 import { createRule } from '../../rule.ts';
+import { findPathInRoot } from '../../language/paths.ts';
+import type { TSESTree } from '@typescript-eslint/utils';
 import type { RestrictedSyntaxOptions } from '../../types/structure.ts';
+import { RESTRICTED_SYNTAX_OPTIONS_SCHEMA } from '../../config/structure.ts';
 
 function isSelected(path: string | undefined, { files, ignores }: RestrictedSyntaxOptions[number]): boolean {
     if (path === undefined) return files === undefined;

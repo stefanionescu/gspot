@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { writeFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import type { CheckProgress } from '#cli/types/engine/run.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { CheckProgress } from '#cli/types/engine/run.ts';
 import { waitForFile } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('progress is reported as soon as each check ends, with ignores applied to the final results', async () => {
     const tables = stringify({

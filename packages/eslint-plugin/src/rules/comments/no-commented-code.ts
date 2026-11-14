@@ -1,16 +1,16 @@
-import { AST_TOKEN_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import type { CommentGroup } from '../../types/structure.ts';
+import { type TSESLint, type TSESTree, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
     COMMENT_CODE,
-    COMMENT_CODE_PATTERNS,
     COMMENT_DIRECTIVES,
+    COMMENT_PARSE_ERRORS,
+    COMMENT_CODE_PATTERNS,
     COMMENT_DOCUMENTATION,
     COMMENT_JSX_ATTRIBUTE,
-    COMMENT_PARSE_ERRORS,
     COMMENT_PARSER_OPTIONS,
 } from '../../config/comments.ts';
-import { createRule } from '../../rule.ts';
-import type { CommentGroup } from '../../types/structure.ts';
 
 function isParsedAsCode(parser: TSESLint.Parser.LooseParserModule, text: string): boolean {
     try {

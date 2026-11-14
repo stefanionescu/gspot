@@ -1,5 +1,4 @@
 import type { z } from 'zod';
-
 import { GspotError } from '#cli/system/errors.ts';
 
 export function formatZodIssue(issue: z.core.$ZodIssue): string[] {

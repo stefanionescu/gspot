@@ -1,25 +1,23 @@
-import { readFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-
-import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
+import { readFile } from 'node:fs/promises';
+import { parse } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { buildMiseInstall } from '#cli/tools/projects.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/setup/configurations.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { buildMiseInstall } from '#cli/tools/projects.ts';
+import { VALE_STYLES_PATH } from '#cli/config/tools/vale.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/setup/configurations.ts';
 
 async function fakeSwiftlint(
     root: string,

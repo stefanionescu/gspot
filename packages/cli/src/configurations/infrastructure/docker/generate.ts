@@ -1,9 +1,8 @@
 import { stringify } from 'yaml';
-
-import { HADOLINT_FAILURE_THRESHOLD, TRIVY_SKIPPED_FOLDERS } from '#cli/config/configurations/docker.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { TRIVY_SKIPPED_FOLDERS, HADOLINT_FAILURE_THRESHOLD } from '#cli/config/configurations/docker.ts';
 
 function buildHadolintFile(planned: PlannedConfig): string {
     const off = listDisabledRules(planned);

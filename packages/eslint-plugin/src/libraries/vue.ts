@@ -1,7 +1,7 @@
-import { VUE_PACKAGE, VUE_THREE } from '../config/vue.ts';
-import { readPackageFacts } from '../language/packages.ts';
-import { allowsVersion } from '../language/versions.ts';
 import type { FileContext } from '../types/plugin.ts';
+import { allowsVersion } from '../language/versions.ts';
+import { VUE_THREE, VUE_PACKAGE } from '../config/vue.ts';
+import { readPackageFacts } from '../language/packages.ts';
 
 /**
 Check whether the package.json files above the file allow Vue 3 or newer. Count a Vue range that does not have the

@@ -1,20 +1,18 @@
-import { chmod, mkdir, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { EXECUTABLE_FILE } from '#cli/config/system.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { buildProcessResult, runCommand } from '#tests/setup/system/processes.ts';
+import { EXECUTABLE_FILE } from '#cli/config/system.ts';
+import { chmod, mkdir, writeFile } from 'node:fs/promises';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { runCommand, buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const CLOUDFLARE_ENV_SOURCE = 'interface CloudflareEnv {}\n';
 

@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
-import { parseSqlFile } from '#cli/parsers/code/sql.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
+import { parseSqlFile } from '#cli/parsers/code/sql.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
-import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/config/parsers/comments.ts';
 import { TYPO } from '#tests/config/setup/configurations.ts';
+import { NESTED_COMMENT_SQL, QUOTED_PSQL_SOURCES } from '#tests/config/parsers/comments.ts';
 
 test('empty SQL has no statements', async () => {
     const result = await parseSqlFile('', createRunCache(process.cwd()));

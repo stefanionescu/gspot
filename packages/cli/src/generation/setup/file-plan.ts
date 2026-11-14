@@ -1,34 +1,35 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-import {
-    ADDS_BLOCK_NOTE,
-    ATTRIBUTES_ROW,
-    CI_FILE_NOTE,
-    CI_FILE_NOTES,
-    DROPPED_LINE_SETTINGS_NOTE,
-    FOREIGN_HOOK_NOTE,
-    GENERATED_FILE_NOUN,
-    GSPOT_FOLDER_NOTE,
-    INSTALL_LOCKFILE_NOTE,
-    LINT_FOLDER_MESSAGE,
-    NPM_PIN_NOUN,
-    PRETTIER_SCRIPT_NOTE,
-    PYTHON_PIN_NOUN,
-    TOOL_PIN_NOUN,
-    UNREAD_SUBMODULE_MESSAGE,
-} from '#cli/config/generation/setup.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { formatScope, isInScope } from '#cli/repository/scopes.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
-import type { ConflictingConfigs, InitFileRow, InitPlan, InitScan } from '#cli/types/generation.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { Settings } from '#cli/types/settings.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import type { Generation } from '#cli/types/tools.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { Settings } from '#cli/types/settings.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import type { Configuration } from '#cli/types/manifests.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { isInScope, formatScope } from '#cli/repository/scopes.ts';
+import { listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import type { InitPlan, InitScan, InitFileRow, ConflictingConfigs } from '#cli/types/generation.ts';
+
+import {
+    CI_FILE_NOTE,
+    NPM_PIN_NOUN,
+    CI_FILE_NOTES,
+    TOOL_PIN_NOUN,
+    ATTRIBUTES_ROW,
+    ADDS_BLOCK_NOTE,
+    PYTHON_PIN_NOUN,
+    FOREIGN_HOOK_NOTE,
+    GSPOT_FOLDER_NOTE,
+    GENERATED_FILE_NOUN,
+    LINT_FOLDER_MESSAGE,
+    PRETTIER_SCRIPT_NOTE,
+    INSTALL_LOCKFILE_NOTE,
+    UNREAD_SUBMODULE_MESSAGE,
+    DROPPED_LINE_SETTINGS_NOTE,
+} from '#cli/config/generation/setup.ts';
 
 function buildToolProjectRows(configurations: Configuration[]): InitPlan['change'] {
     const pins = listPackagePins(configurations);

@@ -1,10 +1,9 @@
 ---
 import { Icon } from '@astrojs/starlight/components';
 import { CLI_REFERENCE } from '@gspothq/cli/reference';
-
-import { COPIED_MESSAGE, COPY_FAILED_MESSAGE, URL_BREAK } from '#docs/config/home.ts';
 import { CURL_COMMAND } from '#docs/config/reference.ts';
-import { AGENT_PROMPT, LLMS_COMMAND, LLMS_URL } from '#docs/guides/setup.ts';
+import { LLMS_URL, AGENT_PROMPT, LLMS_COMMAND } from '#docs/guides/setup.ts';
+import { URL_BREAK, COPIED_MESSAGE, COPY_FAILED_MESSAGE } from '#docs/config/home.ts';
 
 const [promptStart, promptEnd] = AGENT_PROMPT.split(LLMS_COMMAND);
 const [urlStart, ...urlRest] = LLMS_URL.split(URL_BREAK);

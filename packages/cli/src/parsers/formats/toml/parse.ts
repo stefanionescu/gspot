@@ -1,9 +1,8 @@
-import { parse as parseToml } from '@decimalturn/toml-patch';
 import type { z } from 'zod';
-
+import { GspotError } from '#cli/system/errors.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
 import { MESSAGE_END } from '#cli/config/parsers/formats.ts';
 import { parseFileFields } from '#cli/parsers/validation.ts';
-import { GspotError } from '#cli/system/errors.ts';
 
 export function parseTomlFile(path: string, text: string): Record<string, unknown>;
 

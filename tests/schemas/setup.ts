@@ -1,18 +1,18 @@
 import { z } from 'zod';
+import type { CommandJson } from '#cli/types/system.ts';
 
 import {
-    configurationsListSchema,
-    doctorReportSchema,
     initReportSchema,
-    installReportSchema,
-    pathExplanationSchema,
     pushReportSchema,
     scanReportSchema,
+    doctorReportSchema,
+    settingsListSchema,
+    installReportSchema,
+    pathExplanationSchema,
+    configurationsListSchema,
     settingExplanationSchema,
     settingsEditReportSchema,
-    settingsListSchema,
 } from '#cli/schemas/commands.ts';
-import type { CommandJson } from '#cli/types/system.ts';
 
 const commandFieldsSchema = z.strictObject({
     version: z.string(),

@@ -1,5 +1,5 @@
 import { GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
-import { EXECUTABLE_FILE, NODE_MODULES, OWNER_WRITABLE_FILE, PERMISSION_BITS } from '#cli/config/system.ts';
+import { NODE_MODULES, EXECUTABLE_FILE, PERMISSION_BITS, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 
 // configuration detection
 export const CONFIGURATION_ORIGINS = ['named', 'template', 'detected', 'suggested', 'required', 'always'] as const;

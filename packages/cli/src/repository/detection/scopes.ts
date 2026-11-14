@@ -1,14 +1,15 @@
+import { compareText } from '#cli/system/text/order.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import type { DependencyFile } from '#cli/types/parsers.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
 import { LINT_FOLDERS } from '#cli/config/repository/setup.ts';
+import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
+
 import {
     isProjectSource,
     listToolOnlyPackages,
     listUnparsedDependencyFiles,
 } from '#cli/repository/projects/dependencies.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { DependencyFile } from '#cli/types/parsers.ts';
-import type { ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 
 export function detectScopeFolders(
     files: TrackedFile[],

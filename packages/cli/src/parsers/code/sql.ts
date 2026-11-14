@@ -1,18 +1,18 @@
-import type { Node, ParseResult } from '@pgsql/types';
-
-import { DOLLAR_TAG_BLOCKER, IDENTIFIER_START, WORD_CHARACTER } from '#cli/config/parsers/code.ts';
 import { remember } from '#cli/system/cache.ts';
+import type { Node, ParseResult } from '@pgsql/types';
 import { getPosition } from '#cli/system/text/positions.ts';
+import type { RunCache, TextRange } from '#cli/types/system.ts';
+import { WORD_CHARACTER, IDENTIFIER_START, DOLLAR_TAG_BLOCKER } from '#cli/config/parsers/code.ts';
+
 import type {
-    BlankedSql,
-    MatchedToken,
     Parsed,
     SqlFile,
-    SqlNodeFields,
-    SqlStatement,
     SqlToken,
+    BlankedSql,
+    MatchedToken,
+    SqlStatement,
+    SqlNodeFields,
 } from '#cli/types/parsers.ts';
-import type { RunCache, TextRange } from '#cli/types/system.ts';
 
 async function parsePostgres(text: string): Promise<Parsed<ParseResult, { text: string; offset: number }>> {
     const { SqlError, parse: parseSql } = await import('libpg-query');

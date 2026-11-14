@@ -1,7 +1,7 @@
-import { DOCS_PATHS, SOURCE_FILE_GROUPS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { formatSimilarNames } from '#cli/system/text/messages.ts';
+import { DOCS_PATHS, SOURCE_FILE_GROUPS } from '#cli/config/manifests.ts';
 import type { Configuration, RequirementWalk, WrittenConfiguration } from '#cli/types/manifests.ts';
 
 function addRequiredConfigurations(walk: RequirementWalk, name: string): void {

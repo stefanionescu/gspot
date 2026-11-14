@@ -1,17 +1,15 @@
 import { readFileSync } from 'node:fs';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
-import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
-import * as assets from '#cli/system/package/assets.ts';
+import { test, spyOn, expect } from 'bun:test';
 import type { Level } from '#cli/types/settings.ts';
-import { PLAYWRIGHT_RULE_CASES, RUNTIME_RULE_CASES } from '#tests/config/generation/builders.ts';
+import { openSession } from '#cli/engine/session.ts';
+import * as assets from '#cli/system/package/assets.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
+import { RUNTIME_RULE_CASES, PLAYWRIGHT_RULE_CASES } from '#tests/config/generation/builders.ts';
 
 /**
 Select the rule files of a sandbox whose one configuration ships the given text as its one rule file.

@@ -1,34 +1,34 @@
-import { dirname, join } from 'node:path';
+import { join, dirname } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import { parseComments } from '#cli/parsers/code/comments.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { hasValePackages } from '#cli/tools/installers/vale.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { listMarkdownTexts } from '#cli/parsers/formats/markdown.ts';
+import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
+import { VALE_TOOL, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
+import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import type { ProseRoute, ProseRouteBatch } from '#cli/types/configurations/general.ts';
 
 import {
-    AMBIGUOUS_DATE,
     DATE_RULE,
     NO_OUTPUT,
+    AMBIGUOUS_DATE,
     PROSE_GRAMMARS,
     SCRIPT_GRAMMAR,
     VALE_ARGUMENTS,
     VALE_ERROR_LINE,
     VALE_MESSAGE_RULES,
 } from '#cli/config/configurations/prose.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { SCRIPT_TAG } from '#cli/config/repository/files.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
-import { VALE_PACKAGES_MESSAGE, VALE_TOOL } from '#cli/config/tools/vale.ts';
-import { readCommitMessage } from '#cli/configurations/general/commits/checks.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseComments } from '#cli/parsers/code/comments.ts';
-import { listMarkdownTexts } from '#cli/parsers/formats/markdown.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { extractExtension } from '#cli/system/paths.ts';
-import { hasValePackages } from '#cli/tools/installers/vale.ts';
-import type { ProseRoute, ProseRouteBatch } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 
 function assertValeRan(result: SpawnResult): void {
     if (result.code === 0 && result.end !== 'missing') return;

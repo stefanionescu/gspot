@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { TEMPLATE_FUNCTIONS } from '../../config/security.ts';
-import { isDynamicString } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { TEMPLATE_FUNCTIONS } from '../../config/security.ts';
+import { getAssignedValue } from '../../language/variables.ts';
+import { isDynamicString } from '../../language/expressions.ts';
+import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isCompiledTemplateCall(source: Readonly<TSESLint.SourceCode>, node: TSESTree.CallExpression): boolean {
     if (node.callee.type !== AST_NODE_TYPES.Identifier) return false;

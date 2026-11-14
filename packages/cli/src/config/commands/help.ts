@@ -1,4 +1,4 @@
-import { BASE_FLAG, FIX_FLAG, HOOK_FLAG, ONLY_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
+import { FIX_FLAG, BASE_FLAG, HOOK_FLAG, ONLY_FLAG, STAGED_FLAG } from '#cli/config/engine.ts';
 
 // options
 export const BASE_OPTION = `${BASE_FLAG} <ref>` as const;

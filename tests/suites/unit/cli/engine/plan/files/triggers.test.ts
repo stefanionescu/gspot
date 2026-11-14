@@ -1,26 +1,24 @@
-import { existsSync } from 'node:fs';
-import { appendFile, mkdir, unlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { readChangedPaths, readTreeStatus } from '#cli/repository/revisions/changes.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { Check } from '#cli/types/manifests.ts';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import type { Session } from '#cli/types/tools.ts';
-import { LAST_FILE_CHANGES, TSC_PUSH_OPTIONS, TWO_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { openSession } from '#cli/engine/session.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { BASE_CHECK } from '#tests/config/engine/run.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { mkdir, unlink, appendFile } from 'node:fs/promises';
+import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readTreeStatus, readChangedPaths } from '#cli/repository/revisions/changes.ts';
+import { TSC_PUSH_OPTIONS, LAST_FILE_CHANGES, TWO_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
 
 async function replaceChildScopeChecks(session: Session): Promise<void> {
     if (existsSync(join(session.root, '.git/info/exclude')))

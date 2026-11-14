@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
 import { createRule } from '../../rule.ts';
-import type { DecidedVariable, TestedName } from '../../types/control-flow.ts';
+import type { TestedName, DecidedVariable } from '../../types/control-flow.ts';
+import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 const isNegation = ASTUtils.isNodeOfTypeWithConditions(AST_NODE_TYPES.UnaryExpression, { operator: '!' });
 

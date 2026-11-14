@@ -1,6 +1,6 @@
-import { noClientEnvironment } from '#eslint-plugin/rules/web/no-client-environment.ts';
-import type { ClientEnvironmentOptions } from '#eslint-plugin/types/security.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import type { ClientEnvironmentOptions } from '#eslint-plugin/types/security.ts';
+import { noClientEnvironment } from '#eslint-plugin/rules/web/no-client-environment.ts';
 
 const ENVIRONMENT_GLOBALS = { process: 'readonly', Bun: 'readonly' } as const;
 

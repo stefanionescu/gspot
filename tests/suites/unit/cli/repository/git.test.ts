@@ -1,31 +1,30 @@
-import { existsSync } from 'node:fs';
-import { copyFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { Readable } from 'node:stream';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
+import { existsSync } from 'node:fs';
+import { Readable } from 'node:stream';
+import { test, expect } from 'bun:test';
+import { createRunCache } from '#cli/system/cache.ts';
+import { copyFile, writeFile } from 'node:fs/promises';
+import type { GspotError } from '#cli/system/errors.ts';
+import { parseGitBlobs } from '#cli/repository/git/output.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readGitText, readGitLines } from '#cli/repository/git/run.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 import {
     mergeAttributes,
     parseAttributePatterns,
     readAuthoredLinguistPatterns,
 } from '#cli/repository/git/attributes.ts';
-import { parseGitBlobs } from '#cli/repository/git/output.ts';
-import { readGitLines, readGitText } from '#cli/repository/git/run.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import type { GspotError } from '#cli/system/errors.ts';
 import {
-    ATTRIBUTE_LINES,
-    BINARY_BLOB,
-    INVALID_BLOBS,
     SHA1,
     SHA256,
+    BINARY_BLOB,
+    INVALID_BLOBS,
+    ATTRIBUTE_LINES,
     TRAILING_BLOB_CHUNKS,
 } from '#tests/config/repository.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each([...ATTRIBUTE_LINES])(
     'a .gitattributes line in C quoting decodes its octal bytes, and an [attr] macro line gives no pattern: $line',

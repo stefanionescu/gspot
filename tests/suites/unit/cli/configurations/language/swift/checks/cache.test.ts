@@ -1,39 +1,38 @@
 import { existsSync } from 'node:fs';
-import { mkdir, open, readFile, rm, symlink, writeFile } from 'node:fs/promises';
-import { join, sep } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
-
-import { expect, spyOn, test } from 'bun:test';
+import { sep, join } from 'node:path';
 import { createFileTree } from 'testdirs';
-
-import { acquireBuildLock, planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { readCacheFolder } from '#cli/system/environment.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import * as processes from '#cli/system/processes/stop.ts';
+import { setTimeout as delay } from 'node:timers/promises';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
+import { fakePlatform } from '#tests/setup/system/platform.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { rm, open, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { SWIFT_PROJECT_SELECTION_CASES } from '#tests/config/configurations/swift.ts';
+import { planSwiftBuild, acquireBuildLock } from '#cli/configurations/language/swift/checks/cache.ts';
+
 import {
     SWIFT_PACKAGE,
-    SWIFT_PACKAGE_HEADER,
-    SWIFT_VALUE_SOURCE,
     XCTEST_SOURCE,
+    SWIFT_VALUE_SOURCE,
+    SWIFT_PACKAGE_HEADER,
 } from '#tests/config/setup/languages.ts';
 import {
     getBuiltInCheck,
+    runSandboxCheck,
     planSandboxCheck,
     prepareSwiftCheck,
     redirectCacheFolder,
-    runSandboxCheck,
 } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { fakePlatform } from '#tests/setup/system/platform.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 async function createLockedFolder(): Promise<string> {
     const folder = join(readCacheFolder(), 'scope');

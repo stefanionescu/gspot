@@ -1,8 +1,8 @@
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
-import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import type { CheckStatus } from '#cli/types/engine/run.ts';
+import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { CHECK_HOOKS } from '#cli/config/tools/installers.ts';
 
 // check annotations
 export const ANNOTATION_ESCAPES: Readonly<Record<string, string>> = {

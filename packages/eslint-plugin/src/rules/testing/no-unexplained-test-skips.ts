@@ -1,18 +1,18 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    EXPLANATION_LETTER,
-    NODE_TEST_MODULES,
-    SKIP_FRAMEWORKS,
-    SKIP_IMPORTS,
-    SKIPPED_TEST_CALLS,
-} from '../../config/testing.ts';
-import { getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
-import { readPackageFacts } from '../../language/packages.ts';
-import { getTestCall, isPlaywrightSuite, selectFramework } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
-import type { SkipFramework, TestCall } from '../../types/testing.ts';
+import { readPackageFacts } from '../../language/packages.ts';
+import type { TestCall, SkipFramework } from '../../types/testing.ts';
+import { getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
+import { getTestCall, selectFramework, isPlaywrightSuite } from '../../libraries/testing.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    SKIP_IMPORTS,
+    SKIP_FRAMEWORKS,
+    NODE_TEST_MODULES,
+    EXPLANATION_LETTER,
+    SKIPPED_TEST_CALLS,
+} from '../../config/testing.ts';
 
 function isSkippedCall(call: TSESTree.CallExpression, framework: SkipFramework): boolean {
     const { callee } = call;

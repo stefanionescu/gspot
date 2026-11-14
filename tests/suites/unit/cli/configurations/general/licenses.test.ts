@@ -1,22 +1,21 @@
-import { readFile, realpath, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    ALLOWED_PACKAGE_CASES,
-    GPL_PACKAGE,
-    LICENSE_TABLES,
-    MIT_PACKAGE,
-} from '#tests/config/configurations/general.ts';
-import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { readFile, realpath, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
+import {
+    GPL_PACKAGE,
+    MIT_PACKAGE,
+    LICENSE_TABLES,
+    ALLOWED_PACKAGE_CASES,
+} from '#tests/config/configurations/general.ts';
 
 async function runLicenseCheck(
     root: string,

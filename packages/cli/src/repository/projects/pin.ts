@@ -1,30 +1,30 @@
-import { patch } from '@decimalturn/toml-patch';
-import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
 import semver from 'semver';
-
+import { patch } from '@decimalturn/toml-patch';
+import { isTable } from '#cli/system/tables.ts';
+import type { Files } from '#cli/types/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import {
-    DEFAULT_JSON_INDENT,
-    GSPOT_MISE_OPTIONS,
-    GSPOT_MISE_TOOL,
-    JSON_INDENT_PATTERN,
-    SETUP_NODE_VERSION,
-} from '#cli/config/repository/projects.ts';
-import { NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { miseToolsSchema } from '#cli/schemas/repository.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
 import { readCliSpecifier, selectStartRunner } from '#cli/repository/projects/runner.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import { miseToolsSchema } from '#cli/schemas/repository.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { Files } from '#cli/types/system.ts';
+
+import {
+    GSPOT_MISE_TOOL,
+    GSPOT_MISE_OPTIONS,
+    SETUP_NODE_VERSION,
+    DEFAULT_JSON_INDENT,
+    JSON_INDENT_PATTERN,
+} from '#cli/config/repository/projects.ts';
 
 function addPackagePin(text: string): string {
     const indent = JSON_INDENT_PATTERN.exec(text)?.[0] ?? DEFAULT_JSON_INDENT;

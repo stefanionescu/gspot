@@ -1,20 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    PYTHON_TYPE_SOURCE,
-    REACT_COMPONENT_SOURCE,
-    TEST_FILE_FINDINGS,
-} from '#tests/config/configurations/naming/source-names.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+import {
+    PYTHON_TYPE_SOURCE,
+    TEST_FILE_FINDINGS,
+    REACT_COMPONENT_SOURCE,
+} from '#tests/config/configurations/naming/source-names.ts';
 
 async function listIdentifierFindings(root: string) {
     const { report } = await runChecks(await openSession(root), buildRunOptions({ only: ['naming/identifiers'] }));

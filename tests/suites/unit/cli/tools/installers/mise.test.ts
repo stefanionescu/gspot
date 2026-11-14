@@ -1,26 +1,24 @@
-import { existsSync, realpathSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { parse, stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
-import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { installMiseTools, isMiseLockfileFresh, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { listMisePins } from '#cli/tools/pins.ts';
-import type { MiseToolPin, Session, ToolInstall } from '#cli/types/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall, buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { existsSync, realpathSync } from 'node:fs';
+import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { MiseProject } from '#tests/types/setup.ts';
+import { parse, stringify } from '@decimalturn/toml-patch';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { NETWORK_ADVICE } from '#cli/config/tools/installers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { Session, MiseToolPin, ToolInstall } from '#cli/types/tools.ts';
+import { GITHUB_TOKEN_MESSAGE, MISE_PROJECT_MESSAGE } from '#cli/config/tools/mise.ts';
+import { buildToolLockfiles, buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { installMiseTools, reinstallMiseTools, isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
 
 async function openMiseInstall(root: string): Promise<{ session: Session; install: ToolInstall }> {
     const session = await openSession(root);

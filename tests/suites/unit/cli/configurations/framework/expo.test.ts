@@ -1,19 +1,17 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
-import { FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { FAILED_DOCTOR_OUTPUT } from '#tests/config/configurations/framework.ts';
 
 const APP_FOLDERS = ['apps/first', 'apps/second'] as const;
 

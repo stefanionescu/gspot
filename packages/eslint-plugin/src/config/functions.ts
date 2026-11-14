@@ -1,7 +1,6 @@
-import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
-
-import { FUNCTION_NODES, TYPE_ASSERTION_NODES } from './plugin.ts';
 import { TEST_KINDS } from './testing.ts';
+import { FUNCTION_NODES, TYPE_ASSERTION_NODES } from './plugin.ts';
+import type { JSONSchema4 } from '@typescript-eslint/utils/json-schema';
 
 // no-async-constructor rule
 export const CONSTRUCTOR_BODY_DEPTH = 2;

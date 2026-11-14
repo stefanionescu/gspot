@@ -1,24 +1,24 @@
 import { pathToFileURL } from 'node:url';
-
-import { EXCLUDE_FLAG } from '#cli/config/configurations/shared.ts';
-import {
-    HTML_EXTENSION,
-    LYCHEE_ARGUMENTS,
-    LYCHEE_TOOL,
-    REMAP_FLAG,
-    ROOT_FOLDER_FLAG,
-} from '#cli/config/configurations/site.ts';
-import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
-import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { EXCLUDE_FLAG } from '#cli/config/configurations/shared.ts';
 import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
 import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
 import { clearOutsideLinkExit } from '#cli/engine/run/tool-runs/output.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { escapeRegExp } from '#cli/system/patterns.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { readSitemapUrls } from '#cli/configurations/framework/site/checks/sitemap.ts';
+import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
+
+import {
+    REMAP_FLAG,
+    LYCHEE_TOOL,
+    HTML_EXTENSION,
+    LYCHEE_ARGUMENTS,
+    ROOT_FOLDER_FLAG,
+} from '#cli/config/configurations/site.ts';
 
 async function checkLychee(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);

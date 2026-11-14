@@ -1,12 +1,10 @@
-import { existsSync, utimesSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import * as installers from '#cli/tools/installers/install.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { existsSync, utimesSync } from 'node:fs';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('install removes interrupted temporary writes and keeps active writes and unrelated files', async () => {

@@ -1,8 +1,7 @@
 import type { z } from 'zod';
-
-import type { formatSchema } from '#cli/schemas/settings/fields.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { Defined, ParsedSettings, TableSettings } from '#cli/types/settings.ts';
+import type { formatSchema } from '#cli/schemas/settings/fields.ts';
+import type { Defined, TableSettings, ParsedSettings } from '#cli/types/settings.ts';
 
 export type TaskNames = { mise: Set<string>; scripts: Set<string>; binaries: Set<string> };
 

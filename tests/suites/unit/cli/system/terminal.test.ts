@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { printError, printResult, printUnexpectedError, printWarning, setOutputOptions } from '#cli/system/terminal.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { captureTerminal, fakeTerminals } from '#tests/setup/system/terminal.ts';
+import { fakeTerminals, captureTerminal } from '#tests/setup/system/terminal.ts';
+import { printError, printResult, printWarning, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
 
 test('a printed result removes escape sequences and format characters but keeps the gspot colors', () => {
     using output = captureTerminal();

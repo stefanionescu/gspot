@@ -1,13 +1,12 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../../config/assertions/matchers.ts';
-import { getTypes, isThenable } from '../../language/checker.ts';
-import { findEnclosingFunction } from '../../language/functions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { getEnclosingTestCall } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
-import type { ThrowAssertion } from '../../types/assertions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { getModuleName } from '../../language/modules.ts';
+import type { ThrowAssertion } from '../../types/assertions.ts';
+import { getTypes, isThenable } from '../../language/checker.ts';
+import { getEnclosingTestCall } from '../../libraries/testing.ts';
+import { findEnclosingFunction } from '../../language/functions.ts';
+import { THROW_EXPECTS, UNCERTAIN_TYPES } from '../../config/assertions/matchers.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getThrowExpect(
     callee: TSESTree.MemberExpression,

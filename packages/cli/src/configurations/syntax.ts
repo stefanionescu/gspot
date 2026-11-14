@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
-
-import { GRAMMAR_CONFIGURATIONS, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
-import { findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { GrammarName, Parsed, SqlFile } from '#cli/types/parsers.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+import { findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
+import type { Parsed, SqlFile, GrammarName } from '#cli/types/parsers.ts';
+import { SYNTAX_RULE, GRAMMAR_CONFIGURATIONS } from '#cli/config/configurations/shared.ts';
 
 export function buildSyntaxFinding(file: string, error: NonNullable<SqlFile['error']>): CheckFinding {
     return { file, line: error.line, column: error.column, rule: SYNTAX_RULE, message: error.text };

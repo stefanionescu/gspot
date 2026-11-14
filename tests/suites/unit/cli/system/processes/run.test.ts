@@ -1,14 +1,12 @@
-import { chmod } from 'node:fs/promises';
-import { delimiter, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
+import { join, delimiter } from 'node:path';
+import { runProcess } from '#cli/system/processes/run.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { listExecutableNames } from '#cli/system/processes/programs.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test('a program runs its sibling commands before unrelated PATH tools', async () => {

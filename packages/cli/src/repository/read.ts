@@ -1,49 +1,49 @@
-import { realpathSync } from 'node:fs';
 import { resolve } from 'node:path';
-
-import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
-import {
-    FILE_PREFIX_BYTES,
-    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
-    GIT_INDEX_FILES_ARGUMENTS,
-    GIT_UNTRACKED_FILES_ARGUMENTS,
-    NEEDS_GIT_MESSAGE,
-    ROOT_SCOPE,
-    SETTINGS_FILE,
-} from '#cli/config/repository/files.ts';
-import {
-    GIT_LOCALE,
-    GIT_TOP_LEVEL_ARGUMENTS,
-    INDEX_LINE,
-    NOT_REPOSITORY_CODE,
-    NOT_REPOSITORY_MESSAGE,
-    SPARSE_CHECKOUT_MESSAGE,
-    SPARSE_CHECKOUT_SETTING,
-    TRAILING_NEWLINE,
-} from '#cli/config/repository/git.ts';
+import { realpathSync } from 'node:fs';
+import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
-import { detectScopeFolders } from '#cli/repository/detection/scopes.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
 import { classifyFile } from '#cli/repository/files/classify.ts';
+import { parseListingLine } from '#cli/repository/git/output.ts';
+import { readText, readBytes } from '#cli/system/files/reads.ts';
 import { listTrackedFiles } from '#cli/repository/files/tracked.ts';
 import { parsePathAttributes } from '#cli/repository/git/attributes.ts';
-import { parseListingLine } from '#cli/repository/git/output.ts';
-import { readGitFlag, readGitPaths, runGit } from '#cli/repository/git/run.ts';
+import { detectScopeFolders } from '#cli/repository/detection/scopes.ts';
+import { runGit, readGitFlag, readGitPaths } from '#cli/repository/git/run.ts';
 import { readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
-import { gitIndexFileSchema } from '#cli/schemas/repository.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { readBytes, readText } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text/order.ts';
+
 import type {
     Repository,
-    RepositoryListing,
-    RepositoryReadOptions,
     ScopeFolder,
     TrackedFile,
     UntrackedFiles,
+    RepositoryListing,
+    RepositoryReadOptions,
 } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import {
+    ROOT_SCOPE,
+    SETTINGS_FILE,
+    FILE_PREFIX_BYTES,
+    NEEDS_GIT_MESSAGE,
+    GIT_INDEX_FILES_ARGUMENTS,
+    GIT_UNTRACKED_FILES_ARGUMENTS,
+    GIT_CHECK_ATTRIBUTES_ARGUMENTS,
+} from '#cli/config/repository/files.ts';
+import {
+    GIT_LOCALE,
+    INDEX_LINE,
+    TRAILING_NEWLINE,
+    NOT_REPOSITORY_CODE,
+    NOT_REPOSITORY_MESSAGE,
+    GIT_TOP_LEVEL_ARGUMENTS,
+    SPARSE_CHECKOUT_MESSAGE,
+    SPARSE_CHECKOUT_SETTING,
+} from '#cli/config/repository/git.ts';
 
 async function readAttributes(root: string, paths: string[]): Promise<Map<string, Record<string, string>>> {
     if (paths.length === 0) return new Map();

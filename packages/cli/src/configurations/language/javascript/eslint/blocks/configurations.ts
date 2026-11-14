@@ -1,35 +1,35 @@
 import { isDeepStrictEqual } from 'node:util';
-
+import { joinTables } from '#cli/system/tables.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { findParentScope } from '#cli/settings/scopes.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
 import { PLUGIN_RULE_BLOCKS } from '#cli/config/configurations/javascript/blocks.ts';
+import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 import { ASTRO_BLOCK_BUILDERS } from '#cli/configurations/framework/astro/generate.ts';
+import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
 import { NESTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nestjs/generate.ts';
 import { NEXTJS_BLOCK_BUILDERS } from '#cli/configurations/framework/nextjs/generate.ts';
-import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
 import { SVELTE_BLOCK_BUILDERS } from '#cli/configurations/framework/svelte/generate.ts';
-import { VUE_BLOCK_BUILDERS } from '#cli/configurations/framework/vue/generate.ts';
 import { buildTestFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
-import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
-import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
-import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
 import { DRIZZLE_BLOCK_BUILDERS } from '#cli/configurations/library/drizzle/generate.ts';
-import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
 import { ZUSTAND_BLOCK_BUILDERS } from '#cli/configurations/library/zustand/generate.ts';
 import { SUPABASE_BLOCK_BUILDERS } from '#cli/configurations/platform/supabase/generate.ts';
-import { VITEST_BLOCK_BUILDERS } from '#cli/configurations/testing/vitest/generate.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { findParentScope } from '#cli/settings/scopes.ts';
-import { joinTables } from '#cli/system/tables.ts';
+import { REACT_DOM_BLOCK_BUILDERS } from '#cli/configurations/framework/react-dom/generate.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import { TYPESCRIPT_BLOCK_BUILDERS } from '#cli/configurations/language/typescript/generate.ts';
+import { TESTING_LIBRARY_BLOCK_BUILDERS } from '#cli/configurations/library/testing-library/generate.ts';
+
 import type {
+    EslintScope,
+    PluginRuleBlock,
+    PlannedEslintFile,
+    EslintBlockBuilder,
+    PlannedEslintBlock,
     ConfigurationBlocks,
     ConfigurationScopeBlocks,
-    EslintBlockBuilder,
-    EslintScope,
-    PlannedEslintBlock,
-    PlannedEslintFile,
-    PluginRuleBlock,
 } from '#cli/types/configurations/javascript.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings.ts';
 
 const CONFIGURATION_BUILDERS = joinTables<EslintBlockBuilder>([
     Object.fromEntries(

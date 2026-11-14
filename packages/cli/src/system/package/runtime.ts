@@ -1,5 +1,4 @@
 import semver from 'semver';
-
 import cliPackage from '#cli-package' with { type: 'json' };
 
 /**

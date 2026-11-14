@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, AST_TOKEN_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { BLANK, DOCUMENTED_NODES, STANDALONE_DOC_TAG } from '../../config/comments.ts';
 import { createRule } from '../../rule.ts';
+import { BLANK, DOCUMENTED_NODES, STANDALONE_DOC_TAG } from '../../config/comments.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 export const noDetachedDocComments = createRule<[], 'detached'>({
     name: 'no-detached-doc-comments',

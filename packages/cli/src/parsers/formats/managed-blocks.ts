@@ -1,8 +1,7 @@
 import { posix } from 'node:path';
-
-import { BLOCK_STYLES, GITATTRIBUTES_FILE, LEADING_NEWLINE, MARKERS } from '#cli/config/parsers/formats.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import type { TextRange } from '#cli/types/system.ts';
+import { MARKERS, BLOCK_STYLES, LEADING_NEWLINE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
 
 function addBlock(text: string, body: string, placement: { isFirst: boolean; newline: string }): string {
     const { isFirst, newline } = placement;

@@ -1,33 +1,33 @@
 import { writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
+import { getTable } from '#cli/settings/tables.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { readText, readBytes } from '#cli/system/files/reads.ts';
+import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
+import { listSourceConfigurations } from '#cli/manifests/select.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import { join, relative, isAbsolute, toNamespacedPath } from 'node:path';
+import { buildMissingFileStop } from '#cli/engine/run/tool-runs/check.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     CLONE_RULE,
-    JSCPD_ARGUMENTS,
-    JSCPD_CONFIG_FILE,
-    JSCPD_IMPORT_PATTERNS,
-    JSCPD_REPORT_FILE,
     JSCPD_TOOL,
     OUTPUT_FLAG,
+    JSCPD_ARGUMENTS,
+    JSCPD_CONFIG_FILE,
+    JSCPD_REPORT_FILE,
+    JSCPD_IMPORT_PATTERNS,
 } from '#cli/config/configurations/structure.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
-import { buildMissingFileStop } from '#cli/engine/run/tool-runs/check.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { listSourceConfigurations } from '#cli/manifests/select.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { jscpdOutputSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { CheckStop, hasErrorCode } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { readBytes, readText } from '#cli/system/files/reads.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 /**
 Count the lines of a clone that the import patterns cover. jscpd drops the tokens of an import and still counts

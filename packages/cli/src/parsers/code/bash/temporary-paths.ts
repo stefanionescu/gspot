@@ -1,17 +1,17 @@
 import type { Node } from 'web-tree-sitter';
+import { findSourceLine } from '#cli/parsers/code/bash/commands.ts';
+import { findFunctionNode } from '#cli/parsers/code/bash/functions.ts';
+import type { Removal, TrapScript, TrapCleanup, TemporaryPath, ScriptTemporaryPaths } from '#cli/types/parsers.ts';
 
 import {
     END_OF_OPTIONS,
     EXPANSION_NODES,
+    REMOVE_FILE_COMMAND,
+    TEMPORARY_VALUE_NODES,
+    TEMPORARY_FILE_COMMAND,
     GLOBAL_DECLARATION_FLAG,
     LOCAL_DECLARATION_WORDS,
-    REMOVE_FILE_COMMAND,
-    TEMPORARY_FILE_COMMAND,
-    TEMPORARY_VALUE_NODES,
 } from '#cli/config/parsers/code.ts';
-import { findSourceLine } from '#cli/parsers/code/bash/commands.ts';
-import { findFunctionNode } from '#cli/parsers/code/bash/functions.ts';
-import type { Removal, ScriptTemporaryPaths, TemporaryPath, TrapCleanup, TrapScript } from '#cli/types/parsers.ts';
 
 function isTemporaryValue(assignment: Node): boolean {
     const value = assignment.childForFieldName('value');

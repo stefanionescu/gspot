@@ -1,18 +1,18 @@
 import { isDeepStrictEqual } from 'node:util';
-
-import { ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/javascript/blocks.ts';
-import { ESLINT_CHECK } from '#cli/config/configurations/javascript/eslint.ts';
-import {
-    buildExtensionGlob,
-    buildNodePatterns,
-    splitGlobs,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
-import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
-import { getLimit, getTable } from '#cli/settings/tables.ts';
 import { getRequired } from '#cli/system/tables.ts';
-import type { EslintLanguageRules, EslintRuleBlock, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
+import { getLimit, getTable } from '#cli/settings/tables.ts';
+import { LIMIT_RULES_BY_CHECK } from '#cli/manifests/limits.ts';
+import { ESLINT_CHECK } from '#cli/config/configurations/javascript/eslint.ts';
+import { ESLINT_LIMIT_OPTIONS } from '#cli/config/configurations/javascript/blocks.ts';
+import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import type { EslintRuleBlock, PlannedEslintFile, EslintLanguageRules } from '#cli/types/configurations/javascript.ts';
+
+import {
+    splitGlobs,
+    buildNodePatterns,
+    buildExtensionGlob,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
 
 function buildLimitRules(scopeSettings: ScopeSettings, language: 'typescript' | 'javascript'): Record<string, unknown> {
     return Object.fromEntries(

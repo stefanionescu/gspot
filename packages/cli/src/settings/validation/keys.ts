@@ -1,25 +1,26 @@
-import { AT_TOP_LEVEL, TABLE_KEY_SEGMENTS, UNDER_TABLE } from '#cli/config/settings/validation.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { findSetting, findSettingDefault } from '#cli/settings/values/inherit.ts';
-import { joinSettingPaths } from '#cli/settings/values/paths.ts';
-import {
-    findWrittenSetting,
-    listApplicableTables,
-    listSettingsTables,
-    listWrittenKeys,
-} from '#cli/settings/values/written.ts';
 import { getRequired } from '#cli/system/tables.ts';
+import { RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { joinSettingPaths } from '#cli/settings/values/paths.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { findSetting, findSettingDefault } from '#cli/settings/values/inherit.ts';
 import { formatCodeList, formatNameList, selectSimilarNames } from '#cli/system/text/messages.ts';
+import { UNDER_TABLE, AT_TOP_LEVEL, TABLE_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
+
+import {
+    listWrittenKeys,
+    findWrittenSetting,
+    listSettingsTables,
+    listApplicableTables,
+} from '#cli/settings/values/written.ts';
 import type {
-    AvailableSettings,
     Setting,
     Settings,
     SettingsError,
     SettingsTable,
-    WrittenKeyLookup,
     WrittenSetting,
+    WrittenKeyLookup,
+    AvailableSettings,
 } from '#cli/types/settings.ts';
 
 function formatWeakeningError(key: string, written: WrittenSetting, shipped: unknown): string {

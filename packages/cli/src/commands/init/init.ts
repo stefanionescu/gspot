@@ -1,30 +1,31 @@
-import { formatDetection } from '#cli/commands/init/report.ts';
-import { CONFIGURATIONS_OPTION, FROM_OPTION, LEVEL_OPTION } from '#cli/config/commands/help.ts';
-import {
-    FROM_CONFLICT_MESSAGE,
-    INIT_STOPPED_MESSAGE,
-    NEXT_PIN_MESSAGE,
-    NEXT_STEPS_MESSAGE,
-    SETTINGS_EXIST_MESSAGE,
-    WROTE_PLAN_MESSAGE,
-} from '#cli/config/commands/setup.ts';
+import { print } from '#cli/system/terminal.ts';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { EXIT_FINDINGS } from '#cli/config/system.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
-import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import { EXIT_FINDINGS } from '#cli/config/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { formatDetection } from '#cli/commands/init/report.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { installTools } from '#cli/tools/installers/install.ts';
 import { formatInitPlan } from '#cli/generation/setup/report.ts';
 import { readTemplate } from '#cli/generation/setup/template.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { runCancelableCommand } from '#cli/system/processes/signals.ts';
-import { print } from '#cli/system/terminal.ts';
-import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, CommandLocation, InitFlags, InitJson } from '#cli/types/commands.ts';
+import { assertFilesCommitted } from '#cli/generation/setup/conflicts.ts';
+import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 import type { ApplyReport, InitOptions, InitPlanning } from '#cli/types/generation.ts';
-import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
+import { FROM_OPTION, LEVEL_OPTION, CONFIGURATIONS_OPTION } from '#cli/config/commands/help.ts';
+import type { InitJson, InitFlags, CommandLocation, CommandDefinition } from '#cli/types/commands.ts';
+
+import {
+    NEXT_PIN_MESSAGE,
+    NEXT_STEPS_MESSAGE,
+    WROTE_PLAN_MESSAGE,
+    INIT_STOPPED_MESSAGE,
+    FROM_CONFLICT_MESSAGE,
+    SETTINGS_EXIST_MESSAGE,
+} from '#cli/config/commands/setup.ts';
 
 async function installInitTools(
     root: string,

@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
-import { parseConfigurations } from '#cli/manifests/read.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { CONFIGURATION_TABLE, EXAMPLE_MANIFEST_FOLDER, MANIFEST_INVARIANT_CASES } from '#tests/config/manifests.ts';
-import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { parseConfigurations } from '#cli/manifests/read.ts';
+import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
+import { CONFIGURATION_TABLE, EXAMPLE_MANIFEST_FOLDER, MANIFEST_INVARIANT_CASES } from '#tests/config/manifests.ts';
 
 test('a manifest without [detect] takes the matchers of [files]', () => {
     const tables = '[files]\nfilenames = ["native.project"]\npaths = ["source/**"]\n';

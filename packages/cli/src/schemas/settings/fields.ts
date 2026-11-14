@@ -1,29 +1,29 @@
 import { z } from 'zod';
-
+import { GLOB_EXCLUDE } from '#cli/config/system.ts';
 import { CASE_NAMES } from '#cli/config/manifests.ts';
+import type { ReasonedValue } from '#cli/types/settings.ts';
+import { NAMING_LANGUAGES } from '#cli/config/settings/tables.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+
 import {
-    ARROW_PARENS,
-    BOUND_REASON_DESCRIPTION,
-    FORMAT_INDENT_STYLES,
-    FORMAT_OVERRIDE_MIN_FIELDS,
-    INDENT_DEFAULT,
     INDENT_MAX,
+    PROSE_WRAPS,
+    ARROW_PARENS,
+    QUOTE_STYLES,
+    INDENT_DEFAULT,
     MAX_PERCENTAGE,
-    PRINT_WIDTH_DEFAULT,
     PRINT_WIDTH_MAX,
     PRINT_WIDTH_MIN,
-    PROSE_WRAPS,
-    QUOTE_STYLES,
-    REASON_DESCRIPTIONS,
-    RELATIVE_PATH_PATTERN,
-    REMOVAL_REASON_DESCRIPTION,
-    SETTING_ORIGIN_KINDS,
     TRAILING_COMMAS,
+    PRINT_WIDTH_DEFAULT,
+    REASON_DESCRIPTIONS,
+    FORMAT_INDENT_STYLES,
+    SETTING_ORIGIN_KINDS,
+    RELATIVE_PATH_PATTERN,
+    BOUND_REASON_DESCRIPTION,
+    FORMAT_OVERRIDE_MIN_FIELDS,
+    REMOVAL_REASON_DESCRIPTION,
 } from '#cli/config/settings/fields.ts';
-import { NAMING_LANGUAGES } from '#cli/config/settings/tables.ts';
-import { GLOB_EXCLUDE } from '#cli/config/system.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import type { ReasonedValue } from '#cli/types/settings.ts';
 
 export const nonemptyStringsSchema = nonemptyStringSchema.array();
 

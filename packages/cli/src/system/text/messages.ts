@@ -1,9 +1,9 @@
 import {
-    LIST_LIMIT,
-    MILLISECONDS_PER_SECOND,
-    SIMILAR_NAME_LIMIT,
-    TYPO_FRACTION,
     TYPO_MIN,
+    LIST_LIMIT,
+    TYPO_FRACTION,
+    SIMILAR_NAME_LIMIT,
+    MILLISECONDS_PER_SECOND,
 } from '#cli/config/system.ts';
 
 function measureEditDistance(from: string, to: string): number {

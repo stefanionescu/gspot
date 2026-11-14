@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-import { ERROR_CONSTRUCTOR_SUFFIX } from '../../config/control-flow.ts';
 import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ERROR_CONSTRUCTOR_SUFFIX } from '../../config/control-flow.ts';
 
 export const noUnthrownError = createRule<[], 'error'>({
     name: 'no-unthrown-error',

@@ -1,29 +1,28 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { join, basename } from 'node:path';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/engine/run.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
+import { spawnGspot, listFindingRows, parseCheckReport, readSuppressionResults } from '#tests/setup/cli/commands.ts';
+
 import {
-    PYTEST_SAMPLE,
-    RUFF_PARAMETER_LIMIT_CASE,
     RUFF_SANDBOX,
+    PYTEST_SAMPLE,
+    VERSION_SOURCE,
     RUFF_SUPPRESSIONS,
     RUFF_VERSION_CASES,
     UNUSED_IMPORT_SOURCE,
-    VERSION_SOURCE,
+    RUFF_PARAMETER_LIMIT_CASE,
 } from '#tests/config/integration/python.ts';
-import { listFindingRows, parseCheckReport, readSuppressionResults, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { buildSandboxChanges, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createPythonProject } from '#tests/setup/sandboxes/projects/python.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
 
 const installedSandbox = shareInstalledSandbox(RUFF_SANDBOX);
 

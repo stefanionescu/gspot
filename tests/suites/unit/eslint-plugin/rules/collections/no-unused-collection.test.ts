@@ -1,5 +1,5 @@
-import { noUnusedCollection } from '#eslint-plugin/rules/collections/no-unused-collection.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnusedCollection } from '#eslint-plugin/rules/collections/no-unused-collection.ts';
 
 buildRuleTester().run('no-unused-collection', noUnusedCollection, {
     valid: [

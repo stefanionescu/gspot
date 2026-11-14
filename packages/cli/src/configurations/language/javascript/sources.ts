@@ -1,14 +1,15 @@
+import type { Scope } from '#cli/types/settings.ts';
+import { extractExtension } from '#cli/system/paths.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
+import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
+
 import {
     CODE_LANGUAGES,
-    COMPONENT_CONFIGURATIONS,
     MISE_TASKS_GLOB,
+    COMPONENT_CONFIGURATIONS,
 } from '#cli/config/configurations/javascript/projects.ts';
-import { EXTENSION_PATTERN } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
-import { joinScopeGlob } from '#cli/repository/scopes.ts';
-import { extractExtension } from '#cli/system/paths.ts';
-import type { Scope } from '#cli/types/settings.ts';
 
 export function listJavascriptScopes(scopes: Scope[]): Scope[] {
     return scopes.filter(({ settings }) => settings.configurations.includes(JAVASCRIPT_CONFIGURATION));

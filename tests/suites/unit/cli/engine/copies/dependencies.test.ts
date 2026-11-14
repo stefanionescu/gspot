@@ -1,20 +1,18 @@
 import { existsSync } from 'node:fs';
 import * as filesystem from 'node:fs';
-import { lstat, mkdir, readFile, realpath, symlink, unlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
+import { join, dirname } from 'node:path';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { VALUE_ONE_LINE } from '#tests/config/engine/run.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { VALUE_ONE_LINE } from '#tests/config/engine/run.ts';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { DEPENDENCY_REVISION_NOTE } from '#cli/config/engine.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { lstat, mkdir, unlink, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 test('an index copy links installed packages and redirects workspace links into the copy', async () => {
     await using sandbox = await testdir({

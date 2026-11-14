@@ -1,15 +1,16 @@
-import { LONE_FILE_RULE } from '#cli/config/configurations/structure.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import {
-    buildFolderTree,
-    listCodeFiles,
-    listSourceExtensions,
-} from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { LONE_FILE_RULE } from '#cli/config/configurations/structure.ts';
+import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+
+import {
+    listCodeFiles,
+    buildFolderTree,
+    listSourceExtensions,
+} from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 function checkLoneFiles(_session: Session, planned: PlannedCheck): CheckFinding[] {
     const files = listCodeFiles(planned);

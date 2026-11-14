@@ -1,20 +1,18 @@
-import { appendFile, chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { listFindingRows, parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { INSTALL_HELP } from '#cli/config/tools/programs.ts';
+import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { stat, chmod, readFile, writeFile, appendFile } from 'node:fs/promises';
+import { runGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const GENERATED_FILES_CHECK = ['check', '--only', 'gspot/generated-files', '--json'] as const;
 

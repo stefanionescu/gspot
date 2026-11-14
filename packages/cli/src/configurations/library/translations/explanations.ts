@@ -1,6 +1,6 @@
-import { TRANSLATION_RULES } from '#cli/config/configurations/library.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
+import { TRANSLATION_RULES } from '#cli/config/configurations/library.ts';
 
 export const TRANSLATION_EXPLANATIONS = {
     [TRANSLATION_RULES.message]: {

@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../../config/web.ts';
 import { createRule } from '../../rule.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { SERVER_DIRECTIVE, SERVER_ONLY_MODULE } from '../../config/web.ts';
 
 export const requireServerOnly = createRule<[], 'missing'>({
     name: 'require-server-only',

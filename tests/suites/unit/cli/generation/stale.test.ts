@@ -1,21 +1,19 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { MARKERS } from '#cli/config/parsers/formats.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { readTree } from '#tests/setup/system/files.ts';
+import { MARKERS } from '#cli/config/parsers/formats.ts';
 import { listStaleFiles } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { PROJECT_FILES, SWITCH_CASES } from '#tests/config/generation/configs.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { SWITCH_CASES, PROJECT_FILES } from '#tests/config/generation/configs.ts';
 
 async function listStaleAgentsRows(root: string, change: (text: string) => string) {
     await applyGeneratedFiles(root);

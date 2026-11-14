@@ -1,18 +1,18 @@
 import { parseDocument } from '@decimalturn/toml-patch';
-
+import { isTable, findValueAt } from '#cli/system/tables.ts';
 import { MISSING_RANGE_MESSAGE } from '#cli/config/parsers/formats.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
+
 import type {
     KeyPath,
-    SourceRange,
     TomlBlock,
-    TomlCommentNode,
+    TomlValue,
+    TomlSyntax,
+    SourceRange,
     TomlDocument,
     TomlKeyValue,
     TomlLocation,
-    TomlSyntax,
+    TomlCommentNode,
     TomlTablePositions,
-    TomlValue,
 } from '#cli/types/parsers.ts';
 
 function addTomlRanges(node: unknown, lineStarts: readonly number[]): void {

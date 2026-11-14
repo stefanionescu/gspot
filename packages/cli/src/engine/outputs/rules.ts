@@ -1,11 +1,11 @@
-import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
-import { readShippedChecks } from '#cli/manifests/checks.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import { canReadRuleExplanations } from '#cli/tools/rules/explanations.ts';
-import type { CheckCode, Finding } from '#cli/types/engine/run.ts';
 import type { Check } from '#cli/types/manifests.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+import type { Finding, CheckCode } from '#cli/types/engine/run.ts';
+import { canReadRuleExplanations } from '#cli/tools/rules/explanations.ts';
 
 export function canIgnoreRule(check: Check, code: CheckCode | undefined): boolean {
     return OUTPUT_FORMATS[check.output.format].namesRules(check.output) || code?.explanations !== undefined;

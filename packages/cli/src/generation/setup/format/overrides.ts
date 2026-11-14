@@ -1,24 +1,25 @@
-import {
-    FORMATTER_DEFAULTS,
-    PYTHON_TAG,
-    RUFF_SETTINGS_FILES,
-    SCRIPT_EXTENSIONS,
-    SCRIPT_FILES,
-    TAB_STEP,
-    UNREADABLE_CONFIG_MESSAGE,
-} from '#cli/config/generation/setup.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { readEditorconfig } from '#cli/generation/setup/format/editorconfig.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { ruffOptionsSchema, ruffProjectSchema } from '#cli/schemas/generation.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { RuffOptions } from '#cli/types/generation.ts';
-import type { Repository } from '#cli/types/repository.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import type { RuffOptions } from '#cli/types/generation.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { readEditorconfig } from '#cli/generation/setup/format/editorconfig.ts';
+import { ruffOptionsSchema, ruffProjectSchema } from '#cli/schemas/generation.ts';
+
+import {
+    TAB_STEP,
+    PYTHON_TAG,
+    SCRIPT_FILES,
+    SCRIPT_EXTENSIONS,
+    FORMATTER_DEFAULTS,
+    RUFF_SETTINGS_FILES,
+    UNREADABLE_CONFIG_MESSAGE,
+} from '#cli/config/generation/setup.ts';
 
 function convertRuffFormat(options: RuffOptions): TomlTable {
     const fields = {

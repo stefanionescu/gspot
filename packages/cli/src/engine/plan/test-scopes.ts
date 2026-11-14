@@ -1,10 +1,10 @@
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { CONFIG_BOUND_RUNNERS } from '#cli/config/engine.ts';
 import { listNestedScopes } from '#cli/repository/scopes.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
 
 function holdsTestConfig(session: Session, scopePath: string, configuration: Configuration): boolean {
     const isConfig = buildPathMatcher(configuration.files.paths);

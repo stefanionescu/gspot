@@ -1,14 +1,15 @@
-import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/configurations/structure.ts';
-import {
-    buildFolderTree,
-    listCodeFiles,
-    listSourceExtensions,
-} from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { extractParentFolder, isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { PASS_THROUGH_FOLDER_RULE } from '#cli/config/configurations/structure.ts';
+import { extractParentFolder, isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+
+import {
+    listCodeFiles,
+    buildFolderTree,
+    listSourceExtensions,
+} from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 function checkPassThroughFolders(session: Session, planned: PlannedCheck): CheckFinding[] {
     const extensions = listSourceExtensions(planned.scope);

@@ -1,14 +1,15 @@
-import {
-    SEMGREP_PARSE_ERRORS,
-    SEMGREP_PARSE_EXIT,
-    SEMGREP_PARSE_RULE,
-    SEMGREP_UNMATCHED_SUPPRESSION,
-} from '#cli/config/engine.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import { CheckStop } from '#cli/system/errors.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
+import { semgrepOutputSchema } from '#cli/schemas/engine.ts';
 import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+
+import {
+    SEMGREP_PARSE_EXIT,
+    SEMGREP_PARSE_RULE,
+    SEMGREP_PARSE_ERRORS,
+    SEMGREP_UNMATCHED_SUPPRESSION,
+} from '#cli/config/engine.ts';
 
 /**
 Read the JSON report of Semgrep. A source parse error is a finding, and any other error stops the check, apart from

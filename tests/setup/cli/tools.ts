@@ -1,31 +1,29 @@
-import { mkdir, open, readFile, writeFile } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { basename, join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
 import { spyOn } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { tmpdir } from 'node:os';
+import { join, basename } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { readHost } from '#cli/system/environment.ts';
-import { executableLayout, listExecutableNames } from '#cli/system/processes/programs.ts';
-import { buildToolInstall } from '#cli/tools/installers/install.ts';
-import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
-import { findMissingBuild, listMisePins, listPackagePins } from '#cli/tools/pins.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import * as mise from '#cli/tools/programs/mise.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { readHost } from '#cli/system/environment.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { ToolProjectFiles } from '#tests/types/setup.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { buildPythonProjectTable } from '#cli/tools/projects.ts';
-import type { Configuration, Tool } from '#cli/types/manifests.ts';
-import type { NpmToolInstall, Session, ToolInstall, ToolPackageManager, ToolSearch } from '#cli/types/tools.ts';
-import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import type { Tool, Configuration } from '#cli/types/manifests.ts';
+import { buildToolInstall } from '#cli/tools/installers/install.ts';
+import { open, mkdir, readFile, writeFile } from 'node:fs/promises';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
-import type { ToolProjectFiles } from '#tests/types/setup.ts';
+import { UNPINNED_NPM_MESSAGE } from '#tests/config/setup/programs.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { listMisePins, listPackagePins, findMissingBuild } from '#cli/tools/pins.ts';
+import { executableLayout, listExecutableNames } from '#cli/system/processes/programs.ts';
+import type { Session, ToolSearch, ToolInstall, NpmToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
 
 export async function readToolProjectFiles(
     root: string,

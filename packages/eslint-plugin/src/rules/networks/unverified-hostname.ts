@@ -1,10 +1,9 @@
-import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { ACCEPTED_RESULTS, TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
-import { getOptionProperties, listOptionLiterals } from '../../language/expressions.ts';
-import { findFunction, listReturnedValues } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
+import { ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+import { findFunction, listReturnedValues } from '../../language/functions.ts';
+import { ACCEPTED_RESULTS, TLS_OPTION_ARGUMENTS } from '../../config/networks.ts';
+import { listOptionLiterals, getOptionProperties } from '../../language/expressions.ts';
 
 export const unverifiedHostname = createRule<[], 'unverified'>({
     name: 'unverified-hostname',

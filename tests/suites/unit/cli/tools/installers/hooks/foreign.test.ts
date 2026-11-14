@@ -1,20 +1,18 @@
-import { chmod, readFile, symlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { parse } from 'yaml';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { readGitSetting } from '#cli/repository/git/run.ts';
-import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { HOOK_REPOSITORIES } from '#tests/config/tools.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { chmod, symlink, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 
 async function writeGitHook(root: string, name: string, content: string): Promise<void> {
     await writeFile(join(root, '.git/hooks', name), content);

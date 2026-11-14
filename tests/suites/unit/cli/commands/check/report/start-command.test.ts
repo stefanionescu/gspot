@@ -1,16 +1,14 @@
-import { delimiter } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
+import { delimiter } from 'node:path';
+import { test, expect } from 'bun:test';
+import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { findProgram } from '#cli/system/processes/programs.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 const COMMAND = ['check', '--only', 'sandbox/finding'];
 

@@ -1,52 +1,52 @@
 import { createHash } from 'node:crypto';
-import { lstatSync, mkdirSync, realpathSync, rmSync, statSync, writeFileSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
-import { setTimeout as delay } from 'node:timers/promises';
 import { isDeepStrictEqual } from 'node:util';
-
-import {
-    BUILD_LOCK,
-    BUILD_LOCK_WAIT_MILLISECONDS,
-    BUILD_LOG,
-    BUILD_SOURCE_FOLDER,
-    CODE_SIGNING_OFF,
-    DERIVED_DATA_FLAG,
-    DERIVED_DATA_FOLDER,
-    NO_SWIFT_PROJECT_NOTE,
-    PACKAGE_INDEX_STORE,
-    PACKAGE_SCRATCH_FOLDER,
-    ROOT_BUILD_FOLDER,
-    SCOPE_FOLDER_PREFIX,
-    SCRATCH_PATH_FLAG,
-    SWIFT_BUILD_COMMANDS,
-    SWIFT_BUILD_FOLDER,
-    SWIFT_PROGRAM,
-    SWIFT_TEST_COMMAND,
-    XCODE_DESTINATION_FLAG,
-    XCODE_INDEX_STORE,
-    XCODE_PROJECT_FLAG,
-    XCODE_SCHEME_FLAG,
-    XCODE_SCHEME_MESSAGE,
-    XCODE_TEST_ACTION,
-    XCODE_WORKSPACE_FLAG,
-    XCODE_WORKSPACE_SUFFIX,
-    XCODEBUILD_PROGRAM,
-} from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
-import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
+import { join, posix, relative } from 'node:path';
 import { getTable } from '#cli/settings/tables.ts';
-import { readCacheFolder } from '#cli/system/environment.ts';
-import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import { isProcessRunning } from '#cli/system/processes/stop.ts';
-import type { SwiftBuildPlan, SwiftBuildSetup } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { setTimeout as delay } from 'node:timers/promises';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { readCacheFolder } from '#cli/system/environment.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
+import { openFiles, walkFiles } from '#cli/system/files/open.ts';
+import { isProcessRunning } from '#cli/system/processes/stop.ts';
+import { CheckStop, GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { MODE_BITS, PRIVATE_FILE, PRIVATE_FOLDER } from '#cli/config/system.ts';
+import type { SwiftBuildPlan, SwiftBuildSetup } from '#cli/types/configurations/language.ts';
+import { rmSync, statSync, lstatSync, mkdirSync, realpathSync, writeFileSync } from 'node:fs';
+
+import {
+    BUILD_LOG,
+    BUILD_LOCK,
+    SWIFT_PROGRAM,
+    CODE_SIGNING_OFF,
+    DERIVED_DATA_FLAG,
+    ROOT_BUILD_FOLDER,
+    SCRATCH_PATH_FLAG,
+    XCODE_INDEX_STORE,
+    XCODE_SCHEME_FLAG,
+    XCODE_TEST_ACTION,
+    SWIFT_BUILD_FOLDER,
+    SWIFT_TEST_COMMAND,
+    XCODE_PROJECT_FLAG,
+    XCODEBUILD_PROGRAM,
+    BUILD_SOURCE_FOLDER,
+    DERIVED_DATA_FOLDER,
+    PACKAGE_INDEX_STORE,
+    SCOPE_FOLDER_PREFIX,
+    SWIFT_BUILD_COMMANDS,
+    XCODE_SCHEME_MESSAGE,
+    XCODE_WORKSPACE_FLAG,
+    NO_SWIFT_PROJECT_NOTE,
+    PACKAGE_SCRATCH_FOLDER,
+    XCODE_DESTINATION_FLAG,
+    XCODE_WORKSPACE_SUFFIX,
+    BUILD_LOCK_WAIT_MILLISECONDS,
+} from '#cli/config/configurations/swift.ts';
 
 function readBuildSources(root: string, paths: string[]): Map<string, FileContents> {
     const source = openFiles(root);

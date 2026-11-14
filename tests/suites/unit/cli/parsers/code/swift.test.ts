@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { detectSwiftTags } from '#cli/parsers/code/swift.ts';
 import { SWIFT_TAG_CASES } from '#tests/config/parsers/code.ts';
 

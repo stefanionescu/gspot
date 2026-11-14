@@ -1,17 +1,17 @@
+import { getTable } from '#cli/settings/tables.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import { stringify as stringifyToml } from '@decimalturn/toml-patch';
+import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 import {
-    LYCHEE_MDX_EXPRESSION,
     LYCHEE_NOTES,
-    LYCHEE_REPOSITORY_LINKS,
-    LYCHEE_ROOT_LINKS,
     LYCHEE_ROOT_NOTE,
     LYCHEE_SITE_NOTE,
+    LYCHEE_ROOT_LINKS,
+    LYCHEE_MDX_EXPRESSION,
+    LYCHEE_REPOSITORY_LINKS,
 } from '#cli/config/configurations/docs.ts';
-import { SITE_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildLycheeFile(planned: PlannedConfig): string {
     const { configurations, settings } = planned.scope;

@@ -1,14 +1,12 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { DEPENDENCY_FILE_PARSERS, readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { writeFile } from 'node:fs/promises';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { SWIFT_DEPENDENCY_CALLS } from '#tests/config/parsers/formats.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readPackageJson, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
 
 const PACKAGE_FIELDS = {
     name: 'example-package',

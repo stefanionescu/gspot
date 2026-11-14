@@ -1,5 +1,5 @@
-import { noRedundantAssignment } from '#eslint-plugin/rules/variables/no-redundant-assignment.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noRedundantAssignment } from '#eslint-plugin/rules/variables/no-redundant-assignment.ts';
 
 buildRuleTester().run('no-redundant-assignment', noRedundantAssignment, {
     valid: [

@@ -1,18 +1,17 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { readPushedRevisions, readSelectedCommits } from '#cli/repository/revisions/push.ts';
+import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
+import { writeFile } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readPushedRevisions, readSelectedCommits } from '#cli/repository/revisions/push.ts';
+
 import {
     createGitSandbox,
-    prepareNestedRepository,
     preparePushRepository,
+    prepareNestedRepository,
 } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 
 test.each(['origin', undefined, 'file:///unused'] as const)(
     'the pre-push remote %p picks the remote-tracking branch that a new branch compares with',

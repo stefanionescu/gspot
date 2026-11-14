@@ -1,9 +1,8 @@
 import { test } from 'bun:test';
-
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
 
 const WEB_TSCONFIG = {
     compilerOptions: {

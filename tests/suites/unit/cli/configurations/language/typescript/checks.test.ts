@@ -1,21 +1,20 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    ALL_LEVEL_OPTION_FINDINGS,
-    DEFAULT_LEVEL_TSCONFIG,
-    STRICT_OFF_FINDINGS,
-    STRICT_TSCONFIG_TEXT,
-} from '#tests/config/configurations/language.ts';
-import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { getBuiltInCheck, runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+
+import {
+    STRICT_OFF_FINDINGS,
+    STRICT_TSCONFIG_TEXT,
+    DEFAULT_LEVEL_TSCONFIG,
+    ALL_LEVEL_OPTION_FINDINGS,
+} from '#tests/config/configurations/language.ts';
 
 test('malformed JSON is an unreadable finding that names the file, not missing options', async () => {
     await using sandbox = await createGitSandbox({

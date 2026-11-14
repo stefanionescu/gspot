@@ -1,14 +1,14 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 import {
     CLOUDFLARE_HEADERS,
     CLOUDFLARE_REDIRECTS,
     SECURITY_HEADER_CASES,
 } from '#tests/config/configurations/platform.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('cloudflare/redirects reports each malformed redirect and each status Cloudflare does not support', async () => {
     await using sandbox = await createGitSandbox({

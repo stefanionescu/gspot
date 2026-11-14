@@ -1,14 +1,13 @@
-import { expect, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession } from '#cli/engine/run/checks.ts';
-import { listCopyFiles } from '#cli/engine/run/tool-runs/configs.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { buildCheckSession } from '#cli/engine/run/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { listCopyFiles } from '#cli/engine/run/tool-runs/configs.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a Markdown command run in a copy keeps the config files its manifest writes', async () => {

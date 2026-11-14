@@ -1,22 +1,20 @@
 import { existsSync } from 'node:fs';
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { join, basename } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
-import { AUTHORED_NEXT_ENV, GENERATED_ROUTES, ROUTE_TYPES_COMMENT } from '#tests/config/configurations/framework.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { GENERATED_ROUTES, AUTHORED_NEXT_ENV, ROUTE_TYPES_COMMENT } from '#tests/config/configurations/framework.ts';
 
 async function prepareNextjsBuild(root: string, scopePath: string): Promise<void> {
     await createFileTree(root, {

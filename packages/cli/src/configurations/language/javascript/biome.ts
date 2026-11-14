@@ -1,7 +1,7 @@
-import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript/projects.ts';
-import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { getLimit } from '#cli/settings/tables.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { BIOME_TYPESCRIPT_FILES } from '#cli/config/configurations/javascript/projects.ts';
 
 function buildComplexityRules(planned: PlannedConfig, language: 'javascript' | 'typescript') {
     const limit = getLimit(planned.scope.settings, 'max_cognitive_complexity', language);

@@ -1,12 +1,10 @@
-import { fileURLToPath } from 'node:url';
-
-import * as parser from '@typescript-eslint/parser';
 import { Glob } from 'bun';
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { test, expect } from 'bun:test';
+import { fileURLToPath } from 'node:url';
 import plugin from '#eslint-plugin/plugin.ts';
+import * as parser from '@typescript-eslint/parser';
+import { convertToPosixPath } from '#cli/system/paths.ts';
 import { TOPICS } from '#eslint-plugin/registry/topics.ts';
 
 test('each rule file of a topic folder is registered under that topic and takes the name of its rule', () => {

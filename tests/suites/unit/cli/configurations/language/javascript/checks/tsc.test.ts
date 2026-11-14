@@ -1,27 +1,25 @@
-import { chmod, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { CheckResult } from '#cli/types/engine/run.ts';
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
-import { JAVASCRIPT_PROJECT_FILES, JSCONFIG_CASES } from '#tests/config/configurations/javascript/checks.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { linkInstalledModules, linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import type { CheckResult } from '#cli/types/engine/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
+import { getConfigPath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { JSCONFIG_CASES, JAVASCRIPT_PROJECT_FILES } from '#tests/config/configurations/javascript/checks.ts';
 
 async function listTscResults(root: string): Promise<readonly CheckResult[]> {
     const session = await openSession(root);

@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('structure/file-folder-clashes reports file-folder-clash in jobs/turn.sh and passes after the fix', async () => {

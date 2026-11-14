@@ -1,5 +1,5 @@
-import { awsSnsUnencryptedTopics } from '#eslint-plugin/rules/aws/aws-sns-unencrypted-topics.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsSnsUnencryptedTopics } from '#eslint-plugin/rules/aws/aws-sns-unencrypted-topics.ts';
 
 buildRuleTester().run('aws-sns-unencrypted-topics', awsSnsUnencryptedTopics, {
     valid: ["import * as sns from 'aws-cdk-lib/aws-sns';\nnew sns.Topic(this, 'Alerts', { masterKey: key });"],

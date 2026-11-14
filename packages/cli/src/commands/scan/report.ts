@@ -1,34 +1,35 @@
+import { compareText } from '#cli/system/text/order.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
-import {
-    SCAN_BUILT_IN_TOOL,
-    SCAN_CARRYOVER_TITLE,
-    SCAN_CATEGORIES,
-    SCAN_CODE_CATEGORY,
-    SCAN_COMMANDS_TITLE,
-    SCAN_EXAMPLES_SHOWN,
-    SCAN_FORMAT_CHECKS,
-    SCAN_FORMATTING_TITLE,
-    SCAN_LEFT_OUT_TITLE,
-    SCAN_NEXT_STEPS,
-    SCAN_NEXT_STEPS_TITLE,
-    SCAN_NOT_RUN_TITLE,
-    SCAN_PLAN_TITLE,
-    SCAN_RULES_SHOWN,
-} from '#cli/config/commands/setup.ts';
-import { INCOMPLETE_STATUSES, RAN_STATUSES } from '#cli/config/engine.ts';
-import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/projects.ts';
-import { BYTES_PER_MEGABYTE, GSPOT_FOLDER, LINE_BREAK, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
+import type { Finding, RunReport } from '#cli/types/engine/run.ts';
+import { RAN_STATUSES, INCOMPLETE_STATUSES } from '#cli/config/engine.ts';
+import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
+import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/projects.ts';
+import { hasNodePin, readMiseTools } from '#cli/repository/projects/pin.ts';
 import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/report.ts';
-import { readShippedChecks } from '#cli/manifests/checks.ts';
-import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
-import { hasNodePin, readMiseTools } from '#cli/repository/projects/pin.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { ScanCategory, ScanInput, ScanReport, ScanSection } from '#cli/types/commands.ts';
-import type { Finding, RunReport } from '#cli/types/engine/run.ts';
+import type { ScanInput, ScanReport, ScanSection, ScanCategory } from '#cli/types/commands.ts';
+import { LINE_BREAK, GSPOT_FOLDER, BYTES_PER_MEGABYTE, MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+
+import {
+    SCAN_CATEGORIES,
+    SCAN_NEXT_STEPS,
+    SCAN_PLAN_TITLE,
+    SCAN_RULES_SHOWN,
+    SCAN_BUILT_IN_TOOL,
+    SCAN_CODE_CATEGORY,
+    SCAN_FORMAT_CHECKS,
+    SCAN_NOT_RUN_TITLE,
+    SCAN_COMMANDS_TITLE,
+    SCAN_EXAMPLES_SHOWN,
+    SCAN_LEFT_OUT_TITLE,
+    SCAN_CARRYOVER_TITLE,
+    SCAN_FORMATTING_TITLE,
+    SCAN_NEXT_STEPS_TITLE,
+} from '#cli/config/commands/setup.ts';
 
 function selectCategory({ check }: Finding): string {
     const configuration = check.split('/', 1)[0] as string;

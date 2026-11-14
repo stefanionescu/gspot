@@ -1,28 +1,29 @@
-import {
-    EDITORCONFIG_FIXED_SECTIONS,
-    EDITORCONFIG_ROOT_LINE,
-    PRETTIER_CHECK,
-    PRETTIER_MARKDOWN_OVERRIDE,
-    SHFMT_CONFIGURATION,
-    SHFMT_EDITORCONFIG_OPTIONS,
-    UNREPRESENTABLE_SELECTOR,
-} from '#cli/config/configurations/general.ts';
-import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { Settings } from '#cli/types/settings.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { commentSectionTitle, keepFirstPatterns, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
-import { listPrettierPlugins } from '#cli/engine/plan/tools.ts';
 import { compareScopeDepth } from '#cli/repository/scopes.ts';
+import { listPrettierPlugins } from '#cli/engine/plan/tools.ts';
+import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
 import { joinScopeSelector } from '#cli/settings/values/paths.ts';
 import { listSettingsTables } from '#cli/settings/values/written.ts';
-import { GspotError } from '#cli/system/errors.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
 import { escapeGlob, includeFolderContents } from '#cli/system/patterns.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { FormatOverride, ScopeFormat, WrittenFormat } from '#cli/types/configurations/general.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { PrettierPlugin } from '#cli/types/engine/plan.ts';
-import type { Settings } from '#cli/types/settings.ts';
+import type { ScopeFormat, WrittenFormat, FormatOverride } from '#cli/types/configurations/general.ts';
+import { keepFirstPatterns, commentSectionTitle, listPlannedIgnoreSections } from '#cli/configurations/ignores.ts';
+
+import {
+    PRETTIER_CHECK,
+    SHFMT_CONFIGURATION,
+    EDITORCONFIG_ROOT_LINE,
+    UNREPRESENTABLE_SELECTOR,
+    PRETTIER_MARKDOWN_OVERRIDE,
+    SHFMT_EDITORCONFIG_OPTIONS,
+    EDITORCONFIG_FIXED_SECTIONS,
+} from '#cli/config/configurations/general.ts';
 
 function buildSectionPath(pattern: string, scopePath: string): string {
     if (pattern.startsWith('!') || UNREPRESENTABLE_SELECTOR.test(pattern))

@@ -1,13 +1,13 @@
 import { posix } from 'node:path';
+import { extractExtension } from '#cli/system/paths.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 
 import {
-    GENERATED_HEADER_TEXT,
     JSON_EXTENSIONS,
-    SLASH_COMMENT_EXTENSIONS,
     SLASH_COMMENT_FILES,
+    GENERATED_HEADER_TEXT,
+    SLASH_COMMENT_EXTENSIONS,
 } from '#cli/config/generation/builders.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { extractExtension } from '#cli/system/paths.ts';
 
 export function formatHeader(path: string, notes: string[] = []): string {
     if (isGspotPath(path)) return '';

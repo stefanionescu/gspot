@@ -1,15 +1,13 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { getBuiltInCheck, openFakeToolSession, planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { getBuiltInCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 async function checkMessage(
     message: string,

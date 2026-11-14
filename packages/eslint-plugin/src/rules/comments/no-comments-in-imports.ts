@@ -1,19 +1,19 @@
-import { AST_NODE_TYPES, AST_TOKEN_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { isCallOf } from '../../language/syntax.ts';
+import type { RuleContext } from '../../types/plugin.ts';
+import type { ImportBlock } from '../../types/structure.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES, AST_TOKEN_TYPES } from '@typescript-eslint/utils';
 
 import {
     BLANK,
-    ESLINT_BLOCK_DIRECTIVE,
-    ESLINT_LINE_DIRECTIVE,
-    LEADING_COMMENT_LINE_BREAKS,
     LEADING_STAR,
     LINE_BREAK_GAP,
-    TOOL_DIRECTIVE_PREFIXES,
     TYPESCRIPT_DIRECTIVE,
+    ESLINT_LINE_DIRECTIVE,
+    ESLINT_BLOCK_DIRECTIVE,
+    TOOL_DIRECTIVE_PREFIXES,
+    LEADING_COMMENT_LINE_BREAKS,
 } from '../../config/comments.ts';
-import { isCallOf } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
-import type { RuleContext } from '../../types/plugin.ts';
-import type { ImportBlock } from '../../types/structure.ts';
 
 function isToolDirective(comment: TSESTree.Comment): boolean {
     const text = comment.value.replace(LEADING_STAR, '').trim();

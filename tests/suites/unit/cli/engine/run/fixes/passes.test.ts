@@ -1,16 +1,14 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { FIX_ROUNDS } from '#cli/config/engine.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('a later pass formats what a fix after the formatter wrote', async () => {
     const tables = stringify({

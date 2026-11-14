@@ -1,16 +1,16 @@
 import type { Node } from 'web-tree-sitter';
+import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
+import type { Identifier, NamedCategory, FileIdentifiers } from '#cli/types/configurations/naming.ts';
 
 import {
-    COMPONENT_FACTORY,
     DECLARATIONS,
-    PATTERN_FIELDS,
     PATTERN_LISTS,
-    TYPESCRIPT_CALLABLE_NODES,
+    PATTERN_FIELDS,
+    COMPONENT_FACTORY,
     TYPESCRIPT_NAME_NODES,
+    TYPESCRIPT_CALLABLE_NODES,
     TYPESCRIPT_PARAMETER_NODES,
 } from '#cli/config/configurations/naming.ts';
-import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
-import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/naming.ts';
 
 function addPattern(found: FileIdentifiers, node: Node | null, category: NamedCategory): void {
     if (node === null) return;

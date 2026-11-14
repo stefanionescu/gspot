@@ -1,16 +1,16 @@
 import type { Node } from 'web-tree-sitter';
+import type { ScriptSyntax } from '#cli/types/parsers.ts';
 
 import {
-    ALL_POSITIONAL_PARAMETERS,
-    BASH_BRANCH_NODES,
-    BASH_COMPOUND_NODES,
-    EXPANSION_NODES,
-    FOR_HEADER_FIELDS,
-    GETOPTS_COMMAND,
-    POSITIONAL_PARAMETER,
     SHIFT_COMMAND,
+    EXPANSION_NODES,
+    GETOPTS_COMMAND,
+    BASH_BRANCH_NODES,
+    FOR_HEADER_FIELDS,
+    BASH_COMPOUND_NODES,
+    POSITIONAL_PARAMETER,
+    ALL_POSITIONAL_PARAMETERS,
 } from '#cli/config/parsers/code.ts';
-import type { ScriptSyntax } from '#cli/types/parsers.ts';
 
 function findHighestParameter(node: Node): number {
     const expansions = node.descendantsOfType([...EXPANSION_NODES]);

@@ -1,23 +1,23 @@
 import { createHash } from 'node:crypto';
-import { existsSync, mkdirSync, readFileSync } from 'node:fs';
-import { basename, dirname } from 'node:path';
-
-import { GRAMMAR_NAMES, SWIFT_EXTENSION, TAG_GRAMMARS } from '#cli/config/parsers/code.ts';
+import { dirname, basename } from 'node:path';
+import type { GrammarName } from '#cli/types/parsers.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
 import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { mkdirSync, existsSync, readFileSync } from 'node:fs';
+import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
+import type { RepositoryListing } from '#cli/types/repository.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import type { ToolInstall, DownloadSession } from '#cli/types/tools.ts';
+import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
+import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
+import { TAG_GRAMMARS, GRAMMAR_NAMES, SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+
 import {
-    CONFIGURATION_GRAMMARS,
-    GRAMMAR_ARCHIVE_LIMIT,
     GRAMMAR_RELEASES,
     GRAMMAR_TOOL_NOUN,
+    GRAMMAR_ARCHIVE_LIMIT,
+    CONFIGURATION_GRAMMARS,
 } from '#cli/config/tools/installers.ts';
-import { buildGrammarPath, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
-import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { replaceBoundedFile } from '#cli/system/files/bounded.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
-import type { RepositoryListing } from '#cli/types/repository.ts';
-import type { DownloadSession, ToolInstall } from '#cli/types/tools.ts';
 
 function listRepositoryGrammars(install: ToolInstall): GrammarName[] {
     const { repository, scopes } = install.session;

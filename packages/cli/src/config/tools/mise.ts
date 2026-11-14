@@ -1,5 +1,5 @@
-import { MISE_CONFIG_FILE, MISE_LOCKFILE } from '#cli/config/manifests.ts';
 import { MISE_PROGRAM } from '#cli/config/system.ts';
+import { MISE_LOCKFILE, MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 
 // mise install
 export const GITHUB_RATE_LIMIT = /rate limit|No lockfile URL found/iu;

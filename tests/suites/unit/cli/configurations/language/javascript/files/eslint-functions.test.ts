@@ -1,17 +1,15 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { setRuntime } from '#cli/configurations/language/javascript/files/eslint-functions.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { setRuntime } from '#cli/configurations/language/javascript/files/eslint-functions.ts';
 
 test('a runtime that the globals package does not name stops the config', () => {
     expect(() => setRuntime({}, { node: {}, browser: {} }, 'nodejs', 'module')).toThrow(/\bnodejs\b/u);

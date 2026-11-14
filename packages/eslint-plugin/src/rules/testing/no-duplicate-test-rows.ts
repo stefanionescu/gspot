@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { TABLE_CALL } from '../../config/testing.ts';
-import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
-import { readTestTable } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
+import { TABLE_CALL } from '../../config/testing.ts';
 import type { TableCall } from '../../types/testing.ts';
+import { readTestTable } from '../../libraries/testing.ts';
+import { haveSameTokens, unwrapExpression } from '../../language/syntax.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function listCopies(table: TSESTree.Node | undefined, source: TSESLint.SourceCode): TSESTree.Node[][] {
     const value = table === undefined ? undefined : unwrapExpression(table);

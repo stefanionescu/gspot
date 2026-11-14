@@ -1,12 +1,10 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
-import { findInstalledDependency, readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
+import { readToolCommandPrefix, findInstalledDependency } from '#cli/tools/programs/packages.ts';
 
 test('an installed dependency version is found when exports hide its package manifest', async () => {
     await using sandbox = await testdir({

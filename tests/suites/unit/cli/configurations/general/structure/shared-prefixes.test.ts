@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
+import { test, expect } from 'bun:test';
 import { join, posix } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { NESTJS_PREFIX_RESULTS } from '#tests/config/configurations/structure/files.ts';
 
 async function runSharedPrefixes(root: string): Promise<RunReport['checks']> {
     const result = await runChecks(await openSession(root), buildRunOptions({ only: ['structure/shared-prefixes'] }));

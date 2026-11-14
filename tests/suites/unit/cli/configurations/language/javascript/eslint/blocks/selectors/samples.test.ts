@@ -1,15 +1,13 @@
-import { relative } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import type { ESLint } from 'eslint';
-import { createFileTree, testdir } from 'testdirs';
-
+import { relative } from 'node:path';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildEslint } from '#tests/setup/eslint/lint.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { SelectorSample } from '#tests/types/configurations.ts';
 import { BASE_SELECTOR_SAMPLES } from '#tests/config/configurations/javascript/base-selectors.ts';
 import { CONFIGURATION_SELECTOR_SAMPLES } from '#tests/config/configurations/javascript/selectors.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint } from '#tests/setup/eslint/lint.ts';
-import type { SelectorSample } from '#tests/types/configurations.ts';
 
 async function listSelectorLines(
     eslint: ESLint,

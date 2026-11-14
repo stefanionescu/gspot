@@ -1,13 +1,13 @@
-import { FILE_LINES_RULE } from '#cli/config/configurations/structure.ts';
+import { getLimit } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { GrammarName } from '#cli/types/parsers.ts';
 import { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import { listCheckedFiles } from '#cli/engine/plan/files.ts';
-import { countCodeLines } from '#cli/parsers/code/comments.ts';
-import { getLimit } from '#cli/settings/tables.ts';
-import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { countCodeLines } from '#cli/parsers/code/comments.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { FILE_LINES_RULE } from '#cli/config/configurations/structure.ts';
 
 async function checkLongFiles(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const sources = listCheckedFiles(session.scopes, planned).flatMap((file) => {

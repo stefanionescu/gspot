@@ -1,31 +1,29 @@
-import { readFile, rm, writeFile } from 'node:fs/promises';
-import { basename, extname, join } from 'node:path';
-
-import { parse as parseToml, stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
-import { parse as parseIni } from 'ini';
-import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import ts from 'typescript';
 import * as prettier from 'prettier';
+import { parse as parseIni } from 'ini';
 import type { Options } from 'prettier';
 import { createFileTree } from 'testdirs';
-import ts from 'typescript';
 import { parse as parseYaml } from 'yaml';
-
-import { GSPOT_PATHS, LEVELS } from '#cli/config/manifests.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { join, extname, basename } from 'node:path';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { hasGeneratedHeader } from '#cli/repository/files/ownership.ts';
-import { PROJECT_FILES, UNPARSED_CONFIGS } from '#tests/config/generation/configs.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { rm, readFile, writeFile } from 'node:fs/promises';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { LEVELS, GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { type ParseError, parse as parseJsonc } from 'jsonc-parser';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { stringify, parse as parseToml } from '@decimalturn/toml-patch';
+import { hasGeneratedHeader } from '#cli/repository/files/ownership.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { PROJECT_FILES, UNPARSED_CONFIGS } from '#tests/config/generation/configs.ts';
+import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 function parseJson(text: string, path: string): void {
     const errors: ParseError[] = [];

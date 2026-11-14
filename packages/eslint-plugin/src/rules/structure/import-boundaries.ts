@@ -1,18 +1,17 @@
 import { posix } from 'node:path';
-
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
+import { createRule } from '../../rule.ts';
+import { buildSourceVisitors } from '../../language/modules.ts';
+import { findPathInRoot, findPathInFolder } from '../../language/paths.ts';
+import type { RelativeImport, ImportBoundariesOptions } from '../../types/structure.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
+    RESOURCE_QUERY,
+    RELATIVE_SPECIFIER,
     DEFAULT_BOUNDARY_FOLDERS,
     IMPORT_BOUNDARY_OPTIONS_SCHEMA,
-    RELATIVE_SPECIFIER,
-    RESOURCE_QUERY,
 } from '../../config/structure.ts';
-import { buildSourceVisitors } from '../../language/modules.ts';
-import { findPathInFolder, findPathInRoot } from '../../language/paths.ts';
-import { createRule } from '../../rule.ts';
-import type { ImportBoundariesOptions, RelativeImport } from '../../types/structure.ts';
 
 function matchAlias(importedPath: string, pattern: string, target: string): string | undefined {
     const keyStar = pattern.indexOf('*');

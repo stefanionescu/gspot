@@ -1,15 +1,13 @@
-import * as filesystem from 'node:fs';
-import { link, readFile, stat, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import type { GspotError } from '#cli/system/errors.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import * as filesystem from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { link, stat, symlink, readFile } from 'node:fs/promises';
 
 test.skipIf(isWindows)(
     'the system path format keeps POSIX names the portable rules refuse, and reads a link as the link itself',

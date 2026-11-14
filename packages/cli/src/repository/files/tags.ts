@@ -1,30 +1,30 @@
 import { posix } from 'node:path';
-
 import { SHEBANG_TAG } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_RUNTIMES, LOCKFILES } from '#cli/config/parsers/projects.ts';
-import {
-    BINARY_EXTENSIONS,
-    BINARY_TAG,
-    DEFAULT_DIALECT,
-    DOCKERFILE_EXTENSION,
-    DOCKERFILE_NAME,
-    DOTENV_PREFIX,
-    ENV_EXECUTABLE_SUFFIX,
-    ENV_SPLIT_FLAG,
-    EXTENSION_TAGS,
-    FILENAME_TAGS,
-    INTERPRETER_DIALECTS,
-    RUNTIME_TAG,
-    SCRIPT_TAG,
-    SHEBANG_INTERPRETERS,
-    SHEBANG_PREFIX,
-    SHEBANG_TAGS,
-    TEXT_TAG,
-    TRAILING_VERSION,
-} from '#cli/config/repository/files.ts';
 import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import type { FileTags, ListedFile } from '#cli/types/repository.ts';
+import { LOCKFILES, JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
+
+import {
+    TEXT_TAG,
+    BINARY_TAG,
+    SCRIPT_TAG,
+    RUNTIME_TAG,
+    SHEBANG_TAGS,
+    DOTENV_PREFIX,
+    FILENAME_TAGS,
+    ENV_SPLIT_FLAG,
+    EXTENSION_TAGS,
+    SHEBANG_PREFIX,
+    DEFAULT_DIALECT,
+    DOCKERFILE_NAME,
+    TRAILING_VERSION,
+    BINARY_EXTENSIONS,
+    DOCKERFILE_EXTENSION,
+    INTERPRETER_DIALECTS,
+    SHEBANG_INTERPRETERS,
+    ENV_EXECUTABLE_SUFFIX,
+} from '#cli/config/repository/files.ts';
 
 function listShebangTags(firstLine: string): string[] {
     const interpreter = parseShebang(firstLine);

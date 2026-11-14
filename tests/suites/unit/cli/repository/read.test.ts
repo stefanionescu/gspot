@@ -1,20 +1,18 @@
-import { chmod, mkdir, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
-import { listRepositoryFiles, readRepositoryRoot } from '#cli/repository/read.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
-import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository.ts';
-import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { readTestRepository } from '#tests/setup/cli/repository.ts';
+import { listSubmodulePaths } from '#cli/repository/files/tracked.ts';
+import { DUBIOUS_GIT_ENVIRONMENT } from '#tests/config/repository.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { rm, chmod, mkdir, symlink, writeFile } from 'node:fs/promises';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readRepositoryRoot, listRepositoryFiles } from '#cli/repository/read.ts';
+import { commitAll, runGitStep, stageUnmergedFile } from '#tests/setup/system/git.ts';
 
 test('inside Git, gspot takes the worktree root from a nested folder', async () => {
     await using sandbox = await createGitSandbox({ 'nested/source.ts': 'export {});\n' });

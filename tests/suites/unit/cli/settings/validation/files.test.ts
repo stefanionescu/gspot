@@ -1,19 +1,17 @@
-import { symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { symlink } from 'node:fs/promises';
+import { stringify } from '@decimalturn/toml-patch';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { FIRST_READ } from '#cli/config/settings/validation.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { RULE_FILE_ERRORS, RULE_FILE_SETTINGS } from '#tests/config/settings/validation.ts';
-import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { RULE_FILE_ERRORS, RULE_FILE_SETTINGS } from '#tests/config/settings/validation.ts';
 
 test('rule_files.exclude accepts a rule file path', () => {
     const exclude = [getRuleFilePath('agents', 'ACCESSIBILITY.md')];

@@ -1,5 +1,5 @@
-import { staticBeforeSession } from '#eslint-plugin/rules/servers/static-before-session.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { staticBeforeSession } from '#eslint-plugin/rules/servers/static-before-session.ts';
 
 buildRuleTester().run('static-before-session', staticBeforeSession, {
     valid: [

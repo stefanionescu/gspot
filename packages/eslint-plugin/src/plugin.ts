@@ -1,9 +1,8 @@
-import type { TSESLint } from '@typescript-eslint/utils';
-
-import pluginPackage from '../package.json' with { type: 'json' };
-import { PLUGIN_PREFIX } from './config/plugin.ts';
 import { TOPICS } from './registry/topics.ts';
 import type { RuleDocs } from './types/plugin.ts';
+import { PLUGIN_PREFIX } from './config/plugin.ts';
+import type { TSESLint } from '@typescript-eslint/utils';
+import pluginPackage from '../package.json' with { type: 'json' };
 
 const rules = Object.fromEntries(
     Object.values(TOPICS)

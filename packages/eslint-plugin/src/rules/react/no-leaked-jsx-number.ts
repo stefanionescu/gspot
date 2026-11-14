@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/react.ts';
+import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import { listImportedModules } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { LEAKING_TYPES, NATIVE_LEAKING_TYPES } from '../../config/react.ts';
 
 function listOperands(node: TSESTree.Expression): TSESTree.Expression[] {
     const operands: TSESTree.Expression[] = [];

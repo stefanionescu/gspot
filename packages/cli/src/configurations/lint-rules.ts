@@ -1,12 +1,12 @@
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildUnknownRuleError, canIgnoreRule, findRuleTool, hasRuleExplanations } from '#cli/engine/outputs/rules.ts';
-import { findCheck, readShippedChecks } from '#cli/manifests/checks.ts';
-import { isConfigurationSelected } from '#cli/settings/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { readToolBinPaths } from '#cli/tools/programs/mise.ts';
-import { readLintRuleExplanation } from '#cli/tools/rules/explanations.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { isConfigurationSelected } from '#cli/settings/scopes.ts';
 import type { Check, Configuration } from '#cli/types/manifests.ts';
-import type { RuleExplanation, RuleExplanationOptions, Session } from '#cli/types/tools.ts';
+import { findCheck, readShippedChecks } from '#cli/manifests/checks.ts';
+import { readLintRuleExplanation } from '#cli/tools/rules/explanations.ts';
+import type { Session, RuleExplanation, RuleExplanationOptions } from '#cli/types/tools.ts';
+import { findRuleTool, canIgnoreRule, hasRuleExplanations, buildUnknownRuleError } from '#cli/engine/outputs/rules.ts';
 
 function rethrowForUnselectedCheck(error: unknown, check: Check, session: Session | undefined): never {
     const name = readShippedChecks().get(check.id)?.configuration.name;

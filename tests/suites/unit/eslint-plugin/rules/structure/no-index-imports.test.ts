@@ -1,5 +1,5 @@
-import { noIndexImports } from '#eslint-plugin/rules/structure/no-index-imports.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIndexImports } from '#eslint-plugin/rules/structure/no-index-imports.ts';
 
 buildRuleTester().run('no-index-imports', noIndexImports, {
     valid: [

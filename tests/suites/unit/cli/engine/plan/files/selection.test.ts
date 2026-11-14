@@ -1,17 +1,15 @@
-import { symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { symlink } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
-import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { PROJECT_PATH_IGNORES, TSC_PUSH_OPTIONS, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { isActive, planChecks } from '#cli/engine/plan/checks.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { TSC_PUSH_OPTIONS, PROJECT_PATH_IGNORES, TYPESCRIPT_SCOPES_SETTINGS } from '#tests/config/engine/plan.ts';
 
 test("a file named on the command line runs its scope's project check on every file of the scope", async () => {
     await using sandbox = await createGitSandbox({

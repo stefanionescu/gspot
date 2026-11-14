@@ -1,11 +1,12 @@
+import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
+
 import {
     DOCKER_RULES,
     INSTRUCTION_RULES,
-    SERVICE_SECURITY_MESSAGES,
     SERVICE_SECURITY_RULES,
+    SERVICE_SECURITY_MESSAGES,
 } from '#cli/config/configurations/docker.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
-import type { RuleExplanations } from '#cli/types/tools.ts';
 
 export const DOCKERIGNORE_EXPLANATIONS = {
     [DOCKER_RULES.missingFile]: {

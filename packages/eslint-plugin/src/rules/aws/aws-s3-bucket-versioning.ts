@@ -1,6 +1,6 @@
+import { createRule } from '../../rule.ts';
 import { S3_VERSIONING_CHECKS } from '../../config/aws.ts';
 import { listCdkTableIssues } from '../../libraries/aws.ts';
-import { createRule } from '../../rule.ts';
 
 export const awsS3BucketVersioning = createRule<[], 'omitted' | 'unversioned'>({
     name: 'aws-s3-bucket-versioning',

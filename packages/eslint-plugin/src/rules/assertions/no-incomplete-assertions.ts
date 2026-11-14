@@ -1,14 +1,14 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    ASSERTION_METHODS,
-    ASSERTION_ROOTS,
-    ASSERTION_WORDS,
-    EXPECT_ROOTS,
-    EXPECT_STATIC_METHODS,
-} from '../../config/assertions/styles.ts';
 import { createRule } from '../../rule.ts';
 import type { AssertionFinding } from '../../types/assertions.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    EXPECT_ROOTS,
+    ASSERTION_ROOTS,
+    ASSERTION_WORDS,
+    ASSERTION_METHODS,
+    EXPECT_STATIC_METHODS,
+} from '../../config/assertions/styles.ts';
 
 function isExpectCall(node: TSESTree.Node): boolean {
     if (node.type !== AST_NODE_TYPES.CallExpression || !ASTUtils.isIdentifier(node.callee)) return false;

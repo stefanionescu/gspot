@@ -1,9 +1,9 @@
-import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/file.ts';
-import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
-import { compareScopeDepth, isInScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { RemovedConfiguration, Scope, SelectedConfigurations, Settings } from '#cli/types/settings.ts';
+import { NO_ROOT_SCOPE_MESSAGE } from '#cli/config/settings/file.ts';
+import { listAlwaysSelected, selectConfigurations } from '#cli/manifests/select.ts';
+import { isInScope, selectScopePath, compareScopeDepth } from '#cli/repository/scopes.ts';
+import type { Scope, Settings, RemovedConfiguration, SelectedConfigurations } from '#cli/types/settings.ts';
 
 export function findParentScope(scopes: Scope[], path: string): Scope | undefined {
     if (path === '') return undefined;

@@ -1,6 +1,6 @@
-import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { Repository } from '#cli/types/repository.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
 
 export async function readTestRepository(root: string): Promise<Repository> {
     const cache = createRunCache(root);

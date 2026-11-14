@@ -1,21 +1,21 @@
+import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { Tool, Check } from '#cli/types/manifests.ts';
+import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
+import type { OutputCheck } from '#cli/types/engine/tool-runs.ts';
+import type { Finding, CheckFinding } from '#cli/types/engine/run.ts';
 
 import {
-    BROKEN_TOOL_ADVICE,
-    MODULE_FAILURE,
-    NO_ERROR_OUTPUT_MESSAGE,
-    OUT_OF_MEMORY,
-    OUT_OF_MEMORY_MESSAGE,
     TAIL_LINES,
+    OUT_OF_MEMORY,
+    MODULE_FAILURE,
+    BROKEN_TOOL_ADVICE,
+    OUT_OF_MEMORY_MESSAGE,
+    NO_ERROR_OUTPUT_MESSAGE,
 } from '#cli/config/engine.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { STACK_FRAME_LINE } from '#cli/config/tools/programs.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { CheckFinding, Finding } from '#cli/types/engine/run.ts';
-import type { OutputCheck } from '#cli/types/engine/tool-runs.ts';
-import type { Check, Tool } from '#cli/types/manifests.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 
 /**
 End a crash message with the install command when a module under the tool folder failed to load, because install

@@ -1,5 +1,5 @@
-import { noPathCommand } from '#eslint-plugin/rules/security/no-path-command.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPathCommand } from '#eslint-plugin/rules/security/no-path-command.ts';
 
 buildRuleTester().run('no-path-command', noPathCommand, {
     valid: [

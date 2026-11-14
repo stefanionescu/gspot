@@ -1,13 +1,11 @@
-import { stat, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { readSettingsFile, writeSettings } from '#cli/settings/toml/file.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
 import { openFiles } from '#cli/system/files/open.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { stat, symlink, writeFile } from 'node:fs/promises';
+import { writeSettings, readSettingsFile } from '#cli/settings/toml/file.ts';
 
 test('reading a file with invalid UTF-8 is refused', async () => {
     await using sandbox = await testdir();

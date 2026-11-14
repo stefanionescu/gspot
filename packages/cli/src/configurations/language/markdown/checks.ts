@@ -1,36 +1,36 @@
-import { parse as parseToml } from '@decimalturn/toml-patch';
-import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 import { parseAllDocuments } from 'yaml';
-
-import {
-    ANGLE_PLACEHOLDER,
-    CAMEL_CASE_BOUNDARY,
-    ELLIPSIS_ARGUMENTS,
-    ELLIPSIS_LINE,
-    EMPTY_ARGUMENTS,
-    EXCERPT_FORMS,
-    FENCE_PARSERS,
-    JSON_FENCE_OPTIONS,
-    PLACEHOLDER_VALUE,
-    SYNTAX_ERROR_MESSAGE,
-} from '#cli/config/configurations/markdown.ts';
-import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
-import { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
-import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
+import { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
+import { listCodeFences } from '#cli/parsers/formats/markdown.ts';
+import { SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
+import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { parse, type ParseError, type ParseOptions, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
+
 import type {
     FenceParser,
     FenceSyntaxError,
     FormatFenceParser,
     GrammarFenceParser,
 } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { CodeFence, ParseCache } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    ELLIPSIS_LINE,
+    EXCERPT_FORMS,
+    FENCE_PARSERS,
+    EMPTY_ARGUMENTS,
+    ANGLE_PLACEHOLDER,
+    PLACEHOLDER_VALUE,
+    ELLIPSIS_ARGUMENTS,
+    JSON_FENCE_OPTIONS,
+    CAMEL_CASE_BOUNDARY,
+    SYNTAX_ERROR_MESSAGE,
+} from '#cli/config/configurations/markdown.ts';
 
 function findJsonSyntaxError(body: string, options: ParseOptions): FenceSyntaxError | undefined {
     const errors: ParseError[] = [];

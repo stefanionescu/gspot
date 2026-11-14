@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { writeFile } from 'node:fs/promises';
+import { stringify } from '@decimalturn/toml-patch';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { NAMING_SCOPE_SETTINGS } from '#tests/config/commands/check.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 function buildFakeCheckTables(id: string, path: string, stdout: string): string {
     return stringify({

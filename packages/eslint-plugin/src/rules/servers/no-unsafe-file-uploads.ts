@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { FORMIDABLE_MODULE, MULTER_MODULE, UPLOAD_MESSAGES } from '../../config/servers.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { findAssignedVariable, findMemberAssignment } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
 import type { UploadForm } from '../../types/security.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { findAssignedVariable, findMemberAssignment } from '../../language/variables.ts';
+import { MULTER_MODULE, UPLOAD_MESSAGES, FORMIDABLE_MODULE } from '../../config/servers.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function setFormOption(form: UploadForm, property: string, value: TSESTree.Expression): void {
     if (property === 'uploadDir') form.hasFolder = true;

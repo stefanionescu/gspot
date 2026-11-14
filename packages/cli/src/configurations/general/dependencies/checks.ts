@@ -1,49 +1,48 @@
-import { join, posix } from 'node:path';
-
 import semver from 'semver';
-
-import {
-    DEPENDENCY_RULES,
-    DOWNLOAD_PROTOCOLS,
-    LOCKFILE_KEY_SUFFIX,
-    LOCKFILE_UPDATE_COMMANDS,
-    NPM_TOOL_PREFIX,
-    STALE_LOCKFILE_SECTIONS,
-    UNBUNDLED_PACKAGE_MANAGERS,
-} from '#cli/config/configurations/dependencies.ts';
+import { join, posix } from 'node:path';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import { miseToolsSchema } from '#cli/schemas/repository.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { MISE_FILES } from '#cli/config/configurations/general.ts';
-import {
-    IMPORTER_LOCKFILES,
-    JAVASCRIPT_LOCKFILES,
-    LOCKFILES,
-    PACKAGE_JSON,
-    PNPM_ROOT_IMPORTER,
-} from '#cli/config/parsers/projects.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { getMiseToolVersion } from '#cli/repository/projects/pin.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
+import { findWrittenPackageManager } from '#cli/repository/projects/package-manager.ts';
+
 import {
     LOCKFILE_EXPLANATIONS,
     PACKAGE_MANAGER_PIN_EXPLANATIONS,
 } from '#cli/configurations/general/dependencies/explanations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import {
-    findNearestLockfile,
-    listLockfileUrls,
     listSpecifiers,
+    listLockfileUrls,
     SPECIFIER_PARSERS,
+    findNearestLockfile,
 } from '#cli/parsers/projects/lockfiles.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { findWrittenPackageManager } from '#cli/repository/projects/package-manager.ts';
-import { getMiseToolVersion } from '#cli/repository/projects/pin.ts';
-import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
-import { miseToolsSchema } from '#cli/schemas/repository.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    LOCKFILES,
+    PACKAGE_JSON,
+    IMPORTER_LOCKFILES,
+    PNPM_ROOT_IMPORTER,
+    JAVASCRIPT_LOCKFILES,
+} from '#cli/config/parsers/projects.ts';
+import {
+    NPM_TOOL_PREFIX,
+    DEPENDENCY_RULES,
+    DOWNLOAD_PROTOCOLS,
+    LOCKFILE_KEY_SUFFIX,
+    STALE_LOCKFILE_SECTIONS,
+    LOCKFILE_UPDATE_COMMANDS,
+    UNBUNDLED_PACKAGE_MANAGERS,
+} from '#cli/config/configurations/dependencies.ts';
 
 function validateUrl(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

@@ -1,23 +1,24 @@
-import { REMOVED_CONFIGURATIONS } from '#cli/config/settings/validation.ts';
-import { formatUnknownCheck, listCheckIds } from '#cli/manifests/checks.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { validateKeys } from '#cli/settings/validation/keys.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import type { WrittenConfiguration } from '#cli/types/manifests.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
+import type { Settings, SettingsError } from '#cli/types/settings.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { validateSettingRules } from '#cli/settings/validation/rules.ts';
+import { REMOVED_CONFIGURATIONS } from '#cli/config/settings/validation.ts';
+import { listCheckIds, formatUnknownCheck } from '#cli/manifests/checks.ts';
+import { validateSwiftTargets, validateSettingReasons } from '#cli/settings/validation/reasons.ts';
+import { validateScopePaths, validateRuleExcludes, validateRuleFilePaths } from '#cli/settings/validation/files.ts';
+
 import {
     findRequirementChain,
+    selectConfigurations,
     formatAlwaysOnMessage,
     formatRequiredRemoval,
     listUnknownConfigurations,
-    selectConfigurations,
 } from '#cli/manifests/select.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { validateRuleExcludes, validateRuleFilePaths, validateScopePaths } from '#cli/settings/validation/files.ts';
-import { validateKeys } from '#cli/settings/validation/keys.ts';
-import { validateSettingReasons, validateSwiftTargets } from '#cli/settings/validation/reasons.ts';
-import { validateSettingRules } from '#cli/settings/validation/rules.ts';
-import { listSettingsTables } from '#cli/settings/values/written.ts';
-import type { WrittenConfiguration } from '#cli/types/manifests.ts';
-import type { Settings, SettingsError } from '#cli/types/settings.ts';
 
 function validateRemovedConfigurations(settings: Settings): SettingsError[] {
     const configurations = readConfigurations();

@@ -1,38 +1,37 @@
 import { posix } from 'node:path';
-
 import { parseSyml } from '@yarnpkg/parsers';
-
-import {
-    DEPENDENCY_SECTIONS,
-    type IMPORTER_LOCKFILES,
-    JAVASCRIPT_LOCKFILES,
-    LOCKFILE_URL_FIELDS,
-    NPM_PACKAGE_FOLDER,
-    PACKAGE_JSON,
-    PNPM_PEER_START,
-    PNPM_ROOT_IMPORTER,
-    YARN_CLASSIC_HEADER,
-    YARN_CLASSIC_PROPERTY,
-} from '#cli/config/parsers/projects.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
+import type { LockfileName } from '#cli/types/parsers.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
 import { parseFileFields } from '#cli/parsers/validation.ts';
+import { parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+
 import {
     bunLockfileSchema,
-    dependencySectionsSchema,
     npmLockfileSchema,
+    yarnPackageSchema,
     pnpmLockfileSchema,
     yarnLockfileSchema,
-    yarnPackageSchema,
+    dependencySectionsSchema,
 } from '#cli/schemas/parsers.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { escapeRegExp } from '#cli/system/patterns.ts';
-import { isTable } from '#cli/system/tables.ts';
-import type { LockfileName } from '#cli/types/parsers.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import {
+    PACKAGE_JSON,
+    PNPM_PEER_START,
+    NPM_PACKAGE_FOLDER,
+    PNPM_ROOT_IMPORTER,
+    DEPENDENCY_SECTIONS,
+    LOCKFILE_URL_FIELDS,
+    YARN_CLASSIC_HEADER,
+    JAVASCRIPT_LOCKFILES,
+    YARN_CLASSIC_PROPERTY,
+    type IMPORTER_LOCKFILES,
+} from '#cli/config/parsers/projects.ts';
 
 function parseNpmVersions(path: string, text: string, folder: string): Map<string, string> {
     const { packages } = parseJsonFile(path, text, npmLockfileSchema);

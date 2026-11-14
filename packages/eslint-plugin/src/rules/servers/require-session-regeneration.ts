@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { AUTHENTICATE_FUNCTION, REGENERATE_METHOD, ROUTE_CALLBACK_POSITION } from '../../config/servers.ts';
-import { getOptionValue } from '../../language/expressions.ts';
-import { findFunction } from '../../language/functions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
+import { findFunction } from '../../language/functions.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getOptionValue } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { REGENERATE_METHOD, AUTHENTICATE_FUNCTION, ROUTE_CALLBACK_POSITION } from '../../config/servers.ts';
 
 function isStateless(source: Readonly<TSESLint.SourceCode>, options: TSESTree.Node | undefined): boolean {
     if (options?.type !== AST_NODE_TYPES.ObjectExpression) return false;

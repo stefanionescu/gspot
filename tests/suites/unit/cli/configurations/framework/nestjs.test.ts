@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
+import { test, expect } from 'bun:test';
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
+import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test.each([
     { name: 'without', swagger: {}, expected: [] },

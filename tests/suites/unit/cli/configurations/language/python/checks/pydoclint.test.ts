@@ -1,26 +1,25 @@
-import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { createFileTree } from 'testdirs';
-
+import { getTool } from '#cli/manifests/tools.ts';
+import type { Level } from '#cli/types/settings.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import type { Level } from '#cli/types/settings.ts';
-import {
-    GOOGLE_DOCSTRING_MODULE,
-    NUMPY_DOCSTRING_MODULE,
-    PYDOCLINT_PROJECT_CASES,
-} from '#tests/config/configurations/python.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { PYPROJECT } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildPythonToolFiles, buildVenvExecutablePath, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { fakeToolExecutables, buildPythonToolFiles, buildVenvExecutablePath } from '#tests/setup/cli/tools.ts';
+
+import {
+    NUMPY_DOCSTRING_MODULE,
+    GOOGLE_DOCSTRING_MODULE,
+    PYDOCLINT_PROJECT_CASES,
+} from '#tests/config/configurations/python.ts';
 
 async function writePydoclintProject(
     root: string,

@@ -1,17 +1,15 @@
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-
+import { getTool } from '#cli/manifests/tools.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PURGECSS_STYLE_CASES } from '#tests/config/configurations/framework.ts';
 import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.each([...PURGECSS_STYLE_CASES])('site/purgecss checks $name', async ({ source, css, expected }) => {

@@ -1,5 +1,5 @@
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/builders.ts';
 import { SOURCE_KIND } from '#cli/config/repository/files.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation/builders.ts';
 
 // blob hashes
 export const SHA1 = 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa';

@@ -1,20 +1,18 @@
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import * as processes from '#cli/system/processes/run.ts';
-import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/run.ts';
-import { BROKEN_IF_SCRIPT, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
+import { CHILD_SCOPE_SETTINGS } from '#tests/config/engine/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runChecks, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BROKEN_IF_SCRIPT, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 
 test('a command in a scope runs in the scope folder with paths relative to it', async () => {
     const scope = 'apps/café [web]';

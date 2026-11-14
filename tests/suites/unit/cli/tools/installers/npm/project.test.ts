@@ -1,25 +1,24 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { installNpmTools, planNpmLockfile, installUnlockedNpmTools } from '#cli/tools/installers/npm/project.ts';
+
 import {
+    NPM_TOOL_PROJECT,
     LOCKFILE_CREDENTIAL_MESSAGE,
     NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-    NPM_TOOL_PROJECT,
 } from '#cli/config/tools/installers.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { installNpmTools, installUnlockedNpmTools, planNpmLockfile } from '#cli/tools/installers/npm/project.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildNpmToolInstall } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 const CREDENTIAL_TOKEN = 'synthetic-generated-lockfile-token';
 

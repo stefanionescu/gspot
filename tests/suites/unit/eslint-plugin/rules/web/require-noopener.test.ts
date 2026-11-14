@@ -1,5 +1,5 @@
-import { requireNoopener } from '#eslint-plugin/rules/web/require-noopener.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireNoopener } from '#eslint-plugin/rules/web/require-noopener.ts';
 
 buildRuleTester().run('require-noopener', requireNoopener, {
     valid: [

@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
 import { BOOLEAN_TEXTS } from '../config/accessibility.ts';
 import type { JsxAttributeValue } from '../types/accessibility.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function normalizeLiteral(value: unknown): unknown {
     if (typeof value !== 'string') return value;

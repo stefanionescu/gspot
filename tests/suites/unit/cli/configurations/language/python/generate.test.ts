@@ -1,9 +1,8 @@
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { RuffConfig } from '#tests/types/configurations.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 async function buildRuffIgnore(tables: string): Promise<string[]> {
     const ruff = parse(

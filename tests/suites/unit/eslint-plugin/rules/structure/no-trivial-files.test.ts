@@ -1,7 +1,6 @@
 import { join } from 'node:path';
-
-import { noTrivialFiles } from '#eslint-plugin/rules/structure/no-trivial-files.ts';
 import type { TrivialFilesOptions } from '#eslint-plugin/types/structure.ts';
+import { noTrivialFiles } from '#eslint-plugin/rules/structure/no-trivial-files.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run<keyof (typeof noTrivialFiles)['meta']['messages'], [Partial<TrivialFilesOptions[0]>]>(

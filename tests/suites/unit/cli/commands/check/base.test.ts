@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
+import { writeFile } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildReportingCheck } from '#tests/setup/cli/settings.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 async function prepareChangedRepository(root: string, files: Record<string, string>): Promise<void> {
     const gspotToml = stringify({

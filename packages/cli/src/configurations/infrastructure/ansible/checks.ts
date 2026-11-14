@@ -1,19 +1,18 @@
 import { join } from 'node:path';
-
-import { ANSIBLE_CONFIG_EXTENSION, ANSIBLE_CONFIG_FILE } from '#cli/config/configurations/infrastructure.ts';
+import { isInInstalledFolder } from '#cli/system/paths.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
-import { buildCommandSubstitutions } from '#cli/engine/run/tool-runs/check.ts';
-import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
-import { expandCommand } from '#cli/engine/run/tool-runs/placeholders.ts';
 import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { isInScope, isOutsideChildScopes, listNestedScopes } from '#cli/repository/scopes.ts';
-import { isInInstalledFolder } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
+import { expandCommand } from '#cli/engine/run/tool-runs/placeholders.ts';
+import { assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { buildCommandSubstitutions } from '#cli/engine/run/tool-runs/check.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { isInScope, listNestedScopes, isOutsideChildScopes } from '#cli/repository/scopes.ts';
+import { ANSIBLE_CONFIG_FILE, ANSIBLE_CONFIG_EXTENSION } from '#cli/config/configurations/infrastructure.ts';
 
 async function lintProject(
     session: CheckSession,

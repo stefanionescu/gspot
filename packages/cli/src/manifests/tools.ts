@@ -1,5 +1,5 @@
 import { compareText } from '#cli/system/text/order.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
 
 export function findToolName(check: Pick<Check, 'tool' | 'command'>): string | undefined {
     return check.tool ?? check.command?.[0];

@@ -1,6 +1,6 @@
-import { SHELLCHECK_ALL_LEVEL_ON, SHELLCHECK_OPTIONS } from '#cli/config/configurations/bash.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { SHELLCHECK_OPTIONS, SHELLCHECK_ALL_LEVEL_ON } from '#cli/config/configurations/bash.ts';
 
 function buildShellcheckFile(planned: PlannedConfig): string {
     const disable = listDisabledRules(planned);

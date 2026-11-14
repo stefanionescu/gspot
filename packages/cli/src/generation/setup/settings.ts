@@ -1,15 +1,15 @@
-import { LEADING_COMMENTS } from '#cli/config/generation/setup.ts';
-import { SETTINGS_PREFACE_LINES } from '#cli/config/settings/file.ts';
-import { stripDefaults } from '#cli/generation/setup/defaults.ts';
-import { readScopeFormat } from '#cli/generation/setup/format/prettier.ts';
-import { leaveOutUnreadSettings } from '#cli/generation/setup/template.ts';
-import { buildDetectedTables } from '#cli/settings/detected.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
 import { overlayTable } from '#cli/settings/toml/edit.ts';
 import { buildSettingsText } from '#cli/settings/toml/text.ts';
+import { buildDetectedTables } from '#cli/settings/detected.ts';
+import { stripDefaults } from '#cli/generation/setup/defaults.ts';
+import { LEADING_COMMENTS } from '#cli/config/generation/setup.ts';
+import { SETTINGS_PREFACE_LINES } from '#cli/config/settings/file.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { readScopeFormat } from '#cli/generation/setup/format/prettier.ts';
+import { leaveOutUnreadSettings } from '#cli/generation/setup/template.ts';
 import type { InitOptions, SettingsDraft } from '#cli/types/generation.ts';
-import type { ProposedConfigurations, Repository } from '#cli/types/repository.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
+import type { Repository, ProposedConfigurations } from '#cli/types/repository.ts';
 
 function buildSettingsTable(draft: SettingsDraft, repository: Repository): TomlTable {
     const selected = {

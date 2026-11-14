@@ -1,5 +1,5 @@
-import { awsUnencryptedNotebooks } from '#eslint-plugin/rules/aws/aws-unencrypted-notebooks.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnencryptedNotebooks } from '#eslint-plugin/rules/aws/aws-unencrypted-notebooks.ts';
 
 buildRuleTester().run('aws-unencrypted-notebooks', awsUnencryptedNotebooks, {
     valid: [

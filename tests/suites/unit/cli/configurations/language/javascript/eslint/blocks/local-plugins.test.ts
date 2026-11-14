@@ -1,17 +1,17 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LOCAL_PLUGIN_TABLES } from '#tests/config/setup/configurations.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 import {
-    CONFLICTING_LOCAL_PLUGIN_TABLES,
     LOCAL_PLUGIN,
     SCOPE_PLUGIN_TABLES,
+    CONFLICTING_LOCAL_PLUGIN_TABLES,
 } from '#tests/config/configurations/javascript/plugins.ts';
-import { LOCAL_PLUGIN_TABLES } from '#tests/config/setup/configurations.ts';
-import { buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 const SCOPE_PLUGIN_FILES = {
     '.gitignore': 'node_modules/\n',

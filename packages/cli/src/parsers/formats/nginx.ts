@@ -1,14 +1,15 @@
-import {
-    ESCAPE_LENGTH,
-    ESCAPED_CHARACTER,
-    NGINX_ESCAPES,
-    NGINX_PUNCTUATION,
-    QUOTED_ARGUMENT,
-    WHITESPACE_CHARACTER,
-    WORD_START_STOPS,
-    WORD_STOPS,
-} from '#cli/config/parsers/formats.ts';
 import type { DirectiveScan } from '#cli/types/parsers.ts';
+
+import {
+    WORD_STOPS,
+    ESCAPE_LENGTH,
+    NGINX_ESCAPES,
+    QUOTED_ARGUMENT,
+    WORD_START_STOPS,
+    ESCAPED_CHARACTER,
+    NGINX_PUNCTUATION,
+    WHITESPACE_CHARACTER,
+} from '#cli/config/parsers/formats.ts';
 
 function findQuotedEnd(text: string, start: number): number {
     const quote = text.charAt(start);

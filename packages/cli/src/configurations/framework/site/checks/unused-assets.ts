@@ -1,32 +1,31 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import {
-    ALIAS_WILDCARD_SIDES,
-    ASSET_FOLDER,
-    ASSET_GLOB_CALL,
-    ASSET_REFERENCE_PREFIX,
-    ASSET_REFERENCE_SUFFIX,
-    CONVENTIONAL_ASSETS,
-    TEXT_EXTENSIONS,
-    UNUSED_ASSET_MESSAGE,
-    UNUSED_ASSET_RULE,
-} from '#cli/config/configurations/site.ts';
-import { FILENAME_TAGS, GIT_FILE_MODES, SYMLINK_MODE } from '#cli/config/repository/files.ts';
-import { WHITESPACE_RUN } from '#cli/config/system.ts';
-import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
-import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
 import { extractParentFolder } from '#cli/system/paths.ts';
-import { buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
-import type { AssetGlobImport, AssetSource } from '#cli/types/configurations/framework.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { ComponentScript } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { ComponentScript } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { escapeRegExp, buildPathMatcher } from '#cli/system/patterns.ts';
+import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
+import { getStringLiteral, listJavascriptSources } from '#cli/parsers/code/javascript.ts';
+import type { AssetSource, AssetGlobImport } from '#cli/types/configurations/framework.ts';
+import { SYMLINK_MODE, FILENAME_TAGS, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
+import { UNUSED_ASSET_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+
+import {
+    ASSET_FOLDER,
+    ASSET_GLOB_CALL,
+    TEXT_EXTENSIONS,
+    UNUSED_ASSET_RULE,
+    CONVENTIONAL_ASSETS,
+    ALIAS_WILDCARD_SIDES,
+    UNUSED_ASSET_MESSAGE,
+    ASSET_REFERENCE_PREFIX,
+    ASSET_REFERENCE_SUFFIX,
+} from '#cli/config/configurations/site.ts';
 
 function getGlobPatterns(node: Node): string[] | undefined {
     const argument = node.childForFieldName('arguments')?.namedChild(0);

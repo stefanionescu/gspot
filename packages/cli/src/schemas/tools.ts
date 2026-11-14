@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 import { TOOL_STATES } from '#cli/config/tools/programs.ts';
 import { bunLockfileSchema, npmLockfileSchema, pnpmLockfileSchema } from '#cli/schemas/parsers.ts';
 

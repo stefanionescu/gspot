@@ -1,17 +1,17 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
 import { validateIdentifiers } from '#cli/configurations/general/naming/checks/validation.ts';
 import type { FileNaming, Identifier, NamingSettings } from '#cli/types/configurations/naming.ts';
+
 import {
+    NAME_WORDS,
+    HOOK_PREFIX_TABLES,
+    NAMING_LIMIT_CASES,
     ALLOWED_NAME_TABLES,
     HANDLE_PREFIX_TABLES,
     HANDLE_ROUTE_IDENTIFIER,
-    HOOK_PREFIX_TABLES,
-    NAME_WORDS,
-    NAMING_LIMIT_CASES,
 } from '#tests/config/configurations/naming/validation.ts';
-import { buildScopeNamingSettings } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 async function readNaming(tables: string): Promise<FileNaming> {
     return buildFileNaming(

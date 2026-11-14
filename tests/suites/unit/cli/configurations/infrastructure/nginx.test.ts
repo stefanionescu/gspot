@@ -1,24 +1,23 @@
 import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { readFile } from 'node:fs/promises';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
 import {
-    NGINX_FAILURE_CASES,
     NGINX_MOUNT_CASES,
+    NGINX_FAILURE_CASES,
     NGINX_UPSTREAM_CONFIG,
 } from '#tests/config/configurations/infrastructure.ts';
-import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test.each([...NGINX_MOUNT_CASES])(
     'nginx/syntax mounts the nginx.conf and its certificates and maps upstream hosts: $name',

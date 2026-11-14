@@ -1,21 +1,21 @@
+import type { Session } from '#cli/types/tools.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { isAbsolute, join, relative, resolve } from 'node:path';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import { join, resolve, relative, isAbsolute } from 'node:path';
+import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { readTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import type { TypeScriptReferenceCopy } from '#cli/types/configurations/shared.ts';
 
 import {
     PATHS_BASE_OPTION,
-    TSC_COMPILER_INPUT_PATHS,
-    TSC_CONFIG_INPUT_PATHS,
     TSC_REFERENCE_BUNDLE,
-    TSC_REFERENCE_OUTPUT_FOLDER,
     TSCONFIG_TSBUILDINFO,
+    TSC_CONFIG_INPUT_PATHS,
+    TSC_COMPILER_INPUT_PATHS,
+    TSC_REFERENCE_OUTPUT_FOLDER,
 } from '#cli/config/configurations/shared.ts';
-import { GSPOT_FOLDER, PRIVATE_FILE } from '#cli/config/system.ts';
-import { listSourceFiles, readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
-import type { TypeScriptReferenceCopy } from '#cli/types/configurations/shared.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function convertToCopyPath(value: unknown, copy: TypeScriptReferenceCopy): unknown {
     if (Array.isArray(value)) return value.map((path: unknown) => convertToCopyPath(path, copy));

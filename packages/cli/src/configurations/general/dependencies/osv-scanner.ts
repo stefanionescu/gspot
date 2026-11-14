@@ -1,9 +1,8 @@
-import { stringify as stringifyToml } from '@decimalturn/toml-patch';
-
-import { OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/dependencies.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
+import { stringify as stringifyToml } from '@decimalturn/toml-patch';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { OSV_SCANNER_CHECK, OSV_SCANNER_NOTES } from '#cli/config/configurations/dependencies.ts';
 
 function buildOsvScannerFile(planned: PlannedConfig): string {
     const ignores = listIgnores(planned.scope.settings, OSV_SCANNER_CHECK).filter(

@@ -1,6 +1,5 @@
 import type { TSESTree } from '@typescript-eslint/utils';
-
-import type { CheckedType, RuleContext, TypeCategory, TypeReader } from '../types/plugin.ts';
+import type { TypeReader, CheckedType, RuleContext, TypeCategory } from '../types/plugin.ts';
 
 export function getTypes(context: Pick<RuleContext, 'sourceCode'>): TypeReader | undefined {
     const services = context.sourceCode.parserServices;

@@ -1,15 +1,13 @@
-import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { mkdir } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 test('a folder with no files reports once at its top, and through a folder that holds only empty folders', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,13 +1,11 @@
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
 
 test('setting level all and unsetting it restores every generated file and its bytes', async () => {
     await using sandbox = await createGitSandbox({

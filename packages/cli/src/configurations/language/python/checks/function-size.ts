@@ -1,10 +1,10 @@
-import { PYTHON_RULES } from '#cli/config/configurations/python.ts';
-import { countCodeLines } from '#cli/parsers/code/comments.ts';
-import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/tables.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { countCodeLines } from '#cli/parsers/code/comments.ts';
+import { PYTHON_RULES } from '#cli/config/configurations/python.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { findDocstring, readPythonFiles } from '#cli/parsers/code/python.ts';
 
 async function checkPythonFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const limit = getLimit(planned.scope.settings, 'max_function_lines', 'python');

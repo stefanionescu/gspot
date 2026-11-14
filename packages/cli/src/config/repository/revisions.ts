@@ -1,5 +1,5 @@
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 
 // changed revisions
 export const COMMIT_SUFFIX = '^{commit}';

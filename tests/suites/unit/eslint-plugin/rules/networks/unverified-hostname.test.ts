@@ -1,5 +1,5 @@
-import { unverifiedHostname } from '#eslint-plugin/rules/networks/unverified-hostname.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { unverifiedHostname } from '#eslint-plugin/rules/networks/unverified-hostname.ts';
 
 buildRuleTester().run('unverified-hostname', unverifiedHostname, {
     valid: [

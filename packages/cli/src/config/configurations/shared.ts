@@ -1,6 +1,6 @@
+import type { GrammarName } from '#cli/types/parsers.ts';
 import { GSPOT_PATHS, SHEBANG_TAG } from '#cli/config/manifests.ts';
 import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import type { GrammarName } from '#cli/types/parsers.ts';
 
 // bash scripts
 export const BASH_SOURCE_COMMANDS = new Set(['source', '.']);

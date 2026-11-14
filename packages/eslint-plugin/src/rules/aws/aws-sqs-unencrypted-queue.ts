@@ -1,6 +1,6 @@
+import { createRule } from '../../rule.ts';
 import { SQS_QUEUE_CHECKS } from '../../config/aws.ts';
 import { listCdkTableIssues } from '../../libraries/aws.ts';
-import { createRule } from '../../rule.ts';
 
 export const awsSqsUnencryptedQueue = createRule<[], 'omitted' | 'invalid'>({
     name: 'aws-sqs-unencrypted-queue',

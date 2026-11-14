@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { haveSameTokens } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { haveSameTokens } from '../../language/syntax.ts';
 import type { Branch, BranchSet } from '../../types/control-flow.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isMultiline(statements: readonly TSESTree.Node[], source: TSESLint.SourceCode): boolean {
     const tokens = statements

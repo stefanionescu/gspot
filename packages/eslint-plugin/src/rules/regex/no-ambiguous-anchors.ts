@@ -1,8 +1,7 @@
-import type { AST } from '@eslint-community/regexpp';
-
-import { ANCHOR_KINDS, ANCHOR_PAIR } from '../../config/regex.ts';
-import { buildRegexVisitors } from '../../language/regex.ts';
 import { createRule } from '../../rule.ts';
+import type { AST } from '@eslint-community/regexpp';
+import { buildRegexVisitors } from '../../language/regex.ts';
+import { ANCHOR_PAIR, ANCHOR_KINDS } from '../../config/regex.ts';
 
 function getAnchors({ elements }: AST.Alternative): { start: boolean; end: boolean } {
     const [first] = elements;

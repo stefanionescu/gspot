@@ -1,7 +1,7 @@
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { valeOutputSchema } from '#cli/schemas/engine.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
+import { valeOutputSchema } from '#cli/schemas/engine.ts';
 import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
 
 export function parseValeFindings(output: ToolOutput): Finding[] {
     const { check, stdout } = output;

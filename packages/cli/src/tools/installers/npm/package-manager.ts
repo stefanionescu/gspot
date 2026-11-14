@@ -1,15 +1,14 @@
 import semver from 'semver';
-
-import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
-import { CI_NODE, PACKAGE_MANAGER_UPGRADES, RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
-import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
-import { buildPackageManagerCommand, selectToolPackageManager } from '#cli/repository/projects/package-manager.ts';
-import { packageManagerSchema } from '#cli/schemas/repository.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
 import { runInstallStep } from '#cli/tools/installers/steps.ts';
+import { packageManagerSchema } from '#cli/schemas/repository.ts';
+import { TRAILING_PERIOD } from '#cli/config/settings/validation.ts';
 import type { PackageManagerCommand } from '#cli/types/repository.ts';
 import type { Session, ToolInstall, ToolPackageManager } from '#cli/types/tools.ts';
+import { CI_NODE, RELEASE_AGE_VERSIONS, PACKAGE_MANAGER_UPGRADES } from '#cli/config/tools/installers.ts';
+import { selectToolPackageManager, buildPackageManagerCommand } from '#cli/repository/projects/package-manager.ts';
 
 /**
 Read the package manager of the tool project and its version. A session without npm tools has none. A pin gives the

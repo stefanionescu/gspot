@@ -1,5 +1,5 @@
-import { noSelfComparingAssertions } from '#eslint-plugin/rules/assertions/no-self-comparing-assertions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSelfComparingAssertions } from '#eslint-plugin/rules/assertions/no-self-comparing-assertions.ts';
 
 buildRuleTester().run('no-self-comparing-assertions', noSelfComparingAssertions, {
     valid: [

@@ -1,5 +1,5 @@
-import { noCodeAfterDone } from '#eslint-plugin/rules/testing/no-code-after-done.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCodeAfterDone } from '#eslint-plugin/rules/testing/no-code-after-done.ts';
 
 buildRuleTester().run('no-code-after-done', noCodeAfterDone, {
     valid: [

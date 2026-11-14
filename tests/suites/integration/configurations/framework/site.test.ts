@@ -1,15 +1,13 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const CORRECTED_INDEX_PAGE =
     '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body><p class="unused">Example</p></body></html>';

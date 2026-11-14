@@ -1,61 +1,61 @@
-import {
-    Argument,
-    Command,
-    CommanderError,
-    type Help,
-    InvalidArgumentError,
-    Option,
-} from '@commander-js/extra-typings';
-
-import cliPackage from '#cli-package' with { type: 'json' };
 import { ADD_COMMAND } from '#cli/commands/add.ts';
-import { beginCheckReport } from '#cli/commands/check/annotations.ts';
-import { CHECK_COMMAND } from '#cli/commands/check/check.ts';
-import { DOCTOR_COMMAND } from '#cli/commands/doctor.ts';
-import { EXPLAIN_COMMAND } from '#cli/commands/explain/explain.ts';
-import { IGNORE_COMMAND } from '#cli/commands/ignore.ts';
-import { INIT_COMMAND } from '#cli/commands/init/init.ts';
-import { INSTALL_COMMAND } from '#cli/commands/install.ts';
-import { LIST_COMMAND } from '#cli/commands/list.ts';
-import { REMOVE_COMMAND } from '#cli/commands/remove.ts';
-import { SCAN_COMMAND } from '#cli/commands/scan/scan.ts';
 import { SET_COMMAND } from '#cli/commands/set.ts';
-import { UNIGNORE_COMMAND } from '#cli/commands/unignore.ts';
-import { UNSET_COMMAND } from '#cli/commands/unset.ts';
-import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
-import {
-    ALLOWED_CHOICES,
-    COMMAND_SUGGESTION,
-    COMMANDER_ERROR_PREFIX,
-    COMMANDS_HELP_MESSAGE,
-    DASH_VALUE_COMMANDS,
-    DASH_VALUE_HELP,
-    GLOBAL_OPTIONS,
-    HELP_ERROR_CODE,
-    HELP_FLAG,
-    HELP_MIN_WRAP_WIDTH,
-    HELP_WIDTH,
-    INVALID_VALUE,
-    JSON_FLAG,
-    NAME_LIST_SEPARATOR,
-    PIN_COMMANDS,
-    PROGRAM_EXIT_CODES,
-    PROGRAM_HELP_FOOTER,
-    UNKNOWN_COMMAND_ERROR_CODE,
-    UNKNOWN_COMMAND_NAME,
-    UNKNOWN_OPTION_ERROR_CODE,
-    USAGE_LINE,
-    VERBOSE_FLAG,
-} from '#cli/config/main.ts';
 import { EXIT_ERROR } from '#cli/config/system.ts';
-import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
-import { assertGspotPin } from '#cli/repository/projects/pin.ts';
-import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { print, printError, printResult, printUnexpectedError, setOutputOptions } from '#cli/system/terminal.ts';
+import { LIST_COMMAND } from '#cli/commands/list.ts';
+import { UNSET_COMMAND } from '#cli/commands/unset.ts';
+import { DOCTOR_COMMAND } from '#cli/commands/doctor.ts';
+import { IGNORE_COMMAND } from '#cli/commands/ignore.ts';
+import { REMOVE_COMMAND } from '#cli/commands/remove.ts';
+import { INIT_COMMAND } from '#cli/commands/init/init.ts';
+import { SCAN_COMMAND } from '#cli/commands/scan/scan.ts';
+import { INSTALL_COMMAND } from '#cli/commands/install.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { CHECK_COMMAND } from '#cli/commands/check/check.ts';
+import { UNIGNORE_COMMAND } from '#cli/commands/unignore.ts';
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
+import { readRepositoryRoot } from '#cli/repository/read.ts';
 import { formatNameList } from '#cli/system/text/messages.ts';
-import type { AnyCommandDefinition, ArgumentDefinition, OptionDefinition } from '#cli/types/commands.ts';
+import { assertGspotPin } from '#cli/repository/projects/pin.ts';
+import { EXPLAIN_COMMAND } from '#cli/commands/explain/explain.ts';
 import type { CommandHelp, InvalidValue } from '#cli/types/main.ts';
+import { beginCheckReport } from '#cli/commands/check/annotations.ts';
+import { CODE_MARK, COMMAND_HELP } from '#cli/config/commands/help.ts';
+import type { OptionDefinition, ArgumentDefinition, AnyCommandDefinition } from '#cli/types/commands.ts';
+import { print, printError, printResult, setOutputOptions, printUnexpectedError } from '#cli/system/terminal.ts';
+
+import {
+    Option,
+    Command,
+    Argument,
+    type Help,
+    CommanderError,
+    InvalidArgumentError,
+} from '@commander-js/extra-typings';
+import {
+    HELP_FLAG,
+    JSON_FLAG,
+    HELP_WIDTH,
+    USAGE_LINE,
+    PIN_COMMANDS,
+    VERBOSE_FLAG,
+    INVALID_VALUE,
+    GLOBAL_OPTIONS,
+    ALLOWED_CHOICES,
+    DASH_VALUE_HELP,
+    HELP_ERROR_CODE,
+    COMMAND_SUGGESTION,
+    PROGRAM_EXIT_CODES,
+    DASH_VALUE_COMMANDS,
+    HELP_MIN_WRAP_WIDTH,
+    NAME_LIST_SEPARATOR,
+    PROGRAM_HELP_FOOTER,
+    UNKNOWN_COMMAND_NAME,
+    COMMANDS_HELP_MESSAGE,
+    COMMANDER_ERROR_PREFIX,
+    UNKNOWN_OPTION_ERROR_CODE,
+    UNKNOWN_COMMAND_ERROR_CODE,
+} from '#cli/config/main.ts';
 
 function formatInvalidValue(message: string, command: string | undefined): string | undefined {
     const groups = INVALID_VALUE.exec(message)?.groups as InvalidValue | undefined;

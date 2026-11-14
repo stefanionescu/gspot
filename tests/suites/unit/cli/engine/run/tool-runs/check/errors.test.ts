@@ -1,25 +1,23 @@
-import { chmod } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { chmod } from 'node:fs/promises';
 import { createFileTree } from 'testdirs';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
-import { runCommandBatches, runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { BATCH_CHECK, BATCH_FINDINGS, BATCH_IGNORE } from '#tests/config/engine/run.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildFixerSettings, buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramPin } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { runChecks, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions, buildFixerSettings } from '#tests/setup/cli/run.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { runCommandCheck, runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
+import { BATCH_CHECK, BATCH_IGNORE, BATCH_FINDINGS } from '#tests/config/engine/run.ts';
 import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 test.skipIf(isWindows)('a command check whose program lost its execute bit errors with exit code 2', async () => {

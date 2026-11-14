@@ -1,9 +1,8 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { UNUSED_NAME_CASES } from '#tests/config/configurations/naming/validation.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { UNUSED_NAME_CASES } from '#tests/config/configurations/naming/validation.ts';
 
 test.each([...UNUSED_NAME_CASES])(
     'naming/allowed-names reports allowed names that no identifier or path uses: $name',

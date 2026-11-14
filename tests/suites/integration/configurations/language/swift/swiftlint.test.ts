@@ -1,30 +1,29 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
+import { parse } from '@decimalturn/toml-patch';
+import { readFile, writeFile } from 'node:fs/promises';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
+import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { LinterJsonFinding } from '#tests/types/integration.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 import {
     CAST_SWIFT,
-    CORRECTED_PARSER_SOURCE,
     PARSER_SOURCE,
     SWIFT_SANDBOX,
-    SWIFTLINT_PARAMETER_LIMIT_CASE,
     XCTEST_SCOPES,
+    CORRECTED_PARSER_SOURCE,
+    SWIFTLINT_PARAMETER_LIMIT_CASE,
 } from '#tests/config/integration/swift.ts';
-import { CLEAN_SWIFT } from '#tests/config/setup/languages.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { applyGeneratedFiles, writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
-import type { LinterJsonFinding } from '#tests/types/integration.ts';
 
 const BRANCHING_SOURCE = `/// Counts the matches of a sample value.
 public func matches(_ value: Int) -> Int {

@@ -1,21 +1,19 @@
-import { readFileSync } from 'node:fs';
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { MANAGED_KEYS_NOTE } from '#cli/config/commands/edits.ts';
-import { TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readFile } from 'node:fs/promises';
+import { parse } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildToolLockfiles } from '#tests/setup/cli/tools.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { MANAGED_KEYS_NOTE } from '#cli/config/commands/edits.ts';
+import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { TOOLS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

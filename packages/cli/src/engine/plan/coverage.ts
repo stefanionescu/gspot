@@ -1,8 +1,8 @@
-import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
 import { getTable } from '#cli/settings/tables.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Check } from '#cli/types/manifests.ts';
 import type { Scope } from '#cli/types/settings.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import { COVERAGE_DIMENSIONS } from '#cli/config/engine.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 
 export function selectCheckCommand(
     planned: Pick<PlannedCheck, 'check' | 'scope' | 'configuration'>,

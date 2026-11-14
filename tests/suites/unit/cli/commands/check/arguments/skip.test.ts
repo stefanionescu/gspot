@@ -1,9 +1,8 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 test('--skip repeats, takes commas, and leaves the paths after it as paths', async () => {
     const ids = ['sandbox/one', 'sandbox/two', 'sandbox/three', 'sandbox/kept'];

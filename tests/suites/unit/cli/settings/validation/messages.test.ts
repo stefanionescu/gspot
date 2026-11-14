@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/parse.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { INVALID_SETTING_LOCATIONS, KEY_PATH_CASES } from '#tests/config/settings/validation.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { KEY_PATH_CASES, INVALID_SETTING_LOCATIONS } from '#tests/config/settings/validation.ts';
 
 test.each([...KEY_PATH_CASES])(
     'an error names the key path of $name, and the fix clears it',

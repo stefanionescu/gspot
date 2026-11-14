@@ -1,22 +1,21 @@
-import { basename, dirname, resolve } from 'node:path';
-
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
 import picomatch from 'picomatch';
+import { createRule } from '../../rule.ts';
+import { isAlias } from '../../language/variables.ts';
+import { isTypeAlias } from '../../language/syntax.ts';
+import { dirname, resolve, basename } from 'node:path';
+import { findPathInRoot } from '../../language/paths.ts';
+import { readManifest, listManifestPaths } from '../../language/packages.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import type { TrivialFilesContext, TrivialFilesOptions } from '../../types/structure.ts';
 
 import {
-    BARREL_DECLARATIONS,
-    DECLARING_DEFAULT_EXPORTS,
-    INDEX_BASENAMES,
     INDEX_EXPORTS,
+    INDEX_BASENAMES,
+    BARREL_DECLARATIONS,
     PUBLISHED_PATH_FIELDS,
+    DECLARING_DEFAULT_EXPORTS,
     TRIVIAL_FILE_OPTIONS_SCHEMA,
 } from '../../config/structure.ts';
-import { listManifestPaths, readManifest } from '../../language/packages.ts';
-import { findPathInRoot } from '../../language/paths.ts';
-import { isTypeAlias } from '../../language/syntax.ts';
-import { isAlias } from '../../language/variables.ts';
-import { createRule } from '../../rule.ts';
-import type { TrivialFilesContext, TrivialFilesOptions } from '../../types/structure.ts';
 
 function listPublishedPaths(value: unknown): string[] {
     if (typeof value === 'string') return [value];

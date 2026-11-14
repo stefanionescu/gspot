@@ -1,15 +1,13 @@
-import { existsSync } from 'node:fs';
-import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { createFileTree, type TestdirResult } from 'testdirs';
-
 import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 const COVERAGE_ZERO_LIMITS = `[coverage]
 min_line_percent = { value = 0, reason = "This test checks execution without coverage collection." }

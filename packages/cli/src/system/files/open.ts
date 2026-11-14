@@ -1,19 +1,19 @@
-import { chmodSync, lstatSync, mkdirSync, readdirSync, realpathSync, rmdirSync, rmSync, unlinkSync } from 'node:fs';
-
-import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import {
-    buildContainedPath,
-    buildWriteError,
-    preparePath,
-    readBoundedFile,
-    readBoundedKeepingLinks,
-    replaceBoundedFile,
-} from '#cli/system/files/bounded.ts';
-import { readContainedPath } from '#cli/system/files/reads.ts';
-import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text/order.ts';
 import type { Files } from '#cli/types/system.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { readContainedPath } from '#cli/system/files/reads.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { LINK_REFUSAL, PRIVATE_FOLDER } from '#cli/config/system.ts';
+import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { rmSync, chmodSync, lstatSync, mkdirSync, rmdirSync, unlinkSync, readdirSync, realpathSync } from 'node:fs';
+
+import {
+    preparePath,
+    buildWriteError,
+    readBoundedFile,
+    buildContainedPath,
+    replaceBoundedFile,
+    readBoundedKeepingLinks,
+} from '#cli/system/files/bounded.ts';
 
 function createBoundedFolder(root: string, path: string): void {
     try {

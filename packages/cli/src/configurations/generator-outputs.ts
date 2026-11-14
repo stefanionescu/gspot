@@ -1,22 +1,21 @@
 import { join, posix } from 'node:path';
-
-import { GENERATOR_IGNORED_FOLDERS, GENERATOR_OUTPUT_RULES } from '#cli/config/configurations/shared.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import { buildCommandSubstitutions } from '#cli/engine/run/tool-runs/check.ts';
-import { buildFileCommandLines, expandCommand, replacePlaceholders } from '#cli/engine/run/tool-runs/placeholders.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { GeneratorOutput, GeneratorRun } from '#cli/types/configurations/shared.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { listMatchingPaths } from '#cli/system/files/folders.ts';
+import type { Substitutions } from '#cli/types/engine/tool-runs.ts';
+import type { CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { buildCommandSubstitutions } from '#cli/engine/run/tool-runs/check.ts';
+import type { GeneratorRun, GeneratorOutput } from '#cli/types/configurations/shared.ts';
+import { GENERATOR_OUTPUT_RULES, GENERATOR_IGNORED_FOLDERS } from '#cli/config/configurations/shared.ts';
+import { expandCommand, replacePlaceholders, buildFileCommandLines } from '#cli/engine/run/tool-runs/placeholders.ts';
 
 function listMissingOutputs(session: CheckSession, outputs: GeneratorOutput[], commandText: string): CheckFinding[] {
     return outputs

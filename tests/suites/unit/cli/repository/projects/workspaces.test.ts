@@ -1,15 +1,13 @@
-import { symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
+import { test, expect } from 'bun:test';
+import { symlink, writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text/order.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { WORKSPACE_FILE_CASES } from '#tests/config/repository.ts';
 import { UNCLOSED_PACKAGES } from '#tests/config/setup/languages.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
 
 const INACTIVE_LERNA_FILES = {
     'package.json': '{}',

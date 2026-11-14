@@ -1,10 +1,10 @@
-import { DOCS_RULES, LICENSE_PATH, MISSING_LICENSE_MESSAGE, README_FILE } from '#cli/config/configurations/docs.ts';
-import { LICENSE_FILE } from '#cli/config/repository/files.ts';
-import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
-import { formatScope, joinScope } from '#cli/repository/scopes.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { LICENSE_FILE } from '#cli/config/repository/files.ts';
+import { joinScope, formatScope } from '#cli/repository/scopes.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { REQUIRED_FILE_EXPLANATIONS } from '#cli/configurations/general/docs/explanations.ts';
+import { DOCS_RULES, README_FILE, LICENSE_PATH, MISSING_LICENSE_MESSAGE } from '#cli/config/configurations/docs.ts';
 
 function checkRequiredFiles(session: Session, planned: PlannedCheck): CheckFinding[] {
     const findings: CheckFinding[] = [];

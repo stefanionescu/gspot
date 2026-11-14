@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
+import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
 
 const PACKAGE_MANAGER_PIN_CASES = [
     [

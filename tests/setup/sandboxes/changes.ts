@@ -1,17 +1,16 @@
-import { randomUUID } from 'node:crypto';
 import { lstatSync } from 'node:fs';
-import { mkdir, readFile, rm, rmdir, unlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { randomUUID } from 'node:crypto';
+import { join, dirname } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import type { ApplyReport } from '#cli/types/generation.ts';
-import { markExecutable, runGitStep } from '#tests/setup/system/git.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { writeEveryGeneratedFile } from '#cli/generation/write.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
-import type { Sandbox, SandboxChanges, SandboxWrite } from '#tests/types/setup.ts';
+import { runGitStep, markExecutable } from '#tests/setup/system/git.ts';
+import { rm, mkdir, rmdir, unlink, readFile, writeFile } from 'node:fs/promises';
+import type { Sandbox, SandboxWrite, SandboxChanges } from '#tests/types/setup.ts';
 
 async function deleteLeftover(root: string, path: string): Promise<void> {
     await rm(join(root, path), { force: true });

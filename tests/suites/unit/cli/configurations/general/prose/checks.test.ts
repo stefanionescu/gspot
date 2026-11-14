@@ -1,21 +1,19 @@
-import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { SCHEDULE_RELEASE_MARKDOWN } from '#tests/config/configurations/general.ts';
 import { EMPTY_VALE_INI, VALE_INSTALLED_FILES } from '#tests/config/setup/configurations.ts';
-import { getBuiltInCheck, openFakeToolSession, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { getBuiltInCheck, runSandboxCheck, planSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
 
 const VALE_ALERT = {
     Line: 1,

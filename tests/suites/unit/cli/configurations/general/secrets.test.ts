@@ -1,20 +1,20 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    COMPONENT_ENVIRONMENT_FINDINGS,
-    ENV_ACCESSOR_EXAMPLE,
-    ENVIRONMENT_FUNCTION_EXAMPLE,
-    ENVIRONMENT_FUNCTION_FINDINGS,
-    ENVIRONMENT_SCOPE_RESULTS,
-} from '#tests/config/configurations/general.ts';
-import { openFakeToolSession, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck, openFakeToolSession } from '#tests/setup/cli/checks.ts';
+
+import {
+    ENV_ACCESSOR_EXAMPLE,
+    ENVIRONMENT_SCOPE_RESULTS,
+    ENVIRONMENT_FUNCTION_EXAMPLE,
+    ENVIRONMENT_FUNCTION_FINDINGS,
+    COMPONENT_ENVIRONMENT_FINDINGS,
+} from '#tests/config/configurations/general.ts';
 
 test('keys read through Bun.env and environment functions are reported until the example file lists them', async () => {
     await using sandbox = await createGitSandbox({

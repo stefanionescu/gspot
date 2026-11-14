@@ -1,22 +1,20 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { join, basename } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { compareText } from '#cli/system/text/order.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { linkInstalledModules, toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeLauncher } from '#tests/setup/system/programs.ts';
 import type { KnipConfig } from '#tests/types/configurations.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { toolModules, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 /**
 Give the project a Knip that gspot accepts. gspot refuses a tool file that links out of the repository, so the package

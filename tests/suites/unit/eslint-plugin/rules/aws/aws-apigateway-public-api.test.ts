@@ -1,5 +1,5 @@
-import { awsApigatewayPublicApi } from '#eslint-plugin/rules/aws/aws-apigateway-public-api.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsApigatewayPublicApi } from '#eslint-plugin/rules/aws/aws-apigateway-public-api.ts';
 
 buildRuleTester().run('aws-apigateway-public-api', awsApigatewayPublicApi, {
     valid: [

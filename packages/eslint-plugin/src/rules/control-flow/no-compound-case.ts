@@ -1,6 +1,5 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
 import { createRule } from '../../rule.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasCompoundCase(node: TSESTree.Expression): boolean {
     if (node.type === AST_NODE_TYPES.SequenceExpression) return true;

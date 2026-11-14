@@ -1,24 +1,24 @@
 import { decodeXML } from 'entities';
-
-import {
-    HTML_EXTENSION,
-    INDEX_PAGE,
-    SITE_RULES,
-    SITEMAP_EXTENSION,
-    SITEMAP_FILE,
-    SITEMAP_LOCATION,
-    UNLISTED_PAGE_MESSAGE,
-} from '#cli/config/configurations/site.ts';
-import { LEADING_SLASH } from '#cli/config/system.ts';
-import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
-import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { LEADING_SLASH } from '#cli/config/system.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
-import type { SitemapUrls } from '#cli/types/configurations/framework.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { SitemapUrls } from '#cli/types/configurations/framework.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { SITEMAP_EXPLANATIONS } from '#cli/configurations/framework/site/explanations.ts';
+import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
+
+import {
+    INDEX_PAGE,
+    SITE_RULES,
+    SITEMAP_FILE,
+    HTML_EXTENSION,
+    SITEMAP_LOCATION,
+    SITEMAP_EXTENSION,
+    UNLISTED_PAGE_MESSAGE,
+} from '#cli/config/configurations/site.ts';
 
 function parseSitemapUrl(value: string): URL | undefined {
     const url = URL.parse(value);

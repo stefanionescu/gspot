@@ -1,8 +1,7 @@
 import type { Node } from 'web-tree-sitter';
-
-import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { ParsedLanguage } from '#cli/types/parsers.ts';
 import type { ImportRule } from '#cli/types/settings.ts';
+import type { ParsedLanguage } from '#cli/types/parsers.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
 
 export type FolderChild = { name: string; kind: 'file' | 'folder' };
 

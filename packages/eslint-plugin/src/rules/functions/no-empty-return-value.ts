@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/functions.ts';
-import { getLocalFunction, listReturnedValues } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { LocalFunction } from '../../types/plugin.ts';
+import { getLocalFunction, listReturnedValues } from '../../language/functions.ts';
+import { EMPTY_RETURN_TYPES, UNUSED_CALL_PARENTS } from '../../config/functions.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isCallValueUsed(node: TSESTree.CallExpression | TSESTree.SequenceExpression): boolean {
     const { parent } = node;

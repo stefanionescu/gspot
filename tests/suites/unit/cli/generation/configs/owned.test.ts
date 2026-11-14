@@ -1,14 +1,12 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/configs.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { IGNORED_CHECK_FILES, NESTED_PYTHON_SETTINGS } from '#tests/config/generation/configs.ts';
 
 test('a child project receives Python configuration only after its first Python file', async () => {
     await using sandbox = await createGitSandbox({

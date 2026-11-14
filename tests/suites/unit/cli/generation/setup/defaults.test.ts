@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { getTable } from '#cli/settings/tables.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { buildSettingsText } from '#cli/settings/toml/text.ts';
 import { stripDefaults } from '#cli/generation/setup/defaults.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { buildSettingsText } from '#cli/settings/toml/text.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const DEFAULT_CASES = [

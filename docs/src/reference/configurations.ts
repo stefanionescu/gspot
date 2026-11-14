@@ -1,38 +1,37 @@
 import { posix } from 'node:path';
-
-import { CLI_REFERENCE, type CliReference, formatNameList } from '@gspothq/cli/reference';
-
-import {
-    ALL_FILES_LABEL,
-    ALWAYS_SELECTED_MESSAGE,
-    CHECKS_HEADING,
-    CONDITION_SEPARATOR,
-    CONFIG_FILES_HEADING,
-    CONFIGURATIONS_OPENING,
-    DEFAULTS_HEADING,
-    IGNORED_PATHS_HEADING,
-    INSTALLED_HEADING,
-    LINT_RULES_HEADING,
-    LOCAL_FILES_MESSAGE,
-    REFERENCE_FOLDERS,
-    RULE_FILE_HEADING,
-    RULE_FILES_HEADING,
-    RULES_OFF_HEADING,
-    SELECTED_HEADING,
-    SELF_INSTALL_LABEL,
-    SETS_HEADING,
-    TOOLS_VERSIONS_HEADING,
-} from '#docs/config/reference.ts';
 import { formatCheckSection } from '#docs/reference/checks.ts';
+import { formatSettingLink } from '#docs/reference/settings.ts';
+import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
+import { CLI_REFERENCE, formatNameList, type CliReference } from '@gspothq/cli/reference';
+
 import {
+    formatText,
+    formatTable,
+    formatSection,
     buildReferencePage,
     formatConfigurationLink,
-    formatSection,
-    formatTable,
-    formatText,
 } from '#docs/reference/markdown.ts';
-import { formatSettingLink } from '#docs/reference/settings.ts';
-import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
+import {
+    SETS_HEADING,
+    CHECKS_HEADING,
+    ALL_FILES_LABEL,
+    DEFAULTS_HEADING,
+    SELECTED_HEADING,
+    INSTALLED_HEADING,
+    REFERENCE_FOLDERS,
+    RULE_FILE_HEADING,
+    RULES_OFF_HEADING,
+    LINT_RULES_HEADING,
+    RULE_FILES_HEADING,
+    SELF_INSTALL_LABEL,
+    CONDITION_SEPARATOR,
+    LOCAL_FILES_MESSAGE,
+    CONFIG_FILES_HEADING,
+    IGNORED_PATHS_HEADING,
+    CONFIGURATIONS_OPENING,
+    TOOLS_VERSIONS_HEADING,
+    ALWAYS_SELECTED_MESSAGE,
+} from '#docs/config/reference.ts';
 
 function formatRuleFiles(configuration: CliReference['configurations'][number]): string {
     const rows = configuration.ruleFiles.map(({ path, conditions, exclusions }) => {

@@ -1,26 +1,26 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import { listChildren } from '../../language/syntax.ts';
+import type { TypeReader } from '../../types/plugin.ts';
+import { isModuleUsed } from '../../language/packages.ts';
+import { getCalleeChain } from '../../libraries/testing.ts';
+import type { AssertionSearch } from '../../types/assertions.ts';
+import { readAssertionKind } from '../../libraries/assertions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
     ASSERTION_TEXT,
     CHAI_TERMINALS,
-    CHECKED_TEST_MODIFIERS,
-    CHECKED_TEST_NAMES,
     DONE_CALLBACKS,
-    EVIDENCE_DEPENDENCIES,
     EVIDENCE_IMPORTS,
     HTTP_EXPECTATIONS,
+    CHECKED_TEST_NAMES,
     HTTP_TESTING_MODULE,
-    TEST_FRAMEWORK_DEPENDENCIES,
+    EVIDENCE_DEPENDENCIES,
+    CHECKED_TEST_MODIFIERS,
     TEST_FRAMEWORK_IMPORTS,
+    TEST_FRAMEWORK_DEPENDENCIES,
 } from '../../config/assertions/evidence.ts';
-import { getTypes } from '../../language/checker.ts';
-import { isModuleUsed } from '../../language/packages.ts';
-import { listChildren } from '../../language/syntax.ts';
-import { readAssertionKind } from '../../libraries/assertions.ts';
-import { getCalleeChain } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
-import type { AssertionSearch } from '../../types/assertions.ts';
-import type { TypeReader } from '../../types/plugin.ts';
 
 /**
 Get the callback of a test that the rule checks. The callee name decides, so a test fixture that `test.extend` builds

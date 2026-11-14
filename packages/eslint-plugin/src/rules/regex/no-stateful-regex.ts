@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { LOOP_STATEMENTS } from '../../config/plugin.ts';
-import { DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, EXEC_METHOD, STATEFUL_REGEX_METHODS } from '../../config/regex.ts';
-import { buildRegexVisitors, getRegex } from '../../language/regex.ts';
-import { getAssignedValue } from '../../language/variables.ts';
 import { createRule } from '../../rule.ts';
+import { LOOP_STATEMENTS } from '../../config/plugin.ts';
+import { getAssignedValue } from '../../language/variables.ts';
+import { getRegex, buildRegexVisitors } from '../../language/regex.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { EXEC_METHOD, DISTINCT_SUBJECTS, EMPTY_STRING_TEXTS, STATEFUL_REGEX_METHODS } from '../../config/regex.ts';
 
 function isLoopCondition(node: TSESTree.Node, ancestors: readonly TSESTree.Node[]): boolean {
     const chain = [...ancestors, node];

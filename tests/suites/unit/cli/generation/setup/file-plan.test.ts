@@ -1,16 +1,14 @@
-import { readFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { ATTRIBUTES_ROW, DROPPED_LINE_SETTINGS_NOTE, UNREAD_SUBMODULE_MESSAGE } from '#cli/config/generation/setup.ts';
-import { planInit } from '#cli/generation/setup/planner.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { symlink, readFile } from 'node:fs/promises';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { applySandboxInit, planSandboxInit } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { planInit } from '#cli/generation/setup/planner.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { planSandboxInit, applySandboxInit } from '#tests/setup/cli/commands.ts';
+import { ATTRIBUTES_ROW, UNREAD_SUBMODULE_MESSAGE, DROPPED_LINE_SETTINGS_NOTE } from '#cli/config/generation/setup.ts';
 
 const QUALITY_PACKAGE_FILES = {
     'package.json': '{"name":"shop","private":true,"type":"module","dependencies":{"react":"19.0.0"}}\n',

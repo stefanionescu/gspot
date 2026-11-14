@@ -1,9 +1,8 @@
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-
-import { ESCALATION_ACTIONS, ESCALATION_RESOURCE } from '../../config/aws.ts';
-import { getCdkProperty, listAllowStatements, listCdkStrings } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 import type { PolicyStatement } from '../../types/aws.ts';
+import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import { ESCALATION_ACTIONS, ESCALATION_RESOURCE } from '../../config/aws.ts';
+import { getCdkProperty, listCdkStrings, listAllowStatements } from '../../libraries/aws.ts';
 
 function findEscalation(
     source: Readonly<TSESLint.SourceCode>,

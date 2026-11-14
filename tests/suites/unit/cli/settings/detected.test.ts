@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { findValueAt } from '#cli/system/tables.ts';
-import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BUILD_SETTINGS_PBXPROJ } from '#tests/config/setup/configurations.ts';
 
 const IMPORT_STYLE_CASES = [
     {

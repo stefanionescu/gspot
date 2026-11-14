@@ -1,13 +1,12 @@
-import type { Node } from 'web-tree-sitter';
-import type { CST } from 'yaml';
 import type { z } from 'zod';
-
-import type { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
-import type { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
-import type { deptrySchema, xccovSchema } from '#cli/schemas/configurations.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { ParsedTsconfig, ScriptSyntax } from '#cli/types/parsers.ts';
+import type { CST } from 'yaml';
+import type { Node } from 'web-tree-sitter';
 import type { Files } from '#cli/types/system.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+import type { FENCE_GRAMMARS } from '#cli/config/parsers/code.ts';
+import type { ScriptSyntax, ParsedTsconfig } from '#cli/types/parsers.ts';
+import type { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
+import type { xccovSchema, deptrySchema } from '#cli/schemas/configurations.ts';
 
 export type LayoutFinding = { line: number; rule: string; message: string };
 

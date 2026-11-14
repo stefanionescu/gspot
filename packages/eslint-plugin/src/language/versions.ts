@@ -1,14 +1,15 @@
+import type { VersionCeiling } from '../types/plugin.ts';
+
 import {
+    VERSION_SIZE,
+    VERSION_NUMBER,
+    VERSION_SPACES,
+    VERSION_PATTERN,
+    VERSION_WILDCARD,
+    VERSION_OPERATORS,
     UNBOUNDED_VERSIONS,
     VERSION_ALTERNATIVES,
-    VERSION_NUMBER,
-    VERSION_OPERATORS,
-    VERSION_PATTERN,
-    VERSION_SIZE,
-    VERSION_SPACES,
-    VERSION_WILDCARD,
 } from '../config/plugin.ts';
-import type { VersionCeiling } from '../types/plugin.ts';
 
 function bumpVersion(numbers: number[], kind: string): number[] {
     let position = numbers.length - 1;

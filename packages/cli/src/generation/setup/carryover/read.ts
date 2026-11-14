@@ -1,34 +1,34 @@
 import { posix } from 'node:path';
-
-import {
-    CARRIED_TOOLS,
-    CARRYOVER_ROW_START,
-    EDITORCONFIG_FILE,
-    EDITORCONFIG_WORDS,
-    EMPTY_CARRYOVER,
-    PRETTIER_EXCLUDE_KEY,
-    PRETTIER_OVERRIDES_KEY,
-    PRINTED_RULE_TOOLS,
-    SCAN_FIRST_MESSAGE,
-    UNREAD_CONFIG_MESSAGE,
-    UNREAD_TYPOS_MESSAGE,
-    UNREADABLE_CONFIG_MESSAGE,
-} from '#cli/config/generation/setup.ts';
+import { getTool } from '#cli/manifests/tools.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { readRuffCarryover } from '#cli/generation/setup/carryover/ruff.ts';
+import { listUnparsedCiFiles } from '#cli/repository/setup/lint-commands.ts';
 import { readIgnoreFiles } from '#cli/generation/setup/carryover/ignore-files.ts';
 import { readPyrightCarryover } from '#cli/generation/setup/carryover/pyright.ts';
-import { readRuffCarryover } from '#cli/generation/setup/carryover/ruff.ts';
+import { listUnparsedDependencyFiles } from '#cli/repository/projects/dependencies.ts';
+import type { Carryover, CarryoverRow, CarryoverInput } from '#cli/types/generation.ts';
 import { readCommitlintCarryover, readMarkdownlintCarryover } from '#cli/generation/setup/carryover/rules.ts';
+
 import {
-    buildPrettierOverrides,
     parsePrettierFile,
     readPrettierOptions,
+    buildPrettierOverrides,
 } from '#cli/generation/setup/format/prettier.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { listUnparsedDependencyFiles } from '#cli/repository/projects/dependencies.ts';
-import { listUnparsedCiFiles } from '#cli/repository/setup/lint-commands.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import type { Carryover, CarryoverInput, CarryoverRow } from '#cli/types/generation.ts';
+import {
+    CARRIED_TOOLS,
+    EMPTY_CARRYOVER,
+    EDITORCONFIG_FILE,
+    EDITORCONFIG_WORDS,
+    PRINTED_RULE_TOOLS,
+    SCAN_FIRST_MESSAGE,
+    CARRYOVER_ROW_START,
+    PRETTIER_EXCLUDE_KEY,
+    UNREAD_TYPOS_MESSAGE,
+    UNREAD_CONFIG_MESSAGE,
+    PRETTIER_OVERRIDES_KEY,
+    UNREADABLE_CONFIG_MESSAGE,
+} from '#cli/config/generation/setup.ts';
 
 function listUncomparedRows({ conflictingConfigs, tools }: CarryoverInput): CarryoverRow[] {
     return PRINTED_RULE_TOOLS.flatMap(({ tool }) =>

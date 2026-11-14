@@ -1,9 +1,9 @@
 import { createRequire } from 'node:module';
 
 import type {
-    EslintRuleContext,
     EslintRuleModule,
     EslintRuleReport,
+    EslintRuleContext,
     EslintUnicornPlugin,
 } from '#cli/types/configurations/javascript.ts';
 

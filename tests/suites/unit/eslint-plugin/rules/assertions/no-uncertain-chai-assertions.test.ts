@@ -1,5 +1,5 @@
-import { noUncertainChaiAssertions } from '#eslint-plugin/rules/assertions/no-uncertain-chai-assertions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUncertainChaiAssertions } from '#eslint-plugin/rules/assertions/no-uncertain-chai-assertions.ts';
 
 buildRuleTester().run('no-uncertain-chai-assertions', noUncertainChaiAssertions, {
     valid: [

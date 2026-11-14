@@ -1,11 +1,12 @@
-import {
-    NESTJS_INJECTABLE_FILTER_PATHS,
-    NESTJS_RULES,
-    SWAGGER_PACKAGE,
-    TS_PATTERN,
-} from '#cli/config/configurations/framework.ts';
 import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type { EslintBlockBuilder } from '#cli/types/configurations/javascript.ts';
+
+import {
+    TS_PATTERN,
+    NESTJS_RULES,
+    SWAGGER_PACKAGE,
+    NESTJS_INJECTABLE_FILTER_PATHS,
+} from '#cli/config/configurations/framework.ts';
 
 export const NESTJS_BLOCK_BUILDERS: Readonly<Record<string, EslintBlockBuilder>> = {
     nestjs: (scope) => {

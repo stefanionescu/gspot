@@ -1,6 +1,6 @@
-import { CIPHER_FUNCTION, WEAK_CIPHER_PREFIXES } from '../../config/cryptography.ts';
-import { getCallText } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getCallText } from '../../language/modules.ts';
+import { CIPHER_FUNCTION, WEAK_CIPHER_PREFIXES } from '../../config/cryptography.ts';
 
 export const noWeakCipher = createRule<[], 'weak'>({
     name: 'no-weak-cipher',

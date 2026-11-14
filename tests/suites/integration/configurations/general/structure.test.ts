@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const DUPLICATED_METADATA = JSON.stringify(
     Array.from({ length: 40 }, (_, value) => ({ name: `entry-${String(value)}`, value })),

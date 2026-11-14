@@ -1,22 +1,22 @@
 import { join } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import { readBytes } from '#cli/system/files/reads.ts';
+import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import { parseOutput } from '#cli/engine/outputs/formats.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 import {
     HTML_EXTENSION,
-    HTML_VALIDATE_FORMATTER_FLAG,
-    HTML_VALIDATE_OUTPUT,
     HTML_VALIDATE_TOOL,
+    HTML_VALIDATE_OUTPUT,
+    HTML_VALIDATE_FORMATTER_FLAG,
 } from '#cli/config/configurations/site.ts';
-import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
-import { readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
-import { parseOutput } from '#cli/engine/outputs/formats.ts';
-import { splitFileArguments } from '#cli/engine/run/tool-runs/batches.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { readBytes } from '#cli/system/files/reads.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function checkHtmlValidate(session: CheckSession, planned: PlannedCheck): Promise<CheckFinding[]> {
     const build = await readSuccessfulBuild(session, planned);

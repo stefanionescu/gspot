@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { formatExplainCommand } from '#cli/engine/outputs/rules.ts';
 

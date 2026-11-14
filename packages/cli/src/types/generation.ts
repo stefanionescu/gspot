@@ -1,37 +1,37 @@
 import type { z } from 'zod';
-
-import type { PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
-import type { FROZEN_INSTALLS } from '#cli/config/repository/projects.ts';
-import type {
-    carryoverRowSchema,
-    generatedFilesSchema,
-    initFileRowSchema,
-    initPlanSchema,
-    leftOutSettingSchema,
-    prettierSettingsSchema,
-    ruffOptionsSchema,
-} from '#cli/schemas/generation.ts';
-import type { ConfigOwner, IgnoreSection, SourcedConfig } from '#cli/types/configurations/shared.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { Config, Configuration, Tool } from '#cli/types/manifests.ts';
+import type { TextRange, FileContents } from '#cli/types/system.ts';
+import type { PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
+import type { FROZEN_INSTALLS } from '#cli/config/repository/projects.ts';
+import type { Tool, Config, Configuration } from '#cli/types/manifests.ts';
+import type { Session, Generation, GeneratedFile, ExecutableSearch } from '#cli/types/tools.ts';
+import type { Level, Scope, Settings, TomlTable, AvailableSettings } from '#cli/types/settings.ts';
+import type { ConfigOwner, IgnoreSection, SourcedConfig } from '#cli/types/configurations/shared.ts';
+
 import type {
-    ConfigurationEvidence,
-    ConflictingConfig,
+    initPlanSchema,
+    initFileRowSchema,
+    ruffOptionsSchema,
+    carryoverRowSchema,
+    generatedFilesSchema,
+    leftOutSettingSchema,
+    prettierSettingsSchema,
+} from '#cli/schemas/generation.ts';
+import type {
+    WritePlan,
+    Repository,
     LintCommand,
     ManagedKeys,
-    PackageManagerPin,
-    ProposedConfigurations,
-    Repository,
-    RepositorySetup,
     ScopeFolder,
     StartRunner,
     TrackedFile,
-    WritePlan,
+    RepositorySetup,
+    ConflictingConfig,
+    PackageManagerPin,
+    ConfigurationEvidence,
+    ProposedConfigurations,
 } from '#cli/types/repository.ts';
-import type { AvailableSettings, Level, Scope, Settings, TomlTable } from '#cli/types/settings.ts';
-import type { FileContents, TextRange } from '#cli/types/system.ts';
-import type { ExecutableSearch, GeneratedFile, Generation, Session } from '#cli/types/tools.ts';
 
 export type OwnedConfig = { config: Config; owner: ConfigOwner };
 

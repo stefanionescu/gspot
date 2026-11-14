@@ -1,22 +1,20 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { getTool } from '#cli/manifests/tools.ts';
+import { UV_PROGRAM } from '#cli/config/system.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { UV_PROGRAM } from '#cli/config/system.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { PYTHON_TUTORIAL, SWIFT_TUTORIAL } from '#tests/config/e2e.ts';
 import { runtimePinsSchema } from '#tests/schemas/setup.ts';
-import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
-import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { SWIFT_TUTORIAL, PYTHON_TUTORIAL } from '#tests/config/e2e.ts';
+import { listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 async function runQuickstart(tutorial: typeof PYTHON_TUTORIAL | typeof SWIFT_TUTORIAL): Promise<void> {
     await using sandbox = await testdir();

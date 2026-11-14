@@ -1,30 +1,29 @@
+import type { Session } from '#cli/types/tools.ts';
 import { chmodSync, writeFileSync } from 'node:fs';
-import { dirname, extname, join, relative } from 'node:path';
-
-import { JAVASCRIPT_TSC_COMMAND, JSCONFIG_TSBUILDINFO } from '#cli/config/configurations/javascript/projects.ts';
-import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/shared.ts';
 import { RAN_STATUSES } from '#cli/config/engine.ts';
-import { JSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { DECLARATION_EXTENSIONS, PRIVATE_FILE } from '#cli/config/system.ts';
-import { addTsbuildinfoFlag } from '#cli/configurations/tsc/compiler.ts';
-import { listCompilerFiles } from '#cli/configurations/tsc/references.ts';
-import { readAuthoredTypes } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { createCheckCopy, createCopy } from '#cli/engine/copies/files.ts';
-import { listCheckedFiles } from '#cli/engine/plan/files.ts';
-import { buildBaseResult, keepListedFindings, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
-import { buildMissingFileStop, runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { extractConfigName } from '#cli/manifests/checks.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import { convertToPosixPath, extractExtension, isInside } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import type { ParsedTsconfig } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { extractConfigName } from '#cli/manifests/checks.ts';
+import { join, dirname, extname, relative } from 'node:path';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { JSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { addTsbuildinfoFlag } from '#cli/configurations/tsc/compiler.ts';
+import { listCompilerFiles } from '#cli/configurations/tsc/references.ts';
+import { createCopy, createCheckCopy } from '#cli/engine/copies/files.ts';
+import { PRIVATE_FILE, DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { TSC_UNFORMATTED_OUTPUT } from '#cli/config/configurations/shared.ts';
+import { readAuthoredTypes } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { isInside, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { runCommandCheck, buildMissingFileStop } from '#cli/engine/run/tool-runs/check.ts';
+import { JSCONFIG_TSBUILDINFO, JAVASCRIPT_TSC_COMMAND } from '#cli/config/configurations/javascript/projects.ts';
+import { buildBaseResult, mergeCheckResults, keepListedFindings, restoreCommandPaths } from '#cli/engine/results.ts';
 
 function buildScopeCompilerProject(
     session: Session,

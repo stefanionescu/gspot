@@ -1,40 +1,40 @@
-import { readFileSync, statSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PYPROJECT_TOML, UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER, OWNER_WRITABLE_FILE, PYTHON_ENVIRONMENT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
-import {
-    NETWORK_ADVICE,
-    PYTHON_TOOL_NOUN,
-    UV_FLAGS,
-    UV_INSTALL_ARGUMENTS,
-    UV_LOCKFILE_ARGUMENTS,
-    UV_LOCKFILE_CREDENTIAL_MESSAGE,
-    UV_PROJECT_ENVIRONMENT,
-    UV_PROJECT_INSTALL_ARGUMENTS,
-    UV_SETTINGS_FILE,
-    UV_STALE_LOCKFILE,
-} from '#cli/config/tools/installers.ts';
-import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
-import { assertCredentialFreeLockfile, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import { explainReleaseAgeHold, listPythonReleases } from '#cli/tools/installers/network/releases.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { statSync, readFileSync, writeFileSync } from 'node:fs';
+import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
+import { buildPythonProjectTable } from '#cli/tools/projects.ts';
+import { findRepositoryPython } from '#cli/tools/programs/mise.ts';
+import type { ReplacementRequest } from '#cli/types/repository.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { formatUnavailableNote } from '#cli/tools/programs/inspect.ts';
 import { writeUvSettings } from '#cli/tools/installers/python/indexes.ts';
+import { UV_LOCKFILE, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import type { UvCommand, ToolInstall, GeneratedFile } from '#cli/types/tools.ts';
 import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
 import { formatExit, runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import { formatUnavailableNote } from '#cli/tools/programs/inspect.ts';
-import { findRepositoryPython } from '#cli/tools/programs/mise.ts';
-import { buildPythonProjectTable } from '#cli/tools/projects.ts';
-import type { ReplacementRequest } from '#cli/types/repository.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
-import type { GeneratedFile, ToolInstall, UvCommand } from '#cli/types/tools.ts';
+import { listPythonReleases, explainReleaseAgeHold } from '#cli/tools/installers/network/releases.ts';
+import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/installers/credentials.ts';
+import { UV_PROGRAM, GSPOT_FOLDER, OWNER_WRITABLE_FILE, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+
+import {
+    UV_FLAGS,
+    NETWORK_ADVICE,
+    PYTHON_TOOL_NOUN,
+    UV_SETTINGS_FILE,
+    UV_STALE_LOCKFILE,
+    UV_INSTALL_ARGUMENTS,
+    UV_LOCKFILE_ARGUMENTS,
+    UV_PROJECT_ENVIRONMENT,
+    UV_PROJECT_INSTALL_ARGUMENTS,
+    UV_LOCKFILE_CREDENTIAL_MESSAGE,
+} from '#cli/config/tools/installers.ts';
 
 async function runUv(
     install: ToolInstall,

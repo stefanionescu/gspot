@@ -1,23 +1,21 @@
-import { readFileSync } from 'node:fs';
-import { readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { parseSettings } from '#cli/settings/parse.ts';
+import { parse } from '@decimalturn/toml-patch';
 import { findValueAt } from '#cli/system/tables.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { ROOT_EDITORCONFIG, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
+import { runGspot } from '#tests/setup/cli/commands.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
 import { settingsListOutputSchema } from '#tests/schemas/setup.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { rm, symlink, readFile, writeFile } from 'node:fs/promises';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { ROOT_EDITORCONFIG, STRING_SETTING_VALUES } from '#tests/config/commands/edits.ts';
 
 test('set writes and unset removes a setting of a selected configuration', async () => {
     await using sandbox = await createGitSandbox({

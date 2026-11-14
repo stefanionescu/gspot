@@ -1,19 +1,17 @@
+import { test, expect } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { dirname, relative, resolve } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { dirname, resolve, relative } from 'node:path';
 import type { Finding } from '#cli/types/engine/run.ts';
-import { SVELTE_CHECK_FINDINGS, SVELTE_CHECK_OUTPUT, SVELTE_PROJECTS } from '#tests/config/configurations/framework.ts';
+import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
 import { tsconfigSchema } from '#tests/schemas/setup.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { SVELTE_PROJECTS, SVELTE_CHECK_OUTPUT, SVELTE_CHECK_FINDINGS } from '#tests/config/configurations/framework.ts';
 
 async function runSvelteCheck(stdout: string, options: { scope?: string } = {}): Promise<readonly Finding[]> {
     const scope = options.scope ?? '';

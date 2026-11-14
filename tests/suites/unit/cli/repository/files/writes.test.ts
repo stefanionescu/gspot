@@ -1,24 +1,23 @@
-import { chmod, readFile, stat, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { parse as parseToml } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_CHECK } from '#cli/config/manifests.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_CHECK } from '#cli/config/manifests.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { parse as parseToml } from '@decimalturn/toml-patch';
+import { stat, chmod, unlink, readFile, writeFile } from 'node:fs/promises';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
+
 import {
     planBlock,
-    planManagedKeys,
-    planRemovals,
-    planReplacements,
     writePlans,
+    planRemovals,
+    planManagedKeys,
+    planReplacements,
 } from '#cli/repository/files/writes.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 
 const AUTHORED_REFUSAL = matchFields<GspotError>({
     name: 'GspotError',

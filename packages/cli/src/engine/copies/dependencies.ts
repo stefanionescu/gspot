@@ -1,28 +1,28 @@
-import {
-    constants,
-    copyFileSync,
-    type Dirent,
-    existsSync,
-    mkdirSync,
-    readdirSync,
-    realpathSync,
-    statSync,
-    symlinkSync,
-} from 'node:fs';
 import { cp } from 'node:fs/promises';
-import { basename, dirname, join, posix, relative } from 'node:path';
-
-import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { DECLARATION_EXTENSIONS, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
-import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { convertToPosixPath, extractExtension, isInside, splitSystemPath } from '#cli/system/paths.ts';
-import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
 import type { GitFile } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import { join, posix, dirname, basename, relative } from 'node:path';
+import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
+import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { findTsconfig, listSourceFiles } from '#cli/parsers/projects/tsconfig.ts';
+import type { CopyPlan, DeclarationDependencies } from '#cli/types/engine/tool-runs.ts';
+import { isInside, splitSystemPath, extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { NODE_MODULES, DECLARATION_EXTENSIONS, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+
+import {
+    statSync,
+    constants,
+    mkdirSync,
+    existsSync,
+    type Dirent,
+    readdirSync,
+    symlinkSync,
+    copyFileSync,
+    realpathSync,
+} from 'node:fs';
 
 function listUntrackedDeclarations(root: string, tracked: ReadonlySet<string>, paths: string[]): string[] {
     return paths.flatMap((path) => {

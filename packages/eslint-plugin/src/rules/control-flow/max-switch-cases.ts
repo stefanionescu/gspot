@@ -1,6 +1,6 @@
-import { DEFAULT_SWITCH_CASES, SWITCH_CASES_OPTIONS_SCHEMA } from '../../config/control-flow.ts';
 import { createRule } from '../../rule.ts';
 import type { SwitchCasesOptions } from '../../types/control-flow.ts';
+import { DEFAULT_SWITCH_CASES, SWITCH_CASES_OPTIONS_SCHEMA } from '../../config/control-flow.ts';
 
 export const maxSwitchCases = createRule<SwitchCasesOptions, 'cases'>({
     name: 'max-switch-cases',

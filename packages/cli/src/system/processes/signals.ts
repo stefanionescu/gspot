@@ -1,5 +1,5 @@
 import { SIGNAL_EXIT_CODES } from '#cli/config/system.ts';
-import type { CanceledCommandJson, CommandResult } from '#cli/types/system.ts';
+import type { CommandResult, CanceledCommandJson } from '#cli/types/system.ts';
 
 export async function runCancelableCommand<Json extends object>(
     runCommand: (cancelSignal: AbortSignal) => Promise<CommandResult<Json>>,

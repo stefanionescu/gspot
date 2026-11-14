@@ -1,27 +1,27 @@
-import { readFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-
-import cliPackage from '#cli-package' with { type: 'json' };
+import { statSync, readFileSync } from 'node:fs';
+import { GspotError } from '#cli/system/errors.ts';
+import { runGit } from '#cli/repository/git/run.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readHooks } from '#cli/repository/setup/read.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
+import { LINE_BREAK, EXECUTABLE_BITS } from '#cli/config/system.ts';
+import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
 import { COMMENT_LINE, PRE_COMMIT_FILE } from '#cli/config/repository/setup.ts';
-import { EXECUTABLE_BITS, LINE_BREAK } from '#cli/config/system.ts';
+import type { Session, HookName, HookPlan, HookStatus, ScopeCheck } from '#cli/types/tools.ts';
+
 import {
     CHECK_HOOKS,
     HOOK_CHECKS,
-    HOOK_FOLDER_KINDS,
     HOOK_PROGRAM,
-    NOT_INSTALLED_STATUS,
     SET_HOOKS_PATH,
     UNSET_HOOKS_NOTE,
     UNSET_HOOKS_PATH,
+    HOOK_FOLDER_KINDS,
+    NOT_INSTALLED_STATUS,
 } from '#cli/config/tools/installers.ts';
-import { VERSION_FLAG } from '#cli/config/tools/programs.ts';
-import { runGit } from '#cli/repository/git/run.ts';
-import { readHooks } from '#cli/repository/setup/read.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
-import type { Repository, RepositorySetup } from '#cli/types/repository.ts';
-import type { HookName, HookPlan, HookStatus, ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function formatPreCommitLines(names: HookName[]): string {
     const entries = names.filter((name) => name !== 'pre-push');

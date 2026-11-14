@@ -1,23 +1,23 @@
-import semver from 'semver';
 import { z } from 'zod';
+import semver from 'semver';
+import type { ToolInstallers } from '#cli/types/manifests.ts';
+import { regexSchema, conditionSchema, operatingSystemSchema } from '#cli/schemas/manifests/fields.ts';
 
 import {
-    DEFAULT_FILE_PATTERN,
-    DEFAULT_GROUPED_PATTERN,
-    DEFAULT_OUTPUT_FORMAT,
-    DEFAULT_PATTERN,
-    EXTENSION_PATTERN,
-    INSTALLER_VERSION_MESSAGE,
-    MAX_EXIT_CODE,
-    MINIMUM_VERSION_PATTERN,
-    NUMERIC_MINIMUM_MESSAGE,
-    RULE_PLACEHOLDER,
-    SHIPPED_CHECKSUM_PATTERN,
     STAGES,
     TOOL_KINDS,
+    MAX_EXIT_CODE,
+    DEFAULT_PATTERN,
+    RULE_PLACEHOLDER,
+    EXTENSION_PATTERN,
+    DEFAULT_FILE_PATTERN,
+    DEFAULT_OUTPUT_FORMAT,
+    DEFAULT_GROUPED_PATTERN,
+    MINIMUM_VERSION_PATTERN,
+    NUMERIC_MINIMUM_MESSAGE,
+    SHIPPED_CHECKSUM_PATTERN,
+    INSTALLER_VERSION_MESSAGE,
 } from '#cli/config/manifests.ts';
-import { conditionSchema, operatingSystemSchema, regexSchema } from '#cli/schemas/manifests/fields.ts';
-import type { ToolInstallers } from '#cli/types/manifests.ts';
 
 const findingExitCodesSchema = z.int().min(1).max(MAX_EXIT_CODE).array();
 

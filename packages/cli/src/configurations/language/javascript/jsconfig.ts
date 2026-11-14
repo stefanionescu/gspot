@@ -1,25 +1,25 @@
-import { dirname, join, relative } from 'node:path';
-
-import {
-    CONFIG_FOLDER_TEMPLATE,
-    JAVASCRIPT_BUNDLED_IMPORTS,
-    JAVASCRIPT_EXTENSIONS,
-    JAVASCRIPT_IGNORED_GLOBS,
-    JAVASCRIPT_OPTIONS,
-    SOURCE_SELECTION_FIELDS,
-} from '#cli/config/configurations/javascript/projects.ts';
-import { STANDALONE_OPTIONS } from '#cli/config/configurations/shared.ts';
-import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { join, dirname, relative } from 'node:path';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { JSON_INDENT } from '#cli/config/tools/programs.ts';
+import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { listOwnFiles } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
-import { findValueAt } from '#cli/system/tables.ts';
+import { STANDALONE_OPTIONS } from '#cli/config/configurations/shared.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+import { JSCONFIG_FILE, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { ParsedTsconfig } from '#cli/types/parsers.ts';
+
+import {
+    JAVASCRIPT_OPTIONS,
+    JAVASCRIPT_EXTENSIONS,
+    CONFIG_FOLDER_TEMPLATE,
+    SOURCE_SELECTION_FIELDS,
+    JAVASCRIPT_IGNORED_GLOBS,
+    JAVASCRIPT_BUNDLED_IMPORTS,
+} from '#cli/config/configurations/javascript/projects.ts';
 
 function buildExtendedExclude(
     planned: PlannedConfig,

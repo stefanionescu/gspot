@@ -1,5 +1,5 @@
-import { noTrivialFunctions } from '#eslint-plugin/rules/functions/no-trivial-functions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noTrivialFunctions } from '#eslint-plugin/rules/functions/no-trivial-functions.ts';
 
 buildRuleTester().run('no-trivial-functions', noTrivialFunctions, {
     valid: [

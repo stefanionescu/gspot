@@ -1,8 +1,8 @@
-import { EVERY_FILE_GLOBS, ROOT_SCOPE_MARK } from '#cli/config/repository/setup.ts';
-import { FOLDER_CONTENTS, GLOB_EXCLUDE } from '#cli/config/system.ts';
-import { findEnclosingFolder } from '#cli/system/paths.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { findEnclosingFolder } from '#cli/system/paths.ts';
+import { GLOB_EXCLUDE, FOLDER_CONTENTS } from '#cli/config/system.ts';
+import { ROOT_SCOPE_MARK, EVERY_FILE_GLOBS } from '#cli/config/repository/setup.ts';
 
 const scopeFolderSets = new WeakMap<ReadonlyArray<{ path: string }>, ReadonlySet<string>>();
 

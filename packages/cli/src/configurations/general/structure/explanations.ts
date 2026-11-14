@@ -1,5 +1,5 @@
-import { IMPORT_RULE_CHECK_RULES, TRIVIAL_FUNCTION_RULES } from '#cli/config/configurations/structure.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { TRIVIAL_FUNCTION_RULES, IMPORT_RULE_CHECK_RULES } from '#cli/config/configurations/structure.ts';
 
 export const IMPORT_EXPLANATIONS = {
     [IMPORT_RULE_CHECK_RULES.refusedImport]: {

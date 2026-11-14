@@ -1,5 +1,5 @@
-import { lstat, open, readdir, readlink } from 'node:fs/promises';
 import { join } from 'node:path';
+import { open, lstat, readdir, readlink } from 'node:fs/promises';
 
 export async function readTree(root: string): Promise<Record<string, string>> {
     const paths = await readdir(root, { recursive: true });

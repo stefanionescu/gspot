@@ -1,5 +1,5 @@
-import { noDiscardedPostfix } from '#eslint-plugin/rules/variables/no-discarded-postfix.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDiscardedPostfix } from '#eslint-plugin/rules/variables/no-discarded-postfix.ts';
 
 buildRuleTester().run('no-discarded-postfix', noDiscardedPostfix, {
     valid: [

@@ -1,15 +1,15 @@
-import { extractBashIdentifiers } from '#cli/configurations/general/naming/checks/languages/bash.ts';
-import { extractPythonIdentifiers } from '#cli/configurations/general/naming/checks/languages/python.ts';
-import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
-import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/checks/languages/swift.ts';
-import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/checks/languages/typescript.ts';
-import { selectGrammar } from '#cli/configurations/syntax.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { buildFileMatcher } from '#cli/repository/files/selection.ts';
 import { remember } from '#cli/system/cache.ts';
-import type { Identifier, IdentifierRead, NamedFile } from '#cli/types/configurations/naming.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { Session } from '#cli/types/tools.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { buildFileMatcher } from '#cli/repository/files/selection.ts';
+import type { NamedFile, Identifier, IdentifierRead } from '#cli/types/configurations/naming.ts';
+import { extractSqlIdentifiers } from '#cli/configurations/general/naming/checks/languages/sql.ts';
+import { extractBashIdentifiers } from '#cli/configurations/general/naming/checks/languages/bash.ts';
+import { extractSwiftIdentifiers } from '#cli/configurations/general/naming/checks/languages/swift.ts';
+import { extractPythonIdentifiers } from '#cli/configurations/general/naming/checks/languages/python.ts';
+import { extractTypescriptIdentifiers } from '#cli/configurations/general/naming/checks/languages/typescript.ts';
 
 export function listNamedFiles(planned: PlannedCheck): NamedFile[] {
     const languages = planned.scope.configurations

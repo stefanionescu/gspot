@@ -1,16 +1,16 @@
-import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
-import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { listReplacedTools } from '#cli/tools/pins.ts';
 import { listToolNames } from '#cli/manifests/tools.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GSPOT_RULES } from '#cli/config/configurations/gspot.ts';
+import { LINT_COMMAND_NAMES } from '#cli/config/repository/setup.ts';
 import { listGeneratedPaths } from '#cli/repository/files/classify.ts';
 import { listConflictingConfigs } from '#cli/repository/setup/conflicts.ts';
 import { findLine, listLintCommands } from '#cli/repository/setup/lint-commands.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { listReplacedTools } from '#cli/tools/pins.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { CONFLICTING_CONFIG_EXPLANATIONS } from '#cli/configurations/general/gspot/explanations.ts';
 
 function checkConflictingConfigs(session: CheckSession, _planned: PlannedCheck): CheckFinding[] {
     const tools = listToolNames(session.toolConfigurations);

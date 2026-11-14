@@ -1,23 +1,21 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
-import { openSession } from '#cli/engine/session.ts';
+import { readFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { CheckStop } from '#cli/system/errors.ts';
-import { formatUnexpectedError } from '#cli/system/terminal.ts';
-import { compareText } from '#cli/system/text/order.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import * as mise from '#cli/tools/programs/mise.ts';
-import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { CallRecord } from '#tests/types/setup.ts';
+import { formatUnexpectedError } from '#cli/system/terminal.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
-import type { CallRecord } from '#tests/types/setup.ts';
+import { buildRunOptions, createRunResources } from '#tests/setup/cli/run.ts';
 
 function parseJsonLines<Line>(text: string): Line[] {
     const lines = text.trim().split('\n');

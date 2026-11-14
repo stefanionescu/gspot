@@ -1,21 +1,19 @@
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GENERATED_HEADER_TEXT } from '#cli/config/generation/builders.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
-import { buildCommandLaunch } from '#cli/engine/run/tool-runs/check.ts';
-import { expandCommand, replacePlaceholders } from '#cli/engine/run/tool-runs/placeholders.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { WORKSPACE_SCOPE_CASES } from '#tests/config/engine/run.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildCommandLaunch } from '#cli/engine/run/tool-runs/check.ts';
+import { runChecks, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { GENERATED_HEADER_TEXT } from '#cli/config/generation/builders.ts';
+import { expandCommand, replacePlaceholders } from '#cli/engine/run/tool-runs/placeholders.ts';
 
 const GENERATE_ARGUMENTS = [process.execPath, 'generate.ts', '', 'two words'];
 

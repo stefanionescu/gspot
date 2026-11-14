@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BUN_PROJECT_FILES } from '#tests/config/configurations/general.ts';
 
 test('react-versions reports react and react-dom that lock different versions, and nothing when they match', async () => {
     await using sandbox = await createGitSandbox({

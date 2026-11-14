@@ -1,19 +1,18 @@
 import semver from 'semver';
-
-import { JAVASCRIPT_LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
-import { NODE_PROGRAM, OPERATING_SYSTEMS, UV_PROGRAM } from '#cli/config/system.ts';
-import { TYPESCRIPT_ESLINT_TOOL, TYPESCRIPT_PACKAGE } from '#cli/config/tools/programs.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findTool, getTool, listDistinctTools } from '#cli/manifests/tools.ts';
-import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
-import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { Configuration, Tool } from '#cli/types/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { LintCommandSearch } from '#cli/types/repository.ts';
-import type { Host, MiseToolPin, PackagePin, PackagePins, Session, SessionBase } from '#cli/types/tools.ts';
+import type { Tool, Configuration } from '#cli/types/manifests.ts';
+import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
+import { readLockedVersions } from '#cli/parsers/projects/lockfiles.ts';
+import { getTool, findTool, listDistinctTools } from '#cli/manifests/tools.ts';
+import { LINT_PACKAGE, OVERLAPPING_TOOLS } from '#cli/config/repository/setup.ts';
+import { UV_PROGRAM, NODE_PROGRAM, OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { PACKAGE_JSON, JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { TYPESCRIPT_PACKAGE, TYPESCRIPT_ESLINT_TOOL } from '#cli/config/tools/programs.ts';
+import type { Host, Session, PackagePin, MiseToolPin, PackagePins, SessionBase } from '#cli/types/tools.ts';
 
 /**
 Read the TypeScript version that the tracked root lockfile resolves. An untracked lockfile does not count, so every

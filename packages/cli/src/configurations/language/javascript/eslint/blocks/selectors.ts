@@ -1,14 +1,15 @@
+import type { Session } from '#cli/types/tools.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
+import type { Level, Scope } from '#cli/types/settings.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
+import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+
 import {
-    ALIAS_IMPORT_SELECTORS,
     BASE_SELECTORS,
     ENVIRONMENT_SELECTOR,
+    ALIAS_IMPORT_SELECTORS,
 } from '#cli/config/configurations/javascript/blocks.ts';
-import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { escapeGlob } from '#cli/system/patterns.ts';
-import type { SelectorBlock, SelectorPaths } from '#cli/types/configurations/javascript.ts';
-import type { Level, Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listSettingSelectors(scope: Scope, level: Level): SelectorPaths[] {
     const selectors: SelectorPaths[] = [];

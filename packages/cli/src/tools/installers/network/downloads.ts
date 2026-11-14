@@ -1,11 +1,10 @@
-import { createHash } from 'node:crypto';
 import http from 'node:http';
-
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { NETWORK_ADVICE, NODE_PROXY_ADVICE, PROXY_VARIABLES } from '#cli/config/tools/installers.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { createHash } from 'node:crypto';
 import { GspotError } from '#cli/system/errors.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import type { ArchiveDownload, DownloadSession } from '#cli/types/tools.ts';
+import { NETWORK_ADVICE, PROXY_VARIABLES, NODE_PROXY_ADVICE } from '#cli/config/tools/installers.ts';
 
 async function readBoundedArchive(response: Response, { url, name, limit }: ArchiveDownload): Promise<Buffer> {
     const reader: ReadableStreamDefaultReader<Uint8Array> | undefined = response.body?.getReader();

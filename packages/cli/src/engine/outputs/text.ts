@@ -1,12 +1,11 @@
 import { relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
-
-import { FILE_LINK, LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { findCanonicalPath, isInside } from '#cli/system/paths.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
 import type { CheckOutput } from '#cli/types/manifests.ts';
+import type { ToolOutput } from '#cli/types/engine/tool-runs.ts';
+import { isInside, findCanonicalPath } from '#cli/system/paths.ts';
+import { FILE_LINK, LEADING_DOT_SLASH } from '#cli/config/engine.ts';
 
 function setMatchedFields(finding: Finding, groups: Record<string, string | undefined>): Finding {
     const line = groups['line'];

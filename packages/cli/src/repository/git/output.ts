@@ -1,25 +1,25 @@
 import type { z } from 'zod';
+import { GspotError } from '#cli/system/errors.ts';
+import { OCTAL_RADIX } from '#cli/config/system.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
+import { decodeUtf8, readContents } from '#cli/system/files/reads.ts';
+import type { GitFile, GitStream, GitIndexFile } from '#cli/types/repository.ts';
 
 import {
+    LINE_FEED,
+    TREE_LINE,
+    INDEX_LINE,
+    SIZE_GROUP,
     BLOB_HEADER,
     CONFLICT_END,
-    CONFLICT_SEPARATOR,
     CONFLICT_START,
-    FIRST_NON_PRINTABLE_BYTE,
-    FIRST_PRINTABLE_BYTE,
-    INDEX_LINE,
-    INVALID_GIT_STREAM_MESSAGE,
-    LINE_FEED,
     OCTAL_BYTE_WIDTH,
-    SIZE_GROUP,
-    TREE_LINE,
+    CONFLICT_SEPARATOR,
+    FIRST_PRINTABLE_BYTE,
+    FIRST_NON_PRINTABLE_BYTE,
+    INVALID_GIT_STREAM_MESSAGE,
     UNSUPPORTED_GIT_FILE_MESSAGE,
 } from '#cli/config/repository/git.ts';
-import { OCTAL_RADIX } from '#cli/config/system.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { decodeUtf8, readContents } from '#cli/system/files/reads.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
-import type { GitFile, GitIndexFile, GitStream } from '#cli/types/repository.ts';
 
 async function readNextChunk(stream: GitStream): Promise<Buffer | undefined> {
     while (stream.cursor === stream.chunk.length) {

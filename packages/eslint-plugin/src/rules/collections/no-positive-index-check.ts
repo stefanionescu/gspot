@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { INDEX_OF_METHOD } from '../../config/collections.ts';
-import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
+import { INDEX_OF_METHOD } from '../../config/collections.ts';
+import { getTypes, getTypeCategory } from '../../language/checker.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getSearchedArray({ left, right, operator }: TSESTree.BinaryExpression): TSESTree.Node | undefined {
     if (

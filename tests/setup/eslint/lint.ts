@@ -1,16 +1,14 @@
-import { join, relative } from 'node:path';
-
 import { ESLint } from 'eslint';
-
+import { join, relative } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import { extractConfigName } from '#cli/manifests/checks.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { extractConfigName } from '#cli/manifests/checks.ts';
 import { getConfigPath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import type { EslintConfiguration, LintFinding } from '#tests/types/setup.ts';
+import type { LintFinding, EslintConfiguration } from '#tests/types/setup.ts';
 
 export async function listLintFindings(
     eslint: ESLint,

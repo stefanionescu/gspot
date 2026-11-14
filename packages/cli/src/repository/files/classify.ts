@@ -1,45 +1,45 @@
 import { posix } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GITATTRIBUTES_FILE, MARKERS } from '#cli/config/parsers/formats.ts';
-import {
-    BANNER_BYTES,
-    BUILD_LAUNCHERS,
-    DIFF_ATTRIBUTE,
-    EXTENSION_TAGS,
-    FILTER_ATTRIBUTE,
-    GENERATED_ATTRIBUTE,
-    GENERATOR_OUTPUT_BANNERS,
-    KIND_ORIGINS,
-    LFS_FILTER,
-    LICENSE_FILE,
-    LICENSE_TAGS,
-    MARKDOWN_EXTENSION,
-    NOTICE_FILE,
-    SET_STATE,
-    SET_VALUES,
-    SOURCE_KIND,
-    TEXT_ATTRIBUTE,
-    UNSET_STATE,
-    VENDORED_ATTRIBUTE,
-    VENDORED_FOLDERS,
-} from '#cli/config/repository/files.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { hasGeneratedHeader, isGspotPath } from '#cli/repository/files/ownership.ts';
-import { tagFile } from '#cli/repository/files/tags.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { tagFile } from '#cli/repository/files/tags.ts';
 import { extractExtension } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import type { Config, Configuration } from '#cli/types/manifests.ts';
+import { MARKERS, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import { isGspotPath, hasGeneratedHeader } from '#cli/repository/files/ownership.ts';
+
 import type {
-    FileClassification,
+    ListedFile,
+    TrackedFile,
     FileKindRules,
     GeneratedPaths,
-    ListedFile,
     RepositoryListing,
-    TrackedFile,
+    FileClassification,
 } from '#cli/types/repository.ts';
+import {
+    SET_STATE,
+    LFS_FILTER,
+    SET_VALUES,
+    NOTICE_FILE,
+    SOURCE_KIND,
+    UNSET_STATE,
+    BANNER_BYTES,
+    KIND_ORIGINS,
+    LICENSE_FILE,
+    LICENSE_TAGS,
+    DIFF_ATTRIBUTE,
+    EXTENSION_TAGS,
+    TEXT_ATTRIBUTE,
+    BUILD_LAUNCHERS,
+    FILTER_ATTRIBUTE,
+    VENDORED_FOLDERS,
+    MARKDOWN_EXTENSION,
+    VENDORED_ATTRIBUTE,
+    GENERATED_ATTRIBUTE,
+    GENERATOR_OUTPUT_BANNERS,
+} from '#cli/config/repository/files.ts';
 
 function findConfiguredKind(path: string, rules: FileKindRules): FileClassification | undefined {
     const attribute = findAttributeKind(rules.attributes.get(path));

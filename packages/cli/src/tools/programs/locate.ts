@@ -1,26 +1,25 @@
-import { statSync } from 'node:fs';
-import { basename, dirname, isAbsolute, join, relative } from 'node:path';
-
 import which from 'which';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { MISE_LAUNCHER_FOLDER, MISE_WHICH } from '#cli/config/tools/mise.ts';
-import { NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { statSync } from 'node:fs';
+import type { Files } from '#cli/types/system.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
-import {
-    executableLayout,
-    filterOutsidePaths,
-    findProgram,
-    listExecutableNames,
-} from '#cli/system/processes/programs.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
 import { formatMiseFailure } from '#cli/tools/programs/mise.ts';
-import type { Files } from '#cli/types/system.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { join, dirname, basename, relative, isAbsolute } from 'node:path';
 import type { ExecutableList, ExecutableSearch } from '#cli/types/tools.ts';
+import { MISE_WHICH, MISE_LAUNCHER_FOLDER } from '#cli/config/tools/mise.ts';
+import { NPM_BIN_FOLDER, TOOL_ENVIRONMENT } from '#cli/config/tools/programs.ts';
+import { GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+
+import {
+    findProgram,
+    executableLayout,
+    filterOutsidePaths,
+    listExecutableNames,
+} from '#cli/system/processes/programs.ts';
 
 function listSearchFolders(root: string, options: ExecutableSearch): string[] {
     const { folders: searchFolders, toolFolderKind } = options;

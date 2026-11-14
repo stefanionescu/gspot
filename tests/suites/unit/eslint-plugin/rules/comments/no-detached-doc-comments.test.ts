@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { noDetachedDocComments } from '#eslint-plugin/rules/comments/no-detached-doc-comments.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDetachedDocComments } from '#eslint-plugin/rules/comments/no-detached-doc-comments.ts';
 
 buildRuleTester().run('no-detached-doc-comments', noDetachedDocComments, {
     valid: [

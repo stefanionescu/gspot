@@ -1,5 +1,5 @@
-import { preferNativeLodash } from '#eslint-plugin/rules/utilities/prefer-native-lodash.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferNativeLodash } from '#eslint-plugin/rules/utilities/prefer-native-lodash.ts';
 
 buildRuleTester().run('prefer-native-lodash', preferNativeLodash, {
     valid: [

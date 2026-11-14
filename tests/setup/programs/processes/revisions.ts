@@ -1,10 +1,9 @@
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join, resolve } from 'node:path';
-
-import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { readGitText, runGit, runGitBytes } from '#cli/repository/git/run.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
 import { runTool } from '#cli/tools/run.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { copyRevision } from '#cli/engine/copies/revision.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { runGit, readGitText, runGitBytes } from '#cli/repository/git/run.ts';
 
 const [timeoutSeconds = '', reportPath = ''] = process.argv.slice(2);
 

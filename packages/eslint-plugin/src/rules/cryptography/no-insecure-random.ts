@@ -1,6 +1,6 @@
-import { INSECURE_RANDOM_GENERATOR } from '../../config/cryptography.ts';
-import { getModuleName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { INSECURE_RANDOM_GENERATOR } from '../../config/cryptography.ts';
 
 export const noInsecureRandom = createRule<[], 'random'>({
     name: 'no-insecure-random',

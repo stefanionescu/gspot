@@ -1,21 +1,21 @@
 import type { Node } from 'web-tree-sitter';
+import type { Session } from '#cli/types/tools.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { selectGrammar } from '#cli/configurations/syntax.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import type { SourceTree, GrammarName } from '#cli/types/parsers.ts';
+import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { TopLevelFunction } from '#cli/types/configurations/structure.ts';
 
 import {
+    TEST_CALL_NAMES,
     DEFAULT_EXPORT_NAME,
     FUNCTION_ORDER_RULE,
-    SCRIPT_FUNCTION_DECLARATIONS,
     SCRIPT_FUNCTION_VALUES,
-    TEST_CALL_NAMES,
+    SCRIPT_FUNCTION_DECLARATIONS,
 } from '#cli/config/configurations/structure.ts';
-import { selectGrammar } from '#cli/configurations/syntax.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import { isPrivateSwiftDeclaration } from '#cli/parsers/code/swift.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { TopLevelFunction } from '#cli/types/configurations/structure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { GrammarName, SourceTree } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function describePythonFunction(statement: Node): TopLevelFunction | undefined {
     const declaration =

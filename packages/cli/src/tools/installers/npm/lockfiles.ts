@@ -1,31 +1,30 @@
+import semver from 'semver';
 import { posix } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-
-import { applyEdits, modify } from 'jsonc-parser/lib/esm/main.js';
-import semver from 'semver';
-
-import {
-    BUN_LOCKFILE,
-    LOCKFILES,
-    NPM_PACKAGE_FOLDER,
-    PNPM_PEER_START,
-    PNPM_ROOT_IMPORTER,
-} from '#cli/config/parsers/projects.ts';
-import { INTEGRITY, LOCKFILE_WORKSPACE_KEYS, NPM_SETTING_PREFIX } from '#cli/config/tools/installers.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parsePnpmProjectLock, splitIdentity } from '#cli/parsers/projects/lockfiles.ts';
-import { parseFileFields, tryParseFile } from '#cli/parsers/validation.ts';
+import type { Dependencies } from '#cli/types/parsers.ts';
 import { bunLockfileSchema } from '#cli/schemas/parsers.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { modify, applyEdits } from 'jsonc-parser/lib/esm/main.js';
+import type { ToolPackageManagerName } from '#cli/types/repository.ts';
+import { tryParseFile, parseFileFields } from '#cli/parsers/validation.ts';
+import { splitIdentity, parsePnpmProjectLock } from '#cli/parsers/projects/lockfiles.ts';
+import type { Lockfile, BunPackage, LockedTarball, ToolProjectLockfileName } from '#cli/types/tools.ts';
+import { INTEGRITY, NPM_SETTING_PREFIX, LOCKFILE_WORKSPACE_KEYS } from '#cli/config/tools/installers.ts';
+
 import {
     bunPackageSchema,
     npmToolLockSchemas,
     npmToolPackageSchema,
     pnpmToolPackageSchema,
 } from '#cli/schemas/tools.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
-import type { Dependencies } from '#cli/types/parsers.ts';
-import type { ToolPackageManagerName } from '#cli/types/repository.ts';
-import type { BunPackage, LockedTarball, Lockfile, ToolProjectLockfileName } from '#cli/types/tools.ts';
+import {
+    LOCKFILES,
+    BUN_LOCKFILE,
+    PNPM_PEER_START,
+    NPM_PACKAGE_FOLDER,
+    PNPM_ROOT_IMPORTER,
+} from '#cli/config/parsers/projects.ts';
 
 function findPackageRegistry(name: string, environment: Record<string, string>): string | undefined {
     const scope = name.startsWith('@') ? name.split('/', 1)[0] : undefined;

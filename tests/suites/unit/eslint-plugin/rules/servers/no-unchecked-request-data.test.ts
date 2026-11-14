@@ -1,5 +1,5 @@
-import { noUncheckedRequestData } from '#eslint-plugin/rules/servers/no-unchecked-request-data.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUncheckedRequestData } from '#eslint-plugin/rules/servers/no-unchecked-request-data.ts';
 
 buildRuleTester().run('no-unchecked-request-data', noUncheckedRequestData, {
     valid: [

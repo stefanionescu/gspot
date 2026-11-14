@@ -1,20 +1,21 @@
-import { NAMING_LANGUAGE_CATEGORIES, NAMING_LANGUAGES } from '#cli/config/settings/tables.ts';
 import { isScopeCovered } from '#cli/repository/scopes.ts';
-import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
-import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { addTable, findValueAt } from '#cli/system/tables.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { namingCategorySchema } from '#cli/schemas/settings/fields.ts';
+import { tableValuesSchema } from '#cli/schemas/settings/configurations.ts';
 import { extractKeyName, findSettingSchema } from '#cli/settings/lookup.ts';
 import { getSettingValue, listInheritedSettings } from '#cli/settings/values/inherit.ts';
-import { addTable, findValueAt } from '#cli/system/tables.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import { NAMING_LANGUAGES, NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/tables.ts';
+
 import type {
-    AvailableSettings,
-    InheritedSetting,
     Scope,
-    ScopeSettings,
     Settings,
-    TableSettings,
     TableValues,
+    ScopeSettings,
+    TableSettings,
+    InheritedSetting,
+    AvailableSettings,
 } from '#cli/types/settings.ts';
 
 const NAMING_VARIANT_KEYS: readonly string[] = NAMING_LANGUAGES.flatMap((language) =>

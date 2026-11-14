@@ -1,55 +1,54 @@
 import { statSync } from 'node:fs';
-import { join, posix, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { stripVTControlCharacters } from 'node:util';
-
 import type { Node } from '@pgsql/types';
-
-import { DENO_CONFIG_FILES, SYNTAX_RULE } from '#cli/config/configurations/shared.ts';
-import {
-    DENO_CHECK_COMMAND,
-    DENO_CHECK_FAILED_MESSAGE,
-    DENO_IMPORT_MAP_FLAG,
-    DENO_LINT_COMMAND,
-    DENO_LINT_NAME,
-    DENO_LOCATION,
-    FILE_URL_PREFIX,
-    FUNCTION_ENTRYPOINT,
-    SERVICE_ROLE_KEY_MESSAGE,
-    SERVICE_ROLE_KEY_NAMES,
-    SHARED_PREFIX,
-    STORAGE_POLICY_TABLE,
-    SUPABASE_CHECK_RULES,
-    SUPABASE_PROJECT_FILE,
-    VERIFY_JWT_MESSAGE,
-    VERIFY_JWT_OFF,
-} from '#cli/config/configurations/supabase.ts';
+import { fileURLToPath } from 'node:url';
+import { CheckStop } from '#cli/system/errors.ts';
+import { join, posix, relative } from 'node:path';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { stripVTControlCharacters } from 'node:util';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { listMatchingLines } from '#cli/system/text/positions.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { SYNTAX_RULE, DENO_CONFIG_FILES } from '#cli/config/configurations/shared.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { formatOutputTail, assertToolFindings } from '#cli/engine/run/tool-runs/failures.ts';
+import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import { readParsedMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
+import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/platform.ts';
+
 import {
     DENO_CHECK_EXPLANATIONS,
     STORAGE_POLICY_EXPLANATIONS,
 } from '#cli/configurations/platform/supabase/explanations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { assertToolFindings, formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { denoLintOutputSchema, supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { listMatchingLines } from '#cli/system/text/positions.ts';
-import type { FunctionEntrypoint, SupabaseProjectFile } from '#cli/types/configurations/platform.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { Parsed, SqlNodeFields } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    DENO_LOCATION,
+    SHARED_PREFIX,
+    DENO_LINT_NAME,
+    VERIFY_JWT_OFF,
+    FILE_URL_PREFIX,
+    DENO_LINT_COMMAND,
+    DENO_CHECK_COMMAND,
+    VERIFY_JWT_MESSAGE,
+    FUNCTION_ENTRYPOINT,
+    DENO_IMPORT_MAP_FLAG,
+    STORAGE_POLICY_TABLE,
+    SUPABASE_CHECK_RULES,
+    SUPABASE_PROJECT_FILE,
+    SERVICE_ROLE_KEY_NAMES,
+    SERVICE_ROLE_KEY_MESSAGE,
+    DENO_CHECK_FAILED_MESSAGE,
+} from '#cli/config/configurations/supabase.ts';
 
 function listEqualityBuckets(expression: SqlNodeFields['A_Expr']): string[] {
     for (const [column, value] of [

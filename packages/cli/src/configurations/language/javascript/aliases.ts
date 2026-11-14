@@ -1,14 +1,13 @@
-import { dirname, join, relative, resolve } from 'node:path';
-
-import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX } from '#cli/config/configurations/javascript/projects.ts';
-import { PATHS_BASE_OPTION } from '#cli/config/configurations/shared.ts';
-import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
 import { isTable } from '#cli/system/tables.ts';
 import type { RunCache } from '#cli/types/system.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { join, dirname, resolve, relative } from 'node:path';
+import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { PATHS_BASE_OPTION } from '#cli/config/configurations/shared.ts';
+import { PACKAGE_JSON, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { IMPORT_CONDITIONS, LOCAL_PATH_PREFIX } from '#cli/config/configurations/javascript/projects.ts';
 
 function findImportTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;

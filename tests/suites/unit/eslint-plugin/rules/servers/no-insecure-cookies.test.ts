@@ -1,5 +1,5 @@
-import { noInsecureCookies } from '#eslint-plugin/rules/servers/no-insecure-cookies.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInsecureCookies } from '#eslint-plugin/rules/servers/no-insecure-cookies.ts';
 
 buildRuleTester().run('no-insecure-cookies', noInsecureCookies, {
     valid: [

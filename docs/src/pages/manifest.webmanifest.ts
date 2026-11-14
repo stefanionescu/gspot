@@ -1,7 +1,6 @@
 import type { APIRoute } from 'astro';
-
 import cliPackage from '#cli-package' with { type: 'json' };
-import { BACKGROUND_COLOR, SITE_TITLE } from '#docs/config/site.ts';
+import { SITE_TITLE, BACKGROUND_COLOR } from '#docs/config/site.ts';
 
 export const GET: APIRoute = () =>
     Response.json({

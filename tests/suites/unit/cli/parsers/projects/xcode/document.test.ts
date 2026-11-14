@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
-import { parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
-import type { GspotError } from '#cli/system/errors.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
+import { parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
 
 test.each([{ parse: parseProjectSources }, { parse: parseBuildSettings }])(
     'invalid Xcode syntax names the file and its fix once',

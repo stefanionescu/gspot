@@ -1,21 +1,20 @@
-import { isAbsolute, posix, sep } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
-
-import { FILE_GROUP, MISSING_RULE_HELP, MISSING_RULE_MESSAGE, RULE_GROUP, TAPLO_OUTPUTS } from '#cli/config/engine.ts';
-import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
+import { sep, posix, isAbsolute } from 'node:path';
 import { DRIVE_LETTER } from '#cli/config/system.ts';
-import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
-import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
-import { parseOsvScannerFindings } from '#cli/engine/outputs/osv-scanner.ts';
-import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
-import { parseGroupedFindings, parseRegexFindings } from '#cli/engine/outputs/text.ts';
-import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
-import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
-import { convertToPosixPath, findCanonicalPath } from '#cli/system/paths.ts';
+import { stripVTControlCharacters } from 'node:util';
 import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { Finding } from '#cli/types/engine/run.ts';
-import type { OutputParser, OutputPaths, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
 import type { CheckOutput } from '#cli/types/manifests.ts';
+import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
+import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
+import { parseKnipFindings } from '#cli/engine/outputs/knip.ts';
+import { parseValeFindings } from '#cli/engine/outputs/vale.ts';
+import { parseTyposFindings } from '#cli/engine/outputs/typos.ts';
+import { parseSemgrepFindings } from '#cli/engine/outputs/semgrep.ts';
+import { parseOsvScannerFindings } from '#cli/engine/outputs/osv-scanner.ts';
+import { findCanonicalPath, convertToPosixPath } from '#cli/system/paths.ts';
+import { parseRegexFindings, parseGroupedFindings } from '#cli/engine/outputs/text.ts';
+import type { OutputPaths, OutputParser, ParsingCheck } from '#cli/types/engine/tool-runs.ts';
+import { FILE_GROUP, RULE_GROUP, TAPLO_OUTPUTS, MISSING_RULE_HELP, MISSING_RULE_MESSAGE } from '#cli/config/engine.ts';
 
 const COPY_ROOT = new RegExp(`^(?<repository>.*)/${escapeRegExp(COPIES_FOLDER)}/[^/]+(?<folder>/.*)?$`, 'u');
 

@@ -1,9 +1,8 @@
+import { pathToFileURL } from 'node:url';
 import { createRequire } from 'node:module';
 import { text } from 'node:stream/consumers';
-import { pathToFileURL } from 'node:url';
-
 import { PURGECSS_TOOL } from '#cli/config/configurations/site.ts';
-import type { PurgecssConstructor, PurgecssRequest } from '#cli/types/configurations/framework.ts';
+import type { PurgecssRequest, PurgecssConstructor } from '#cli/types/configurations/framework.ts';
 
 const executable = process.argv[2] as string;
 const api = (await import(pathToFileURL(createRequire(executable).resolve(PURGECSS_TOOL)).href)) as {

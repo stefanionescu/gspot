@@ -1,5 +1,5 @@
-import { noConstantAssertions } from '#eslint-plugin/rules/assertions/no-constant-assertions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noConstantAssertions } from '#eslint-plugin/rules/assertions/no-constant-assertions.ts';
 
 buildRuleTester().run('no-constant-assertions', noConstantAssertions, {
     valid: [

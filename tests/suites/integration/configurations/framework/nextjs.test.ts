@@ -1,25 +1,23 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { listPackagePins } from '#cli/tools/pins.ts';
+import type { Sandbox } from '#tests/types/setup.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text/order.ts';
+import { tsconfigSchema } from '#tests/schemas/setup.ts';
+import type { RunReport } from '#cli/types/engine/run.ts';
 import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { readTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { listPackagePins } from '#cli/tools/pins.ts';
-import type { RunReport } from '#cli/types/engine/run.ts';
-import workspacePackage from '#root-package' with { type: 'json' };
-import { NEXT_MESSAGES } from '#tests/config/setup/configurations.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
-import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
-import { tsconfigSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import workspacePackage from '#root-package' with { type: 'json' };
+import { SANDBOX_PACKAGES } from '#tests/config/setup/sandboxes.ts';
+import { NEXT_MESSAGES } from '#tests/config/setup/configurations.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import type { Sandbox } from '#tests/types/setup.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const NEXT_PACKAGE = {
     name: 'example',

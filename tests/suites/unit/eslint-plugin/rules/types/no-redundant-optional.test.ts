@@ -1,8 +1,7 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
+import { writeFileSync } from 'node:fs';
 import { noRedundantOptional } from '#eslint-plugin/rules/types/no-redundant-optional.ts';
-import { buildRuleTester, buildTypedRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { buildRuleTester, writePackageFolders, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
 
 buildRuleTester().run('no-redundant-optional', noRedundantOptional, {
     valid: ['type User = { name?: string };', 'type User = { name: string | undefined };'],

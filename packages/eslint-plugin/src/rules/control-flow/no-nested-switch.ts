@@ -1,6 +1,5 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
 import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 export const noNestedSwitch = createRule<[], 'nested'>({
     name: 'no-nested-switch',

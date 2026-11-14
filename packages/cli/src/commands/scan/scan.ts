@@ -1,41 +1,41 @@
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { readGitText } from '#cli/repository/git/run.ts';
+import { rewriteProgress } from '#cli/system/terminal.ts';
+import type { RunResult } from '#cli/types/engine/run.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { printProgress } from '#cli/engine/run/progress.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { measureFolder } from '#cli/system/files/folders.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { installTools } from '#cli/tools/installers/install.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
+import { runCancelableCommand } from '#cli/system/processes/signals.ts';
+import { copyHooks, copyRevision } from '#cli/engine/copies/revision.ts';
+import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
+import type { ScanReport, CommandDefinition } from '#cli/types/commands.ts';
+import { formatScanText, buildScanReport } from '#cli/commands/scan/report.ts';
+import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
+import { readUserRules, compareInstalledRules } from '#cli/generation/setup/carryover/installed-rules.ts';
 
-import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
 import {
-    GIT_UNBORN_HEAD_ARGUMENTS,
     SCAN_LEFT_OUT_NEEDS,
+    SCAN_STOPPED_MESSAGE,
     SCAN_LOCKFILE_MESSAGE,
     SCAN_NO_FILES_MESSAGE,
     SCAN_SETTINGS_MESSAGE,
-    SCAN_STOPPED_MESSAGE,
+    GIT_UNBORN_HEAD_ARGUMENTS,
 } from '#cli/config/commands/setup.ts';
-import { LOCKFILES } from '#cli/config/parsers/projects.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { linkEnvironments } from '#cli/engine/copies/dependencies.ts';
-import { copyHooks, copyRevision } from '#cli/engine/copies/revision.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
-import { printProgress } from '#cli/engine/run/progress.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { compareInstalledRules, readUserRules } from '#cli/generation/setup/carryover/installed-rules.ts';
-import { planInit, writeInitFiles } from '#cli/generation/setup/planner.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { readGitText } from '#cli/repository/git/run.ts';
-import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { measureFolder } from '#cli/system/files/folders.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { runCancelableCommand } from '#cli/system/processes/signals.ts';
-import { rewriteProgress } from '#cli/system/terminal.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { installTools } from '#cli/tools/installers/install.ts';
-import type { CommandDefinition, ScanReport } from '#cli/types/commands.ts';
-import type { RunResult } from '#cli/types/engine/run.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listCodeRunners(session: Session): string[] {
     const checks = session.scopes.flatMap((scope) => scope.configurations.flatMap(({ checks }) => checks));

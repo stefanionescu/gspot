@@ -1,20 +1,18 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { UV_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { installPythonProjects, installPythonTools, planPythonLockfile } from '#cli/tools/installers/python/project.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { PYTHON_INSTALL_FILES, PYTHON_TOOL_LOCKFILE, PYTHON_TOOL_PROJECT } from '#tests/config/tools.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { UV_LOCKFILE_CREDENTIAL_MESSAGE } from '#cli/config/tools/installers.ts';
+import { PYTHON_TOOL_PROJECT, PYTHON_INSTALL_FILES, PYTHON_TOOL_LOCKFILE } from '#tests/config/tools.ts';
+import { installPythonTools, planPythonLockfile, installPythonProjects } from '#cli/tools/installers/python/project.ts';
 
 test('a failed uv sync hides index passwords', async () => {
     await using sandbox = await createGitSandbox(PYTHON_INSTALL_FILES);

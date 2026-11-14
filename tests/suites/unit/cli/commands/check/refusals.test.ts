@@ -1,24 +1,22 @@
-import { readdir, writeFile } from 'node:fs/promises';
 import * as os from 'node:os';
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { PUSH_STDIN_MESSAGE } from '#cli/config/commands/check.ts';
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { stringify } from '@decimalturn/toml-patch';
+import { readdir, writeFile } from 'node:fs/promises';
 import type { CommandFailureJson } from '#cli/types/system.ts';
-import { PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
 import { fakeTerminals } from '#tests/setup/system/terminal.ts';
+import { PUSH_STDIN_MESSAGE } from '#cli/config/commands/check.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
+import { PUSH_INPUT_REFUSALS } from '#tests/config/commands/check.ts';
+import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { limitCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 async function createFixableSandbox(): Promise<Awaited<ReturnType<typeof testdir>>> {
     const fix = buildProgramCommand('fakes/tool', '--text', 'fixed\n', 'source.txt');

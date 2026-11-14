@@ -1,49 +1,49 @@
+import { runTool } from '#cli/tools/run.ts';
 import { isDeepStrictEqual } from 'node:util';
-
-import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/markdown.ts';
-import {
-    CARRYOVER_ROW_START,
-    COMMITLINT_CHECK,
-    COMMITLINT_CONFIG_PATH,
-    COMMITLINT_TARGET,
-    EMPTY_CARRYOVER,
-    FIRST_NUMBER,
-    IGNORE_REASON_START,
-    LIMIT_RULE,
-    MARKDOWNLINT_ALIASES,
-    MARKDOWNLINT_CHECK,
-    MARKDOWNLINT_CONFIG_FILES,
-    MARKDOWNLINT_RETIRED_RULES,
-    MARKDOWNLINT_RUNNER_FILE,
-    MARKDOWNLINT_TARGET,
-    PRINT_TIMEOUT_SECONDS,
-    UNREADABLE_CONFIG_MESSAGE,
-} from '#cli/config/generation/setup.ts';
-import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/tables.ts';
-import { buildConfigs } from '#cli/generation/configs/build.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { printedRulesSchema } from '#cli/schemas/generation.ts';
-import { configTableSchema } from '#cli/schemas/parsers.ts';
-import { toolsSchema } from '#cli/schemas/settings/tools.ts';
+import { isTable } from '#cli/system/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { isTable } from '#cli/system/tables.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { configTableSchema } from '#cli/schemas/parsers.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { toolsSchema } from '#cli/schemas/settings/tools.ts';
+import { buildConfigs } from '#cli/generation/configs/build.ts';
+import { printedRulesSchema } from '#cli/schemas/generation.ts';
+import { MARKDOWNLINT_RULE_ID } from '#cli/config/settings/tables.ts';
 import { listRepositoryExecutablePaths } from '#cli/tools/programs/locate.ts';
-import { runTool } from '#cli/tools/run.ts';
+import { MARKDOWNLINT_PRETTIER_DISABLED } from '#cli/config/configurations/markdown.ts';
+
 import type {
-    CarryoverInput,
-    CarryoverRow,
-    CarryoverSection,
-    ComparedRules,
-    MarkdownlintConfig,
-    PrintedRules,
-    RuleComparison,
     RuleState,
     RuleTable,
+    CarryoverRow,
+    PrintedRules,
+    ComparedRules,
+    CarryoverInput,
+    RuleComparison,
+    CarryoverSection,
+    MarkdownlintConfig,
     ToolCarryoverInput,
 } from '#cli/types/generation.ts';
+import {
+    LIMIT_RULE,
+    FIRST_NUMBER,
+    EMPTY_CARRYOVER,
+    COMMITLINT_CHECK,
+    COMMITLINT_TARGET,
+    MARKDOWNLINT_CHECK,
+    CARRYOVER_ROW_START,
+    IGNORE_REASON_START,
+    MARKDOWNLINT_TARGET,
+    MARKDOWNLINT_ALIASES,
+    PRINT_TIMEOUT_SECONDS,
+    COMMITLINT_CONFIG_PATH,
+    MARKDOWNLINT_RUNNER_FILE,
+    MARKDOWNLINT_CONFIG_FILES,
+    UNREADABLE_CONFIG_MESSAGE,
+    MARKDOWNLINT_RETIRED_RULES,
+} from '#cli/config/generation/setup.ts';
 
 function isWeakerRule(rule: string, user: unknown[], shipped: unknown[]): boolean {
     const value = FIRST_NUMBER.exec(JSON.stringify(user))?.[0];

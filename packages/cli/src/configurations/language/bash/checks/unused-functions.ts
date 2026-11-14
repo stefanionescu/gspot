@@ -1,8 +1,8 @@
-import { BATS_HOOKS, MAIN_FUNCTION, NEVER_CALLED_RULE } from '#cli/config/configurations/bash.ts';
-import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import { BATS_HOOKS, MAIN_FUNCTION, NEVER_CALLED_RULE } from '#cli/config/configurations/bash.ts';
 
 /**
 Report functions that no script in the scope calls. A script can call a function that another script defines, because

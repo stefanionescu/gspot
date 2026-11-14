@@ -1,24 +1,23 @@
-import { realpathSync } from 'node:fs';
-import { join, resolve, win32 } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { realpathSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { join, win32, resolve } from 'node:path';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { BASE_CHECK } from '#tests/config/engine/run.ts';
 import { MISSING_RULE_HELP } from '#cli/config/engine.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { isLinux } from '#tests/setup/system/platform.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import type { CheckStop } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+
 import {
     CHECK_OUTPUTS,
-    EDITORCONFIG_REPORT,
     LINE_ENDING_CASES,
     WINDOWS_ROOT_CASES,
+    EDITORCONFIG_REPORT,
 } from '#tests/config/engine/outputs.ts';
-import { BASE_CHECK } from '#tests/config/engine/run.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { isLinux } from '#tests/setup/system/platform.ts';
 
 const ROOT = resolve('/repo');
 

@@ -1,15 +1,13 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-
+import { writeFile } from 'node:fs/promises';
 import { buildJsonSchema } from '#cli/settings/reference.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const installedSandbox = shareInstalledSandbox({
     configurations: ['toml'],

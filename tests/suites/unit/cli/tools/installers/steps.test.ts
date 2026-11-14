@@ -1,15 +1,14 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runInstallStep, runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
 
 test.skipIf(isWindows)('an install step that a signal stops names the signal in place of an exit code', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

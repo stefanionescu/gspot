@@ -1,26 +1,27 @@
+import { remember } from '#cli/system/cache.ts';
+import { getTool } from '#cli/manifests/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { runProcess } from '#cli/system/processes/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listEnclosingFolders } from '#cli/system/paths.ts';
+import { findToolPath } from '#cli/tools/programs/inspect.ts';
 import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_PACKAGES } from '#cli/config/repository/projects.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import {
-    CANCELED_CHECK_NOTE,
-    DOCKER_DAEMON_NOTE,
-    DOCKER_MISSING_MESSAGE,
-    DOCKER_TOOL,
-    PROJECT_DEPENDENCIES_MESSAGE,
-    PROJECT_ENVIRONMENT_MESSAGE,
-    ROOT_FOLDER_NAME,
-} from '#cli/config/tools/programs.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { remember } from '#cli/system/cache.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { runProcess } from '#cli/system/processes/run.ts';
-import { findToolPath } from '#cli/tools/programs/inspect.ts';
 import { findActiveEnvironment } from '#cli/tools/python-environment.ts';
-import type { ProcessFailure, ScopeCheck, Session, ToolLookupSession } from '#cli/types/tools.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import type { Session, ScopeCheck, ProcessFailure, ToolLookupSession } from '#cli/types/tools.ts';
+
+import {
+    DOCKER_TOOL,
+    ROOT_FOLDER_NAME,
+    DOCKER_DAEMON_NOTE,
+    CANCELED_CHECK_NOTE,
+    DOCKER_MISSING_MESSAGE,
+    PROJECT_ENVIRONMENT_MESSAGE,
+    PROJECT_DEPENDENCIES_MESSAGE,
+} from '#cli/config/tools/programs.ts';
 
 const DOCKER_AVAILABILITY = Symbol('docker availability');
 

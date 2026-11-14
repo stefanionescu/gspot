@@ -1,39 +1,38 @@
 import { basename } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import { BASH_SOURCE_COMMANDS, PYTHON_PACKAGE_FILE } from '#cli/config/configurations/shared.ts';
-import {
-    BARE_NAME_NODES,
-    BASH_COMMAND_NODES,
-    COUNTED_FUNCTION_NODES,
-    DECORATED_PYTHON_NODE,
-    FORWARDING_NODES,
-    FUNCTION_LABEL,
-    LANGUAGE_NAME_NODES,
-    ONE_STATEMENT,
-    PYTHON_EXPORT_LIST,
-    SWIFT_ACCESSOR_NODES,
-    SWIFT_ACCESSOR_OWNERS,
-    SWIFT_FUNCTION_LABELS,
-    TRIVIAL_FILE_MESSAGE,
-    TRIVIAL_FUNCTION_RULES,
-    TYPE_ALIAS_NODES,
-    TYPE_REFERENCE_NODES,
-} from '#cli/config/configurations/structure.ts';
-import { listSingleCallExports } from '#cli/configurations/general/structure/checks/exported-functions.ts';
-import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
-import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
-import { listCheckFiles } from '#cli/engine/plan/files.ts';
-import { isDocstring } from '#cli/parsers/code/python.ts';
 import { getLimit } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { isDocstring } from '#cli/parsers/code/python.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ParsedSource, TrivialFunction } from '#cli/types/configurations/structure.ts';
+import type { ParsedLanguage } from '#cli/types/parsers.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { ParsedLanguage } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { ParsedSource, TrivialFunction } from '#cli/types/configurations/structure.ts';
+import { PYTHON_PACKAGE_FILE, BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
+import { visitQueriedSources } from '#cli/configurations/general/structure/checks/parsed-sources.ts';
+import { TRIVIAL_FUNCTION_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
+import { listSingleCallExports } from '#cli/configurations/general/structure/checks/exported-functions.ts';
+
+import {
+    ONE_STATEMENT,
+    FUNCTION_LABEL,
+    BARE_NAME_NODES,
+    FORWARDING_NODES,
+    TYPE_ALIAS_NODES,
+    BASH_COMMAND_NODES,
+    PYTHON_EXPORT_LIST,
+    LANGUAGE_NAME_NODES,
+    SWIFT_ACCESSOR_NODES,
+    TRIVIAL_FILE_MESSAGE,
+    TYPE_REFERENCE_NODES,
+    DECORATED_PYTHON_NODE,
+    SWIFT_ACCESSOR_OWNERS,
+    SWIFT_FUNCTION_LABELS,
+    COUNTED_FUNCTION_NODES,
+    TRIVIAL_FUNCTION_RULES,
+} from '#cli/config/configurations/structure.ts';
 
 function extractFunctionBody(node: Node, language: ParsedLanguage): Node[] {
     const body = node.childForFieldName('body') ?? node;

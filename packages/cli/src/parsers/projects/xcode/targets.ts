@@ -1,6 +1,6 @@
-import { STRICT_CONCURRENCY, SWIFT_SIX_PREFIX } from '#cli/config/parsers/projects.ts';
-import { buildProjectParseError, getElement, parsePbxproj } from '#cli/parsers/projects/xcode/document.ts';
-import type { ParsedPbxproj, PbxElement, ProjectBuildSettings, ProjectBuildTarget } from '#cli/types/parsers.ts';
+import { SWIFT_SIX_PREFIX, STRICT_CONCURRENCY } from '#cli/config/parsers/projects.ts';
+import { getElement, parsePbxproj, buildProjectParseError } from '#cli/parsers/projects/xcode/document.ts';
+import type { PbxElement, ParsedPbxproj, ProjectBuildTarget, ProjectBuildSettings } from '#cli/types/parsers.ts';
 
 function listConfigurations(project: ParsedPbxproj, list: string | undefined): PbxElement[] {
     const configurations = list === undefined ? [] : (getElement(project, list).buildConfigurations ?? []);

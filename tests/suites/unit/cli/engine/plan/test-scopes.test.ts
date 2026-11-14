@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test.each([

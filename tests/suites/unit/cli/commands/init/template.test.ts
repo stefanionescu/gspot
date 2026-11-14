@@ -1,17 +1,15 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { readFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/parse.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 const TEAM_TEMPLATE = `# gspot settings for this repository. Change them with gspot set, unset, add, remove, ignore, and unignore.
 

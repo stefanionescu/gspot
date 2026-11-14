@@ -1,27 +1,25 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { HOOKS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { listStaleFiles } from '#cli/generation/stale.ts';
+import { readGitSetting } from '#cli/repository/git/run.ts';
+import { listInstallNotes } from '#cli/generation/report.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
 import { formatHeader } from '#cli/generation/builders/header.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { listInstallNotes } from '#cli/generation/report.ts';
-import { listStaleFiles } from '#cli/generation/stale.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { readGitSetting } from '#cli/repository/git/run.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/configs.ts';
-import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { HOOKS_CHANGED_NOTE } from '#cli/config/generation/files.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { EDITED_STYLELINT_PACKAGE } from '#tests/config/generation/configs.ts';
+import { STYLELINT_PACKAGE_JSON } from '#tests/config/setup/configurations.ts';
 
 test('removing css drops its managed stylelint field and keeps authored fields byte for byte', async () => {
     const project = {

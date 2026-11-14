@@ -1,52 +1,52 @@
-import { Document, type Node, Scalar, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
-
+import { getUvPin } from '#cli/tools/pins.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { NODE_PROGRAM } from '#cli/config/system.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { GSPOT_INSTALL } from '#cli/config/manifests.ts';
+import { CI_PINS } from '#cli/config/settings/tables.ts';
+import { CI_NODE } from '#cli/config/tools/installers.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readMisePin } from '#cli/repository/projects/pin.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { STRICT_MODE } from '#cli/config/configurations/bash.ts';
+import { formatHeader } from '#cli/generation/builders/header.ts';
+import type { PackageManagerPin } from '#cli/types/repository.ts';
+import type { Session, GeneratedFile } from '#cli/types/tools.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { quoteCommand, quoteArgument } from '#cli/system/text/quoting.ts';
 import { WORKFLOW_EXPRESSION } from '#cli/config/configurations/github-actions.ts';
+import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
+import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+
 import {
+    findPackageManagerPin,
+    buildPackageManagerCommand,
+    buildFrozenInstallArguments,
+} from '#cli/repository/projects/package-manager.ts';
+import {
+    CI_JOB_NAME,
+    GITLAB_CACHE,
+    GITLAB_RULES,
+    CI_DIFF_LINES,
+    CI_STEP_NAMES,
+    GITHUB_EVENTS,
+    GITHUB_WORKFLOW,
+    GITLAB_WORKFLOW,
     CHECKOUT_OPTIONS,
     CI_BASE_VARIABLE,
     CI_CHECK_COMMAND,
-    CI_DIFF_LINES,
-    CI_JOB_NAME,
-    CI_PACKAGE_RUNNER,
-    CI_STEP_NAMES,
-    CI_TESTS_JOB_NAME,
-    CI_TIMEOUT_MINUTES,
-    GITHUB_BASE_EXPRESSION,
-    GITHUB_CONCURRENCY,
-    GITHUB_EVENTS,
-    GITHUB_EXPRESSION_MESSAGE,
-    GITHUB_PUSH_CONDITION,
-    GITHUB_WORKFLOW,
     GITLAB_BASE_LINE,
-    GITLAB_CACHE,
-    GITLAB_MISE_IMAGE,
-    GITLAB_RULES,
     GITLAB_VARIABLES,
-    GITLAB_WORKFLOW,
+    CI_PACKAGE_RUNNER,
+    CI_TESTS_JOB_NAME,
+    GITLAB_MISE_IMAGE,
+    CI_TIMEOUT_MINUTES,
+    GITHUB_CONCURRENCY,
+    GITHUB_PUSH_CONDITION,
+    GITHUB_BASE_EXPRESSION,
+    GITHUB_EXPRESSION_MESSAGE,
 } from '#cli/config/generation/builders.ts';
-import { GSPOT_INSTALL } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
-import { CI_PINS } from '#cli/config/settings/tables.ts';
-import { NODE_PROGRAM } from '#cli/config/system.ts';
-import { CI_NODE } from '#cli/config/tools/installers.ts';
-import { formatHeader } from '#cli/generation/builders/header.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import {
-    buildFrozenInstallArguments,
-    buildPackageManagerCommand,
-    findPackageManagerPin,
-} from '#cli/repository/projects/package-manager.ts';
-import { readMisePin } from '#cli/repository/projects/pin.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { quoteArgument, quoteCommand } from '#cli/system/text/quoting.ts';
-import { getUvPin } from '#cli/tools/pins.ts';
-import type { ActionPin, FrozenLockfile, Pipeline } from '#cli/types/generation.ts';
-import type { PackageManagerPin } from '#cli/types/repository.ts';
-import type { GeneratedFile, Session } from '#cli/types/tools.ts';
 
 function buildActionPin({ name, sha, version }: ActionPin): Scalar {
     const node = new Scalar(`${name}@${sha}`);

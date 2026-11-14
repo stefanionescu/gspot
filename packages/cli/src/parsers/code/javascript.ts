@@ -1,15 +1,15 @@
 import type { Node } from 'web-tree-sitter';
+import type { ComponentScript } from '#cli/types/parsers.ts';
+import { blankText, replaceRanges } from '#cli/system/text/positions.ts';
+import { parseSource, findGrammarByExtension } from '#cli/parsers/code/grammars.ts';
 
 import {
+    TSX_LANGUAGES,
     ASTRO_EXTENSION,
     ASTRO_FRONT_MATTER,
     COMPONENT_EXTENSION,
     SCRIPT_LANGUAGE_ATTRIBUTE,
-    TSX_LANGUAGES,
 } from '#cli/config/parsers/code.ts';
-import { findGrammarByExtension, parseSource } from '#cli/parsers/code/grammars.ts';
-import { blankText, replaceRanges } from '#cli/system/text/positions.ts';
-import type { ComponentScript } from '#cli/types/parsers.ts';
 
 function listComponentScripts(element: Node, text: string, masked: string): ComponentScript[] {
     const language = element.namedChildren

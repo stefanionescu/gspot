@@ -17,6 +17,13 @@ import { defineConfig } from "eslint/config";
 import typescriptBlocks from "../../typescript/eslint.mjs";
 import astroBlocks from "../../astro/eslint.mjs";
 import zodBlocks from "../../zod/eslint.mjs";
+const perfectionistSortNamedImportsList = [
+    "error",
+    {
+        "type": "line-length",
+        "ignoreCase": false
+    }
+];
 const maxLinesList = [
     "error",
     {
@@ -461,30 +468,20 @@ export default setRuleOptions(defineConfig([
         "perfectionist/sort-imports": [
             "error",
             {
-                "type": "alphabetical",
+                "type": "line-length",
                 "ignoreCase": false,
                 "groups": [
-                    "builtin",
-                    "external",
-                    "internal",
-                    [
-                        "parent",
-                        "sibling",
-                        "index"
-                    ],
-                    "unknown"
+                    "singleline-import",
+                    "multiline-import"
                 ],
-                "newlinesBetween": 1,
+                "fallbackSort": {
+                    "type": "alphabetical",
+                    "order": "asc"
+                },
                 "useExperimentalDependencyDetection": false
             }
         ],
-        "perfectionist/sort-named-imports": [
-            "error",
-            {
-                "type": "alphabetical",
-                "ignoreCase": false
-            }
-        ],
+        "perfectionist/sort-named-imports": perfectionistSortNamedImportsList,
         "perfectionist/sort-exports": [
             "error",
             {
@@ -497,13 +494,7 @@ export default setRuleOptions(defineConfig([
                 "ignoreCase": false
             }
         ],
-        "perfectionist/sort-named-exports": [
-            "error",
-            {
-                "type": "line-length",
-                "ignoreCase": false
-            }
-        ],
+        "perfectionist/sort-named-exports": perfectionistSortNamedImportsList,
         "unicorn/name-replacements": "off",
         "unicorn/filename-case": "off",
         "unicorn/no-null": "off",

@@ -1,7 +1,7 @@
-import { POLICY_SCHEMA_INDEX, SCHEMA_NAME_INDEX } from '#cli/config/configurations/postgres.ts';
+import type { SqlNodeFields } from '#cli/types/parsers.ts';
 import { qualifyName } from '#cli/configurations/database/postgres/checks/schema/names.ts';
 import type { SchemaState, StatementApplier } from '#cli/types/configurations/database.ts';
-import type { SqlNodeFields } from '#cli/types/parsers.ts';
+import { SCHEMA_NAME_INDEX, POLICY_SCHEMA_INDEX } from '#cli/config/configurations/postgres.ts';
 
 export function dropPolicy(state: SchemaState, _name: string, names: string[]): void {
     state.policies

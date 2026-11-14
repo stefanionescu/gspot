@@ -1,8 +1,8 @@
-import { FILE_EXTENSION_RULE, IMPORT_EXTENSIONS } from '#cli/config/configurations/javascript/blocks.ts';
-import { SUPABASE_RULES } from '#cli/config/configurations/supabase.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { escapeGlob } from '#cli/system/patterns.ts';
-import type { ConfigurationBlocks, EslintBlockBuilder, EslintScope } from '#cli/types/configurations/javascript.ts';
+import { SUPABASE_RULES } from '#cli/config/configurations/supabase.ts';
+import { IMPORT_EXTENSIONS, FILE_EXTENSION_RULE } from '#cli/config/configurations/javascript/blocks.ts';
+import type { EslintScope, EslintBlockBuilder, ConfigurationBlocks } from '#cli/types/configurations/javascript.ts';
 
 function buildSupabaseBlocks(scope: EslintScope): ConfigurationBlocks {
     const folder = escapeGlob(getTable(scope.settings, 'supabase').functions_folder);

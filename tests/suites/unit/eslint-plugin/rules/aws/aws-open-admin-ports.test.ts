@@ -1,5 +1,5 @@
-import { awsOpenAdminPorts } from '#eslint-plugin/rules/aws/aws-open-admin-ports.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsOpenAdminPorts } from '#eslint-plugin/rules/aws/aws-open-admin-ports.ts';
 
 buildRuleTester().run('aws-open-admin-ports', awsOpenAdminPorts, {
     valid: [

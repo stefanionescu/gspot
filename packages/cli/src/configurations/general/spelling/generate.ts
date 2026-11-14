@@ -1,28 +1,28 @@
-import { stringify } from '@decimalturn/toml-patch';
-
-import {
-    ENGLISH_LOCALE_GLOBS,
-    EXTEND_EXCLUDE_LINE,
-    LOCKFILE_EXTENSION,
-    LOCKFILE_GLOB,
-    MESSAGE_FILES_TITLE,
-    TYPOS_CHECK,
-    TYPOS_FORMAT_GLOBS,
-    TYPOS_IGNORE_PATTERNS,
-    TYPOS_LOCKFILE_GLOBS,
-} from '#cli/config/configurations/general.ts';
-import { MESSAGE_FILE_SUFFIX, TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
-import {
-    commentSectionTitle,
-    convertToGlobs,
-    keepFirstPatterns,
-    listPlannedIgnoreSections,
-} from '#cli/configurations/ignores.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { escapeGlob } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
+import { MESSAGE_FILE_SUFFIX, TRANSLATIONS_CONFIGURATION } from '#cli/config/settings/detected.ts';
 import type { ConfigBuilder, IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
+
+import {
+    convertToGlobs,
+    keepFirstPatterns,
+    commentSectionTitle,
+    listPlannedIgnoreSections,
+} from '#cli/configurations/ignores.ts';
+import {
+    TYPOS_CHECK,
+    LOCKFILE_GLOB,
+    LOCKFILE_EXTENSION,
+    TYPOS_FORMAT_GLOBS,
+    EXTEND_EXCLUDE_LINE,
+    MESSAGE_FILES_TITLE,
+    ENGLISH_LOCALE_GLOBS,
+    TYPOS_LOCKFILE_GLOBS,
+    TYPOS_IGNORE_PATTERNS,
+} from '#cli/config/configurations/general.ts';
 
 // typos reads every file as English. The section comes first, so that a later path that you ignore still wins.
 function listMessageSections({ scope }: PlannedConfig): IgnoreSection[] {

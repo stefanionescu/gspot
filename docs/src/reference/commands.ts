@@ -1,18 +1,18 @@
+import type { ReferencePage } from '#docs/types/pages.ts';
 import { CLI_REFERENCE, type CommandReference } from '@gspothq/cli/reference';
+import { formatText, formatTable, formatSection, buildReferencePage } from '#docs/reference/markdown.ts';
 
 import {
-    COMMANDS_OPENING,
-    DEFINITION_HEADING,
-    ENVIRONMENT_VARIABLES,
-    ENVIRONMENT_VARIABLES_HEADING,
     EXAMPLE_MESSAGE,
-    EXIT_CODE_HEADING,
-    EXIT_CODES_HEADING,
-    GLOBAL_OPTIONS_HEADING,
     PURPOSE_HEADING,
+    COMMANDS_OPENING,
+    EXIT_CODE_HEADING,
+    DEFINITION_HEADING,
+    EXIT_CODES_HEADING,
+    ENVIRONMENT_VARIABLES,
+    GLOBAL_OPTIONS_HEADING,
+    ENVIRONMENT_VARIABLES_HEADING,
 } from '#docs/config/reference.ts';
-import { buildReferencePage, formatSection, formatTable, formatText } from '#docs/reference/markdown.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
 
 function formatChoices(value: Pick<CommandReference['arguments'][number], 'choices' | 'default'>): string {
     const listed = value.choices?.map((choice) => `\`${choice}\``).join(', ');

@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { hasGeneratedHeader } from '#cli/repository/files/ownership.ts';
-import { GENERATED_HEADERS, NOT_GENERATED } from '#tests/config/repository.ts';
+import { NOT_GENERATED, GENERATED_HEADERS } from '#tests/config/repository.ts';
 
 test.each([...GENERATED_HEADERS])('the generated header is found in each comment form: %j', (text) => {
     expect(hasGeneratedHeader(text)).toBe(true);

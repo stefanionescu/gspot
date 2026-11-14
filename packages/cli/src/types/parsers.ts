@@ -1,20 +1,20 @@
-import type { parseDocument } from '@decimalturn/toml-patch';
-import type { Node as SqlNode } from '@pgsql/types';
-import type ts from 'typescript';
-import type { Node, Parser, Tree } from 'web-tree-sitter';
-import type { Document } from 'yaml';
 import type { z } from 'zod';
-
+import type ts from 'typescript';
+import type { Document } from 'yaml';
+import type { Node as SqlNode } from '@pgsql/types';
+import type { Node, Tree, Parser } from 'web-tree-sitter';
+import type { parseDocument } from '@decimalturn/toml-patch';
+import type { RunCache, TextRange } from '#cli/types/system.ts';
 import type { GRAMMAR_NAMES } from '#cli/config/parsers/code.ts';
 import type { JAVASCRIPT_LOCKFILES } from '#cli/config/parsers/projects.ts';
+
 import type {
-    packageJsonSchema,
     pbxprojSchema,
     pipfileSchema,
-    pyprojectSchema,
     tsconfigSchema,
+    pyprojectSchema,
+    packageJsonSchema,
 } from '#cli/schemas/parsers.ts';
-import type { RunCache, TextRange } from '#cli/types/system.ts';
 
 export type TrapScript = {
     trap: Node;

@@ -1,13 +1,12 @@
 import type { z } from 'zod';
-
-import type { GROUP_LABELS } from '#cli/config/commands/setup.ts';
-import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
-import type { CheckDescription } from '#cli/types/engine/plan.ts';
-import type { Configuration, ConfigurationCheck, RuleFileReference, Tool } from '#cli/types/manifests.ts';
-import type { SetupReference } from '#cli/types/repository.ts';
-import type { Level, Setting, SettingReference } from '#cli/types/settings.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import type { SetupReference } from '#cli/types/repository.ts';
+import type { GROUP_LABELS } from '#cli/config/commands/setup.ts';
+import type { CheckDescription } from '#cli/types/engine/plan.ts';
+import type { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
+import type { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
+import type { Level, Setting, SettingReference } from '#cli/types/settings.ts';
+import type { Tool, Configuration, RuleFileReference, ConfigurationCheck } from '#cli/types/manifests.ts';
 
 export type CommandHelp = {
     summary: string;

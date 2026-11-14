@@ -1,34 +1,33 @@
-import { availableParallelism } from 'node:os';
-import { setImmediate } from 'node:timers/promises';
-
 import pLimit from 'p-limit';
-
-import { PROGRESS_INTERVAL_MILLISECONDS } from '#cli/config/engine.ts';
-import { CANCELED_CHECK_NOTE } from '#cli/config/tools/programs.ts';
-import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
-import { assertShippedCheck, isActive, planChecks } from '#cli/engine/plan/checks.ts';
-import { buildBaseResult, finishResult } from '#cli/engine/results.ts';
+import { availableParallelism } from 'node:os';
+import type { Session } from '#cli/types/tools.ts';
+import { setImmediate } from 'node:timers/promises';
 import { runFixers } from '#cli/engine/run/fixes.ts';
-import { buildRunReport } from '#cli/engine/run/report.ts';
-import { lookUpCommandTools, runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { buildRunReport } from '#cli/engine/run/report.ts';
 import { CheckStop, GspotError } from '#cli/system/errors.ts';
+import { holdCopyFolder } from '#cli/engine/copies/folders.ts';
 import { formatUnexpectedError } from '#cli/system/terminal.ts';
-import { findMissingDependencies, findMissingDocker, findMissingEnvironment } from '#cli/tools/missing.ts';
+import { CANCELED_CHECK_NOTE } from '#cli/config/tools/programs.ts';
+import { PROGRESS_INTERVAL_MILLISECONDS } from '#cli/config/engine.ts';
+import { finishResult, buildBaseResult } from '#cli/engine/results.ts';
 import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
+import { isActive, planChecks, assertShippedCheck } from '#cli/engine/plan/checks.ts';
+import { runCommandCheck, lookUpCommandTools } from '#cli/engine/run/tool-runs/check.ts';
+import { findMissingDocker, findMissingEnvironment, findMissingDependencies } from '#cli/tools/missing.ts';
+
 import type {
-    BuiltInCheck,
+    Run,
     CheckCode,
-    CheckGeneration,
+    RunResult,
+    RunOptions,
     CheckResult,
-    CheckRunOptions,
+    BuiltInCheck,
     CheckSession,
     PlanAfterFixes,
-    Run,
-    RunOptions,
-    RunResult,
+    CheckGeneration,
+    CheckRunOptions,
 } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 async function findUnrunnableResult(
     session: CheckSession,

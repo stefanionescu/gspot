@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { buildTableGrid, isLayoutTable } from '../../language/html-tables.ts';
-import { getAttribute, getElementName } from '../../language/jsx.ts';
 import { createRule } from '../../rule.ts';
 import type { TableCell } from '../../types/accessibility.ts';
+import { getAttribute, getElementName } from '../../language/jsx.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { isLayoutTable, buildTableGrid } from '../../language/html-tables.ts';
 
 function hasHeaderLine(grid: ReadonlyArray<readonly TableCell[]> | null): boolean {
     if (grid === null) return true;

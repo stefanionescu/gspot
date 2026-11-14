@@ -1,9 +1,8 @@
-import { expect, spyOn, test } from 'bun:test';
-
-import { listLintCommands, listOtherFormatScripts } from '#cli/repository/setup/lint-commands.ts';
+import { test, spyOn, expect } from 'bun:test';
 import type { LintCommand } from '#cli/types/repository.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listLintCommands, listOtherFormatScripts } from '#cli/repository/setup/lint-commands.ts';
 
 async function listRows(root: string): Promise<LintCommand[]> {
     const { files } = await readTestRepository(root);

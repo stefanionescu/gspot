@@ -1,13 +1,13 @@
-import { listCheckTools } from '#cli/engine/plan/tools.ts';
-import { listToolNames } from '#cli/manifests/tools.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
 import { remember } from '#cli/system/cache.ts';
-import type { OwnedConfig, UsedNames } from '#cli/types/generation.ts';
-import type { Config } from '#cli/types/manifests.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 import type { Scope } from '#cli/types/settings.ts';
-import type { ScopeCheck, Session } from '#cli/types/tools.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import { listToolNames } from '#cli/manifests/tools.ts';
+import { listCheckTools } from '#cli/engine/plan/tools.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { Session, ScopeCheck } from '#cli/types/tools.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import type { UsedNames, OwnedConfig } from '#cli/types/generation.ts';
 
 const OWNED_CONFIGS = Symbol('owned configs');
 

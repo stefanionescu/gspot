@@ -1,5 +1,5 @@
-import { noEmptyReturnValue } from '#eslint-plugin/rules/functions/no-empty-return-value.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyReturnValue } from '#eslint-plugin/rules/functions/no-empty-return-value.ts';
 
 buildRuleTester().run('no-empty-return-value', noEmptyReturnValue, {
     valid: [

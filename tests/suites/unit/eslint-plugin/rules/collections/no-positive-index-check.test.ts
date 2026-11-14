@@ -1,5 +1,5 @@
-import { noPositiveIndexCheck } from '#eslint-plugin/rules/collections/no-positive-index-check.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPositiveIndexCheck } from '#eslint-plugin/rules/collections/no-positive-index-check.ts';
 
 buildTypedRuleTester().run('no-positive-index-check', noPositiveIndexCheck, {
     valid: [

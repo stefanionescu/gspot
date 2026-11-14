@@ -1,29 +1,30 @@
+import { isTable } from '#cli/system/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { formatScope } from '#cli/repository/scopes.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import { planChecks, buildCheckState } from '#cli/engine/plan/checks.ts';
+import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
+import { formatSettingSource, listInheritedSettings } from '#cli/settings/values/inherit.ts';
+import { listRemovedConfigurations, listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import type { SettingsListJson, CommandDefinition, ConfigurationsListJson } from '#cli/types/commands.ts';
+
 import {
     KEY_GAP,
-    LIST_ARGUMENT,
-    LIST_KINDS,
     NOT_SET,
-    REASON_CONDITIONS,
-    REASON_HEADER,
-    SCOPES_NAMED,
+    LIST_KINDS,
     VALUE_WIDTH,
+    SCOPES_NAMED,
+    LIST_ARGUMENT,
+    REASON_HEADER,
+    REASON_CONDITIONS,
 } from '#cli/config/commands/lookup.ts';
-import { buildCheckState, planChecks } from '#cli/engine/plan/checks.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { formatScope } from '#cli/repository/scopes.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
-import { listRemovedConfigurations, listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { formatSettingSource, listInheritedSettings } from '#cli/settings/values/inherit.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import type { CommandDefinition, ConfigurationsListJson, SettingsListJson } from '#cli/types/commands.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function formatScopeGroup(scopes: readonly string[]): string {
     const nested = scopes.filter((scopePath) => scopePath !== '');

@@ -1,15 +1,13 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
 import type { TomlTable } from '#cli/types/settings.ts';
 import { REFUSAL_FILES } from '#tests/config/commands/edits.ts';
-import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SYNTAX_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('ignore of an unknown check exits 2, names the close check, and leaves gspot.toml byte for byte', async () => {
     await using sandbox = await createGitSandbox({

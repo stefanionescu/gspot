@@ -1,38 +1,37 @@
 import { existsSync } from 'node:fs';
-import { appendFile, chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { fileURLToPath } from 'node:url';
-
-import { expect, test } from 'bun:test';
-import prettierPackage from 'prettier/package.json' with { type: 'json' };
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { runTool } from '#cli/tools/run.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { join, dirname, basename } from 'node:path';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ToolPackageManager } from '#cli/types/tools.ts';
-import {
-    NPM_PROJECT_FILES,
-    NPM_PROJECT_IGNORES,
-    NPM_PROJECT_ROOT_PACKAGE,
-    NPM_REGISTRY_TOKEN,
-} from '#tests/config/integration/general.ts';
-import { AUTHENTICATION_REQUIRED_MESSAGE, REGISTRY_HOST } from '#tests/config/setup/runner.ts';
-import { PNPM_WORKSPACE } from '#tests/config/setup/sandboxes.ts';
-import { doctorOutputSchema, installOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import type { NpmProject } from '#tests/types/integration.ts';
 import { readToolProjectFiles } from '#tests/setup/cli/tools.ts';
+import { PNPM_WORKSPACE } from '#tests/config/setup/sandboxes.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { startNpmRegistry } from '#tests/setup/runner/npm-registry.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
-import type { NpmProject } from '#tests/types/integration.ts';
+import prettierPackage from 'prettier/package.json' with { type: 'json' };
 import type { NpmRegistry, ToolProjectFiles } from '#tests/types/setup.ts';
+import { selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
+import { chmod, mkdir, readFile, writeFile, appendFile } from 'node:fs/promises';
+import { doctorOutputSchema, installOutputSchema } from '#tests/schemas/setup.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { REGISTRY_HOST, AUTHENTICATION_REQUIRED_MESSAGE } from '#tests/config/setup/runner.ts';
+
+import {
+    NPM_PROJECT_FILES,
+    NPM_REGISTRY_TOKEN,
+    NPM_PROJECT_IGNORES,
+    NPM_PROJECT_ROOT_PACKAGE,
+} from '#tests/config/integration/general.ts';
 
 const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm'] as const;
 

@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { CALL_NODES, CATCH_METHOD, CHAINED_USES, HANDLING_PARENTS } from '../../config/functions.ts';
-import { getTypes, isThenable } from '../../language/checker.ts';
-import { listBodyNodes } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
-import type { PromiseUse } from '../../types/functions.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
+import type { PromiseUse } from '../../types/functions.ts';
+import { getTypes, isThenable } from '../../language/checker.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { CALL_NODES, CATCH_METHOD, CHAINED_USES, HANDLING_PARENTS } from '../../config/functions.ts';
 
 function getChainedUse(node: TSESTree.Node): PromiseUse {
     const { parent } = node;

@@ -1,36 +1,35 @@
-import { join, posix } from 'node:path';
-
 import type ts from 'typescript';
+import { join, posix } from 'node:path';
+import { setKey } from '#cli/settings/toml/edit.ts';
+import type { RunCache } from '#cli/types/system.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import { buildFilenameMatcher } from '#cli/system/patterns.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
+import { isInScope, joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
+import { TSCONFIG_FILE, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import type { TomlTable, DetectedScopes, ScopeConfigurations, ImportExtensionStyle } from '#cli/types/settings.ts';
 
-import { PBXPROJ_SUFFIX, TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
 import {
+    MESSAGES_FOLDER,
     BUNDLER_PACKAGES,
+    OPENNEXT_PACKAGE,
+    TS_SUFFIX_IMPORT,
+    XCODE_DESTINATIONS,
+    MESSAGE_FILE_SUFFIX,
+    SWIFT_CONFIGURATION,
+    OPENAPI_CONFIGURATION,
+    OPENNEXT_TYPE_DEFAULTS,
     CLOUDFLARE_CONFIGURATION,
     IMPORT_EXTENSION_SETTING,
     JAVASCRIPT_CONFIGURATION,
-    MESSAGE_FILE_SUFFIX,
-    MESSAGES_FOLDER,
-    OPENAPI_CONFIGURATION,
-    OPENNEXT_PACKAGE,
-    OPENNEXT_TYPE_DEFAULTS,
-    SWIFT_CONFIGURATION,
     TRANSLATIONS_CONFIGURATION,
-    TS_SUFFIX_IMPORT,
-    XCODE_DESTINATIONS,
 } from '#cli/config/settings/detected.ts';
-import { findTsconfig } from '#cli/parsers/projects/tsconfig.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
-import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { isInScope, joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
-import { setKey } from '#cli/settings/toml/edit.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import { buildFilenameMatcher } from '#cli/system/patterns.ts';
-import type { Repository } from '#cli/types/repository.ts';
-import type { DetectedScopes, ImportExtensionStyle, ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
-import type { RunCache } from '#cli/types/system.ts';
 
 function buildOpenApiTable(selection: ScopeConfigurations, { repository, scopes }: DetectedScopes): TomlTable {
     const openapi = selection.selected.find((configuration) => configuration.name === OPENAPI_CONFIGURATION);

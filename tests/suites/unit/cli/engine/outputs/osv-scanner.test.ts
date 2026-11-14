@@ -1,8 +1,6 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 

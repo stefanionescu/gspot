@@ -1,16 +1,14 @@
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation/setup.ts';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { getTable } from '#cli/settings/tables.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import type { FormatSettings } from '#cli/types/configurations/general.ts';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
 import { captureTerminal } from '#tests/setup/system/terminal.ts';
+import { PRETTIER_SCRIPT_NOTE } from '#cli/config/generation/setup.ts';
+import type { FormatSettings } from '#cli/types/configurations/general.ts';
 
 const FORMAT_FILE_CASES = [
     {

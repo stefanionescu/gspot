@@ -1,16 +1,14 @@
-import { execFile } from 'node:child_process';
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
-
-import starlight from '@astrojs/starlight';
-import { defineConfig, passthroughImageService } from 'astro/config';
-import { createMermaidRenderer } from 'mermaid-isomorphic';
 import { chromium } from 'playwright';
-import { defineHastPlugin, type HastNode, type HastPluginEntry } from 'satteri';
-
+import { fileURLToPath } from 'node:url';
+import starlight from '@astrojs/starlight';
+import { execFile } from 'node:child_process';
+import { createMermaidRenderer } from 'mermaid-isomorphic';
 import cliPackage from '#cli-package' with { type: 'json' };
-import { EDIT_URL, README_OPENING_BLOCKS, REPOSITORY_URL, SIDEBAR, SITE_TITLE } from '#docs/config/site.ts';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { defineConfig, passthroughImageService } from 'astro/config';
+import { type HastNode, defineHastPlugin, type HastPluginEntry } from 'satteri';
+import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
 const FAVICON = '/favicon.png';
 const ICONS = [

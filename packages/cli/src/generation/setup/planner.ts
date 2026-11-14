@@ -1,46 +1,47 @@
-import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
-import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { listSessionFiles, openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readCarryover } from '#cli/generation/setup/carryover/read.ts';
-import { deleteConflictingConfigs, readConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
-import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
-import { readPrettierScripts } from '#cli/generation/setup/format/prettier.ts';
-import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { listToolNames } from '#cli/manifests/tools.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { selectProposedConfigurations } from '#cli/repository/detection/proposals.ts';
-import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
-import { readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/projects/pin.ts';
-import { buildStartRunner } from '#cli/repository/projects/runner.ts';
-import { readRepository } from '#cli/repository/read.ts';
-import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
-import { listLintCommands, listOtherFormatScripts } from '#cli/repository/setup/lint-commands.ts';
-import { readRepositorySetup } from '#cli/repository/setup/read.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { parseSettings } from '#cli/settings/parse.ts';
-import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { writeSettings } from '#cli/settings/toml/file.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { includeParentFolders } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text/order.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
 import { listReplacedTools } from '#cli/tools/pins.ts';
+import { listToolNames } from '#cli/manifests/tools.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { TomlTable } from '#cli/types/settings.ts';
+import { readRepository } from '#cli/repository/read.ts';
+import { writeSettings } from '#cli/settings/toml/file.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
+import { includeParentFolders } from '#cli/system/paths.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { SessionOptions } from '#cli/types/engine/plan.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { planInitFiles } from '#cli/generation/setup/file-plan.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { readRepositorySetup } from '#cli/repository/setup/read.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import { buildStartRunner } from '#cli/repository/projects/runner.ts';
+import { openSession, listSessionFiles } from '#cli/engine/session.ts';
+import { readCarryover } from '#cli/generation/setup/carryover/read.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { listCrlfIndexPaths } from '#cli/repository/revisions/files.ts';
+import { readPrettierScripts } from '#cli/generation/setup/format/prettier.ts';
+import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
+import { detectPackageManager } from '#cli/repository/projects/package-manager.ts';
+import { selectProposedConfigurations } from '#cli/repository/detection/proposals.ts';
+import { buildInitSettings, buildSettingsDraft } from '#cli/generation/setup/settings.ts';
+import { readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/projects/pin.ts';
+import { listLintCommands, listOtherFormatScripts } from '#cli/repository/setup/lint-commands.ts';
+import { readConflictingConfigs, deleteConflictingConfigs } from '#cli/generation/setup/conflicts.ts';
+
 import type {
+    InitScan,
     ApplyReport,
     InitOptions,
     InitPlanning,
-    InitScan,
-    PlannedSettings,
-    SettingsDraft,
     SettingsPlan,
+    SettingsDraft,
+    PlannedSettings,
 } from '#cli/types/generation.ts';
-import type { Repository } from '#cli/types/repository.ts';
-import type { TomlTable } from '#cli/types/settings.ts';
 
 /**
 Choose where init pins gspot, and the runner that starts it from that pin. A repository that already pins gspot gets

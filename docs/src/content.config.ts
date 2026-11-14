@@ -1,25 +1,25 @@
-import { docsLoader } from '@astrojs/starlight/loaders';
+import { z } from 'astro/zod';
+import { defineCollection } from 'astro:content';
 import { docsSchema } from '@astrojs/starlight/schema';
 import { CLI_REFERENCE } from '@gspothq/cli/reference';
-import { defineCollection } from 'astro:content';
+import { docsLoader } from '@astrojs/starlight/loaders';
 import type { Loader, LoaderContext } from 'astro/loaders';
-import { z } from 'astro/zod';
+import { buildCommandPage } from '#docs/reference/commands.ts';
+import { buildSettingsPage } from '#docs/reference/settings.ts';
+import { buildChangelogPage } from '#docs/reference/changelog.ts';
+import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
+import { buildConfigurationPages } from '#docs/reference/configurations.ts';
+import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
+import type { ReferencePage, ConfigurationGuide } from '#docs/types/pages.ts';
 
 import {
-    CHANGELOG_PATH,
-    DOCS_SOURCE_NAME,
     PAGES_FOLDER,
+    CHANGELOG_PATH,
+    REFERENCE_PATH,
+    DOCS_SOURCE_NAME,
     REFERENCE_FOLDERS,
     REFERENCE_IDS_KEY,
-    REFERENCE_PATH,
 } from '#docs/config/reference.ts';
-import { buildChangelogPage } from '#docs/reference/changelog.ts';
-import { buildCheckIndex, formatCheckTable } from '#docs/reference/checks.ts';
-import { buildCommandPage } from '#docs/reference/commands.ts';
-import { buildConfigurationPages } from '#docs/reference/configurations.ts';
-import { buildPluginPages } from '#docs/reference/eslint-plugin.ts';
-import { buildSettingsPage } from '#docs/reference/settings.ts';
-import type { ConfigurationGuide, ReferencePage } from '#docs/types/pages.ts';
 
 const configurationNameSchema = z.enum(CLI_REFERENCE.configurations.map(({ name }) => name));
 

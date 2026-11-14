@@ -1,14 +1,15 @@
+import { formatScopePrefix } from '#cli/repository/scopes.ts';
+import { writeProgress, rewriteProgress } from '#cli/system/terminal.ts';
+import type { CheckResult, CheckProgress } from '#cli/types/engine/run.ts';
+import { formatSeconds, formatNameList } from '#cli/system/text/messages.ts';
+
 import {
-    PROGRESS_INTERVAL_MILLISECONDS,
-    RUNNING_CHECKS_SHOWN,
-    SHORT_HASH_LENGTH,
     STAGED_FILES,
     WORKING_TREE,
+    SHORT_HASH_LENGTH,
+    RUNNING_CHECKS_SHOWN,
+    PROGRESS_INTERVAL_MILLISECONDS,
 } from '#cli/config/engine.ts';
-import { formatScopePrefix } from '#cli/repository/scopes.ts';
-import { rewriteProgress, writeProgress } from '#cli/system/terminal.ts';
-import { formatNameList, formatSeconds } from '#cli/system/text/messages.ts';
-import type { CheckProgress, CheckResult } from '#cli/types/engine/run.ts';
 
 function formatRunningChecks(running: Array<Pick<CheckResult, 'check' | 'scope'>>): string {
     const names = running

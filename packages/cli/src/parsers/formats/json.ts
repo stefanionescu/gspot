@@ -1,14 +1,12 @@
-import { isDeepStrictEqual } from 'node:util';
-
-import { applyEdits, modify, parse, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 import type { z } from 'zod';
-
-import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
-import { parseFileFields } from '#cli/parsers/validation.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { GspotError } from '#cli/system/errors.ts';
-import { findValueAt, isTable, normalizeTables } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
 import type { EditableFile } from '#cli/types/parsers.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import { parseFileFields } from '#cli/parsers/validation.ts';
+import { JSONC_OPTIONS } from '#cli/config/parsers/formats.ts';
+import { isTable, findValueAt, normalizeTables } from '#cli/system/tables.ts';
+import { parse, modify, applyEdits, type ParseError, printParseErrorCode } from 'jsonc-parser/lib/esm/main.js';
 
 export function parseJsonFile(path: string, text: string): Record<string, unknown>;
 

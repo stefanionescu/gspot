@@ -1,47 +1,47 @@
 import { posix } from 'node:path';
-
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import {
-    BIN_FOLDER_PREFIX,
-    COMMAND_FILES,
-    COMMAND_KEYS,
-    COMMAND_SEPARATORS,
-    COMMENT_LINE,
-    FORMAT_SCRIPT,
-    HOOK_FOLDER_PATH,
-    HOOK_ID_SEPARATOR,
-    LINT_COMMAND_FIXES,
-    LINT_STAGED_KEY,
-    MISE_TASK_FOLDER,
-    MISE_TASKS_KEY,
-    OTHER_FORMATTER_MESSAGE,
-    OVERLAPPING_TOOLS,
-    PRE_COMMIT_TOOL,
-    PYGREP_LANGUAGE,
-    QUOTE_MARK,
-    RUN_WORD,
-    RUNNER_NAMES,
-    SIMPLE_GIT_HOOKS_KEY,
-    TASK_AFTER_RUN,
-    TASK_NAME_SEPARATOR,
-    YAML_EXTENSIONS,
-} from '#cli/config/repository/setup.ts';
-import { LINE_BREAK, MISE_PROGRAM } from '#cli/config/system.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlDocuments, parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { hasToolSection, parseSharedFile } from '#cli/repository/setup/conflicts.ts';
-import { lintCommandPackageSchema, preCommitConfigSchema } from '#cli/schemas/repository.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import { isTable } from '#cli/system/tables.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { LINE_BREAK, MISE_PROGRAM } from '#cli/config/system.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { parseYamlFile, parseYamlDocuments } from '#cli/parsers/formats/yaml.ts';
+import { hasToolSection, parseSharedFile } from '#cli/repository/setup/conflicts.ts';
+import { preCommitConfigSchema, lintCommandPackageSchema } from '#cli/schemas/repository.ts';
+
 import type {
-    CommandSearch,
     LintCommand,
-    LintCommandPackage,
+    CommandSearch,
     LintCommandPlace,
     LintCommandSearch,
+    LintCommandPackage,
 } from '#cli/types/repository.ts';
+import {
+    RUN_WORD,
+    QUOTE_MARK,
+    COMMAND_KEYS,
+    COMMENT_LINE,
+    RUNNER_NAMES,
+    COMMAND_FILES,
+    FORMAT_SCRIPT,
+    MISE_TASKS_KEY,
+    TASK_AFTER_RUN,
+    LINT_STAGED_KEY,
+    PRE_COMMIT_TOOL,
+    PYGREP_LANGUAGE,
+    YAML_EXTENSIONS,
+    HOOK_FOLDER_PATH,
+    MISE_TASK_FOLDER,
+    BIN_FOLDER_PREFIX,
+    HOOK_ID_SEPARATOR,
+    OVERLAPPING_TOOLS,
+    COMMAND_SEPARATORS,
+    LINT_COMMAND_FIXES,
+    TASK_NAME_SEPARATOR,
+    SIMPLE_GIT_HOOKS_KEY,
+    OTHER_FORMATTER_MESSAGE,
+} from '#cli/config/repository/setup.ts';
 
 function findCalledTool(command: string, search: CommandSearch, seen = new Set<string>()): string | undefined {
     const words = command

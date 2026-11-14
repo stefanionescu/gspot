@@ -1,29 +1,27 @@
-import { mkdir, symlink } from 'node:fs/promises';
-import { delimiter, dirname, extname, join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
 import semver from 'semver';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { mkdir, symlink } from 'node:fs/promises';
+import { testdir, createFileTree } from 'testdirs';
+import { findPackagePin } from '#cli/tools/pins.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import * as locate from '#cli/tools/programs/locate.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { doctorOutputSchema } from '#tests/schemas/setup.ts';
+import { join, dirname, extname, delimiter } from 'node:path';
+import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { MISE_INSTALL_URL } from '#cli/config/tools/programs.ts';
+import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
 import { executableLayout } from '#cli/system/processes/programs.ts';
-import { findPackagePin } from '#cli/tools/pins.ts';
-import * as locate from '#cli/tools/programs/locate.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import { APP_PYPROJECT } from '#tests/config/setup/languages.ts';
-import { doctorOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 function selectExecutableFolder(tool: Tool): string {
     const installation = findPackagePin(tool);

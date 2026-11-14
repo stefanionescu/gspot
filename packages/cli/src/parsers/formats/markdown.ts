@@ -1,6 +1,5 @@
-import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
-
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import type { CodeFence, ProseLine, SourceComment } from '#cli/types/parsers.ts';
 
 export function listCodeFences(text: string): CodeFence[] {

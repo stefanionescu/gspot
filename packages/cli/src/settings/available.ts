@@ -1,20 +1,18 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import { z } from 'zod';
-
-import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
-import { BOUND_PREFIXES } from '#cli/config/settings/fields.ts';
-import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
-import { LANGUAGE_GROUP_TABLES, OVERRIDING_GROUPS, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/values.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
-import { configurationTableSchemas, tableSettingSchemas } from '#cli/schemas/settings/configurations.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
+import { SETTING_LANGUAGES } from '#cli/config/manifests.ts';
 import { toolsSchema } from '#cli/schemas/settings/tools.ts';
-import { extractKeyName, getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
 import { mergeValue } from '#cli/settings/values/inherit.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { AvailableSettings, Level, Setting } from '#cli/types/settings.ts';
+import { BOUND_PREFIXES } from '#cli/config/settings/fields.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { importRulesSchema } from '#cli/schemas/settings/tables.ts';
+import { TABLE_KEY_SEGMENTS } from '#cli/config/settings/validation.ts';
+import type { Level, Setting, AvailableSettings } from '#cli/types/settings.ts';
+import { extractKeyName, getSettingType, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { tableSettingSchemas, configurationTableSchemas } from '#cli/schemas/settings/configurations.ts';
+import { OVERRIDING_GROUPS, LANGUAGE_GROUP_TABLES, SHIPPED_DEFAULT_ORIGIN } from '#cli/config/settings/values.ts';
 
 function addDefault(availableSettings: AvailableSettings, configuration: Configuration, setting: Setting): void {
     const previous = availableSettings.defaults.get(setting.name);

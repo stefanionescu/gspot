@@ -1,16 +1,16 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { ENVIRONMENT_CASES, ENVIRONMENT_TABLES } from '#tests/config/configurations/javascript/blocks.ts';
-import {
-    IMPORT_FILES,
-    INDEX_ONLY_REEXPORTS,
-    LEVEL_REEXPORT_CASES,
-    REEXPORT_CASES,
-} from '#tests/config/configurations/javascript/plugins.ts';
-import { STRICT_TSCONFIG_TEXT } from '#tests/config/configurations/language.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { STRICT_TSCONFIG_TEXT } from '#tests/config/configurations/language.ts';
+import { ENVIRONMENT_CASES, ENVIRONMENT_TABLES } from '#tests/config/configurations/javascript/blocks.ts';
+
+import {
+    IMPORT_FILES,
+    REEXPORT_CASES,
+    INDEX_ONLY_REEXPORTS,
+    LEVEL_REEXPORT_CASES,
+} from '#tests/config/configurations/javascript/plugins.ts';
 
 test('environment reads are allowed only in environment_readers files of each scope at all', async () => {
     await using sandbox = await testdir();

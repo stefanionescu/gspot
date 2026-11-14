@@ -1,10 +1,10 @@
-import { BATS_EXTENSION, BATS_FLAG, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/bash.ts';
-import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
-import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
-import { runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { DEFAULT_DIALECT } from '#cli/config/repository/files.ts';
+import { runCommandBatches } from '#cli/engine/run/tool-runs/check.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
+import { BATS_FLAG, BATS_EXTENSION, SHELLCHECK_DIALECT_FLAG } from '#cli/config/configurations/bash.ts';
 
 /**
 Runs ShellCheck. It passes a dialect only for scripts without a shebang, and leaves out the warnings that do not fit

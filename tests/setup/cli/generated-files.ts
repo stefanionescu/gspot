@@ -1,15 +1,14 @@
 import { posix } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { extractConfigName } from '#cli/manifests/checks.ts';
+import { ROOT_LABEL } from '#tests/config/setup/programs.ts';
 import { buildConfigs } from '#cli/generation/configs/build.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { extractConfigName } from '#cli/manifests/checks.ts';
-import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { ROOT_LABEL } from '#tests/config/setup/programs.ts';
+import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
 
 export function getConfigPath(session: Session, tool: string, scopePath = ''): string {
     const declaration = session.scopes

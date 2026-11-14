@@ -1,7 +1,6 @@
 import type { Node } from 'web-tree-sitter';
-
 import { NAME_QUOTE } from '#cli/config/configurations/naming.ts';
-import type { FileIdentifiers, NamedCategory } from '#cli/types/configurations/naming.ts';
+import type { NamedCategory, FileIdentifiers } from '#cli/types/configurations/naming.ts';
 
 export function addIdentifier(
     found: FileIdentifiers,

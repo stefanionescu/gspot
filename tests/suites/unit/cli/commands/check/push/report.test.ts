@@ -1,20 +1,18 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
+import { test, expect } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runGspot } from '#tests/setup/cli/commands.ts';
 import { runReportSchema } from '#cli/schemas/engine.ts';
 import type { RunReport } from '#cli/types/engine/run.ts';
-import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PUSH_CHECK_COMMAND } from '#tests/config/commands/check.ts';
+import { BASH_SYNTAX_PUSH_CHECK } from '#tests/config/setup/sandboxes.ts';
+import { createGitSandbox, preparePushRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 async function runBrokenPushCheck(root: string, base: string, broken: string): Promise<RunReport> {
     const result = await runGspot(

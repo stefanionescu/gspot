@@ -1,20 +1,19 @@
 import { existsSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, relative } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import { join, dirname, relative } from 'node:path';
 import { NODE_PROGRAM } from '#cli/config/system.ts';
-import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
-import type { Tool } from '#cli/types/manifests.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { PackageJson } from '#cli/types/parsers.ts';
-import type { Files } from '#cli/types/system.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import type { InstalledDependency } from '#cli/types/tools.ts';
+import { BIN_FOLDER_NAME } from '#cli/config/tools/programs.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 
 export function readToolProjectPackage(files: Files, root: string, path: string): PackageJson | undefined {
     let target: string;

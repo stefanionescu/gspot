@@ -1,30 +1,30 @@
 import { posix } from 'node:path';
-
+import { readText } from '#cli/system/files/reads.ts';
+import type { Files, RunCache } from '#cli/types/system.ts';
+import type { AttributePattern } from '#cli/types/repository.ts';
 import { GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import { OCTAL_RADIX, LEADING_SLASH, WHITESPACE_RUN } from '#cli/config/system.ts';
+import { stripBlock, findBlockBody } from '#cli/parsers/formats/managed-blocks.ts';
+
 import {
-    GENERATED_ATTRIBUTE,
     SET_STATE,
     SET_VALUES,
     UNSET_STATE,
     VENDORED_ATTRIBUTE,
+    GENERATED_ATTRIBUTE,
 } from '#cli/config/repository/files.ts';
 import {
-    ANY_FOLDER_PREFIX,
-    ATTRIBUTE_ASSIGNMENT_SIDES,
-    ATTRIBUTE_FIELDS,
-    ATTRIBUTE_LINE,
-    IGNORED_ATTRIBUTE_LINE,
-    IGNORED_ATTRIBUTE_PATTERN,
-    OCTAL_PATH_BYTE,
     PATH_ESCAPES,
-    QUOTED_ATTRIBUTE_PATTERN,
+    ATTRIBUTE_LINE,
+    OCTAL_PATH_BYTE,
+    ATTRIBUTE_FIELDS,
+    ANY_FOLDER_PREFIX,
     QUOTED_PATH_CHUNKS,
+    IGNORED_ATTRIBUTE_LINE,
+    QUOTED_ATTRIBUTE_PATTERN,
+    IGNORED_ATTRIBUTE_PATTERN,
+    ATTRIBUTE_ASSIGNMENT_SIDES,
 } from '#cli/config/repository/git.ts';
-import { LEADING_SLASH, OCTAL_RADIX, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { findBlockBody, stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { AttributePattern } from '#cli/types/repository.ts';
-import type { Files, RunCache } from '#cli/types/system.ts';
 
 function decodeQuotedPattern(pattern: string): string | undefined {
     if (!QUOTED_ATTRIBUTE_PATTERN.test(pattern)) return undefined;

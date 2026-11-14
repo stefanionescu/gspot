@@ -1,5 +1,5 @@
-import { awsS3BucketVersioning } from '#eslint-plugin/rules/aws/aws-s3-bucket-versioning.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsS3BucketVersioning } from '#eslint-plugin/rules/aws/aws-s3-bucket-versioning.ts';
 
 buildRuleTester().run('aws-s3-bucket-versioning', awsS3BucketVersioning, {
     valid: [

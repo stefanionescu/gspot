@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { ROOT_PARAMETERS } from '#tests/config/configurations/javascript/plugins.ts';
+import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { ROOT_PARAMETERS } from '#tests/config/configurations/javascript/plugins.ts';
 
 test('a JavaScript doc comment needs its types, and a TypeScript one may not repeat them', async () => {
     const typed =

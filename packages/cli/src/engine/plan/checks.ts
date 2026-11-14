@@ -1,24 +1,25 @@
-import { buildPlanInventory, selectCheckFiles } from '#cli/engine/plan/files.ts';
-import { findFirstSkip, findSettingsSkip } from '#cli/engine/plan/skips.ts';
-import { isRunElsewhere } from '#cli/engine/plan/test-scopes.ts';
-import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findCommandTool, findToolName } from '#cli/manifests/tools.ts';
-import { listNestedScopes } from '#cli/repository/scopes.ts';
-import { getRootScope } from '#cli/settings/scopes.ts';
-import { readHost } from '#cli/system/environment.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Check } from '#cli/types/manifests.ts';
+import { readHost } from '#cli/system/environment.ts';
+import { getRootScope } from '#cli/settings/scopes.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { listNestedScopes } from '#cli/repository/scopes.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
+import type { Session, ScopeCheck } from '#cli/types/tools.ts';
+import { isRunElsewhere } from '#cli/engine/plan/test-scopes.ts';
+import { findToolName, findCommandTool } from '#cli/manifests/tools.ts';
+import { findFirstSkip, findSettingsSkip } from '#cli/engine/plan/skips.ts';
+import { isRepositoryRun, isRootOnlyCheck } from '#cli/manifests/checks.ts';
+import { selectCheckFiles, buildPlanInventory } from '#cli/engine/plan/files.ts';
+
 import type {
     CheckState,
+    PlanOptions,
     PlannedCheck,
     PlannedScope,
-    PlanOptions,
     RunSelection,
     ShippedPlannedCheck,
 } from '#cli/types/engine/plan.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
-import type { ScopeCheck, Session } from '#cli/types/tools.ts';
 
 function listScopeChecks(settings: Settings, scope: Scope, root: Scope): ScopeCheck[] {
     const isRoot = scope.path === '';

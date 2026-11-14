@@ -1,21 +1,20 @@
-import { basename, join } from 'node:path/posix';
-
-import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
-import { CI_FILES } from '#cli/config/generation/builders.ts';
-import { BUILD_OUTPUT_FOLDERS, BUILD_OUTPUT_PATTERNS, GSPOT_FOLDER_PATTERNS } from '#cli/config/generation/files.ts';
+import { join, basename } from 'node:path/posix';
+import type { Session } from '#cli/types/tools.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
+import { CI_FILES } from '#cli/config/generation/builders.ts';
 import { GITLINK_MODE } from '#cli/config/repository/files.ts';
 import { convertToGlob } from '#cli/configurations/ignores.ts';
-import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
-import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
 import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
-import { readAuthoredLinguistPatterns } from '#cli/repository/git/attributes.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { IgnoreSection } from '#cli/types/configurations/shared.ts';
 import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { IgnoreSection } from '#cli/types/configurations/shared.ts';
+import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
+import { IGNORE_SECTION_TITLES } from '#cli/config/configurations/shared.ts';
+import { readAuthoredLinguistPatterns } from '#cli/repository/git/attributes.ts';
+import { BUILD_OUTPUT_FOLDERS, BUILD_OUTPUT_PATTERNS, GSPOT_FOLDER_PATTERNS } from '#cli/config/generation/files.ts';
 
 export function buildGspotSection(session: Session, generated: Pick<ConfigTargets, 'targets'>): IgnoreSection {
     const { ci } = session.settings;

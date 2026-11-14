@@ -1,8 +1,8 @@
-import { COMMITLINT_ERROR_SEVERITY, COMMITLINT_PARSER_PRESET } from '#cli/config/configurations/general.ts';
-import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { assertRunningRuleOptions, listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { listDisabledRules, assertRunningRuleOptions } from '#cli/configurations/rule-options.ts';
+import { COMMITLINT_PARSER_PRESET, COMMITLINT_ERROR_SEVERITY } from '#cli/config/configurations/general.ts';
 
 function buildCommitlintFile(planned: PlannedConfig): string {
     const { scopes } = planned.session;

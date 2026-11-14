@@ -1,13 +1,12 @@
 import { join } from 'node:path';
-
-import { SEMGREP_TOOL } from '#cli/config/configurations/general.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { CONFIG_FLAG } from '#cli/config/tools/programs.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
 import { listLocalRuleConfigs } from '#cli/engine/plan/skips.ts';
+import { SEMGREP_TOOL } from '#cli/config/configurations/general.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 function listSemgrepRuleFiles(session: CheckSession, planned: PlannedCheck): string[] {

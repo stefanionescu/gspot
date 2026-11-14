@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-import { ARRAY_PROTOTYPE_NAMES } from '../../config/collections.ts';
-import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ARRAY_PROTOTYPE_NAMES } from '../../config/collections.ts';
+import { getTypes, getTypeCategory } from '../../language/checker.ts';
 
 export const noInMisuse = createRule<[], 'misuse'>({
     name: 'no-in-misuse',

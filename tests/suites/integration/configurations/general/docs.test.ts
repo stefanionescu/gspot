@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { compareText } from '#cli/system/text/order.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { LinkFailure } from '#tests/types/integration.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import type { LinkFailure } from '#tests/types/integration.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const LINK_PAGE = `<!doctype html>
 <html lang="en"><head><title>Setup</title></head><body><h1 id="setup">Setup</h1><p>Current setup.</p></body></html>

@@ -1,6 +1,5 @@
 import { splitByCase } from 'scule';
-
-import { DIGIT_BOUNDARY, NUMERIC_WORDS, WORD_SEPARATORS } from '#cli/config/configurations/naming.ts';
+import { NUMERIC_WORDS, DIGIT_BOUNDARY, WORD_SEPARATORS } from '#cli/config/configurations/naming.ts';
 
 export function splitWords(name: string): string[] {
     return name

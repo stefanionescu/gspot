@@ -1,27 +1,26 @@
 import { spyOn } from 'bun:test';
-import { createFileTree, type DirectoryJSON, testdir, type TestdirResult } from 'testdirs';
-
-import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
-import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runBuiltInCheck, runCheckCode } from '#cli/engine/run/checks.ts';
+import { getTool } from '#cli/manifests/tools.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
+import * as environment from '#cli/system/environment.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import * as environment from '#cli/system/environment.ts';
-import type { NamingSettings } from '#cli/types/configurations/naming.ts';
-import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
-import type { Finding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
-import { SWIFT_PACKAGE } from '#tests/config/setup/languages.ts';
 import { ROOT_LABEL } from '#tests/config/setup/programs.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeToolExecutables } from '#tests/setup/cli/tools.ts';
+import { SWIFT_PACKAGE } from '#tests/config/setup/languages.ts';
 import { linkGrammars } from '#tests/setup/runner/run-folder.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import type { NamingSettings } from '#cli/types/configurations/naming.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { PlannedCheck, RunSelection } from '#cli/types/engine/plan.ts';
+import { CHECK_CODE, selectCheckCode } from '#cli/configurations/registry.ts';
+import { readNamingSettings } from '#cli/configurations/general/naming/checks/settings.ts';
+import { testdir, createFileTree, type DirectoryJSON, type TestdirResult } from 'testdirs';
+import { runCheckCode, runBuiltInCheck, buildCheckSession } from '#cli/engine/run/checks.ts';
 
 export async function redirectCacheFolder(): Promise<AsyncDisposableStack> {
     await using resources = new AsyncDisposableStack();

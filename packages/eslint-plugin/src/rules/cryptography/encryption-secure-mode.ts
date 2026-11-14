@@ -1,6 +1,6 @@
-import { CIPHER_FUNCTION, INSECURE_MODES, MODELESS_CIPHERS } from '../../config/cryptography.ts';
-import { getCallText } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getCallText } from '../../language/modules.ts';
+import { INSECURE_MODES, CIPHER_FUNCTION, MODELESS_CIPHERS } from '../../config/cryptography.ts';
 
 export const encryptionSecureMode = createRule<[], 'insecure'>({
     name: 'encryption-secure-mode',

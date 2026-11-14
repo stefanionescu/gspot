@@ -1,18 +1,18 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
+    LIST_FORMAT,
     DANGEROUS_TAGS,
+    SANITIZE_FUNCTIONS,
+    URI_PATTERN_OPTION,
+    SANITIZE_LIST_OPTIONS,
     DANGEROUS_URI_ATTRIBUTES,
     EVENT_LISTENER_ATTRIBUTE,
-    LIST_FORMAT,
     SANITIZE_BOOLEAN_OPTIONS,
     SANITIZE_CONFIG_ARGUMENT,
-    SANITIZE_FUNCTIONS,
-    SANITIZE_LIST_OPTIONS,
-    URI_PATTERN_OPTION,
 } from '../../config/web.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
 
 function isDangerousName(kind: string | undefined, name: string): boolean {
     if (kind === 'events') return EVENT_LISTENER_ATTRIBUTE.test(name);

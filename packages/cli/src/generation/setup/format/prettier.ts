@@ -1,40 +1,40 @@
 import { join, posix } from 'node:path';
 import { pathToFileURL } from 'node:url';
+import { isTable } from '#cli/system/tables.ts';
+import { getTool } from '#cli/manifests/tools.ts';
+import { muteOutput } from '#cli/system/terminal.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { joinScopeSelector } from '#cli/settings/values/paths.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
+import { prettierSettingsSchema } from '#cli/schemas/generation.ts';
+import { FORMAT_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { tryParseFile, parseFileFields } from '#cli/parsers/validation.ts';
+import type { TomlTable, ScopeConfigurations } from '#cli/types/settings.ts';
+import { readEditorconfig } from '#cli/generation/setup/format/editorconfig.ts';
+import { buildFormatterOverrides } from '#cli/generation/setup/format/overrides.ts';
+import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
 
+import type {
+    FormatSearch,
+    PrettierStyle,
+    SettingsDraft,
+    PrettierOptions,
+    PrettierScripts,
+} from '#cli/types/generation.ts';
 import {
+    PROSE_TAGS,
     EDITORCONFIG_FILE,
     PRETTIER_DEFAULTS,
-    PRETTIER_FILE_FORMATS,
     PRETTIER_PACKAGE_KEY,
     PRETTIER_SCRIPT_FILE,
     PRETTIER_SCRIPT_NAME,
-    PROSE_TAGS,
+    PRETTIER_FILE_FORMATS,
 } from '#cli/config/generation/setup.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { FORMAT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { readEditorconfig } from '#cli/generation/setup/format/editorconfig.ts';
-import { buildFormatterOverrides } from '#cli/generation/setup/format/overrides.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { parseFileFields, tryParseFile } from '#cli/parsers/validation.ts';
-import { joinScope, listOwnFiles } from '#cli/repository/scopes.ts';
-import { prettierSettingsSchema } from '#cli/schemas/generation.ts';
-import { joinScopeSelector } from '#cli/settings/values/paths.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { muteOutput } from '#cli/system/terminal.ts';
-import type {
-    FormatSearch,
-    PrettierOptions,
-    PrettierScripts,
-    PrettierStyle,
-    SettingsDraft,
-} from '#cli/types/generation.ts';
-import type { Repository, ScopeFolder, TrackedFile } from '#cli/types/repository.ts';
-import type { ScopeConfigurations, TomlTable } from '#cli/types/settings.ts';
 
 function convertQuotes({ singleQuote }: Pick<PrettierStyle, 'singleQuote'>): 'single' | 'double' | undefined {
     if (singleQuote === undefined) return undefined;

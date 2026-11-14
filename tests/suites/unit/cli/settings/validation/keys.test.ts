@@ -1,16 +1,15 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { validateKeys } from '#cli/settings/validation/keys.ts';
-import { getSettingValue } from '#cli/settings/values/inherit.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { validateKeys } from '#cli/settings/validation/keys.ts';
 import type { AvailableSettings } from '#cli/types/settings.ts';
-import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/validation.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { INVALID_MARKDOWNLINT_NAMES, SCOPE_CONFIGURATION_SETTINGS } from '#tests/config/settings/validation.ts';
 
 const sqlConfiguration = readConfigurations().get('sql') as Configuration;
 

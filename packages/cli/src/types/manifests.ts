@@ -1,9 +1,8 @@
 import type { z } from 'zod';
-
+import type { KeyPath } from '#cli/types/parsers.ts';
 import type { GROUPS } from '#cli/config/manifests.ts';
 import type { outputSchema } from '#cli/schemas/manifests/checks.ts';
 import type { checkSchema, manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import type { KeyPath } from '#cli/types/parsers.ts';
 
 export type ShippedRule = {
     source: string;

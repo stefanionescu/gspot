@@ -1,6 +1,6 @@
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import type { RunOptions } from '#cli/types/engine/run.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 export function buildRunOptions(overrides: Partial<RunOptions>): RunOptions {

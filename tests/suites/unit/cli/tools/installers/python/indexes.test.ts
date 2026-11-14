@@ -1,30 +1,29 @@
-import { readFileSync } from 'node:fs';
-import { rm } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { rm } from 'node:fs/promises';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { readPythonSettings } from '#cli/tools/installers/python/indexes.ts';
-import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
-import { installPythonTools } from '#cli/tools/installers/python/project.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import type { PythonToolProject } from '#cli/types/tools.ts';
-import {
-    INVALID_UV_SETTINGS,
-    PYPROJECT_UV_INDEX,
-    PYTHON_TOOL_LOCKFILE,
-    PYTHON_TOOL_PROJECT,
-    UV_TOML,
-} from '#tests/config/tools.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readPythonSettings } from '#cli/tools/installers/python/indexes.ts';
+import { installPythonTools } from '#cli/tools/installers/python/project.ts';
+import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
+
+import {
+    UV_TOML,
+    PYPROJECT_UV_INDEX,
+    INVALID_UV_SETTINGS,
+    PYTHON_TOOL_PROJECT,
+    PYTHON_TOOL_LOCKFILE,
+} from '#tests/config/tools.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;
 

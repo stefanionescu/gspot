@@ -1,31 +1,31 @@
-import { mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync } from 'node:fs';
-import { dirname, join, posix } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { CONFIG_FLAG, JSON_INDENT } from '#cli/config/tools/programs.ts';
-import {
-    VALE_ARCHIVE_LIMIT,
-    VALE_DOWNLOAD_NAME,
-    VALE_INSTALL_ARGUMENTS,
-    VALE_INSTALL_PREFIX,
-    VALE_INSTALL_STEP,
-    VALE_PACKAGE_FOLDERS,
-    VALE_PACKAGE_RELEASES,
-    VALE_PACKAGE_URLS,
-    VALE_PACKAGES,
-    VALE_TEMPORARY_NAME,
-    VALE_TOOL,
-} from '#cli/config/tools/vale.ts';
+import { join, posix, dirname } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
-import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
-import { buildToolAvailability, inspectTool } from '#cli/tools/programs/inspect.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import type { ToolInstall } from '#cli/types/tools.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { runRequiredInstallStep } from '#cli/tools/installers/steps.ts';
+import { CONFIG_FLAG, JSON_INDENT } from '#cli/config/tools/programs.ts';
+import { deleteStaleTemporaryPaths } from '#cli/system/files/temporary.ts';
+import { downloadArchive } from '#cli/tools/installers/network/downloads.ts';
+import { inspectTool, buildToolAvailability } from '#cli/tools/programs/inspect.ts';
+import { rmSync, mkdirSync, renameSync, mkdtempSync, writeFileSync } from 'node:fs';
+
+import {
+    VALE_TOOL,
+    VALE_PACKAGES,
+    VALE_INSTALL_STEP,
+    VALE_PACKAGE_URLS,
+    VALE_ARCHIVE_LIMIT,
+    VALE_DOWNLOAD_NAME,
+    VALE_INSTALL_PREFIX,
+    VALE_TEMPORARY_NAME,
+    VALE_PACKAGE_FOLDERS,
+    VALE_PACKAGE_RELEASES,
+    VALE_INSTALL_ARGUMENTS,
+} from '#cli/config/tools/vale.ts';
 
 async function downloadValePackages(install: ToolInstall, folder: string): Promise<string[]> {
     const packages: string[] = [];

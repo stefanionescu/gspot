@@ -1,12 +1,11 @@
 import { stringify } from '@decimalturn/toml-patch';
-
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { NPM_TOOL_PROJECT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
-import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/programs.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { listMisePins, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { GeneratedFile, PythonToolProject, Session } from '#cli/types/tools.ts';
+import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
+import type { Session, GeneratedFile, PythonToolProject } from '#cli/types/tools.ts';
+import { listMisePins, listPackagePins, listNpmProjectPins } from '#cli/tools/pins.ts';
+import { NPM_TOOL_PROJECT, PYTHON_TOOL_PROJECT } from '#cli/config/tools/installers.ts';
 
 export function buildMiseInstall(configurations: Configuration[]): GeneratedFile {
     const tools = Object.fromEntries(

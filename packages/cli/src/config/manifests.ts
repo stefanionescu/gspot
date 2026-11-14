@@ -1,5 +1,5 @@
 import cliPackage from '#cli-package' with { type: 'json' };
-import { PACKAGE_JSON, PYPROJECT_TOML, UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
+import { UV_LOCKFILE, PACKAGE_JSON, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
 import { GSPOT_FOLDER, NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
 
 // check output defaults

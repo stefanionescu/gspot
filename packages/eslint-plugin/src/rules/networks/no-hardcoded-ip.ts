@@ -1,17 +1,17 @@
 import { isIP } from 'node:net';
+import { createRule } from '../../rule.ts';
+import { OCTAL_RADIX } from '../../config/plugin.ts';
 
 import {
-    ALLOWED_IP_ADDRESSES,
-    ALLOWED_IP_PREFIXES,
+    IPV4_OCTETS,
+    OCTAL_OCTET,
+    NETMASK_SUFFIX,
     HEXADECIMAL_OCTET,
     HEXADECIMAL_RADIX,
-    IPV4_OCTETS,
     MAPPED_IPV4_PREFIX,
-    NETMASK_SUFFIX,
-    OCTAL_OCTET,
+    ALLOWED_IP_PREFIXES,
+    ALLOWED_IP_ADDRESSES,
 } from '../../config/networks.ts';
-import { OCTAL_RADIX } from '../../config/plugin.ts';
-import { createRule } from '../../rule.ts';
 
 function isReportedAddress(address: string): boolean {
     const isAllowed =

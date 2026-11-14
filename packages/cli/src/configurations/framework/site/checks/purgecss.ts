@@ -1,26 +1,26 @@
-import { extname, isAbsolute, join, relative } from 'node:path';
+import { readText } from '#cli/system/files/reads.ts';
+import { WHITESPACE_RUN } from '#cli/config/system.ts';
+import { listOwnFiles } from '#cli/repository/scopes.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { join, extname, relative, isAbsolute } from 'node:path';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
 
 import {
+    SITE_RULES,
     CSS_EXTENSION,
+    PURGECSS_TOOL,
+    STYLE_SCOPING,
     PURGECSS_CONTENT,
     PURGECSS_PROCESS,
-    PURGECSS_TOOL,
-    SITE_RULES,
     STYLE_COMPONENTS,
     STYLE_EXTENSIONS,
-    STYLE_SCOPING,
 } from '#cli/config/configurations/site.ts';
-import { WHITESPACE_RUN } from '#cli/config/system.ts';
-import { convertToBuildPath, readSuccessfulBuild } from '#cli/configurations/framework/site/checks/build.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { listOwnFiles } from '#cli/repository/scopes.ts';
-import { purgecssOutputSchema } from '#cli/schemas/configurations.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function readScopeStyles(session: CheckSession, planned: PlannedCheck): Promise<string> {
     const files = listOwnFiles(session.repository.files, session.scopes, planned.scope.path).filter(

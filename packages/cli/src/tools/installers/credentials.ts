@@ -1,14 +1,14 @@
 import { unescape } from 'node:querystring';
+import { GspotError } from '#cli/system/errors.ts';
+import type { SpawnResult } from '#cli/types/system.ts';
 
 import {
+    REDACTED,
+    URL_CREDENTIALS,
     EMPTY_OUTPUT_MESSAGE,
     INSTALL_OUTPUT_LIMIT,
     LOCKFILE_URL_PASSWORD,
-    REDACTED,
-    URL_CREDENTIALS,
 } from '#cli/config/tools/installers.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 
 export function assertCredentialFreeLockfile(lockfile: string, credentials: string[], message: string): void {
     if (LOCKFILE_URL_PASSWORD.test(lockfile)) throw new GspotError('install', message);

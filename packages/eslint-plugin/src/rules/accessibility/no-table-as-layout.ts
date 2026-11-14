@@ -1,5 +1,5 @@
-import { isLayoutTable } from '../../language/html-tables.ts';
 import { createRule } from '../../rule.ts';
+import { isLayoutTable } from '../../language/html-tables.ts';
 
 export const noTableAsLayout = createRule<[], 'layoutTable'>({
     name: 'no-table-as-layout',

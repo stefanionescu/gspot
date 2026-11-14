@@ -1,20 +1,20 @@
 import { posix } from 'node:path';
-
-import {
-    CARRYOVER_ROW_START,
-    IGNORE_FILES,
-    NOT_COMPARED_MESSAGE,
-    OTHER_CONFIG_MESSAGE,
-    PRINTED_RULE_TOOLS,
-    REASON_PLACEHOLDER,
-    RULE_PRINT_FLAG,
-} from '#cli/config/generation/setup.ts';
-import { compareRules, readPrintedRules } from '#cli/generation/setup/carryover/rules.ts';
-import { listToolNames } from '#cli/manifests/tools.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { escapeRegExp } from '#cli/system/patterns.ts';
+import { listToolNames } from '#cli/manifests/tools.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { CarryoverRow, InitPlanning, RuleRead } from '#cli/types/generation.ts';
+import type { RuleRead, CarryoverRow, InitPlanning } from '#cli/types/generation.ts';
+import { compareRules, readPrintedRules } from '#cli/generation/setup/carryover/rules.ts';
+
+import {
+    IGNORE_FILES,
+    RULE_PRINT_FLAG,
+    PRINTED_RULE_TOOLS,
+    REASON_PLACEHOLDER,
+    CARRYOVER_ROW_START,
+    NOT_COMPARED_MESSAGE,
+    OTHER_CONFIG_MESSAGE,
+} from '#cli/config/generation/setup.ts';
 
 /**
 Read the rules that the ESLint and Stylelint of the repository resolve. Call this before init replaces their configs.

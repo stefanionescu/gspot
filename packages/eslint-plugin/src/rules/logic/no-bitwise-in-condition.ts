@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import { BITWISE_JOINS, BITWISE_OPERATORS, CONDITION_PARENTS } from '../../config/logic.ts';
-import { NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
-import { getTypeCategory, getTypes } from '../../language/checker.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { NUMERIC_VALUE_TYPES } from '../../config/plugin.ts';
+import { getTypes, getTypeCategory } from '../../language/checker.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { BITWISE_JOINS, BITWISE_OPERATORS, CONDITION_PARENTS } from '../../config/logic.ts';
 
 function isNumeric(node: TSESTree.Node, types: TypeReader | undefined): boolean {
     if (types === undefined) return node.type === AST_NODE_TYPES.Literal && NUMERIC_VALUE_TYPES.has(typeof node.value);

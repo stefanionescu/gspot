@@ -1,10 +1,9 @@
+import { createRule } from '../../rule.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-
-import { MAXIMUM_TIMER_DELAY, MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getLiteralValue } from '../../language/expressions.ts';
 import { listImportedModules } from '../../language/modules.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
+import { MOCHA_CONSTRUCTS, MAXIMUM_TIMER_DELAY } from '../../config/testing.ts';
 
 export const noOverflowingTestTimeout = createRule<[], 'overflow'>({
     name: 'no-overflowing-test-timeout',

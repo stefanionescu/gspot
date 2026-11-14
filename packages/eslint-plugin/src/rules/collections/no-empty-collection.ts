@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { ELEMENT_WRITE_OPERATORS, READING_COLLECTION_METHODS } from '../../config/collections.ts';
+import { createRule } from '../../rule.ts';
 import { listInitialElements } from '../../language/expressions.ts';
 import { getStoredValue, listLocalVariables } from '../../language/variables.ts';
-import { createRule } from '../../rule.ts';
+import { TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ELEMENT_WRITE_OPERATORS, READING_COLLECTION_METHODS } from '../../config/collections.ts';
 
 function isElementWrite(member: TSESTree.MemberExpression, source: TSESLint.SourceCode): boolean {
     const chain = [...source.getAncestors(member), member];

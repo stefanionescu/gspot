@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { DRIZZLE_SCOPE_SETTINGS } from '#tests/config/configurations/javascript/blocks.ts';
+import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { DRIZZLE_SCOPE_SETTINGS } from '#tests/config/configurations/javascript/blocks.ts';
 
 test('Drizzle reports delete and update without where only for its client names', async () => {
     await using sandbox = await testdir({

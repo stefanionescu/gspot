@@ -1,9 +1,8 @@
-import { expect, spyOn, test } from 'bun:test';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import * as inspect from '#cli/tools/programs/inspect.ts';
-import { doctorOutputSchema } from '#tests/schemas/setup.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import * as inspect from '#cli/tools/programs/inspect.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { doctorOutputSchema } from '#tests/schemas/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

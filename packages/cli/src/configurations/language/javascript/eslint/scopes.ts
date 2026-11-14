@@ -1,9 +1,8 @@
 import { isDeepStrictEqual } from 'node:util';
-
-import { compareScopeDepth, joinScopeGlob, listNestedScopes } from '#cli/repository/scopes.ts';
+import type { Scope } from '#cli/types/settings.ts';
 import { findParentScope } from '#cli/settings/scopes.ts';
 import type { ScopeOverride } from '#cli/types/configurations/javascript.ts';
-import type { Scope } from '#cli/types/settings.ts';
+import { joinScopeGlob, listNestedScopes, compareScopeDepth } from '#cli/repository/scopes.ts';
 
 export function listNestedScopeGlobs(paths: readonly string[], scopePath: string): string[] {
     return listNestedScopes(paths, scopePath).map((path) => joinScopeGlob(path, '**'));

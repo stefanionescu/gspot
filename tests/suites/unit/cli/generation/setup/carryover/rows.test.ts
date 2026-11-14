@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { SCAN_FIRST_MESSAGE } from '#cli/config/generation/setup.ts';
+import { test, expect } from 'bun:test';
 import { planSandboxInit } from '#tests/setup/cli/commands.ts';
+import { SCAN_FIRST_MESSAGE } from '#cli/config/generation/setup.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const CARRYOVER_ROW_CASES = [

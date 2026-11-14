@@ -1,19 +1,19 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
 import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+
 import {
-    BOUNDARY_IMPORT_RULES,
+    VALID_LICENSES,
+    REVIEWED_REASON,
     INVALID_LICENSES,
+    REFUSED_SCOPE_PATHS,
     ORDERED_IMPORT_RULES,
     REFUSED_RULE_OPTIONS,
-    REFUSED_SCOPE_PATHS,
-    REVIEWED_REASON,
-    VALID_LICENSES,
+    BOUNDARY_IMPORT_RULES,
 } from '#tests/config/settings/validation.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
 
 function buildVendorPrefixSettings(ignoreProperties: string[]): string {
     return stringify({

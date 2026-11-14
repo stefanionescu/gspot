@@ -1,11 +1,10 @@
 ---
 import Head from '@astrojs/starlight/components/Head.astro';
-import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
-import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
-
 import RuleRedirect from '#docs/components/starlight/RuleRedirect.astro';
-import { REFERENCE_FOLDERS, REFERENCE_PATH } from '#docs/config/reference.ts';
-import { SECTION_IMAGES, SECTION_SEGMENT, SOCIAL_IMAGE } from '#docs/config/site.ts';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
+import { SOCIAL_IMAGE, SECTION_IMAGES, SECTION_SEGMENT } from '#docs/config/site.ts';
+import geist from '@fontsource-variable/geist/files/geist-latin-wght-normal.woff2?url';
+import geistMono from '@fontsource-variable/geist-mono/files/geist-mono-latin-wght-normal.woff2?url';
 
 const section = SECTION_SEGMENT.exec(Astro.url.pathname)?.groups?.['section'] ?? '';
 const sectionImage = SECTION_IMAGES.get(section);

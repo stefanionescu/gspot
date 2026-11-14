@@ -1,18 +1,18 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/parse.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
+
 import {
-    DUPLICATED_REASON_ERRORS,
     EMPTY_REASONS,
     REVIEWED_REASON,
+    DUPLICATED_REASON_ERRORS,
     RULE_OPTION_REASON_TABLES,
     SWIFT_TARGET_REASON_CASES,
 } from '#tests/config/settings/validation.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings, validateSettingsText } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 
 test.each([...RULE_OPTION_REASON_TABLES])(
     'a reason option in $name rules belongs to the lint rule',

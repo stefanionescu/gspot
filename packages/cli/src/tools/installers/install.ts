@@ -1,30 +1,31 @@
-import { MISE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import { listDistinctTools } from '#cli/manifests/tools.ts';
-import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
-import { getRootScope } from '#cli/settings/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { readHost } from '#cli/system/environment.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { getRootScope } from '#cli/settings/scopes.ts';
+import { buildToolProjects } from '#cli/tools/projects.ts';
+import { listDistinctTools } from '#cli/manifests/tools.ts';
+import { readToolBinPaths } from '#cli/tools/programs/mise.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';
 import { installGrammars } from '#cli/tools/installers/grammars.ts';
-import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
-import { assertPackageManagerVersion, readToolPackageManager } from '#cli/tools/installers/npm/package-manager.ts';
-import {
-    installNpmToolProject,
-    installPythonToolProjects,
-    isEveryEnvironmentReady,
-    isEveryLockfileFresh,
-    repairToolProjects,
-} from '#cli/tools/installers/projects.ts';
-import { readPythonSettings } from '#cli/tools/installers/python/indexes.ts';
 import { installValePackages } from '#cli/tools/installers/vale.ts';
-import { findMisePin, findMissingBuild, findPackagePin } from '#cli/tools/pins.ts';
-import { buildToolAvailability, inspectTool, lookUpTool } from '#cli/tools/programs/inspect.ts';
-import { readToolBinPaths } from '#cli/tools/programs/mise.ts';
-import { buildToolProjects } from '#cli/tools/projects.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import type { BrokenTool, InstallResult, Session, ToolInstall } from '#cli/types/tools.ts';
+import { MISE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { readPythonSettings } from '#cli/tools/installers/python/indexes.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
+import { writePlans, planReplacements } from '#cli/repository/files/writes.ts';
+import { findMisePin, findPackagePin, findMissingBuild } from '#cli/tools/pins.ts';
+import { installMiseTools, reinstallMiseTools } from '#cli/tools/installers/mise.ts';
+import type { Session, BrokenTool, ToolInstall, InstallResult } from '#cli/types/tools.ts';
+import { lookUpTool, inspectTool, buildToolAvailability } from '#cli/tools/programs/inspect.ts';
+import { readToolPackageManager, assertPackageManagerVersion } from '#cli/tools/installers/npm/package-manager.ts';
+
+import {
+    repairToolProjects,
+    isEveryLockfileFresh,
+    installNpmToolProject,
+    isEveryEnvironmentReady,
+    installPythonToolProjects,
+} from '#cli/tools/installers/projects.ts';
 
 function writeToolProjects({ writer, generated }: ToolInstall): void {
     const requests = generated.files.map(({ path, content }) => ({

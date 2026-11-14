@@ -1,46 +1,46 @@
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER, NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import {
-    CI_NODE,
-    DELETED_LOCKFILE_MESSAGE,
-    INSTALL_FAILURE,
-    LOCK_ONLY_FLAG,
-    LOCKFILE_CREDENTIAL_MESSAGE,
-    LOCKFILE_FAILURE,
-    NODE_MISSING_MESSAGE,
-    NPM_CONFIG_FOLDER_VARIABLE,
-    NPM_LOCKFILE_CREDENTIAL_MESSAGE,
-    NPM_SETTING_PREFIX,
-    NPM_TOOL_NOUN,
-    NPM_USER_CONFIG_VARIABLE,
-    NPMRC_FILE,
-    PACKAGE_MANAGER_ARGUMENTS,
-    PACKAGE_MANAGER_SETTINGS_NAME,
-} from '#cli/config/tools/installers.ts';
-import { buildPackageManagerCommand } from '#cli/repository/projects/package-manager.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { findProgram } from '#cli/system/processes/programs.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
-import { assertCredentialFreeLockfile, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
-import { explainReleaseAgeHold, listNpmReleases } from '#cli/tools/installers/network/releases.ts';
-import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
-import { extractRegistryCredentials, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
-import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
-import { formatExit, runInstallStep } from '#cli/tools/installers/steps.ts';
-import { listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { findProgram } from '#cli/system/processes/programs.ts';
 import type { ReplacementRequest } from '#cli/types/repository.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { listPackagePins, listNpmProjectPins } from '#cli/tools/pins.ts';
+import { formatExit, runInstallStep } from '#cli/tools/installers/steps.ts';
+import { GSPOT_FOLDER, NODE_PROGRAM, OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { buildPackageManagerCommand } from '#cli/repository/projects/package-manager.ts';
+import { writeNpmrc, extractRegistryCredentials } from '#cli/tools/installers/npm/registry.ts';
+import { prepareReleaseAge, writeBunReleaseAge } from '#cli/tools/installers/npm/release-age.ts';
+import { listNpmReleases, explainReleaseAgeHold } from '#cli/tools/installers/network/releases.ts';
+import { redactInstallOutput, assertCredentialFreeLockfile } from '#cli/tools/installers/credentials.ts';
+import { isLockfileFresh, selectLockfileName, stripBunRegistryUrls } from '#cli/tools/installers/npm/lockfiles.ts';
+
 import type {
+    ToolInstall,
     GeneratedFile,
     NpmToolInstall,
-    PackageManagerRequest,
     PackageManagerRun,
-    ToolInstall,
+    PackageManagerRequest,
 } from '#cli/types/tools.ts';
+import {
+    CI_NODE,
+    NPMRC_FILE,
+    NPM_TOOL_NOUN,
+    LOCK_ONLY_FLAG,
+    INSTALL_FAILURE,
+    LOCKFILE_FAILURE,
+    NPM_SETTING_PREFIX,
+    NODE_MISSING_MESSAGE,
+    DELETED_LOCKFILE_MESSAGE,
+    NPM_USER_CONFIG_VARIABLE,
+    PACKAGE_MANAGER_ARGUMENTS,
+    NPM_CONFIG_FOLDER_VARIABLE,
+    LOCKFILE_CREDENTIAL_MESSAGE,
+    PACKAGE_MANAGER_SETTINGS_NAME,
+    NPM_LOCKFILE_CREDENTIAL_MESSAGE,
+} from '#cli/config/tools/installers.ts';
 
 async function createNpmLockfile(
     install: NpmToolInstall,

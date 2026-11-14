@@ -1,9 +1,8 @@
-import { expect, spyOn, test } from 'bun:test';
-
-import { printProgress } from '#cli/engine/run/progress.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { setOutputOptions } from '#cli/system/terminal.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { printProgress } from '#cli/engine/run/progress.ts';
 import { fakeTerminals } from '#tests/setup/system/terminal.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 
 test('terminal progress rewrites one status line, and a log prints only what runs past the interval', () => {
     const terminal: string[] = [];

@@ -1,17 +1,18 @@
-import {
-    INVALID_STRING_MESSAGE,
-    MISSING_ROOT_MESSAGE,
-    OCTAL_ESCAPE_START,
-    PROJECT_ESCAPE,
-    PROJECT_ESCAPES,
-    PROJECT_PUNCTUATION,
-    PROJECT_TOKENS,
-    TRAILING_TEXT_MESSAGE,
-} from '#cli/config/parsers/projects.ts';
-import { HEXADECIMAL_RADIX, OCTAL_RADIX } from '#cli/config/system.ts';
-import { pbxprojSchema } from '#cli/schemas/parsers.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import type { ParsedPbxproj, PbxElement, ProjectTokens, XcodeProject } from '#cli/types/parsers.ts';
+import { pbxprojSchema } from '#cli/schemas/parsers.ts';
+import { OCTAL_RADIX, HEXADECIMAL_RADIX } from '#cli/config/system.ts';
+import type { PbxElement, XcodeProject, ParsedPbxproj, ProjectTokens } from '#cli/types/parsers.ts';
+
+import {
+    PROJECT_ESCAPE,
+    PROJECT_TOKENS,
+    PROJECT_ESCAPES,
+    OCTAL_ESCAPE_START,
+    PROJECT_PUNCTUATION,
+    MISSING_ROOT_MESSAGE,
+    TRAILING_TEXT_MESSAGE,
+    INVALID_STRING_MESSAGE,
+} from '#cli/config/parsers/projects.ts';
 
 function parseProjectString(token: string | undefined): string {
     if (token === undefined || PROJECT_PUNCTUATION.has(token)) throw new Error(INVALID_STRING_MESSAGE);

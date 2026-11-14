@@ -1,20 +1,19 @@
-import { basename, delimiter, dirname } from 'node:path';
-
-import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
-import { listSecondaryTools } from '#cli/engine/plan/tools.ts';
-import { formatCommandFailure, formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findCommandTool, getTool } from '#cli/manifests/tools.ts';
-import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { findToolPath, lookUpTool } from '#cli/tools/programs/inspect.ts';
-import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
 import { runTool } from '#cli/tools/run.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { CheckTool, CheckToolOptions, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
+import { CheckStop } from '#cli/system/errors.ts';
 import type { SpawnResult } from '#cli/types/system.ts';
+import { dirname, basename, delimiter } from 'node:path';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listSecondaryTools } from '#cli/engine/plan/tools.ts';
+import { getTool, findCommandTool } from '#cli/manifests/tools.ts';
+import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
+import { lookUpTool, findToolPath } from '#cli/tools/programs/inspect.ts';
 import type { ProcessFailure, ToolRunOptions } from '#cli/types/tools.ts';
+import { PROCESS_KILLED_LINE, RAISE_TIMEOUT_MESSAGE } from '#cli/config/engine.ts';
+import { foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
+import { formatOutputTail, formatCommandFailure } from '#cli/engine/run/tool-runs/failures.ts';
+import type { CheckTool, CheckToolOptions, ToolProcessResult } from '#cli/types/engine/tool-runs.ts';
 
 async function readCheckTool(
     session: CheckSession,

@@ -1,13 +1,13 @@
-import { COVERAGE_INI_SECTION } from '#cli/config/configurations/testing.ts';
-import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
-import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { isTable } from '#cli/system/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
-import { isTable } from '#cli/system/tables.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { COVERAGE_INI_SECTION } from '#cli/config/configurations/testing.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
+import type { CheckCode, CheckResult, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 function hasProjectCoverage(session: Session, scopePath: string): boolean {
     if (findText(session.cache, joinScope(scopePath, '.coveragerc')) !== undefined) return true;

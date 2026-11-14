@@ -1,13 +1,14 @@
-import { PACKAGE_JSON_PATTERN, PACKAGE_JSON_RULE_PREFIX } from '#cli/config/configurations/javascript/blocks.ts';
 import { ESLINT_CHECK } from '#cli/config/configurations/javascript/eslint.ts';
+import { splitGlobs, buildScopeFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { buildLimitRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
 import { buildManifestRuleBlocks } from '#cli/configurations/language/javascript/eslint/blocks/manifests.ts';
+import { PACKAGE_JSON_PATTERN, PACKAGE_JSON_RULE_PREFIX } from '#cli/config/configurations/javascript/blocks.ts';
+import type { EslintRuleBlock, EslintBlockFields, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
+
 import {
-    buildEnvironmentRuleBlocks,
     buildTrivialRuleBlocks,
+    buildEnvironmentRuleBlocks,
 } from '#cli/configurations/language/javascript/eslint/blocks/structure.ts';
-import { buildScopeFiles, splitGlobs } from '#cli/configurations/language/javascript/eslint/files.ts';
-import type { EslintBlockFields, EslintRuleBlock, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
 
 function buildSettingsBlocks(planned: Pick<PlannedEslintFile, 'session' | 'scope' | 'nodeFiles'>): EslintRuleBlock[] {
     const { session } = planned;

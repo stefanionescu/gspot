@@ -1,25 +1,25 @@
 import { statSync } from 'node:fs';
-import { join, sep } from 'node:path';
-
-import {
-    COMMAND_PLACEHOLDER,
-    EACH_PLACEHOLDER,
-    FILE_PLACEHOLDER,
-    FILES_PLACEHOLDER,
-    FORMATTER_CHECKS,
-    SETTING_ONLY_PLACEHOLDER,
-    WORKSPACE_PLACEHOLDER,
-} from '#cli/config/engine.ts';
+import { sep, join } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
+import { formatScope } from '#cli/repository/scopes.ts';
+import type { ScopeSettings } from '#cli/types/settings.ts';
+import type { CheckSession } from '#cli/types/engine/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { getConfigPath, selectPointerPath } from '#cli/engine/run/tool-runs/configs.ts';
 import { addPluginExtensions } from '#cli/repository/files/selection.ts';
 import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
-import { formatScope } from '#cli/repository/scopes.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { CommandArgument, CommandLine, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { ScopeSettings } from '#cli/types/settings.ts';
+import { getConfigPath, selectPointerPath } from '#cli/engine/run/tool-runs/configs.ts';
+import type { CommandLine, Substitutions, CommandArgument } from '#cli/types/engine/tool-runs.ts';
+
+import {
+    EACH_PLACEHOLDER,
+    FILE_PLACEHOLDER,
+    FORMATTER_CHECKS,
+    FILES_PLACEHOLDER,
+    COMMAND_PLACEHOLDER,
+    WORKSPACE_PLACEHOLDER,
+    SETTING_ONLY_PLACEHOLDER,
+} from '#cli/config/engine.ts';
 
 function assertArgumentList(value: unknown, name: string): string[] {
     if (Array.isArray(value) && value.every((element) => typeof element === 'string')) return value;

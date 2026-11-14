@@ -1,28 +1,28 @@
 import { posix } from 'node:path';
-
-import {
-    DOWN_MIGRATION_SUFFIX,
-    MIGRATION_DOWN,
-    MIGRATION_SYNTAX_SKIP,
-    MIGRATION_VERSION,
-    PRISMA_MIGRATION_FILE,
-    SQUAWK_CHECK,
-} from '#cli/config/configurations/postgres.ts';
-import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
-import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/tables.ts';
-import { buildSyntaxFinding } from '#cli/configurations/syntax.ts';
-import { listCheckFiles } from '#cli/engine/plan/files.ts';
-import { listSqlTokens, parseSqlFile } from '#cli/parsers/code/sql.ts';
-import { readCommittedTexts, readHead } from '#cli/repository/revisions/files.ts';
-import { getTable } from '#cli/settings/tables.ts';
 import { remember } from '#cli/system/cache.ts';
 import { CheckStop } from '#cli/system/errors.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { Migration, MigrationRead } from '#cli/types/configurations/database.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listCheckFiles } from '#cli/engine/plan/files.ts';
 import type { CheckSession } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { buildSyntaxFinding } from '#cli/configurations/syntax.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
+import { parseSqlFile, listSqlTokens } from '#cli/parsers/code/sql.ts';
+import { FROZEN_ALL, FROZEN_NONE } from '#cli/config/settings/tables.ts';
+import { readHead, readCommittedTexts } from '#cli/repository/revisions/files.ts';
+import type { Migration, MigrationRead } from '#cli/types/configurations/database.ts';
+
+import {
+    SQUAWK_CHECK,
+    MIGRATION_DOWN,
+    MIGRATION_VERSION,
+    DOWN_MIGRATION_SUFFIX,
+    MIGRATION_SYNTAX_SKIP,
+    PRISMA_MIGRATION_FILE,
+} from '#cli/config/configurations/postgres.ts';
 
 const MIGRATIONS = Symbol('migrations');
 

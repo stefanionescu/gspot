@@ -1,15 +1,13 @@
-import { readFileSync } from 'node:fs';
-import { symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { readRegistryEnvironment, writeNpmrc } from '#cli/tools/installers/npm/registry.ts';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { symlink } from 'node:fs/promises';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { writeNpmrc, readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 
 const NPMRC_REFUSALS = [
     {

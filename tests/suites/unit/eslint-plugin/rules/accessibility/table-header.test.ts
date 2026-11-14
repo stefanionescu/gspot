@@ -1,5 +1,5 @@
-import { tableHeader } from '#eslint-plugin/rules/accessibility/table-header.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { tableHeader } from '#eslint-plugin/rules/accessibility/table-header.ts';
 
 buildRuleTester().run('table-header', tableHeader, {
     valid: [

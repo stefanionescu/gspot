@@ -1,31 +1,30 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import {
-    DOCKER_INSTRUCTION,
-    EXEC_FORM_START,
-    INSTRUCTION_MESSAGES,
-    INSTRUCTION_PATTERNS,
-    INSTRUCTION_RULES,
-    LOCKED_INSTALLS,
-    NGINX_IMAGE,
-    NPM_INSTALL_VERBS,
-    PATCH_LEVEL_VERSION,
-    SECOND_INDEX_FLAG,
-} from '#cli/config/configurations/docker.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listScriptForms } from '#cli/parsers/code/bash/forms.ts';
 import { INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
 import { LINE_CONTINUATION } from '#cli/config/parsers/projects.ts';
 import { NPM_PROGRAM, WHITESPACE_RUN } from '#cli/config/system.ts';
-import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
-import { listScriptForms } from '#cli/parsers/code/bash/forms.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
-import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { DockerInstruction } from '#cli/types/configurations/infrastructure.ts';
+import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+
+import {
+    NGINX_IMAGE,
+    EXEC_FORM_START,
+    LOCKED_INSTALLS,
+    INSTRUCTION_RULES,
+    NPM_INSTALL_VERBS,
+    SECOND_INDEX_FLAG,
+    DOCKER_INSTRUCTION,
+    PATCH_LEVEL_VERSION,
+    INSTRUCTION_MESSAGES,
+    INSTRUCTION_PATTERNS,
+} from '#cli/config/configurations/docker.ts';
 
 function isUnlockedInstall(command: Node): boolean {
     const [verb = '', ...rest] = command.childrenForFieldName('argument').map(({ text }) => text);

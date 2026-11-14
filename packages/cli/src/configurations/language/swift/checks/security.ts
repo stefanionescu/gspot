@@ -1,27 +1,27 @@
 import type { Node } from 'web-tree-sitter';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
+import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
 
 import {
-    LOG_FUNCTIONS,
     LOG_METHODS,
-    PLIST_READ_EXPRESSION,
+    SECRET_WORD,
+    SECRET_VALUE,
+    LOG_FUNCTIONS,
     PRIVACY_LABEL,
     PUBLIC_PRIVACY,
     SECRET_PLIST_KEY,
-    SECRET_VALUE,
-    SECRET_WORD,
-    SQL_INTERPOLATION_FINDING,
     SQLITE_FUNCTIONS,
-    SWIFT_SECRET_FINDINGS,
     UNSAFE_SWIFT_NAMES,
-    USER_DEFAULTS_DECLARATION,
+    PLIST_READ_EXPRESSION,
+    SWIFT_SECRET_FINDINGS,
     USER_DEFAULTS_RECEIVER,
+    SQL_INTERPOLATION_FINDING,
+    USER_DEFAULTS_DECLARATION,
 } from '#cli/config/configurations/swift.ts';
-import { SWIFT_SECURITY_EXPLANATIONS } from '#cli/configurations/language/swift/explanations.ts';
-import { visitParsedSources } from '#cli/parsers/code/grammars.ts';
-import { listSwiftCallArguments } from '#cli/parsers/code/swift.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listCallValues(call: Node): Node[] {
     return listSwiftCallArguments(call).flatMap((node) => node.childForFieldName('value') ?? []);

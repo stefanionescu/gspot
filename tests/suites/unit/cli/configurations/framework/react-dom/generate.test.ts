@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test('in a React DOM file, a scrollable region may take tabIndex, and an article may not', async () => {
     await using sandbox = await testdir({

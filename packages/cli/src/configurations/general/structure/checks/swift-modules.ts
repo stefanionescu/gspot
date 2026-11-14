@@ -1,13 +1,12 @@
 import { posix } from 'node:path';
-
-import { NON_WORD_CHARACTERS } from '#cli/config/configurations/structure.ts';
-import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
-import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
-import { listPackageModules } from '#cli/parsers/projects/swift-package.ts';
-import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import type { SwiftModule } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import { listPackageModules } from '#cli/parsers/projects/swift-package.ts';
+import { NON_WORD_CHARACTERS } from '#cli/config/configurations/structure.ts';
+import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
+import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
 
 function listXcodeModules(session: Session, path: string, swiftFiles: string[]): SwiftModule[] {
     const project = parseProjectSources(readText(session.cache, path), path);

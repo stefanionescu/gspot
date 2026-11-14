@@ -1,29 +1,29 @@
 import { z } from 'zod';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/tables.ts';
-import {
-    CATEGORY_KEY_SEGMENTS,
-    CATEGORY_PARENTS,
-    LANGUAGE_GROUP_TABLES,
-    SHIPPED_DEFAULT_ORIGIN,
-    SHIPPED_DEFAULT_OWNER,
-} from '#cli/config/settings/values.ts';
-import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { extractKeyName, findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { joinSettingPaths } from '#cli/settings/values/paths.ts';
-import { findWrittenSetting, listApplicableTables, listWrittenKeys } from '#cli/settings/values/written.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { joinSettingPaths } from '#cli/settings/values/paths.ts';
+import { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/tables.ts';
+import { extractKeyName, findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
+import { listWrittenKeys, findWrittenSetting, listApplicableTables } from '#cli/settings/values/written.ts';
+
+import {
+    CATEGORY_PARENTS,
+    CATEGORY_KEY_SEGMENTS,
+    LANGUAGE_GROUP_TABLES,
+    SHIPPED_DEFAULT_OWNER,
+    SHIPPED_DEFAULT_ORIGIN,
+} from '#cli/config/settings/values.ts';
 import type {
-    AvailableSettings,
-    InheritedSetting,
-    InheritedValue,
     Setting,
-    SettingDefault,
+    Settings,
     SettingMatch,
     SettingOrigin,
-    Settings,
+    InheritedValue,
+    SettingDefault,
+    InheritedSetting,
+    AvailableSettings,
     WrittenScopeTable,
 } from '#cli/types/settings.ts';
 

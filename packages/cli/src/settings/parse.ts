@@ -1,29 +1,29 @@
-import { parse } from '@decimalturn/toml-patch';
 import type { z } from 'zod';
-
+import { parse } from '@decimalturn/toml-patch';
+import { GspotError } from '#cli/system/errors.ts';
+import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
 import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { COMMAND_CHECK_DEFAULTS, COMMAND_CHECK_HELP, COMMAND_CHECK_WHY } from '#cli/config/settings/file.ts';
-import { BOOLEAN_WORDS, NUMBER_TEXT, TOML_COMPOUND_START, TOML_QUOTES } from '#cli/config/settings/values.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { findSettingSchema } from '#cli/settings/lookup.ts';
+import { validateSettings } from '#cli/settings/validation/settings.ts';
+import { COMMAND_CHECK_WHY, COMMAND_CHECK_HELP, COMMAND_CHECK_DEFAULTS } from '#cli/config/settings/file.ts';
+import { NUMBER_TEXT, TOML_QUOTES, BOOLEAN_WORDS, TOML_COMPOUND_START } from '#cli/config/settings/values.ts';
+
 import {
-    formatSettingsErrors,
     formatSettingsIssue,
+    formatSettingsErrors,
     formatSettingValueError,
 } from '#cli/settings/validation/messages.ts';
-import { validateSettings } from '#cli/settings/validation/settings.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
 import type {
-    ParsedSettings,
-    ParsedSettingValue,
     Setting,
     Settings,
-    SettingsFailure,
     TomlTable,
+    ParsedSettings,
+    SettingsFailure,
+    ParsedSettingValue,
 } from '#cli/types/settings.ts';
 
 function normalizeCommandChecks(checks: ParsedSettings['command_check']): Settings['commandChecks'] {

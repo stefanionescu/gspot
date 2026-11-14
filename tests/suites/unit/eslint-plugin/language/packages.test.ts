@@ -1,11 +1,9 @@
-import { writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
-import { readPackageFacts } from '#eslint-plugin/language/packages.ts';
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { writeFileSync } from 'node:fs';
 import type { FileContext } from '#eslint-plugin/types/plugin.ts';
+import { readPackageFacts } from '#eslint-plugin/language/packages.ts';
 import { writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 
 test('a package.json that is not valid JSON, or that holds null, lists no dependencies', () => {

@@ -1,19 +1,17 @@
-import { chmod, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { rm, chmod, writeFile } from 'node:fs/promises';
 import { readGitSetting } from '#cli/repository/git/run.ts';
-import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
-import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { STOCK_LFS_PRE_PUSH } from '#tests/config/tools.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { installHooks, readHookStatus } from '#cli/tools/installers/hooks.ts';
 import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
 
 test('a gspot.toml without hooks installs none', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

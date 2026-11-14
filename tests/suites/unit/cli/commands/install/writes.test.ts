@@ -1,22 +1,20 @@
-import { existsSync } from 'node:fs';
-import { chmod, readFile, rm, stat, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { installOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget, getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { rm, stat, chmod, symlink, readFile, writeFile } from 'node:fs/promises';
+import { getRuleFilePath, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 
 test('install leaves generated files writable, keeps their bytes, and deletes a stray owned file and its folder', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

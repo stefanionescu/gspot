@@ -1,24 +1,24 @@
-import { COMMAND_HELP } from '#cli/config/commands/help.ts';
-import { GROUP_LABELS } from '#cli/config/commands/setup.ts';
-import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/builders.ts';
-import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
-import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/projects.ts';
-import { ALL_LEVEL_SUMMARY, LEVEL_SUMMARY } from '#cli/config/settings/file.ts';
-import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { describeCheck } from '#cli/engine/reference.ts';
 import { buildProgram } from '#cli/main.ts';
-import { listChecksById } from '#cli/manifests/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { formatDetectionConditions, listRuleReferences } from '#cli/manifests/reference.ts';
-import { buildSetupReference } from '#cli/repository/projects/runner.ts';
-import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
-import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
-import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';
-import { compareText } from '#cli/system/text/order.ts';
 import { findPackagePin } from '#cli/tools/pins.ts';
-import type { CliReference, CommandReference, ConfigurationReference } from '#cli/types/main.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { describeCheck } from '#cli/engine/reference.ts';
+import { listChecksById } from '#cli/manifests/checks.ts';
+import { COMMAND_HELP } from '#cli/config/commands/help.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { GROUP_LABELS } from '#cli/config/commands/setup.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { MINIMUM_NODE_VERSION } from '#cli/system/package/runtime.ts';
+import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
+import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
+import { GLOBAL_OPTIONS, PROGRAM_EXIT_CODES } from '#cli/config/main.ts';
+import { buildSetupReference } from '#cli/repository/projects/runner.ts';
+import { HOOK_PROGRAM_MISSING } from '#cli/config/generation/builders.ts';
+import { LEVEL_SUMMARY, ALL_LEVEL_SUMMARY } from '#cli/config/settings/file.ts';
+import { buildJsonSchema, buildSettingsReference } from '#cli/settings/reference.ts';
+import { FROZEN_INSTALLS, YARN_BERRY_INSTALL } from '#cli/config/repository/projects.ts';
+import { listRuleReferences, formatDetectionConditions } from '#cli/manifests/reference.ts';
+import type { CliReference, CommandReference, ConfigurationReference } from '#cli/types/main.ts';
 
 // The docs site imports the CLI only through this file. package.json names it in `exports` under the condition
 // `gspot-source`, which only this repository sets, because the published package holds no source.

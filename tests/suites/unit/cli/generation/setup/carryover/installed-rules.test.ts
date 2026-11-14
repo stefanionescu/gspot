@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
-
-import { NOT_COMPARED_MESSAGE, PRINTED_RULE_TOOLS } from '#cli/config/generation/setup.ts';
+import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { compareInstalledRules, readUserRules } from '#cli/generation/setup/carryover/installed-rules.ts';
-import { convertRule } from '#cli/generation/setup/carryover/rules.ts';
 import { planInit } from '#cli/generation/setup/planner.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { convertRule } from '#cli/generation/setup/carryover/rules.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { PRINTED_RULE_TOOLS, NOT_COMPARED_MESSAGE } from '#cli/config/generation/setup.ts';
+import { readUserRules, compareInstalledRules } from '#cli/generation/setup/carryover/installed-rules.ts';
 
 async function writePrinter(root: string, rules: unknown): Promise<void> {
     const printed = Buffer.from(JSON.stringify({ rules })).toString('hex');

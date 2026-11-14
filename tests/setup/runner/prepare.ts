@@ -1,27 +1,27 @@
-import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { findMisePin } from '#cli/tools/pins.ts';
+import { LINE_BREAK } from '#cli/config/system.ts';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
+import { buildMiseInstall } from '#cli/tools/projects.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
-import { LINE_BREAK } from '#cli/config/system.ts';
-import { MISE_BIN_PATHS_ARGUMENTS, MISE_INSTALL_ARGUMENTS } from '#cli/config/tools/mise.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
-import { findMisePin } from '#cli/tools/pins.ts';
-import { buildMiseInstall } from '#cli/tools/projects.ts';
-import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
-import {
-    GSPOT_LAUNCHER_PATH,
-    MISE_STATE_FOLDER,
-    MISE_TRUST,
-    TOOL_INSTALL_FOLDER,
-    TOOL_PATHS_FILE,
-} from '#tests/config/setup/runner.ts';
-import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
-import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
 import { writeLauncher } from '#tests/setup/system/programs.ts';
+import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
+import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
+import { MISE_INSTALL_ARGUMENTS, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/mise.ts';
+
+import {
+    MISE_TRUST,
+    TOOL_PATHS_FILE,
+    MISE_STATE_FOLDER,
+    GSPOT_LAUNCHER_PATH,
+    TOOL_INSTALL_FOLDER,
+} from '#tests/config/setup/runner.ts';
 
 await runNpmPack(TEST_RUN_FOLDER, [
     { ...eslintPluginPackage, source: join(REPOSITORY_ROOT, 'packages/eslint-plugin') },

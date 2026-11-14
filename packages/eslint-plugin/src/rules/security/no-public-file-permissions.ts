@@ -1,16 +1,16 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { OCTAL_RADIX } from '../../config/plugin.ts';
-import {
-    CHMOD_METHODS,
-    FILE_MODE_CONSTANTS,
-    FILE_MODE_MODULE,
-    OTHERS_MASK,
-    UMASK_FUNCTION,
-} from '../../config/security.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { OCTAL_RADIX } from '../../config/plugin.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    OTHERS_MASK,
+    CHMOD_METHODS,
+    UMASK_FUNCTION,
+    FILE_MODE_MODULE,
+    FILE_MODE_CONSTANTS,
+} from '../../config/security.ts';
 
 function getLiteralMode(literal: TSESTree.Literal): number | undefined {
     if (typeof literal.value === 'string') return Number.parseInt(literal.value, OCTAL_RADIX);

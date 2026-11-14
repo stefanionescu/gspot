@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { runReportSchema } from '#cli/schemas/engine.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runReportSchema } from '#cli/schemas/engine.ts';
+import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 function readKeys(stdout: string): string[] {
     return Object.keys(JSON.parse(stdout) as object).toSorted(compareText);

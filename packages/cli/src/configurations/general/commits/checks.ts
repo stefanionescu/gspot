@@ -1,26 +1,26 @@
-import { readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
+import { PRIVATE_FILE } from '#cli/config/system.ts';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { formatCount } from '#cli/system/text/messages.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runGit, readGitSetting } from '#cli/repository/git/run.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { readSelectedCommits } from '#cli/repository/revisions/push.ts';
+import type { CommitMessage } from '#cli/types/configurations/general.ts';
+import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
+import { REFERENCE_EXPLANATIONS } from '#cli/configurations/general/commits/explanations.ts';
+import type { CheckCode, CheckResult, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 import {
+    MESSAGE_FILE,
+    COMMIT_SCISSORS,
     COMMIT_FIELD_END,
     COMMIT_RECORD_END,
-    COMMIT_SCISSORS,
-    GIT_COMMIT_MESSAGE_ARGUMENTS,
-    MESSAGE_FILE,
     MESSAGE_REFERENCES,
+    GIT_COMMIT_MESSAGE_ARGUMENTS,
 } from '#cli/config/configurations/general.ts';
-import { PRIVATE_FILE } from '#cli/config/system.ts';
-import { REFERENCE_EXPLANATIONS } from '#cli/configurations/general/commits/explanations.ts';
-import { buildBaseResult, mergeCheckResults } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { readGitSetting, runGit } from '#cli/repository/git/run.ts';
-import { readSelectedCommits } from '#cli/repository/revisions/push.ts';
-import { remember } from '#cli/system/cache.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import type { CommitMessage } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 const COMMENT_CHARACTER = Symbol('comment character');
 

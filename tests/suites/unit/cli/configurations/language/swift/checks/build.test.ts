@@ -1,27 +1,26 @@
-import { existsSync } from 'node:fs';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { join, relative } from 'node:path';
 import { runChecks } from '#cli/engine/run/checks.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { SWIFT_VALUE_SOURCE, SWIFT_LANGUAGE_PACKAGE } from '#tests/config/setup/languages.ts';
+import { getBuiltInCheck, runSandboxCheck, prepareSwiftCheck } from '#tests/setup/cli/checks.ts';
+
 import {
-    FAILED_BUILD_FINDINGS,
     PRIVATE_MAIN_FINDING,
+    FAILED_BUILD_FINDINGS,
     PRIVATE_OTHER_FINDING,
 } from '#tests/config/configurations/swift.ts';
-import { SWIFT_LANGUAGE_PACKAGE, SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
-import { getBuiltInCheck, prepareSwiftCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('compiler: a failed Swift build without source errors exits 2', async () => {
     using resources = new DisposableStack();

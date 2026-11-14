@@ -1,11 +1,9 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { readPackageAliases, readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { createRunCache } from '#cli/system/cache.ts';
+import { readScopeAliases, readPackageAliases } from '#cli/configurations/language/javascript/aliases.ts';
 
 const ALIAS_PROJECT = {
     'package.json': '{"imports":{"#app/*":"./src/*","#root/*":"./root/*","#shared/*":"./package/*"}}',

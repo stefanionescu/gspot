@@ -1,12 +1,12 @@
-import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
-import { WEAKENINGS_CHECK } from '#cli/config/settings/file.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
-import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
-import { findCommandTool, findToolName } from '#cli/manifests/tools.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { CheckDescription } from '#cli/types/engine/plan.ts';
 import type { CheckCode } from '#cli/types/engine/run.ts';
-import type { Check, Configuration, Tool } from '#cli/types/manifests.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { WEAKENINGS_CHECK } from '#cli/config/settings/file.ts';
+import { SETTING_ONLY_PLACEHOLDER } from '#cli/config/engine.ts';
+import type { CheckDescription } from '#cli/types/engine/plan.ts';
+import { findToolName, findCommandTool } from '#cli/manifests/tools.ts';
+import type { Tool, Check, Configuration } from '#cli/types/manifests.ts';
+import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts';
 
 function listCheckSystems(check: Check, tool: Tool | undefined): string[] | undefined {
     const limits = tool?.builds ?? check.operating_systems;

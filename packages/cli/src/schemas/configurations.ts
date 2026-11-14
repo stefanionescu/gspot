@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 import { DOCSTRING_STYLES } from '#cli/config/configurations/shared.ts';
 
 export const svelteFindingSchema = z.object({

@@ -1,5 +1,5 @@
-import { noEmptyRepetition } from '#eslint-plugin/rules/regex/no-empty-repetition.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noEmptyRepetition } from '#eslint-plugin/rules/regex/no-empty-repetition.ts';
 
 buildRuleTester().run('no-empty-repetition', noEmptyRepetition, {
     valid: ['/(?:ab)+/u;', '/(?:a*b)+/u;', 'new RegExp(pattern);'],

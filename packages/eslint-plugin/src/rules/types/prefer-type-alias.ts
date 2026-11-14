@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { ALIAS_MEMBER_LIMIT, ALIAS_USE_LIMIT, NULLISH_TYPE_KEYWORDS } from '../../config/types.ts';
 import { createRule } from '../../rule.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { ALIAS_USE_LIMIT, ALIAS_MEMBER_LIMIT, NULLISH_TYPE_KEYWORDS } from '../../config/types.ts';
 
 function findRepeatedType(
     nodes: ReadonlyArray<TSESTree.TSUnionType | TSESTree.TSIntersectionType>,

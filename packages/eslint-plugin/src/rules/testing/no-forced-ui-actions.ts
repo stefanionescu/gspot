@@ -1,13 +1,12 @@
-import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { CYPRESS_ACTIONS, PLAYWRIGHT_ACTIONS } from '../../config/testing.ts';
-import { getExpressionValue, getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
-import { isModuleUsed, readPackageFacts } from '../../language/packages.ts';
-import { listBodyNodes } from '../../language/syntax.ts';
-import { isCypressChain, isLocatorQuery } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { MemberCall } from '../../types/plugin.ts';
+import { listBodyNodes } from '../../language/syntax.ts';
 import type { UiFrameworks } from '../../types/testing.ts';
+import { isModuleUsed, readPackageFacts } from '../../language/packages.ts';
+import { isCypressChain, isLocatorQuery } from '../../libraries/testing.ts';
+import { CYPRESS_ACTIONS, PLAYWRIGHT_ACTIONS } from '../../config/testing.ts';
+import { ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 
 /**
 Check whether the value of an action receiver holds a Playwright locator query. A locator, an element handle, and an

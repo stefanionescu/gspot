@@ -1,14 +1,12 @@
-import { appendFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { beforeAll, describe, expect, test } from 'bun:test';
-
-import { LICENSE, README } from '#tests/config/setup/configurations.ts';
-import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { appendFile } from 'node:fs/promises';
+import { test, expect, describe, beforeAll } from 'bun:test';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { README, LICENSE } from '#tests/config/setup/configurations.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { STRICT_COMPILER_OPTIONS } from '#tests/config/setup/languages.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const TYPESCRIPT_PACKAGE = `{
     "name": "example",

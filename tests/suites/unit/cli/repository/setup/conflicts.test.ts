@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { listConflictingConfigs } from '#cli/repository/setup/conflicts.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import { INI_HEADING_CASES } from '#tests/config/repository.ts';
+import { listConflictingConfigs } from '#cli/repository/setup/conflicts.ts';
 
 test('INI tool headings include their exact sections and subsections', async () => {
     await using sandbox = await testdir({

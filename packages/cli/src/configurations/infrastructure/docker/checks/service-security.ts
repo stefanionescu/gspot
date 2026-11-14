@@ -1,18 +1,18 @@
-import { isMap, isScalar, isSeq, type YAMLMap } from 'yaml';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { isMap, isSeq, isScalar, type YAMLMap } from 'yaml';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { ComposeHit } from '#cli/types/configurations/infrastructure.ts';
+import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
 
 import {
     DOCKER_SOCKET,
-    SERVICE_SECURITY_MESSAGES,
-    SERVICE_SECURITY_RULES,
     UNCONFINED_OPTION,
+    SERVICE_SECURITY_RULES,
+    SERVICE_SECURITY_MESSAGES,
 } from '#cli/config/configurations/docker.ts';
-import { SERVICE_SECURITY_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
-import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { ComposeHit } from '#cli/types/configurations/infrastructure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listVolumeHits(volumes: unknown): ComposeHit[] {
     if (!isSeq(volumes)) return [];

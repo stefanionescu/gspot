@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { INEQUALITY_OPERATORS } from '../../config/logic.ts';
-import { UNDEFINED_NAME } from '../../config/plugin.ts';
-import { BOOLEAN_NAME } from '../../config/types.ts';
 import { createRule } from '../../rule.ts';
+import { BOOLEAN_NAME } from '../../config/types.ts';
+import { UNDEFINED_NAME } from '../../config/plugin.ts';
+import { INEQUALITY_OPERATORS } from '../../config/logic.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getComparedValue(node: TSESTree.BinaryExpression): TSESTree.Node | undefined {
     if (!INEQUALITY_OPERATORS.has(node.operator)) return undefined;

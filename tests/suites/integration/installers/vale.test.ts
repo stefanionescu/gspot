@@ -1,25 +1,23 @@
 import { existsSync } from 'node:fs';
-import { chmod, readFile, rm, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
 import { getTool } from '#cli/manifests/tools.ts';
-import { installValePackages } from '#cli/tools/installers/vale.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
-import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { rm, chmod, readFile, writeFile } from 'node:fs/promises';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
+import { installValePackages } from '#cli/tools/installers/vale.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { PREVIOUS_BYTES, VALE_PACKAGES_INI } from '#tests/config/setup/configurations.ts';
 
 const STRAY_STYLE_PATH = `${dirname(GSPOT_PATHS.valeConfig)}/styles/Google/legacy.yml`;
 

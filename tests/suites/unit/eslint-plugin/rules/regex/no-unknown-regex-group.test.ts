@@ -1,5 +1,5 @@
-import { noUnknownRegexGroup } from '#eslint-plugin/rules/regex/no-unknown-regex-group.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnknownRegexGroup } from '#eslint-plugin/rules/regex/no-unknown-regex-group.ts';
 
 buildRuleTester().run('no-unknown-regex-group', noUnknownRegexGroup, {
     valid: [

@@ -1,12 +1,11 @@
-import { stringify } from '@decimalturn/toml-patch';
-
-import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
-import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
-import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
-import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { stringify } from '@decimalturn/toml-patch';
+import { CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
+import { SQL_EXTENSION } from '#cli/config/configurations/shared.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { SQUAWK_ALL_LEVEL_ON } from '#cli/config/configurations/postgres.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 function buildSquawkFile(planned: PlannedConfig): string {
     const { files } = planned.session.repository;

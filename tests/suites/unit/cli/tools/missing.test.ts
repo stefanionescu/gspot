@@ -1,8 +1,6 @@
-import { mkdir } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { mkdir } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
 import { findMissingDependencies } from '#cli/tools/missing.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';

@@ -1,24 +1,24 @@
 import { posix } from 'node:path';
-
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { EVERY_REPOSITORY_EVIDENCE, RUNTIME_TAG } from '#cli/config/repository/files.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { listToolOnlyPackages } from '#cli/repository/projects/dependencies.ts';
-import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';
 import { findText } from '#cli/system/files/reads.ts';
 import { extractExtension } from '#cli/system/paths.ts';
-import { buildFilenameMatcher, buildPathMatcher } from '#cli/system/patterns.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';
+import { findProjectFolder } from '#cli/repository/detection/scopes.ts';
+import { listToolOnlyPackages } from '#cli/repository/projects/dependencies.ts';
+import { buildPathMatcher, buildFilenameMatcher } from '#cli/system/patterns.ts';
+import { RUNTIME_TAG, EVERY_REPOSITORY_EVIDENCE } from '#cli/config/repository/files.ts';
+
 import type {
-    ConfigurationEvidence,
-    DetectionEvidence,
     Repository,
-    ScopeContents,
     TrackedFile,
+    ScopeContents,
+    DetectionEvidence,
+    ConfigurationEvidence,
 } from '#cli/types/repository.ts';
 
 function buildScopeContents(files: TrackedFile[], dependencyFiles: DependencyFile[], scopePath: string): ScopeContents {

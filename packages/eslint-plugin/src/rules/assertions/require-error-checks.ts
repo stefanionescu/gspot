@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { MOCHA_CONSTRUCTS } from '../../config/testing.ts';
+import { createRule } from '../../rule.ts';
 import { listBodyNodes } from '../../language/syntax.ts';
+import { MOCHA_CONSTRUCTS } from '../../config/testing.ts';
 import { getChaiChain } from '../../libraries/assertions.ts';
 import { listEnclosingTestCalls } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isInsideTest(node: TSESTree.Node, source: TSESLint.SourceCode): boolean {
     return listEnclosingTestCalls(node, source).some(({ name }) => MOCHA_CONSTRUCTS.has(name));

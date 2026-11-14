@@ -1,5 +1,5 @@
-import { preferImmediateReturn } from '#eslint-plugin/rules/variables/prefer-immediate-return.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferImmediateReturn } from '#eslint-plugin/rules/variables/prefer-immediate-return.ts';
 
 buildRuleTester().run('prefer-immediate-return', preferImmediateReturn, {
     valid: [

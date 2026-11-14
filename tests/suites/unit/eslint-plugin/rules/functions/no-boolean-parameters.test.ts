@@ -1,5 +1,5 @@
-import { noBooleanParameters } from '#eslint-plugin/rules/functions/no-boolean-parameters.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noBooleanParameters } from '#eslint-plugin/rules/functions/no-boolean-parameters.ts';
 
 buildRuleTester().run('no-boolean-parameters', noBooleanParameters, {
     valid: [

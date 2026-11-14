@@ -1,16 +1,14 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/plan/tools.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { buildMiseInstall } from '#cli/tools/projects.ts';
 import { NODE_REQUIREMENTS } from '#tests/config/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { listCheckTools, listHostCheckTools, listSecondaryTools } from '#cli/engine/plan/tools.ts';
 
 test.each([...NODE_REQUIREMENTS])(
     'the tools include Node only when an npm tool needs it: $name',

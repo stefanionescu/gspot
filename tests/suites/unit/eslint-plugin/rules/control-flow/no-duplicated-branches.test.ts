@@ -1,5 +1,5 @@
-import { noDuplicatedBranches } from '#eslint-plugin/rules/control-flow/no-duplicated-branches.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noDuplicatedBranches } from '#eslint-plugin/rules/control-flow/no-duplicated-branches.ts';
 
 buildRuleTester().run('no-duplicated-branches', noDuplicatedBranches, {
     valid: [

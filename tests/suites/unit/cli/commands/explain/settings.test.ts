@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { readTree } from '#tests/setup/system/files.ts';
+import { settingOutputSchema } from '#tests/schemas/setup.ts';
 import { REASON_VALUES } from '#tests/config/commands/lookup.ts';
 import { SETTING_REASON } from '#tests/config/setup/sandboxes.ts';
-import { settingOutputSchema } from '#tests/schemas/setup.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test("explain shows each scope's default and value naming limit", async () => {
     await using sandbox = await createGitSandbox({

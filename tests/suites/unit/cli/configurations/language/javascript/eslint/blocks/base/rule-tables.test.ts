@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { DUPLICATE_RULE_CASES } from '#tests/config/configurations/javascript/blocks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { DUPLICATE_RULE_CASES } from '#tests/config/configurations/javascript/blocks.ts';
 
 const DUPLICATE_RULE_FILES = {
     'package.json': '{"private":true,"type":"module"}\n',

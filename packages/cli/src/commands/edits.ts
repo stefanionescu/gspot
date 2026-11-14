@@ -1,49 +1,49 @@
 import { relative } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { createRunCache } from '#cli/system/cache.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { parseSettings } from '#cli/settings/parse.ts';
+import { selectScope } from '#cli/repository/scopes.ts';
+import { buildArgumentPath } from '#cli/system/paths.ts';
+import { scopeSchema } from '#cli/schemas/settings/file.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
+import { findEmptySetting } from '#cli/engine/plan/skips.ts';
+import { listRepositoryFiles } from '#cli/repository/read.ts';
+import { findSetting } from '#cli/settings/values/inherit.ts';
+import { writeGeneratedFiles } from '#cli/generation/write.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { Files, CommandResult } from '#cli/types/system.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/file.ts';
+import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
+import { RECORD_FIELDS, findSettingSchema } from '#cli/settings/lookup.ts';
+import { writeSettings, readSettingsFile } from '#cli/settings/toml/file.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
+import { listInstallNotes, formatApplyReport } from '#cli/generation/report.ts';
+import { addScopeTable, buildEditedSettings } from '#cli/settings/toml/edit.ts';
+import { hasReleasedScanner } from '#cli/configurations/general/dependencies/bunfig.ts';
+import type { Scope, Settings, SettingMatch, AvailableSettings } from '#cli/types/settings.ts';
+import { assertConfigurationsExist, assertConfigurationsEditable } from '#cli/manifests/select.ts';
 
 import {
+    MANAGED_KEYS_NOTE,
     ADD_REMOVE_MESSAGE,
     FIX_INSTALL_MESSAGE,
-    MANAGED_KEYS_NOTE,
     REPAIRED_FILES_MESSAGE,
     UNCHANGED_SETTINGS_MESSAGE,
 } from '#cli/config/commands/edits.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { SETTINGS_PAGE_SENTENCE } from '#cli/config/settings/file.ts';
-import { hasReleasedScanner } from '#cli/configurations/general/dependencies/bunfig.ts';
-import { findEmptySetting } from '#cli/engine/plan/skips.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { formatApplyReport, listInstallNotes } from '#cli/generation/report.ts';
-import { writeGeneratedFiles } from '#cli/generation/write.ts';
-import { assertConfigurationsEditable, assertConfigurationsExist } from '#cli/manifests/select.ts';
-import { listRepositoryFiles } from '#cli/repository/read.ts';
-import { selectScope } from '#cli/repository/scopes.ts';
-import { scopeSchema } from '#cli/schemas/settings/file.ts';
-import { findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
-import { parseSettings } from '#cli/settings/parse.ts';
-import { addScopeTable, buildEditedSettings } from '#cli/settings/toml/edit.ts';
-import { readSettingsFile, writeSettings } from '#cli/settings/toml/file.ts';
-import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
-import { findSetting } from '#cli/settings/values/inherit.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { buildArgumentPath } from '#cli/system/paths.ts';
-import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type {
-    CommandLocation,
-    ConfigurationChange,
-    ConfigurationsOptions,
     EditContext,
+    CommandLocation,
+    SettingsEditReport,
+    ConfigurationChange,
     SettingsEditContext,
     SettingsEditOptions,
-    SettingsEditReport,
+    ConfigurationsOptions,
 } from '#cli/types/commands.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
-import type { AvailableSettings, Scope, SettingMatch, Settings } from '#cli/types/settings.ts';
-import type { CommandResult, Files } from '#cli/types/system.ts';
-import type { Generation, Session } from '#cli/types/tools.ts';
 
 function assertSettingEditable(key: string, scopePath: string): void {
     if (Object.hasOwn(RECORD_FIELDS, key))

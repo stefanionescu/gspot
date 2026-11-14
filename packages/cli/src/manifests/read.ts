@@ -1,15 +1,14 @@
-import { readFileSync } from 'node:fs';
 import { posix } from 'node:path';
-
-import { CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT, MANIFEST_FILE, RULES_FOLDER } from '#cli/config/manifests.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { formatZodIssue } from '#cli/parsers/validation.ts';
-import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
-import { buildAssetPath, listAssets } from '#cli/system/package/assets.ts';
+import { readFileSync } from 'node:fs';
 import { isTable } from '#cli/system/tables.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { Configuration, ManifestSource, ParsedManifest, ShippedRule } from '#cli/types/manifests.ts';
+import { formatZodIssue } from '#cli/parsers/validation.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { manifestSchema } from '#cli/schemas/manifests/manifest.ts';
+import { listAssets, buildAssetPath } from '#cli/system/package/assets.ts';
+import type { ShippedRule, Configuration, ManifestSource, ParsedManifest } from '#cli/types/manifests.ts';
+import { RULES_FOLDER, MANIFEST_FILE, CONFIGURATIONS_FOLDER, DEFAULT_OUTPUT_FORMAT } from '#cli/config/manifests.ts';
 
 const shipped: { configurations?: Map<string, Configuration> } = {};
 

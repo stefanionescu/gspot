@@ -1,5 +1,4 @@
 import { writeFileSync } from 'node:fs';
-
 import { SIGNAL_MARKER_OPTION } from '#tests/config/setup/programs.ts';
 
 const [option, marker, ...markedCall] = process.argv.slice(2);

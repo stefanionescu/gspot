@@ -1,39 +1,38 @@
 import { posix } from 'node:path';
 import { relative } from 'node:path/posix';
-
 import { stringify } from '@decimalturn/toml-patch';
+import type { Pyproject } from '#cli/types/parsers.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { pyprojectSchema } from '#cli/schemas/parsers.ts';
+import { UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
+import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { FASTAPI_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { JSON_INDENT, CONFIG_TOML_FORMAT } from '#cli/config/tools/programs.ts';
+import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
+import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
+import { getLimit, getTable, listIgnores, selectFormat, listIgnoredRules } from '#cli/settings/tables.ts';
 
 import {
-    BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
+    RUFF_CHECK,
+    RUFF_ISORT,
+    PYTHON_FILES,
+    MINIMUM_PYTHON,
+    RUFF_UNFIXABLE,
+    RUFF_PATH_RULES,
+    PYDANTIC_PACKAGE,
+    RUFF_TIDY_IMPORTS,
     BASEDPYRIGHT_CHECK,
-    BASEDPYRIGHT_DEFAULT_OPTIONS,
+    RUFF_CONSOLE_RULES,
+    RUFF_RUNTIME_TYPES,
     BASEDPYRIGHT_LEVELS,
     BASEDPYRIGHT_OPTIONS,
-    MINIMUM_PYTHON,
-    PYDANTIC_PACKAGE,
-    PYTHON_FILES,
-    RUFF_CHECK,
-    RUFF_CONSOLE_RULES,
-    RUFF_ISORT,
-    RUFF_PATH_RULES,
-    RUFF_RUNTIME_TYPES,
-    RUFF_TIDY_IMPORTS,
-    RUFF_UNFIXABLE,
+    BASEDPYRIGHT_DEFAULT_OPTIONS,
+    BASEDPYRIGHT_ALL_LEVEL_OPTIONS,
 } from '#cli/config/configurations/python.ts';
-import { DEFAULT_QUOTES } from '#cli/config/configurations/shared.ts';
-import { UV_LOCKFILE } from '#cli/config/parsers/projects.ts';
-import { FASTAPI_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { GLOB_EXCLUSION, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { CONFIG_TOML_FORMAT, JSON_INDENT } from '#cli/config/tools/programs.ts';
-import { convertToGlobs, listCheckIgnoreSections } from '#cli/configurations/ignores.ts';
-import { readPyproject } from '#cli/configurations/language/python/pyproject.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { isInScope, joinScope, listNestedScopes } from '#cli/repository/scopes.ts';
-import { pyprojectSchema } from '#cli/schemas/parsers.ts';
-import { getLimit, getTable, listIgnoredRules, listIgnores, selectFormat } from '#cli/settings/tables.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { Pyproject } from '#cli/types/parsers.ts';
 
 function listIgnoredGlobs(planned: PlannedConfig, checkId: string, root: string): string[] {
     const shared = convertToGlobs(planned.ignoreSections).filter(

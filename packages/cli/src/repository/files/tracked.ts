@@ -1,14 +1,13 @@
-import { lstatSync, statSync } from 'node:fs';
 import { join, posix } from 'node:path';
-
-import { GIT_FILE_MODES, GITLINK_MODE } from '#cli/config/repository/files.ts';
-import { EXECUTABLE_BITS, EXECUTABLE_FILE, INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
+import { statSync, lstatSync } from 'node:fs';
 import { hasErrorCode } from '#cli/system/errors.ts';
-import { findContainedPath } from '#cli/system/files/reads.ts';
-import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { GitIndexFile, ListedFile, Repository } from '#cli/types/repository.ts';
+import { findContainedPath } from '#cli/system/files/reads.ts';
+import { GITLINK_MODE, GIT_FILE_MODES } from '#cli/config/repository/files.ts';
+import { extractParentFolder, isInInstalledFolder } from '#cli/system/paths.ts';
+import type { ListedFile, Repository, GitIndexFile } from '#cli/types/repository.ts';
+import { EXECUTABLE_BITS, EXECUTABLE_FILE, INSTALLED_DEPENDENCY_FOLDERS } from '#cli/config/system.ts';
 
 function readSymlinkFile(root: string, path: string, { isTracked }: { isTracked: boolean }): ListedFile | undefined {
     const link = { path, size: 0, executable: false, isSymlink: true };

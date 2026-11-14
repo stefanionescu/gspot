@@ -1,33 +1,34 @@
-import {
-    BOUNDARY_DEPENDENCY_NODES,
-    BOUNDARY_DEPENDENCY_SELECTORS,
-    BOUNDARY_OWNER_TEMPLATE,
-    BOUNDARY_SOURCE_TEMPLATE,
-    OTHER_BOUNDARY_ELEMENTS,
-    OTHER_BOUNDARY_FILE,
-    TEMPLATE_OPEN,
-    TEMPLATE_OPEN_ESCAPED,
-    TEST_BOUNDARY_CATEGORY,
-    TEST_IMPORT_POLICY,
-    TRPC_SERVER_CATEGORY,
-    TRPC_SERVER_VALUE_POLICY,
-    UNKNOWN_IMPORT_POLICIES,
-} from '#cli/config/configurations/javascript/blocks.ts';
-import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
+import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import { TRPC_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/configurations/import-rules.ts';
+import { IMPORT_RULE_CATEGORY } from '#cli/config/configurations/shared.ts';
+import { listAllowedRules, formatRefusedImport } from '#cli/configurations/import-rules.ts';
+
 import {
-    listCodePatterns,
     listExternals,
+    listCodePatterns,
     listJavascriptScopes,
 } from '#cli/configurations/language/javascript/sources.ts';
-import { joinScopeGlob } from '#cli/repository/scopes.ts';
 import type {
     EslintBlock,
-    EslintBoundaryPolicy,
-    PlannedEslintFile,
     ScopeBoundaries,
+    PlannedEslintFile,
+    EslintBoundaryPolicy,
 } from '#cli/types/configurations/javascript.ts';
+import {
+    TEMPLATE_OPEN,
+    TEST_IMPORT_POLICY,
+    OTHER_BOUNDARY_FILE,
+    TRPC_SERVER_CATEGORY,
+    TEMPLATE_OPEN_ESCAPED,
+    TEST_BOUNDARY_CATEGORY,
+    BOUNDARY_OWNER_TEMPLATE,
+    OTHER_BOUNDARY_ELEMENTS,
+    UNKNOWN_IMPORT_POLICIES,
+    BOUNDARY_SOURCE_TEMPLATE,
+    TRPC_SERVER_VALUE_POLICY,
+    BOUNDARY_DEPENDENCY_NODES,
+    BOUNDARY_DEPENDENCY_SELECTORS,
+} from '#cli/config/configurations/javascript/blocks.ts';
 
 function buildDependencyPolicies({
     importRules,

@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { expandSuggestions, selectConfigurations } from '#cli/manifests/select.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
+import type { GspotError } from '#cli/system/errors.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { expandSuggestions, selectConfigurations } from '#cli/manifests/select.ts';
 
 test('adds required configurations, dependencies first, in order of first mention', () => {
     const selected = selectConfigurations(['nextjs', 'react']);

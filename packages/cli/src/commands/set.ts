@@ -1,35 +1,36 @@
-import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
-import {
-    ENTRY_REASON_MESSAGE,
-    PREVIOUS_VALUE_LENGTH,
-    REASON_IGNORE_RULES,
-    TOOL_RULES_KEY,
-} from '#cli/config/commands/edits.ts';
-import { REASON_OPTION, SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
-import { isSettingUnread } from '#cli/engine/plan/skips.ts';
-import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { isTable } from '#cli/system/tables.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Check } from '#cli/types/manifests.ts';
 import { findToolName } from '#cli/manifests/tools.ts';
+import { setSetting } from '#cli/settings/toml/edit.ts';
+import type { CommandResult } from '#cli/types/system.ts';
 import { findNamingParent } from '#cli/settings/lookup.ts';
 import { parseSettingValue } from '#cli/settings/parse.ts';
-import { setSetting } from '#cli/settings/toml/edit.ts';
-import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/values/inherit.ts';
+import { isSettingUnread } from '#cli/engine/plan/skips.ts';
+import { readShippedChecks } from '#cli/manifests/checks.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import { joinSettingPaths } from '#cli/settings/values/paths.ts';
 import { isSettingEmpty } from '#cli/settings/values/written.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
+import { isWeakening } from '#cli/settings/validation/reasons.ts';
+import { SCOPE_OPTION, REASON_OPTION } from '#cli/config/commands/help.ts';
+import { readListedRuleExplanation } from '#cli/configurations/lint-rules.ts';
+import type { Setting, TomlTable, InheritedSetting, ParsedSettingValue } from '#cli/types/settings.ts';
+import { writeSettingsEdit, selectSettingToEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import { getSettingValue, findSettingDefault, formatSettingSource } from '#cli/settings/values/inherit.ts';
+
+import {
+    TOOL_RULES_KEY,
+    REASON_IGNORE_RULES,
+    ENTRY_REASON_MESSAGE,
+    PREVIOUS_VALUE_LENGTH,
+} from '#cli/config/commands/edits.ts';
 import type {
-    CommandDefinition,
-    ReasonFlags,
     SetOptions,
-    SettingReasonContext,
+    ReasonFlags,
+    CommandDefinition,
     SettingsEditContext,
+    SettingReasonContext,
 } from '#cli/types/commands.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import type { InheritedSetting, ParsedSettingValue, Setting, TomlTable } from '#cli/types/settings.ts';
-import type { CommandResult } from '#cli/types/system.ts';
 
 function formatMissingReason({ options, change, previous }: SettingReasonContext): string {
     const { key } = options;

@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { PLUGIN_SOURCE_REFUSAL } from '#cli/config/settings/tables.ts';
-import { parseSettings, safeParseSettings } from '#cli/settings/parse.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { test, expect } from 'bun:test';
 import type { TomlSyntax } from '#cli/types/parsers.ts';
-import { CONFIGURATION_CONFLICTS, UNKNOWN_TABLE_FIELDS } from '#tests/config/settings/parse.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { PLUGIN_SOURCE_REFUSAL } from '#cli/config/settings/tables.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { parseSettings, safeParseSettings } from '#cli/settings/parse.ts';
+import { UNKNOWN_TABLE_FIELDS, CONFIGURATION_CONFLICTS } from '#tests/config/settings/parse.ts';
 
 function captureSettingsError(text: string, root: string): string {
     try {

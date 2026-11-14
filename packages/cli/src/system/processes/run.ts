@@ -1,37 +1,36 @@
-import { closeSync, createWriteStream, openSync, readFileSync, statSync } from 'node:fs';
-import { delimiter, dirname, isAbsolute, join, resolve } from 'node:path';
-import { clearInterval, setInterval } from 'node:timers';
-
 import { execa } from 'execa';
+import { setInterval, clearInterval } from 'node:timers';
+import { trackProcessTree } from '#cli/system/processes/stop.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { findProgramCommand } from '#cli/system/processes/programs.ts';
+import { join, dirname, resolve, delimiter, isAbsolute } from 'node:path';
+import { openSync, statSync, closeSync, readFileSync, createWriteStream } from 'node:fs';
+import { foldVariableName, buildSpawnEnvironment, readEnvironmentVariable } from '#cli/system/environment.ts';
 
+import type {
+    ProcessEnd,
+    SpawnResult,
+    SpawnOptions,
+    StdoutReader,
+    RunningProcess,
+    SpawnCompletion,
+    ProcessTreeState,
+    ProcessTreeControl,
+    CancelableSpawnOptions,
+} from '#cli/types/system.ts';
 import {
-    CANCELED_START_MESSAGE,
-    EMPTY_COMMAND_MESSAGE,
+    UNSTOPPED,
     FAILED_CODE,
     MISSING_CODE,
     OUTPUT_LIMIT,
-    OUTPUT_POLL_MILLISECONDS,
-    OVER_LIMIT_COMPLETION,
     PATH_SEPARATORS,
     PATHEXT_DEFAULT,
     UNSTARTED_COMPLETION,
-    UNSTOPPED,
+    EMPTY_COMMAND_MESSAGE,
+    OVER_LIMIT_COMPLETION,
+    CANCELED_START_MESSAGE,
+    OUTPUT_POLL_MILLISECONDS,
 } from '#cli/config/system.ts';
-import { buildSpawnEnvironment, foldVariableName, readEnvironmentVariable } from '#cli/system/environment.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { findProgramCommand } from '#cli/system/processes/programs.ts';
-import { trackProcessTree } from '#cli/system/processes/stop.ts';
-import type {
-    CancelableSpawnOptions,
-    ProcessEnd,
-    ProcessTreeControl,
-    ProcessTreeState,
-    RunningProcess,
-    SpawnCompletion,
-    SpawnOptions,
-    SpawnResult,
-    StdoutReader,
-} from '#cli/types/system.ts';
 
 function buildExecaOptions(options: SpawnOptions, executable: string) {
     const env: Record<string, string | undefined> = { ...buildSpawnEnvironment(options.env), PWD: options.cwd };

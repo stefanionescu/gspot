@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { getLocalFunction } from '../../language/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { LocalFunction } from '../../types/plugin.ts';
+import { getLocalFunction } from '../../language/functions.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isEmptyFunction(declaration: LocalFunction): boolean {
     if (declaration.type === AST_NODE_TYPES.TSDeclareFunction) return false;

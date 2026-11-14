@@ -1,16 +1,15 @@
 ---
-import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import type { ImageMetadata } from 'astro';
 import type { SvgComponent } from 'astro/types';
-
+import Hero from '#docs/components/home/hero/Hero.astro';
 import '#docs/components/home/page.css';
+import InlineText from '#docs/components/InlineText.astro';
 import cliPackage from '#cli-package' with { type: 'json' };
 import Example from '#docs/components/home/example/Example.astro';
-import Hero from '#docs/components/home/hero/Hero.astro';
-import InlineText from '#docs/components/InlineText.astro';
-import { BENEFITS, HOME_TITLE, TOOLS } from '#docs/config/home.ts';
-import { REFERENCE_FOLDERS, REFERENCE_PATH } from '#docs/config/reference.ts';
-import { DOCS_PATH, NPM_URL, REPOSITORY_URL } from '#docs/config/site.ts';
+import { TOOLS, BENEFITS, HOME_TITLE } from '#docs/config/home.ts';
+import { NPM_URL, DOCS_PATH, REPOSITORY_URL } from '#docs/config/site.ts';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
+import { REFERENCE_PATH, REFERENCE_FOLDERS } from '#docs/config/reference.ts';
 
 const icons = import.meta.glob<SvgComponent>('../assets/tools/*.svg', { eager: true, import: 'default' });
 const images = import.meta.glob<ImageMetadata>('../assets/tools/*.png', { eager: true, import: 'default' });

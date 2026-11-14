@@ -1,18 +1,18 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    CDK_PROPS_POSITION,
-    COMPUTE_INSTANCE,
-    PRIVATE_SUBNETS,
-    PUBLIC_NETWORK_CHECKS,
-    PUBLIC_SUBNET,
-    RDS_INSTANCE,
-    SUBNET_SELECTION_METHOD,
-} from '../../config/aws.ts';
-import { listArgumentValues } from '../../language/expressions.ts';
-import { getCdkArgument, getCdkName, getCdkProperty, getCdkResult, listCdkTableIssues } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 import type { CdkResult } from '../../types/aws.ts';
+import { listArgumentValues } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../../libraries/aws.ts';
+
+import {
+    RDS_INSTANCE,
+    PUBLIC_SUBNET,
+    PRIVATE_SUBNETS,
+    COMPUTE_INSTANCE,
+    CDK_PROPS_POSITION,
+    PUBLIC_NETWORK_CHECKS,
+    SUBNET_SELECTION_METHOD,
+} from '../../config/aws.ts';
 
 function findSubnetSelection(source: Readonly<TSESLint.SourceCode>, networkInterface: CdkResult): CdkResult {
     let subnet = getCdkProperty(source, networkInterface, 'subnetId');

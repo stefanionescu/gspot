@@ -1,19 +1,20 @@
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readHooks } from '#cli/repository/setup/read.ts';
+import { formatCount } from '#cli/system/text/messages.ts';
+import type { ApplyReport } from '#cli/types/generation.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { GENERATED_FILE_NOUN } from '#cli/config/generation/setup.ts';
+import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
+
 import {
     CHANGE_LABEL_WIDTH,
     HOOKS_CHANGED_NOTE,
-    STALE_LOCKFILE_NOTE,
     TOOL_PROJECT_FILES,
     TOOLS_CHANGED_NOTE,
+    STALE_LOCKFILE_NOTE,
 } from '#cli/config/generation/files.ts';
-import { GENERATED_FILE_NOUN } from '#cli/config/generation/setup.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { readHooks } from '#cli/repository/setup/read.ts';
-import { formatCount } from '#cli/system/text/messages.ts';
-import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import type { ApplyReport } from '#cli/types/generation.ts';
-import type { Generation, Session } from '#cli/types/tools.ts';
 
 export function listGeneratedChangeLines(report: ApplyReport): string[] {
     const lines: string[] = [];

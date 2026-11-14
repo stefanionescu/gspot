@@ -1,15 +1,14 @@
 import { isDeepStrictEqual } from 'node:util';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/file.ts';
-import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { SettingsFile } from '#cli/types/settings.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
+import { OWNER_WRITABLE_FILE } from '#cli/config/system.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { writePlans, planReplacements } from '#cli/repository/files/writes.ts';
+import { NO_SETTINGS_MESSAGE, SETTINGS_ENCODING_MESSAGE } from '#cli/config/settings/file.ts';
 
 /**
 Read the bytes, mode, and text of gspot.toml without following a link out of the repository.

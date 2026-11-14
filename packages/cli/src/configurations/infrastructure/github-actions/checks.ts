@@ -1,35 +1,34 @@
-import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
 import { join, posix } from 'node:path';
-
-import { type Document, isAlias, isMap, isScalar, isSeq, parseDocument, type Scalar, type YAMLMap } from 'yaml';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { createCopy } from '#cli/engine/copies/files.ts';
+import type { PositionedYaml } from '#cli/types/parsers.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { chmodSync, mkdirSync, writeFileSync } from 'node:fs';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
+import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { PRIVATE_FILE, GIT_METADATA_NAME } from '#cli/config/system.ts';
+import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
+import type { CheckCode, CheckResult, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
+import { isMap, isSeq, isAlias, isScalar, type Scalar, type YAMLMap, type Document, parseDocument } from 'yaml';
 
 import {
     ACTION_FILES,
-    ENCODED_DOLLAR_SUFFIX,
-    FLOATING_RUNNER,
     GITHUB_FOLDER,
-    PULL_REQUEST_TRIGGERS,
+    FLOATING_RUNNER,
     SECRET_EXPRESSION,
+    WORKFLOW_EXPRESSION,
+    WORKFLOW_SHAPE_RULES,
+    ENCODED_DOLLAR_SUFFIX,
+    PULL_REQUEST_TRIGGERS,
     SELF_REFERENCE_PREFIX,
     SELF_REPOSITORY_MARKER,
     UPLOAD_ARTIFACT_ACTION,
-    WORKFLOW_EXPRESSION,
     WORKFLOW_SHAPE_MESSAGES,
-    WORKFLOW_SHAPE_RULES,
 } from '#cli/config/configurations/github-actions.ts';
-import { GIT_METADATA_NAME, PRIVATE_FILE } from '#cli/config/system.ts';
-import { WORKFLOW_SHAPE_EXPLANATIONS } from '#cli/configurations/infrastructure/github-actions/explanations.ts';
-import { createCopy } from '#cli/engine/copies/files.ts';
-import { restoreCommandPaths } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { parseBashScript } from '#cli/parsers/code/bash/script.ts';
-import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { WorkflowShapeHit } from '#cli/types/configurations/infrastructure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import type { PositionedYaml } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listStepReferences(steps: unknown): unknown[] {
     if (!isSeq(steps)) return [];

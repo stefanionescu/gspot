@@ -1,6 +1,6 @@
-import { MISSING_HEADER_RULE } from '#cli/config/configurations/cloudflare.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
+import { MISSING_HEADER_RULE } from '#cli/config/configurations/cloudflare.ts';
 
 export const HEADER_EXPLANATIONS = {
     [MISSING_HEADER_RULE]: {

@@ -1,16 +1,14 @@
-import { delimiter, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { buildCheckSession } from '#cli/engine/run/checks.ts';
-import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/run/tool-runs/tool.ts';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
 import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { buildCheckSession } from '#cli/engine/run/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/run/tool-runs/tool.ts';
 
 test('a timed-out tool reports the configured time limit and the last output of the tool', async () => {
     await using sandbox = await testdir();

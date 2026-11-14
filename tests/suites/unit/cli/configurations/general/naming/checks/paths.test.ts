@@ -1,21 +1,20 @@
-import { rename, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { rename, writeFile } from 'node:fs/promises';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
 import {
     FILE_NAME_CASES,
     NUMBERED_FILE_FINDINGS,
     NUMBERED_PREFIX_OVERRIDE,
 } from '#tests/config/configurations/naming/validation.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('[slug] path brackets are allowed in every scope and banned file names are reported', async () => {
     await using sandbox = await createGitSandbox({

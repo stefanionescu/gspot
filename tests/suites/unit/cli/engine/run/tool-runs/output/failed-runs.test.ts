@@ -1,15 +1,14 @@
-import { expect, test } from 'bun:test';
-
-import { BROKEN_TOOL_ADVICE } from '#cli/config/engine.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { addCommandLine } from '#cli/engine/run/tool-runs/output.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { BROKEN_TOOL_ADVICE } from '#cli/config/engine.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import type { CommandRun } from '#cli/types/engine/tool-runs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { addCommandLine } from '#cli/engine/run/tool-runs/output.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('an unexplained failed invocation fails the run with one finding', async () => {
     await using sandbox = await createGitSandbox({

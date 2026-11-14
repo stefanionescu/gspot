@@ -1,13 +1,11 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
 import type { TomlTable } from '#cli/types/settings.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('remove without --reason exits 2 and writes nothing', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings(['bash'], { rules: true }) });

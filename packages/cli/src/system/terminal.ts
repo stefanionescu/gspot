@@ -1,7 +1,10 @@
 import { addAbortSignal } from 'node:stream';
-import { stripVTControlCharacters, styleText } from 'node:util';
-
+import { GspotError } from '#cli/system/errors.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { styleText, stripVTControlCharacters } from 'node:util';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import type { CommandJson, OutputState, CommandResult, OutputOptions, CommandFailureJson } from '#cli/types/system.ts';
+
 import {
     EXIT_ERROR,
     PROGRESS_CLEAR,
@@ -10,9 +13,6 @@ import {
     TERMINAL_COLOR_SEQUENCE,
     TERMINAL_CONTROL_CHARACTERS,
 } from '#cli/config/system.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import type { CommandFailureJson, CommandJson, CommandResult, OutputOptions, OutputState } from '#cli/types/system.ts';
 
 const options: OutputState = { isJson: false, isVerbose: false, notes: [] };
 

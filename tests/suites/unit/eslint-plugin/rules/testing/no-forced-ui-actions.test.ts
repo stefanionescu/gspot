@@ -1,5 +1,4 @@
 import { join } from 'node:path';
-
 import { noForcedUiActions } from '#eslint-plugin/rules/testing/no-forced-ui-actions.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
 

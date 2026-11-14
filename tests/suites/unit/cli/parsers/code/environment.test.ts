@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import { test, expect } from 'bun:test';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
 
 test('JSX text is not an environment read and destructuring records the original property', async () => {
     const reads = await listJavascriptEnvironmentReads(

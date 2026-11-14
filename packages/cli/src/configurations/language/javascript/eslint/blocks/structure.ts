@@ -1,22 +1,22 @@
 import { isDeepStrictEqual } from 'node:util';
-
-import {
-    ENVIRONMENT_LANGUAGES,
-    TRIVIAL_FILES_RULE,
-    TRIVIAL_FUNCTIONS_RULE,
-    TYPED_LANGUAGES,
-} from '#cli/config/configurations/javascript/blocks.ts';
+import type { Scope, Settings } from '#cli/types/settings.ts';
 import { CODE_LANGUAGES } from '#cli/config/configurations/javascript/projects.ts';
 import { ENVIRONMENT_RULES } from '#cli/config/configurations/javascript/rules.ts';
 import { getRuleLimit } from '#cli/configurations/language/javascript/eslint/blocks/limits.ts';
-import {
-    buildExtensionGlob,
-    buildNodePatterns,
-    splitGlobs,
-} from '#cli/configurations/language/javascript/eslint/files.ts';
-import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
 import type { EslintRuleBlock, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
-import type { Scope, Settings } from '#cli/types/settings.ts';
+import { buildScopeOverrideBlocks } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+
+import {
+    splitGlobs,
+    buildNodePatterns,
+    buildExtensionGlob,
+} from '#cli/configurations/language/javascript/eslint/files.ts';
+import {
+    TYPED_LANGUAGES,
+    TRIVIAL_FILES_RULE,
+    ENVIRONMENT_LANGUAGES,
+    TRIVIAL_FUNCTIONS_RULE,
+} from '#cli/config/configurations/javascript/blocks.ts';
 
 function buildTrivialRules(
     scope: Scope,

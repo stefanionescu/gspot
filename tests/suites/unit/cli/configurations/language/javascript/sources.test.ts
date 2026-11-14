@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
 
 test('ESLint test patterns omit foreign extensions and retain components and shared globs', () => {

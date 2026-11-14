@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { noCommentsInImports } from '#eslint-plugin/rules/comments/no-comments-in-imports.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCommentsInImports } from '#eslint-plugin/rules/comments/no-comments-in-imports.ts';
 
 test('the default JavaScript parser keeps a comment that leads a class', () => {
     const linter = new Linter({ configType: 'flat' });

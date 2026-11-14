@@ -1,16 +1,14 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { executableLayout } from '#cli/system/processes/programs.ts';
-import { inspectTool } from '#cli/tools/programs/inspect.ts';
+import { test, expect } from 'bun:test';
 import type { Tool } from '#cli/types/manifests.ts';
 import { VERSION_OUTPUTS } from '#tests/config/tools.ts';
-import { buildProgramPin, buildToolSearch, fakeNpmPackage } from '#tests/setup/cli/tools.ts';
-import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { inspectTool } from '#cli/tools/programs/inspect.ts';
+import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
 import { buildProgramCommand, writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { fakeNpmPackage, buildProgramPin, buildToolSearch } from '#tests/setup/cli/tools.ts';
 
 test.each([
     ['1.2.3', 'outdated'],

@@ -1,17 +1,17 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import { getAssignedValue } from '../../language/variables.ts';
+import { listReturnedValues } from '../../language/functions.ts';
+import type { TypeReader, CheckedType } from '../../types/plugin.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    COMPONENT_DECLARATION,
     JSX_NODE_PREFIX,
     READONLY_MAPPED,
     READONLY_MEMBER,
     READONLY_UTILITY,
+    COMPONENT_DECLARATION,
 } from '../../config/react.ts';
-import { getTypes } from '../../language/checker.ts';
-import { listReturnedValues } from '../../language/functions.ts';
-import { getAssignedValue } from '../../language/variables.ts';
-import { createRule } from '../../rule.ts';
-import type { CheckedType, TypeReader } from '../../types/plugin.ts';
 
 function traceReturnedValue(node: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node {
     const variable =

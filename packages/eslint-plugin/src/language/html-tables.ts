@@ -1,17 +1,17 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
+import { DECIMAL_RADIX } from '../config/plugin.ts';
+import { getAttribute, getElementName } from './jsx.ts';
+import type { PlacedRow, TableCell } from '../types/accessibility.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    HEADER_SEPARATOR,
-    HTML_ELEMENTS,
-    LAYOUT_ROLES,
-    MAXIMUM_COLUMN_SPAN,
-    MAXIMUM_ROW_SPAN,
     TABLE_CELLS,
+    LAYOUT_ROLES,
+    HTML_ELEMENTS,
     TABLE_SECTIONS,
+    HEADER_SEPARATOR,
+    MAXIMUM_ROW_SPAN,
+    MAXIMUM_COLUMN_SPAN,
 } from '../config/accessibility.ts';
-import { DECIMAL_RADIX } from '../config/plugin.ts';
-import type { PlacedRow, TableCell } from '../types/accessibility.ts';
-import { getAttribute, getElementName } from './jsx.ts';
 
 function getSpan(cell: TSESTree.JSXElement, name: string, maximum: number): number {
     const attribute = getAttribute(cell.openingElement, name);

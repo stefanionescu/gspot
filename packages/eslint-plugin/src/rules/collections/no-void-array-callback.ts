@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import type { TypeReader } from '../../types/plugin.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    ARRAY_CALLBACK_METHODS,
-    ARRAY_FROM_METHOD,
+    VOID_TYPE,
     ARRAY_NAME,
     ARRAY_TYPE_NAMES,
-    VOID_TYPE,
+    ARRAY_FROM_METHOD,
+    ARRAY_CALLBACK_METHODS,
 } from '../../config/collections.ts';
-import { getTypes } from '../../language/checker.ts';
-import { createRule } from '../../rule.ts';
-import type { TypeReader } from '../../types/plugin.ts';
 
 function isArrayFrom(callee: TSESTree.MemberExpression): boolean {
     const { object, property } = callee;

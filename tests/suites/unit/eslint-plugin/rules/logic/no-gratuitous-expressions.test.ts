@@ -1,5 +1,5 @@
-import { noGratuitousExpressions } from '#eslint-plugin/rules/logic/no-gratuitous-expressions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noGratuitousExpressions } from '#eslint-plugin/rules/logic/no-gratuitous-expressions.ts';
 
 buildRuleTester().run('no-gratuitous-expressions', noGratuitousExpressions, {
     valid: [

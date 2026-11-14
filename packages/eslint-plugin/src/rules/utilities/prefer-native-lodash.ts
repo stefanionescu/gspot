@@ -1,21 +1,21 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    CALLBACK_METHODS,
-    LIBRARY_NAMES,
-    NATIVE_REPLACEMENTS,
-    PATTERN_TEXT,
-    SEARCH_METHODS,
-    SHORTHAND_ITERATEES,
-    STRING_INCLUDES,
-} from '../../config/utilities.ts';
-import { getTypeCategory, getTypes } from '../../language/checker.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { isCalleeNamed, unwrapExpression } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
 import type { TypeReader } from '../../types/plugin.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { getTypes, getTypeCategory } from '../../language/checker.ts';
+import { isCalleeNamed, unwrapExpression } from '../../language/syntax.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { LibraryCall, NativeMessageId, NativeReplacement } from '../../types/utilities.ts';
+
+import {
+    PATTERN_TEXT,
+    LIBRARY_NAMES,
+    SEARCH_METHODS,
+    STRING_INCLUDES,
+    CALLBACK_METHODS,
+    NATIVE_REPLACEMENTS,
+    SHORTHAND_ITERATEES,
+} from '../../config/utilities.ts';
 
 const methodNames = new Map(NATIVE_REPLACEMENTS.keys().map((method) => [method.toLowerCase(), method]));
 

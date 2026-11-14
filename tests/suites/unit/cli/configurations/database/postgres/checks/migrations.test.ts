@@ -1,20 +1,18 @@
-import { writeFile } from 'node:fs/promises';
-import { basename, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { readMigrations, selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { join, basename } from 'node:path';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { FROZEN_MIGRATION_CASES, FROZEN_MIGRATION_PATHS } from '#tests/config/configurations/database.ts';
-import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { FROZEN_MIGRATION_CASES, FROZEN_MIGRATION_PATHS } from '#tests/config/configurations/database.ts';
+import { readMigrations, selectFrozenMigrations } from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 test('postgres/migration-order reports a migration that does not parse at its line and column, and the other postgres checks skip', async () => {
     const path = 'migrations/1_teams.sql';

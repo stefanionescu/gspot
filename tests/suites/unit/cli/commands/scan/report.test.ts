@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
-
-import { buildScanReport, formatScanText } from '#cli/commands/scan/report.ts';
-import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/projects.ts';
-import { planInit } from '#cli/generation/setup/planner.ts';
+import { test, expect } from 'bun:test';
 import type { ScanReport } from '#cli/types/commands.ts';
-import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
+import { planInit } from '#cli/generation/setup/planner.ts';
 import { SCAN_RUN_REPORT } from '#tests/config/commands/setup.ts';
+import type { Finding, CheckResult } from '#cli/types/engine/run.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { MISE_NODE_PIN_COMMAND } from '#cli/config/repository/projects.ts';
+import { formatScanText, buildScanReport } from '#cli/commands/scan/report.ts';
 
 function buildRuffFinding(rule: string, line: number): Finding {
     return { check: 'python/ruff', file: 'a.py', line, rule, message: 'A message.', fixable: false };

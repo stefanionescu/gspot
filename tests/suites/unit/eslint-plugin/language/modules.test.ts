@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
-import { getQualifiedName } from '#eslint-plugin/language/modules.ts';
+import { test, expect } from 'bun:test';
 import type { FileContext } from '#eslint-plugin/types/plugin.ts';
+import { getQualifiedName } from '#eslint-plugin/language/modules.ts';
 
 test('a call through two variables that hold each other names no module', () => {
     const names: Array<string | undefined> = [];

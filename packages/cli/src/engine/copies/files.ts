@@ -1,20 +1,19 @@
-import { chmodSync, constants, copyFileSync, mkdirSync, statSync } from 'node:fs';
-import { dirname, join, posix } from 'node:path';
+import { join, posix, dirname } from 'node:path';
+import type { Session } from '#cli/types/tools.ts';
 import { setImmediate } from 'node:timers/promises';
-
-import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/engine.ts';
-import { GSPOT_FOLDER, NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
-import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
-import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { listUnreadFiles } from '#cli/engine/plan/files.ts';
-import { listWorkspaceSources } from '#cli/repository/projects/workspaces.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
 import { splitSystemPath } from '#cli/system/paths.ts';
+import { listUnreadFiles } from '#cli/engine/plan/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CopyPaths, CopyPlan } from '#cli/types/engine/tool-runs.ts';
+import { createCopyFolder } from '#cli/engine/copies/folders.ts';
 import type { Files, TemporaryFolder } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { copyDependencies } from '#cli/engine/copies/dependencies.ts';
+import type { CopyPlan, CopyPaths } from '#cli/types/engine/tool-runs.ts';
+import { listWorkspaceSources } from '#cli/repository/projects/workspaces.ts';
+import { statSync, chmodSync, constants, mkdirSync, copyFileSync } from 'node:fs';
+import { GSPOT_FOLDER, NODE_MODULES, PERMISSION_BITS } from '#cli/config/system.ts';
+import { COPY_ROOT_FILES, DEPENDENCY_FILES, FILES_BETWEEN_PAUSES } from '#cli/config/engine.ts';
 
 function writeCopyFile(files: Files, copyRoot: string, file: string): void {
     const target = join(copyRoot, ...splitSystemPath(file));

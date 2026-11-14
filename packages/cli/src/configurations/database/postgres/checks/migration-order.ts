@@ -1,13 +1,14 @@
-import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/postgres.ts';
-import {
-    compareMigrationVersions,
-    readCommittedMigrations,
-    readMigrations,
-} from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { MIGRATION_ORDER_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
-import type { Migration } from '#cli/types/configurations/database.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Migration } from '#cli/types/configurations/database.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { MIGRATION_RULES, MISSING_VERSION_MESSAGE } from '#cli/config/configurations/postgres.ts';
+import { MIGRATION_ORDER_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
+
+import {
+    readMigrations,
+    readCommittedMigrations,
+    compareMigrationVersions,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
 
 function listVersionFindings(migrations: Migration[]): CheckFinding[] {
     const findings: CheckFinding[] = [];

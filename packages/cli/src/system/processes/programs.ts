@@ -1,12 +1,10 @@
-import { statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-
 import which from 'which';
-
-import { EXECUTABLE_LAYOUTS, GIT_METADATA_NAME, OUTSIDE_PROGRAMS } from '#cli/config/system.ts';
-import { buildSpawnEnvironment, foldVariableName } from '#cli/system/environment.ts';
-import { convertToPosixPath, isInside } from '#cli/system/paths.ts';
+import { statSync } from 'node:fs';
+import { join, dirname, relative } from 'node:path';
 import type { SpawnOptions } from '#cli/types/system.ts';
+import { isInside, convertToPosixPath } from '#cli/system/paths.ts';
+import { foldVariableName, buildSpawnEnvironment } from '#cli/system/environment.ts';
+import { OUTSIDE_PROGRAMS, GIT_METADATA_NAME, EXECUTABLE_LAYOUTS } from '#cli/config/system.ts';
 
 const programPaths = new Map<string, string>();
 

@@ -1,7 +1,6 @@
 import { join } from 'node:path';
-
-import { noUnexplainedTestSkips } from '#eslint-plugin/rules/testing/no-unexplained-test-skips.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnexplainedTestSkips } from '#eslint-plugin/rules/testing/no-unexplained-test-skips.ts';
 
 const root = writePackageFolders({
     jasmine: { devDependencies: { jasmine: '5.0.0' } },

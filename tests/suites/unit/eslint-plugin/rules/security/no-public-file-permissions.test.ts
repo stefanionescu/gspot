@@ -1,5 +1,5 @@
-import { noPublicFilePermissions } from '#eslint-plugin/rules/security/no-public-file-permissions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noPublicFilePermissions } from '#eslint-plugin/rules/security/no-public-file-permissions.ts';
 
 buildRuleTester().run('no-public-file-permissions', noPublicFilePermissions, {
     valid: [

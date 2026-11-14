@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { DIGEST_METHOD, HASH_FUNCTIONS, SUBTLE_DIGEST, TRUNCATION_METHODS } from '../../config/cryptography.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
 import type { MethodCall } from '../../types/security.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { DIGEST_METHOD, SUBTLE_DIGEST, HASH_FUNCTIONS, TRUNCATION_METHODS } from '../../config/cryptography.ts';
 
 function classifyIndex(index: number | null | undefined, missing: 'zero' | 'length'): 'zero' | 'length' | 'other' {
     if (index === undefined) return missing;

@@ -1,22 +1,20 @@
-import { symlink, unlink, writeFile } from 'node:fs/promises';
-import { join, relative } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession, runCheckCode } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { join, relative } from 'node:path';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { createRunResources } from '#tests/setup/cli/run.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { unlink, symlink, writeFile } from 'node:fs/promises';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { runCheckCode, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { getBuiltInCheck, runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 test(`local-files reports each tracked path that a scope's configurations leave untracked, once, including a path only in the Git index`, async () => {
     const paths = {

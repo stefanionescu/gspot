@@ -1,5 +1,5 @@
-import { noUselessIntersection } from '#eslint-plugin/rules/types/no-useless-intersection.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUselessIntersection } from '#eslint-plugin/rules/types/no-useless-intersection.ts';
 
 buildTypedRuleTester().run('no-useless-intersection', noUselessIntersection, {
     valid: [

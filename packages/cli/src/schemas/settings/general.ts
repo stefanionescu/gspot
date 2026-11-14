@@ -1,15 +1,15 @@
 import { z } from 'zod';
-
-import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+import { licensesSchema } from '#cli/schemas/settings/tables.ts';
 import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import { ALLOWED_WORD, REEXPORT_MODES, SPELLING_LOCALES } from '#cli/config/settings/tables.ts';
+
 import {
+    percentageSchema,
     allowReasonedValue,
+    relativePathSchema,
     nonemptyStringsSchema,
     nonnegativeIntegerSchema,
-    percentageSchema,
-    relativePathSchema,
 } from '#cli/schemas/settings/fields.ts';
-import { licensesSchema } from '#cli/schemas/settings/tables.ts';
 
 export const generalTableSchemas = {
     structure: z

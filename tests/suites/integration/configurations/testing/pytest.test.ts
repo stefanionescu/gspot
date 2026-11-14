@@ -1,14 +1,12 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { test, expect } from 'bun:test';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { ARITHMETIC_MODULE } from '#tests/config/integration/python.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const PYTEST_PYPROJECT = `[project]
 name = "example"

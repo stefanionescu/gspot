@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getModuleName } from '../../language/modules.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getLiteralValue, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 
 import {
+    CSRF_MODULE,
+    SESSION_MIDDLEWARES,
     COOKIE_SECURITY_FLAGS,
     COOKIE_SESSION_MODULE,
     COOKIE_SET_OPTIONS_POSITION,
-    CSRF_MODULE,
-    SESSION_MIDDLEWARES,
 } from '../../config/servers.ts';
-import { getExpressionValue, getLiteralValue, getOptionProperties } from '../../language/expressions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
 
 function getCookiesOptions(call: TSESTree.CallExpression, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     if (call.callee.type !== AST_NODE_TYPES.MemberExpression || ASTUtils.getPropertyName(call.callee) !== 'set')

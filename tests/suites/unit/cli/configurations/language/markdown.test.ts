@@ -1,14 +1,13 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import { MARKDOWN_FENCE_CASES } from '#tests/config/configurations/language.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { MARKDOWN_FENCE_CASES } from '#tests/config/configurations/language.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test.each([...MARKDOWN_FENCE_CASES])(
     'markdown/fences reports each fence that does not parse: $name',

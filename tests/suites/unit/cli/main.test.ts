@@ -1,13 +1,12 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import type { CommandFailureJson } from '#cli/types/system.ts';
-import { parseCheckReport, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { test, expect } from 'bun:test';
 import { readTree } from '#tests/setup/system/files.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import type { CommandFailureJson } from '#cli/types/system.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 const MALFORMED_SETTINGS = 'malformed = [';
 

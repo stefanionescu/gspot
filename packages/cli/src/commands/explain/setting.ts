@@ -1,19 +1,19 @@
-import { CODE_MARK } from '#cli/config/commands/help.ts';
-import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/lookup.ts';
-import { isSettingUnread, listSettingReaders } from '#cli/engine/plan/skips.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { Setting } from '#cli/types/settings.ts';
 import { formatScope } from '#cli/repository/scopes.ts';
+import { CODE_MARK } from '#cli/config/commands/help.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { scopeSchema } from '#cli/schemas/settings/file.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { findNamingParent, findSettingSchema, RECORD_FIELDS } from '#cli/settings/lookup.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
 import { buildSettingsFromTable } from '#cli/settings/parse.ts';
 import { isWeakening } from '#cli/settings/validation/reasons.ts';
-import { findSetting, findSettingDefault, formatSettingSource, getSettingValue } from '#cli/settings/values/inherit.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
-import type { ExplainedSetting, Explanation, SettingScope } from '#cli/types/commands.ts';
-import type { Setting } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { isSettingUnread, listSettingReaders } from '#cli/engine/plan/skips.ts';
+import { NOT_SET, REASON_HELP, REASON_OPTION_TEXT } from '#cli/config/commands/lookup.ts';
+import type { Explanation, SettingScope, ExplainedSetting } from '#cli/types/commands.ts';
+import { RECORD_FIELDS, findNamingParent, findSettingSchema } from '#cli/settings/lookup.ts';
+import { findSetting, getSettingValue, findSettingDefault, formatSettingSource } from '#cli/settings/values/inherit.ts';
 
 function formatSettingScope(key: string, setting: Setting, scopeSetting: SettingScope): string[] {
     const { scopePath, shipped, inherited } = scopeSetting;

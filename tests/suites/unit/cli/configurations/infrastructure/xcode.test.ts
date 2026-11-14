@@ -1,26 +1,25 @@
-import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    ASSET_SETTING_CASES,
-    ENTITLEMENT_SCOPE_RESULTS,
-    INVALID_RESOURCE_DOCUMENTS,
-    LOGO_IMAGE_SET,
-    PARTLY_TRANSLATED_STRINGS,
-    SINGLE_FILE_PBXPROJ,
-} from '#tests/config/configurations/swift.ts';
-import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+
+import {
+    LOGO_IMAGE_SET,
+    ASSET_SETTING_CASES,
+    SINGLE_FILE_PBXPROJ,
+    ENTITLEMENT_SCOPE_RESULTS,
+    PARTLY_TRANSLATED_STRINGS,
+    INVALID_RESOURCE_DOCUMENTS,
+} from '#tests/config/configurations/swift.ts';
 
 test('Xcode sources follow group paths and target membership instead of duplicate filenames', async () => {
     await using sandbox = await createGitSandbox({

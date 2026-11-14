@@ -1,28 +1,27 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import {
-    DOCSTRING_PREFIXES,
-    PYTHON_EXTENSION,
-    PYTHON_FROM_STATEMENT,
-    PYTHON_FUNCTION_NODES,
-    PYTHON_IMPORT_STATEMENT,
-    PYTHON_MODULE_SUFFIXES,
-    RELATIVE_IMPORT,
-} from '#cli/config/parsers/code.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { remember } from '#cli/system/cache.ts';
 import { readText } from '#cli/system/files/reads.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+
 import type {
-    LocatedImport,
     ParseCache,
     PythonFiles,
-    PythonFunction,
+    SourceFiles,
     PythonModule,
     PythonSearch,
-    SourceFiles,
+    LocatedImport,
+    PythonFunction,
 } from '#cli/types/parsers.ts';
+import {
+    RELATIVE_IMPORT,
+    PYTHON_EXTENSION,
+    DOCSTRING_PREFIXES,
+    PYTHON_FROM_STATEMENT,
+    PYTHON_FUNCTION_NODES,
+    PYTHON_MODULE_SUFFIXES,
+    PYTHON_IMPORT_STATEMENT,
+} from '#cli/config/parsers/code.ts';
 
 function listFunctions(module: PythonModule): PythonFunction[] {
     return module.tree.rootNode

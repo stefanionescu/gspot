@@ -1,21 +1,21 @@
-import { explainCheck } from '#cli/commands/explain/check.ts';
-import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
-import { explainPath } from '#cli/commands/explain/path.ts';
-import { explainLintRule } from '#cli/commands/explain/rule.ts';
-import { explainSetting } from '#cli/commands/explain/setting.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { listCheckIds } from '#cli/manifests/checks.ts';
+import type { CommandResult } from '#cli/types/system.ts';
+import { explainPath } from '#cli/commands/explain/path.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import { explainCheck } from '#cli/commands/explain/check.ts';
+import { explainLintRule } from '#cli/commands/explain/rule.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { explainSetting } from '#cli/commands/explain/setting.ts';
+import { formatSimilarNames } from '#cli/system/text/messages.ts';
 import { SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { formatUnknownSetting } from '#cli/settings/validation/keys.ts';
 import { listInheritedSettings } from '#cli/settings/values/inherit.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { formatSimilarNames } from '#cli/system/text/messages.ts';
-import type { CommandDefinition, Explanation } from '#cli/types/commands.ts';
-import type { CommandResult } from '#cli/types/system.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { Explanation, CommandDefinition } from '#cli/types/commands.ts';
+import { explainConfiguration } from '#cli/commands/explain/configuration.ts';
 
 function formatUnknownSubject(session: Session | undefined, subject: string): string {
     if (SETTINGS_BY_CONFIGURATION.values().some((settings) => settings.some(({ name }) => name === subject)))

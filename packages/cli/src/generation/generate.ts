@@ -1,41 +1,42 @@
-import cliPackage from '#cli-package' with { type: 'json' };
-import { CI_SYSTEMS_SETTING } from '#cli/config/generation/builders.ts';
-import {
-    ATTRIBUTE_GLOB_CHARACTERS,
-    ATTRIBUTE_QUOTED_CHARACTERS,
-    GIT_ATTRIBUTES_BLOCK,
-    INSTALLED_TOOL_FOLDERS,
-} from '#cli/config/generation/files.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
-import { FILTER_ATTRIBUTE, LFS_FILTER } from '#cli/config/repository/files.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { RuleFile } from '#cli/types/generation.ts';
+import { ciFields } from '#cli/schemas/settings/tables.ts';
+import { buildToolProjects } from '#cli/tools/projects.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { listHookNames } from '#cli/tools/installers/hooks.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
+import { buildConfigs } from '#cli/generation/configs/build.ts';
+import { getSettingValue } from '#cli/settings/values/inherit.ts';
+import { buildHookFiles } from '#cli/generation/builders/hooks.ts';
+import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
+import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
+import { CI_SYSTEMS_SETTING } from '#cli/config/generation/builders.ts';
+import { buildPointerFieldEdits } from '#cli/generation/configs/pointers.ts';
+import { LFS_FILTER, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
+import { AGENTS_FILE, GITATTRIBUTES_FILE } from '#cli/config/parsers/formats.ts';
+import { hasTopHeading, buildAgentsBlock } from '#cli/generation/builders/agents.ts';
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/bunfig.ts';
-import { buildAgentsBlock, hasTopHeading } from '#cli/generation/builders/agents.ts';
+
 import {
+    readCiNode,
+    listTestChecks,
     buildGithubWorkflow,
     buildGitlabWorkflow,
     listProjectInstallLines,
-    listTestChecks,
-    readCiNode,
 } from '#cli/generation/builders/ci.ts';
-import { buildHookFiles } from '#cli/generation/builders/hooks.ts';
-import { selectRuleFiles } from '#cli/generation/builders/rules.ts';
-import { buildConfigs } from '#cli/generation/configs/build.ts';
-import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
-import { buildPointerFieldEdits } from '#cli/generation/configs/pointers.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { ciFields } from '#cli/schemas/settings/tables.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { listSelectedConfigurations } from '#cli/settings/scopes.ts';
-import { getSettingValue } from '#cli/settings/values/inherit.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { listHookNames } from '#cli/tools/installers/hooks.ts';
-import { buildToolProjects } from '#cli/tools/projects.ts';
-import type { ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { RuleFile } from '#cli/types/generation.ts';
-import type { Generation, Session } from '#cli/types/tools.ts';
+import {
+    GIT_ATTRIBUTES_BLOCK,
+    INSTALLED_TOOL_FOLDERS,
+    ATTRIBUTE_GLOB_CHARACTERS,
+    ATTRIBUTE_QUOTED_CHARACTERS,
+} from '#cli/config/generation/files.ts';
 
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;

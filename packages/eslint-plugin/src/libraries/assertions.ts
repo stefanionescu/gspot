@@ -1,45 +1,45 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    EXPECT_SETUP,
-    GLOBAL_EXPECT_DEPENDENCIES,
-    GLOBAL_EXPECT_IMPORTS,
-    GLOBAL_EXPECTS,
-    NODE_TEST_NAME,
-    PLAYWRIGHT_EXPECT,
-    RUNNER_ASSERTION,
-    SCRIPT_ASSERTIONS,
-    TYPE_ASSERTION,
-} from '../config/assertions/evidence.ts';
-import {
-    ASSERT_FUNCTION,
-    CHAI_ASSERT_CHECKS,
-    CHAI_ASSERTION,
-    CHAI_COMPARISONS,
-    CHAI_MODULES,
-    CHAI_PREDICATES,
-    CYPRESS_ASSERTIONS,
-    CYPRESS_MODULES,
-    EXPECT_COMPARISONS,
-    EXPECT_PREDICATES,
-    EXPECT_STYLES,
-    NODE_ASSERT_CHECKS,
-    NODE_ASSERT_MODULES,
-    NODE_ASSERTION,
-} from '../config/assertions/styles.ts';
-import { getModuleName, listImportedModules } from '../language/modules.ts';
+import { isCypressChain } from './testing.ts';
+import type { FileContext } from '../types/plugin.ts';
 import { isModuleUsed } from '../language/packages.ts';
-import { getMemberRoot, isCallOf } from '../language/syntax.ts';
+import { isCallOf, getMemberRoot } from '../language/syntax.ts';
+import { getModuleName, listImportedModules } from '../language/modules.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
 import type {
     Assertion,
-    AssertionChecks,
-    AssertionKind,
-    AssertionStyles,
     ChaiChain,
     ExpectCall,
+    AssertionKind,
+    AssertionChecks,
+    AssertionStyles,
 } from '../types/assertions.ts';
-import type { FileContext } from '../types/plugin.ts';
-import { isCypressChain } from './testing.ts';
+import {
+    EXPECT_SETUP,
+    GLOBAL_EXPECTS,
+    NODE_TEST_NAME,
+    TYPE_ASSERTION,
+    RUNNER_ASSERTION,
+    PLAYWRIGHT_EXPECT,
+    SCRIPT_ASSERTIONS,
+    GLOBAL_EXPECT_IMPORTS,
+    GLOBAL_EXPECT_DEPENDENCIES,
+} from '../config/assertions/evidence.ts';
+import {
+    CHAI_MODULES,
+    EXPECT_STYLES,
+    CHAI_ASSERTION,
+    NODE_ASSERTION,
+    ASSERT_FUNCTION,
+    CHAI_PREDICATES,
+    CYPRESS_MODULES,
+    CHAI_COMPARISONS,
+    EXPECT_PREDICATES,
+    CHAI_ASSERT_CHECKS,
+    CYPRESS_ASSERTIONS,
+    EXPECT_COMPARISONS,
+    NODE_ASSERT_CHECKS,
+    NODE_ASSERT_MODULES,
+} from '../config/assertions/styles.ts';
 
 const styleCache = new WeakMap<TSESLint.SourceCode, AssertionStyles>();
 const chaiAssertChecks = new Map<string, AssertionChecks>(

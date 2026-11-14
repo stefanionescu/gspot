@@ -1,19 +1,19 @@
-import { expect, test } from 'bun:test';
-
-import {
-    ACCESSOR_DECLARATIONS,
-    CALLER_CASES,
-    NESTED_PYTHON_FUNCTIONS,
-    PYTHON_INTERFACES,
-    STATEMENT_COUNT_CASES,
-    TRIVIAL_FILES,
-    TRIVIAL_FUNCTION_CASES,
-} from '#tests/config/configurations/structure/code.ts';
+import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+import {
+    CALLER_CASES,
+    TRIVIAL_FILES,
+    PYTHON_INTERFACES,
+    ACCESSOR_DECLARATIONS,
+    STATEMENT_COUNT_CASES,
+    TRIVIAL_FUNCTION_CASES,
+    NESTED_PYTHON_FUNCTIONS,
+} from '#tests/config/configurations/structure/code.ts';
 
 test('Swift reports constructors, accessors, decorated methods, and nested functions, and counts the statements of closures toward their function', async () => {
     await using initialSandbox = await createGitSandbox({

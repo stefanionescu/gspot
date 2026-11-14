@@ -1,5 +1,5 @@
-import { noInvariantReturns } from '#eslint-plugin/rules/functions/no-invariant-returns.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInvariantReturns } from '#eslint-plugin/rules/functions/no-invariant-returns.ts';
 
 buildRuleTester().run('no-invariant-returns', noInvariantReturns, {
     valid: [

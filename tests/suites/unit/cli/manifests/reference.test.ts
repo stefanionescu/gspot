@@ -1,10 +1,9 @@
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { DETECTION_LABELS, SHEBANG_TAG } from '#cli/config/manifests.ts';
-import { SWIFT_IMPORT_TAG, SWIFT_TEST_TAG, SWIFT_TEST_TARGET_TAG } from '#cli/config/parsers/code.ts';
-import { formatDetectionConditions } from '#cli/manifests/reference.ts';
 import { buildConfiguration } from '#tests/setup/cli/manifests.ts';
+import { formatDetectionConditions } from '#cli/manifests/reference.ts';
+import { SHEBANG_TAG, DETECTION_LABELS } from '#cli/config/manifests.ts';
+import { SWIFT_TEST_TAG, SWIFT_IMPORT_TAG, SWIFT_TEST_TARGET_TAG } from '#cli/config/parsers/code.ts';
 
 test('detection tags read as a shebang, a Swift test file, a test target, and an import', () => {
     const tags = [SWIFT_TEST_TAG, SWIFT_TEST_TARGET_TAG, `${SWIFT_IMPORT_TAG}SwiftUI`, `${SHEBANG_TAG}bash`];

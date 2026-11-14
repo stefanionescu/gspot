@@ -1,43 +1,43 @@
 import { join } from 'node:path';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER, UV_PROGRAM } from '#cli/config/system.ts';
-import { UV_CHECK_FLAG, UV_PROJECT_INSTALL_ARGUMENTS, UV_REINSTALL_FLAG } from '#cli/config/tools/installers.ts';
-import { planReplacements, writePlans } from '#cli/repository/files/writes.ts';
+import type { Files } from '#cli/types/system.ts';
+import type { Tool } from '#cli/types/manifests.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { findProgram } from '#cli/system/processes/programs.ts';
+import { runInstallStep } from '#cli/tools/installers/steps.ts';
+import { buildPythonProjectTable } from '#cli/tools/projects.ts';
 import { isMiseLockfileFresh } from '#cli/tools/installers/mise.ts';
-import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
-import {
-    installNpmTools,
-    installUnlockedNpmTools,
-    isNpmLockfileFresh,
-    planNpmLockfile,
-} from '#cli/tools/installers/npm/project.ts';
+import { listExecutablePaths } from '#cli/tools/programs/locate.ts';
+import { writePlans, planReplacements } from '#cli/repository/files/writes.ts';
 import { readRegistryEnvironment } from '#cli/tools/installers/npm/registry.ts';
 import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
-import {
-    installPythonProjects,
-    installPythonTools,
-    listLockedPythonProjects,
-    planPythonLockfile,
-} from '#cli/tools/installers/python/project.ts';
-import { runInstallStep } from '#cli/tools/installers/steps.ts';
-import { findPackagePin, listMisePins, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
-import { listExecutablePaths } from '#cli/tools/programs/locate.ts';
-import { buildPythonProjectTable } from '#cli/tools/projects.ts';
-import type { Tool } from '#cli/types/manifests.ts';
 import type { ReplacementRequest, ToolPackageManagerName } from '#cli/types/repository.ts';
-import type { Files } from '#cli/types/system.ts';
+import { isLockfileFresh, selectLockfileName } from '#cli/tools/installers/npm/lockfiles.ts';
+import { listMisePins, findPackagePin, listPackagePins, listNpmProjectPins } from '#cli/tools/pins.ts';
+import { UV_PROGRAM, GSPOT_FOLDER, MISE_PROGRAM, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { UV_CHECK_FLAG, UV_REINSTALL_FLAG, UV_PROJECT_INSTALL_ARGUMENTS } from '#cli/config/tools/installers.ts';
+
+import {
+    installNpmTools,
+    planNpmLockfile,
+    isNpmLockfileFresh,
+    installUnlockedNpmTools,
+} from '#cli/tools/installers/npm/project.ts';
 import type {
-    GeneratedFile,
-    NpmToolInstall,
     Session,
-    StaleLockfile,
     ToolInstall,
+    GeneratedFile,
+    StaleLockfile,
+    NpmToolInstall,
     ToolProjectsInstall,
 } from '#cli/types/tools.ts';
+import {
+    installPythonTools,
+    planPythonLockfile,
+    installPythonProjects,
+    listLockedPythonProjects,
+} from '#cli/tools/installers/python/project.ts';
 
 function findStaleMiseLockfile(files: Files, configurations: Session['toolConfigurations']): StaleLockfile | undefined {
     const path = GSPOT_PATHS.miseLockfile;

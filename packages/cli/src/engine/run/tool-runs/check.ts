@@ -1,12 +1,28 @@
 import { join, relative } from 'node:path';
-
-import { FILES_PLACEHOLDER, MISSING_GENERATED_FILE_MESSAGE, RAN_STATUSES } from '#cli/config/engine.ts';
+import { getTool } from '#cli/manifests/tools.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import type { Tool } from '#cli/types/manifests.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { createCopy } from '#cli/engine/copies/files.ts';
-import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { ProcessFailure } from '#cli/types/tools.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listSecondaryTools } from '#cli/engine/plan/tools.ts';
-import { buildBaseResult, measureSpan, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
+import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
+import { lookUpTool, findToolPath } from '#cli/tools/programs/inspect.ts';
+import { listCopyFiles, listCommandConfigs } from '#cli/engine/run/tool-runs/configs.ts';
 import { buildCommandLines, buildDashSafePath } from '#cli/engine/run/tool-runs/batches.ts';
-import { listCommandConfigs, listCopyFiles } from '#cli/engine/run/tool-runs/configs.ts';
+import { runToolProcess, buildSecondaryToolEnvironment } from '#cli/engine/run/tool-runs/tool.ts';
+import { listCopyPythonArguments, buildCopyPythonEnvironment } from '#cli/tools/python-environment.ts';
+import { RAN_STATUSES, FILES_PLACEHOLDER, MISSING_GENERATED_FILE_MESSAGE } from '#cli/config/engine.ts';
+import { measureSpan, buildBaseResult, mergeCheckResults, restoreCommandPaths } from '#cli/engine/results.ts';
+import type { CheckCode, CheckResult, CheckSession, CommandLaunch, CheckRunOptions } from '#cli/types/engine/run.ts';
+import type { FolderRun, CommandRun, CommandBatch, CommandSetup, Substitutions } from '#cli/types/engine/tool-runs.ts';
+
 import {
     addCommandLine,
     buildCheckResult,
@@ -14,27 +30,11 @@ import {
     parseCommandFindings,
 } from '#cli/engine/run/tool-runs/output.ts';
 import {
-    buildFileCommandLines,
     expandCommand,
     isPackageFolderRun,
     replacePlaceholders,
+    buildFileCommandLines,
 } from '#cli/engine/run/tool-runs/placeholders.ts';
-import { buildSecondaryToolEnvironment, runToolProcess } from '#cli/engine/run/tool-runs/tool.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { getTool } from '#cli/manifests/tools.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { findToolPath, lookUpTool } from '#cli/tools/programs/inspect.ts';
-import { readToolCommandPrefix } from '#cli/tools/programs/packages.ts';
-import { buildCopyPythonEnvironment, listCopyPythonArguments } from '#cli/tools/python-environment.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckRunOptions, CheckSession, CommandLaunch } from '#cli/types/engine/run.ts';
-import type { CommandBatch, CommandRun, CommandSetup, FolderRun, Substitutions } from '#cli/types/engine/tool-runs.ts';
-import type { Tool } from '#cli/types/manifests.ts';
-import type { ProcessFailure } from '#cli/types/tools.ts';
 
 async function runCommands(
     planned: PlannedCheck,

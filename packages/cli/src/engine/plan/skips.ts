@@ -1,19 +1,19 @@
-import { LOCAL_RULE_EXTENSION, LOCAL_RULES_SETTING } from '#cli/config/engine.ts';
-import { isRepositoryRun } from '#cli/manifests/checks.ts';
-import { LIMIT_READERS } from '#cli/manifests/limits.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
-import { listIgnores } from '#cli/settings/tables.ts';
-import { isSettingEmpty } from '#cli/settings/values/written.ts';
-import { buildFilenameMatcher } from '#cli/system/patterns.ts';
-import { findValueAt } from '#cli/system/tables.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
-import { findMissingBuild } from '#cli/tools/pins.ts';
-import type { PlannedCheck, PlannedScope, SettingReader, Skip } from '#cli/types/engine/plan.ts';
-import type { Check, Config, Tool } from '#cli/types/manifests.ts';
-import type { Repository } from '#cli/types/repository.ts';
-import type { Level, Scope, Settings } from '#cli/types/settings.ts';
 import type { Host } from '#cli/types/tools.ts';
+import { findValueAt } from '#cli/system/tables.ts';
+import { listIgnores } from '#cli/settings/tables.ts';
+import { findMissingBuild } from '#cli/tools/pins.ts';
+import { LIMIT_READERS } from '#cli/manifests/limits.ts';
+import { isRepositoryRun } from '#cli/manifests/checks.ts';
+import type { Repository } from '#cli/types/repository.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
+import { buildFilenameMatcher } from '#cli/system/patterns.ts';
+import { isSettingEmpty } from '#cli/settings/values/written.ts';
+import type { Tool, Check, Config } from '#cli/types/manifests.ts';
+import type { Level, Scope, Settings } from '#cli/types/settings.ts';
+import { isInScope, isScopeCovered } from '#cli/repository/scopes.ts';
+import { LOCAL_RULES_SETTING, LOCAL_RULE_EXTENSION } from '#cli/config/engine.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import type { Skip, PlannedCheck, PlannedScope, SettingReader } from '#cli/types/engine/plan.ts';
 
 function findDependencySkip(
     dependencies: string[] | undefined,

@@ -1,7 +1,7 @@
-import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
 import { listIgnores } from '#cli/settings/tables.ts';
-import type { IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 import type { ScopeSettings } from '#cli/types/settings.ts';
+import { isAnchoredPattern } from '#cli/repository/files/gitignore.ts';
+import type { IgnoreSection, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 export function convertToGlob(pattern: string): string {
     const negative = pattern.startsWith('!') ? '!' : '';

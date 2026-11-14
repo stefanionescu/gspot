@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { buildGitignoreMatcher, listGitignorePatterns, readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
 import type { GspotError } from '#cli/system/errors.ts';
-import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
+import { matchFields, captureRejection } from '#tests/setup/matchers.ts';
+import { readIgnoredPaths, buildGitignoreMatcher, listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 
 test('a path outside the repository is not ignored, and a path that .gitignore names is', async () => {
     await using sandbox = await testdir({ '.gitignore': 'dist/\n' });

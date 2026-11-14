@@ -1,5 +1,5 @@
-import { noIncompleteAssertions } from '#eslint-plugin/rules/assertions/no-incomplete-assertions.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noIncompleteAssertions } from '#eslint-plugin/rules/assertions/no-incomplete-assertions.ts';
 
 buildRuleTester().run('no-incomplete-assertions', noIncompleteAssertions, {
     valid: [

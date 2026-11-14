@@ -1,10 +1,10 @@
-import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
-import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
-import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { formatCount, formatNameState } from '#cli/system/text/messages.ts';
-import type { ScriptFile } from '#cli/types/configurations/language.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { ScriptFile } from '#cli/types/configurations/language.ts';
+import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
+import { formatCount, formatNameState } from '#cli/system/text/messages.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { READS_NO_POSITIONAL, UNREAD_ARGUMENTS_RULE } from '#cli/config/configurations/bash.ts';
 
 function listFunctionCalls(scripts: ScriptFile[], target: ScriptFile, name: string): ScriptFile['calls'] {
     const callers = scripts.filter(

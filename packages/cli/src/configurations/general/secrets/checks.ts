@@ -1,36 +1,36 @@
 import { posix } from 'node:path';
+import { remember } from '#cli/system/cache.ts';
+import { CheckStop } from '#cli/system/errors.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { EnvironmentRead } from '#cli/types/parsers.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
+import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
+import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
+import { buildBaseResult, keepListedFindings } from '#cli/engine/results.ts';
+import { readPushedRange, readSelectedCommits } from '#cli/repository/revisions/push.ts';
+import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
+import type { CheckCode, CheckResult, CheckFinding, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 import {
     ENV_KEY_LINE,
-    ENVIRONMENT_DEFAULT_RULE,
-    ENVIRONMENT_READ_LANGUAGES,
-    GITLEAKS_FILES_MODE,
-    GITLEAKS_GIT_MODE,
-    GITLEAKS_LOG_FLAG,
-    GITLEAKS_LOG_OPTIONS,
-    GITLEAKS_STAGED_FLAG,
+    SECRET_KEY_NAME,
     MISSING_KEY_RULE,
     ROOT_PLACEHOLDER,
-    SECRET_KEY_NAME,
+    GITLEAKS_GIT_MODE,
+    GITLEAKS_LOG_FLAG,
+    GITLEAKS_FILES_MODE,
+    GITLEAKS_LOG_OPTIONS,
+    GITLEAKS_STAGED_FLAG,
+    ENVIRONMENT_DEFAULT_RULE,
+    ENVIRONMENT_READ_LANGUAGES,
 } from '#cli/config/configurations/secrets.ts';
-import { PYTHON_EXTENSION } from '#cli/config/parsers/code.ts';
-import { ROOT_FOLDER_NAME } from '#cli/config/tools/programs.ts';
-import { assertCommandCheck } from '#cli/engine/plan/checks.ts';
-import { buildBaseResult, keepListedFindings } from '#cli/engine/results.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { listEnvironmentReads, listJavascriptEnvironmentReads } from '#cli/parsers/code/environment.ts';
-import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
-import { readPushedRange, readSelectedCommits } from '#cli/repository/revisions/push.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { remember } from '#cli/system/cache.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
-import type { EnvironmentRead } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 const ENVIRONMENT_READS_KEY = Symbol('environment reads');
 

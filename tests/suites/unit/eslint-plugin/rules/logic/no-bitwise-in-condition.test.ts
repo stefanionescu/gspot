@@ -1,5 +1,5 @@
-import { noBitwiseInCondition } from '#eslint-plugin/rules/logic/no-bitwise-in-condition.ts';
 import { buildRuleTester, buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noBitwiseInCondition } from '#eslint-plugin/rules/logic/no-bitwise-in-condition.ts';
 
 buildRuleTester().run('no-bitwise-in-condition', noBitwiseInCondition, {
     valid: [

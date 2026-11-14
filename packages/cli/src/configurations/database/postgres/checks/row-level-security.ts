@@ -1,28 +1,29 @@
+import { isTable } from '#cli/system/tables.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { Migration } from '#cli/types/configurations/database.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { SqlStatement, SqlNodeFields } from '#cli/types/parsers.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
+import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
+
 import {
-    IDENTITY_CALL_MESSAGE,
+    readParsedMigrations,
+    listUnfrozenMigrations,
+} from '#cli/configurations/database/postgres/checks/migrations.ts';
+import {
+    SQL_COMMENT,
+    POLICY_RULES,
+    ROW_SECURITY_RULE,
     IDENTITY_FUNCTIONS,
     OPEN_POLICY_MESSAGE,
     POLICY_ROLES_MESSAGE,
-    POLICY_RULES,
-    ROW_SECURITY_RULE,
+    IDENTITY_CALL_MESSAGE,
     SECURITY_INVOKER_MESSAGE,
-    SQL_COMMENT,
 } from '#cli/config/configurations/postgres.ts';
-import {
-    listUnfrozenMigrations,
-    readParsedMigrations,
-} from '#cli/configurations/database/postgres/checks/migrations.ts';
-import { buildDatabaseSchema } from '#cli/configurations/database/postgres/checks/schema/build.ts';
-import { ROW_SECURITY_EXPLANATIONS } from '#cli/configurations/database/postgres/explanations.ts';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { isTable } from '#cli/system/tables.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
-import type { Migration } from '#cli/types/configurations/database.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { SqlNodeFields, SqlStatement } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listIdentityCalls(node: unknown): string[] {
     if (Array.isArray(node)) return node.flatMap((child) => listIdentityCalls(child));

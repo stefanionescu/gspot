@@ -1,5 +1,5 @@
-import { noExclusiveTests } from '#eslint-plugin/rules/testing/no-exclusive-tests.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noExclusiveTests } from '#eslint-plugin/rules/testing/no-exclusive-tests.ts';
 
 buildRuleTester().run('no-exclusive-tests', noExclusiveTests, {
     valid: ['other.only("adds", run);', 'test.describe.configure.only("adds", run);'],

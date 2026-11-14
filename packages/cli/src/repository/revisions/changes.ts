@@ -1,43 +1,44 @@
-import { HASH_PATTERN } from '#cli/config/repository/git.ts';
-import {
-    ABSENT_HASH,
-    COMMIT_SUFFIX,
-    DEFAULT_BRANCHES,
-    GIT_CHANGED_COMMITS_ARGUMENTS,
-    GIT_DIFF_NAMES_ARGUMENTS,
-    GIT_HASH_EXISTS_ARGUMENTS,
-    GIT_LOCAL_BRANCHES_ARGUMENTS,
-    GIT_MERGE_BASE_ARGUMENTS,
-    GIT_NO_OPTIONAL_LOCKS,
-    GIT_REF_NAME_ARGUMENTS,
-    GIT_REMOTE_HEADS_ARGUMENTS,
-    GIT_STATUS_ARGUMENTS,
-    GIT_UPSTREAM_ARGUMENTS,
-    GIT_VERIFY_COMMIT_ARGUMENTS,
-    ORIGIN_REMOTE,
-    REMOTE_HEAD,
-    REMOTE_HEAD_FIELD_COUNT,
-    REMOTE_HEAD_HELP,
-    REMOTES_PREFIX,
-    SHALLOW_CLONE_HELP,
-    STATUS_PATH_START,
-    UNCHANGED_STATUS,
-    UNTRACKED_STATUS,
-} from '#cli/config/repository/revisions.ts';
-import { decodeGitPath } from '#cli/repository/git/output.ts';
-import {
-    buildGitError,
-    readGitLines,
-    readGitPaths,
-    readGitText,
-    runGit,
-    runGitBytes,
-} from '#cli/repository/git/run.ts';
-import { isShallowClone } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import type { ChangedPaths, MergeBase, TreeStatus } from '#cli/types/repository.ts';
+import { HASH_PATTERN } from '#cli/config/repository/git.ts';
+import { decodeGitPath } from '#cli/repository/git/output.ts';
+import { isShallowClone } from '#cli/repository/revisions/files.ts';
+import type { MergeBase, TreeStatus, ChangedPaths } from '#cli/types/repository.ts';
+
+import {
+    runGit,
+    readGitText,
+    runGitBytes,
+    readGitLines,
+    readGitPaths,
+    buildGitError,
+} from '#cli/repository/git/run.ts';
+import {
+    ABSENT_HASH,
+    REMOTE_HEAD,
+    COMMIT_SUFFIX,
+    ORIGIN_REMOTE,
+    REMOTES_PREFIX,
+    DEFAULT_BRANCHES,
+    REMOTE_HEAD_HELP,
+    UNCHANGED_STATUS,
+    UNTRACKED_STATUS,
+    STATUS_PATH_START,
+    SHALLOW_CLONE_HELP,
+    GIT_STATUS_ARGUMENTS,
+    GIT_NO_OPTIONAL_LOCKS,
+    GIT_REF_NAME_ARGUMENTS,
+    GIT_UPSTREAM_ARGUMENTS,
+    REMOTE_HEAD_FIELD_COUNT,
+    GIT_DIFF_NAMES_ARGUMENTS,
+    GIT_MERGE_BASE_ARGUMENTS,
+    GIT_HASH_EXISTS_ARGUMENTS,
+    GIT_REMOTE_HEADS_ARGUMENTS,
+    GIT_VERIFY_COMMIT_ARGUMENTS,
+    GIT_LOCAL_BRANCHES_ARGUMENTS,
+    GIT_CHANGED_COMMITS_ARGUMENTS,
+} from '#cli/config/repository/revisions.ts';
 
 async function explainInvalidBase(root: string, compared: string, cancelSignal?: AbortSignal): Promise<MergeBase> {
     if (HASH_PATTERN.test(compared)) {

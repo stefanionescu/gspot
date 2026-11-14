@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { SETTING_RULE_OPTIONS } from '#tests/config/settings/validation.ts';
+import { test, expect } from 'bun:test';
 import { validateSettingsText } from '#tests/setup/cli/settings.ts';
+import { SETTING_RULE_OPTIONS } from '#tests/config/settings/validation.ts';
 
 test.each([...SETTING_RULE_OPTIONS])('options for $rule are refused with $setting', ({ tables, setting, start }) => {
     const errors = validateSettingsText(`configurations = ["javascript", "markdown"]\n${tables}`);

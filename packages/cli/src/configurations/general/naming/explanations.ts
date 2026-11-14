@@ -1,7 +1,7 @@
-import { NAMING_RULES } from '#cli/config/configurations/naming.ts';
-import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 import { readNamingDefaults } from '#cli/manifests/read.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { NAMING_RULES } from '#cli/config/configurations/naming.ts';
+import { SYNTAX_EXPLANATIONS } from '#cli/configurations/syntax.ts';
 
 // The page of banned-word prints the lists from the manifest that the check reads, so the two cannot differ.
 const SHIPPED_WORD_LISTS = Object.entries(readNamingDefaults().lists)

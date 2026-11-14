@@ -1,17 +1,15 @@
-import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { cp, mkdir, writeFile } from 'node:fs/promises';
 import { PLUGIN_TYPES_SOURCE } from '#tests/config/e2e.ts';
-import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
-import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
-import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { REPOSITORY_ROOT } from '#tests/setup/runner/run-folder.ts';
+import { NPM_INSTALL_FLAGS } from '#tests/config/setup/sandboxes.ts';
+import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
+import { isolatedEnvironment } from '#tests/setup/sandboxes/projects/gspot.ts';
 
 async function assertPluginExports(consumer: string): Promise<void> {
     await cp(join(REPOSITORY_ROOT, 'tests/setup/programs/checks/eslint-plugin.ts'), join(consumer, 'consumer.ts'));

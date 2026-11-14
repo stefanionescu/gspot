@@ -1,14 +1,13 @@
-import { describe, expect, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
+import { test, expect, describe } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { isMacos } from '#tests/setup/system/platform.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { isMacos } from '#tests/setup/system/platform.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
 
 const PLUTIL_SAMPLE = {
     check: 'xcode/plutil',

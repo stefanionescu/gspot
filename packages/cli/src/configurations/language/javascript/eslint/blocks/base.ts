@@ -1,51 +1,51 @@
 import { basename } from 'node:path/posix';
-
-import {
-    BOUNDARIES_FILES_SETTING,
-    GSPOT_RULE_PREFIX,
-    IMPORT_BOUNDARIES_RULE,
-    PRESETS_AFTER_CONFIGURATIONS,
-    PRESETS_BEFORE_CONFIGURATIONS,
-    RESTRICTED_SYNTAX_RULE,
-} from '#cli/config/configurations/javascript/blocks.ts';
-import { GSPOT_PRESET_LEVELS } from '#cli/config/configurations/javascript/eslint.ts';
-import {
-    CONSOLE_RULES,
-    IMPORT_LAYOUT_RULES,
-    JAVASCRIPT_RULES,
-    SCRIPT_RULES,
-    TEST_RULES,
-} from '#cli/config/configurations/javascript/rules.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
 import { DENO_CONFIG_FILES } from '#cli/config/configurations/shared.ts';
+import { GSPOT_PRESET_LEVELS } from '#cli/config/configurations/javascript/eslint.ts';
 import { readScopeAliases } from '#cli/configurations/language/javascript/aliases.ts';
-import {
-    buildImportBoundariesRule,
-    buildImportIgnores,
-    buildImportStyleBlocks,
-    buildNodeScriptBlocks,
-    buildRestrictedImportBlocks,
-    buildScopeImportBlocks,
-} from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
-import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
-import { buildPackageJsonBlocks } from '#cli/configurations/language/javascript/eslint/blocks/package-json.ts';
-import { buildRuntimeBlocks } from '#cli/configurations/language/javascript/eslint/blocks/runtimes.ts';
-import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
-import { splitSettingsBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
 import { buildScopeFiles } from '#cli/configurations/language/javascript/eslint/files.ts';
 import { listNestedScopeGlobs } from '#cli/configurations/language/javascript/eslint/scopes.ts';
+import { buildRuntimeBlocks } from '#cli/configurations/language/javascript/eslint/blocks/runtimes.ts';
+import { splitSettingsBlocks } from '#cli/configurations/language/javascript/eslint/blocks/settings.ts';
+import { buildSelectorBlocks } from '#cli/configurations/language/javascript/eslint/blocks/selectors.ts';
+import { buildPackageJsonBlocks } from '#cli/configurations/language/javascript/eslint/blocks/package-json.ts';
+import { buildLocalPluginBlocks } from '#cli/configurations/language/javascript/eslint/blocks/local-plugins.ts';
+
 import {
+    listScriptFiles,
     listCodePatterns,
     listJavascriptScopes,
-    listScriptFiles,
 } from '#cli/configurations/language/javascript/sources.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
+import {
+    TEST_RULES,
+    SCRIPT_RULES,
+    CONSOLE_RULES,
+    JAVASCRIPT_RULES,
+    IMPORT_LAYOUT_RULES,
+} from '#cli/config/configurations/javascript/rules.ts';
 import type {
-    ConfigurationBlocks,
     EslintBlock,
-    EslintBlockFields,
     ListedPlugins,
+    EslintBlockFields,
     PlannedEslintFile,
+    ConfigurationBlocks,
 } from '#cli/types/configurations/javascript.ts';
+import {
+    GSPOT_RULE_PREFIX,
+    IMPORT_BOUNDARIES_RULE,
+    RESTRICTED_SYNTAX_RULE,
+    BOUNDARIES_FILES_SETTING,
+    PRESETS_AFTER_CONFIGURATIONS,
+    PRESETS_BEFORE_CONFIGURATIONS,
+} from '#cli/config/configurations/javascript/blocks.ts';
+import {
+    buildImportIgnores,
+    buildNodeScriptBlocks,
+    buildImportStyleBlocks,
+    buildScopeImportBlocks,
+    buildImportBoundariesRule,
+    buildRestrictedImportBlocks,
+} from '#cli/configurations/language/javascript/eslint/blocks/imports.ts';
 
 function buildProjectBlocks(planned: PlannedEslintFile, boundaryBlocks: EslintBlock[]): ConfigurationBlocks {
     const { session, projects } = planned;

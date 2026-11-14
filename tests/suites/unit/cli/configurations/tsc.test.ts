@@ -1,23 +1,21 @@
-import { existsSync } from 'node:fs';
-import { chmod, readFile, stat, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { normalizeFileMode } from '#cli/system/files/bounded.ts';
-import { REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
-import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
-import { linkInstalledModules, linkTypescript } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { listFindingRows } from '#tests/setup/cli/commands.ts';
+import { normalizeFileMode } from '#cli/system/files/bounded.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { stat, chmod, readFile, writeFile } from 'node:fs/promises';
+import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { writeScopeTsconfig } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { REFERENCE_BUILD_RESULTS } from '#tests/config/configurations/language.ts';
+import { linkTypescript, linkInstalledModules } from '#tests/setup/sandboxes/node-modules.ts';
 
 test('a project with its own tsconfig.json keeps its own compiler options', async () => {
     await using sandbox = await createGitSandbox({

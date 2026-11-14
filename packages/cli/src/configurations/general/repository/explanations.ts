@@ -1,5 +1,5 @@
-import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/config/configurations/general.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/general.ts';
 
 export const ENCODING_EXPLANATIONS = {
     [REPOSITORY_RULES.encoding]: {

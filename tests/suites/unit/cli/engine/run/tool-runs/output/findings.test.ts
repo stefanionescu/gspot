@@ -1,27 +1,25 @@
-import { join, resolve } from 'node:path';
-import { pathToFileURL } from 'node:url';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession } from '#cli/engine/run/checks.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { buildCheckResult, parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { listChecksById } from '#cli/manifests/checks.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
+import { join, resolve } from 'node:path';
 import { getTool } from '#cli/manifests/tools.ts';
-import { BASE_CHECK, FILE_LINE_PATTERN, LOCATED_CHECK, REGEX_OUTPUT_CASES } from '#tests/config/engine/run.ts';
-import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
+import { stringify } from '@decimalturn/toml-patch';
+import { openSession } from '#cli/engine/session.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import { listChecksById } from '#cli/manifests/checks.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { buildCheckSession } from '#cli/engine/run/checks.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { SWIFT_VALUE_SOURCE } from '#tests/config/setup/languages.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildCheckResult, parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
+import { BASE_CHECK, LOCATED_CHECK, FILE_LINE_PATTERN, REGEX_OUTPUT_CASES } from '#tests/config/engine/run.ts';
 
 function buildLinkReport(line: string): string[] {
     return buildProgramCommand('fakes/tool', '--line', 'Errors in guide.md', '--line', line, '--exit', '2', '{files}');

@@ -1,7 +1,6 @@
 import { stringify } from 'yaml';
-
-import { SCHEMA_CHECK_NOTES } from '#cli/config/configurations/language.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import { SCHEMA_CHECK_NOTES } from '#cli/config/configurations/language.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildV8rFile(planned: PlannedConfig): string {

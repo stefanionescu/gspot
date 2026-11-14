@@ -1,18 +1,16 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { writeFile } from 'node:fs/promises';
 import { stringify } from '@decimalturn/toml-patch';
-import { beforeAll, beforeEach, describe, expect, test } from 'bun:test';
-
-import { LICENSE } from '#tests/config/setup/configurations.ts';
-import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { pushOutputSchema } from '#tests/schemas/setup.ts';
-import { parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { LICENSE } from '#tests/config/setup/configurations.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { test, expect, describe, beforeAll, beforeEach } from 'bun:test';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { spawnGspot, runGspotStep, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const COMMIT_MESSAGES = [
     { message: 'fix(Core): repair the parser', rule: undefined },

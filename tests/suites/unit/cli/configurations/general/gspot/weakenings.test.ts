@@ -1,16 +1,14 @@
-import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { IMPORT_RULE_TABLES } from '#tests/config/configurations/general.ts';
-import { getBuiltInCheck, planSandboxCheck, runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { IMPORT_RULE_TABLES } from '#tests/config/configurations/general.ts';
+import { getBuiltInCheck, runSandboxCheck, planSandboxCheck } from '#tests/setup/cli/checks.ts';
 
 async function runWeakenings(root: string): Promise<{ rules: Array<string | undefined>; notes: string[] }> {
     const session = await openSession(root);

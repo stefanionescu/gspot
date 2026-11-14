@@ -1,21 +1,22 @@
-import { NEGATED_PATTERN } from '#cli/config/configurations/gspot.ts';
-import { BASEDPYRIGHT_CHECK } from '#cli/config/configurations/python.ts';
-import { PYRIGHT_CONFIG_FILE } from '#cli/config/generation/builders.ts';
-import {
-    CARRYOVER_ROW_START,
-    EMPTY_CARRYOVER,
-    IGNORE_REASON_START,
-    PYRIGHT_TABLES,
-} from '#cli/config/generation/setup.ts';
-import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { TRAILING_SLASH } from '#cli/config/system.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { pyrightProjectSchema, pyrightScopeSchema } from '#cli/schemas/generation.ts';
 import { findText } from '#cli/system/files/reads.ts';
+import { TRAILING_SLASH } from '#cli/config/system.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { NEGATED_PATTERN } from '#cli/config/configurations/gspot.ts';
+import { PYRIGHT_CONFIG_FILE } from '#cli/config/generation/builders.ts';
+import { BASEDPYRIGHT_CHECK } from '#cli/config/configurations/python.ts';
 import type { CarryoverInput, CarryoverSection } from '#cli/types/generation.ts';
+import { pyrightScopeSchema, pyrightProjectSchema } from '#cli/schemas/generation.ts';
+
+import {
+    PYRIGHT_TABLES,
+    EMPTY_CARRYOVER,
+    CARRYOVER_ROW_START,
+    IGNORE_REASON_START,
+} from '#cli/config/generation/setup.ts';
 
 function readPyrightOptions(
     root: string,

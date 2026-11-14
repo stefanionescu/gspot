@@ -1,10 +1,9 @@
-import { expect, test } from 'bun:test';
-
-import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
-import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
+import { test, expect } from 'bun:test';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { GROUPED_PBXPROJ } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { NAMED_TARGET_SOURCE, NATIVE_TARGET_SOURCE } from '#tests/config/setup/languages.ts';
 
 const SWIFT_LAYER_RULES = `[[import_rule]]
 name = "core"

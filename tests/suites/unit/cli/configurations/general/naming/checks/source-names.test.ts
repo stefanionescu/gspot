@@ -1,16 +1,16 @@
-import { expect, test } from 'bun:test';
-
-import { parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
+import { test, expect } from 'bun:test';
 import { createRunCache } from '#cli/system/cache.ts';
+import { createRunResources } from '#tests/setup/cli/run.ts';
 import type { Identifier } from '#cli/types/configurations/naming.ts';
+import { parseIdentifiers } from '#cli/configurations/general/naming/checks/source-names.ts';
+
 import {
     BASH_SOURCE_NAMES,
     DECLARATION_CASES,
     IMPORT_NAME_LINES,
-    JAVASCRIPT_PARAMETER_NAMES,
     NAME_POSITION_CASES,
+    JAVASCRIPT_PARAMETER_NAMES,
 } from '#tests/config/configurations/naming/source-names.ts';
-import { createRunResources } from '#tests/setup/cli/run.ts';
 
 async function listIdentifiers(file: string, source: string, language: string): Promise<Identifier[]> {
     using resources = createRunResources();

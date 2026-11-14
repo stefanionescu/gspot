@@ -1,22 +1,21 @@
 import { readFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path/posix';
-
-import { CONFIG_SCOPES_FOLDER, TS_EXTENSION } from '#cli/config/generation/files.ts';
-import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
-import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
-import { formatHeader } from '#cli/generation/builders/header.ts';
-import { buildIgnoreSections } from '#cli/generation/configs/ignores.ts';
-import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';
-import { buildPointerFiles, isPointerInherited, listPointerPaths } from '#cli/generation/configs/pointers.ts';
 import { remember } from '#cli/system/cache.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { buildAssetPath } from '#cli/system/package/assets.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
-import type { BuiltConfig, ConfigBuildState, OwnedConfig, OwnedSourceFile } from '#cli/types/generation.ts';
-import type { Config } from '#cli/types/manifests.ts';
 import type { Session } from '#cli/types/tools.ts';
+import type { Config } from '#cli/types/manifests.ts';
+import { join, dirname, relative } from 'node:path/posix';
+import { buildAssetPath } from '#cli/system/package/assets.ts';
+import { CONFIG_BUILDERS } from '#cli/configurations/registry.ts';
+import { formatHeader } from '#cli/generation/builders/header.ts';
+import { listOwnedConfigs } from '#cli/generation/configs/owned.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { getConfigTarget } from '#cli/engine/run/tool-runs/configs.ts';
+import type { ConfigGeneration } from '#cli/types/engine/tool-runs.ts';
+import { buildIgnoreSections } from '#cli/generation/configs/ignores.ts';
+import { TS_EXTENSION, CONFIG_SCOPES_FOLDER } from '#cli/config/generation/files.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import type { BuiltConfig, OwnedConfig, OwnedSourceFile, ConfigBuildState } from '#cli/types/generation.ts';
+import { listPointerPaths, buildPointerFiles, isPointerInherited } from '#cli/generation/configs/pointers.ts';
 
 const CONFIGS = Symbol('config files');
 

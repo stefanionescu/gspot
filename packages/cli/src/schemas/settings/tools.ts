@@ -1,24 +1,24 @@
 import { z } from 'zod';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import { allowReasonedValue, relativePathSchema, nonemptyPathsSchema } from '#cli/schemas/settings/fields.ts';
 
 import {
-    IMPORT_EXTENSION_STYLES,
-    KNIP_PACKAGE_NAME,
-    MARKDOWNLINT_RULE_ID,
-    MARKDOWNLINT_RULE_ID_REFUSAL,
-    RUFF_SELECTOR,
-    SQLFLUFF_DIALECTS,
-    TRIVY_SEVERITIES,
-} from '#cli/config/settings/tables.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { allowReasonedValue, nonemptyPathsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
-import {
-    buildRuleTableSchema,
     commitlintSchema,
-    eslintPluginsSchema,
     eslintRulesSchema,
-    stylelintPluginsSchema,
+    eslintPluginsSchema,
+    buildRuleTableSchema,
     stylelintRulesSchema,
+    stylelintPluginsSchema,
 } from '#cli/schemas/settings/rules.ts';
+import {
+    RUFF_SELECTOR,
+    TRIVY_SEVERITIES,
+    KNIP_PACKAGE_NAME,
+    SQLFLUFF_DIALECTS,
+    MARKDOWNLINT_RULE_ID,
+    IMPORT_EXTENSION_STYLES,
+    MARKDOWNLINT_RULE_ID_REFUSAL,
+} from '#cli/config/settings/tables.ts';
 
 export const javascriptSchema = z
     .strictObject({

@@ -1,12 +1,11 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { LEVELS } from '#cli/config/manifests.ts';
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LEVELS } from '#cli/config/manifests.ts';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test.each([...LEVELS])('%s runs each gspot rule of its level in JavaScript and TypeScript files', async (level) => {
     await using sandbox = await testdir({

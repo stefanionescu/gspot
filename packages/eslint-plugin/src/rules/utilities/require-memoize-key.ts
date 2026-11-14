@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
+import { createRule } from '../../rule.ts';
 import { UNDEFINED_NAME } from '../../config/plugin.ts';
+import { getModuleName } from '../../language/modules.ts';
+import type { LocalFunction } from '../../types/plugin.ts';
 import { MEMOIZE_FUNCTIONS } from '../../config/utilities.ts';
 import { getLocalFunction } from '../../language/functions.ts';
-import { getModuleName } from '../../language/modules.ts';
-import { createRule } from '../../rule.ts';
-import type { LocalFunction } from '../../types/plugin.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function isMissingKey(keyFunction: TSESTree.CallExpressionArgument | undefined): boolean {
     if (keyFunction === undefined) return true;

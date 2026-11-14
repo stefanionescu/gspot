@@ -1,8 +1,7 @@
-import { CLI_REFERENCE, DOCS_PATHS, formatNameList } from '@gspothq/cli/reference';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { CURL_COMMAND, EVALUATION_HEADING, LEVEL_SUGGESTION, RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 import { SITE_TITLE } from '#docs/config/site.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import { DOCS_PATHS, CLI_REFERENCE, formatNameList } from '@gspothq/cli/reference';
+import { CURL_COMMAND, LEVEL_SUGGESTION, EVALUATION_HEADING, RELEASE_AGE_EXCLUSIONS } from '#docs/config/reference.ts';
 
 const { homepage } = cliPackage;
 

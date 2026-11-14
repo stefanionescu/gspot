@@ -1,11 +1,11 @@
+import { getLimit } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
 import { COUNT_LIMITS } from '#cli/config/configurations/bash.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
 import { FUNCTION_SIZE_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
-import { getLimit } from '#cli/settings/tables.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 async function checkBashFunctionSize(session: Session, planned: PlannedCheck): Promise<CheckFinding[]> {
     const scripts = await readScripts(session, planned);

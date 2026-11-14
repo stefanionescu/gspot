@@ -1,15 +1,14 @@
-import { expect, test } from 'bun:test';
-
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { listSettingReaders } from '#cli/engine/plan/skips.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { listPackagePins } from '#cli/tools/pins.ts';
-import { NEXT_INTL_PROJECTS } from '#tests/config/engine/plan.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { listSettingReaders } from '#cli/engine/plan/skips.ts';
+import { NEXT_INTL_PROJECTS } from '#tests/config/engine/plan.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakePlatform, isWindows } from '#tests/setup/system/platform.ts';
+import { isWindows, fakePlatform } from '#tests/setup/system/platform.ts';
 
 test('a check whose required setting is missing is skipped with a note naming the setting', async () => {
     const settings = buildSandboxSettings(['xcode'], { level: 'all' });

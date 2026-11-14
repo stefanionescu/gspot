@@ -1,25 +1,23 @@
-import { readFileSync, statSync } from 'node:fs';
-import { resolve } from 'node:path';
-
 import { z } from 'zod';
-
-import { LOCAL_RECORDS, UNREAD_SETTING_NOTE } from '#cli/config/generation/setup.ts';
-import { LEFT_OUT_NOTES } from '#cli/config/settings/file.ts';
-import { listAlwaysSelected, listUnknownConfigurations, selectConfigurations } from '#cli/manifests/select.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
-import { buildSettingsFromTable } from '#cli/settings/parse.ts';
-import { removeUnknownKeys, setKey } from '#cli/settings/toml/edit.ts';
-import { formatSettingsErrors, formatSettingsIssue } from '#cli/settings/validation/messages.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
-import { decodeUtf8 } from '#cli/system/files/reads.ts';
+import { resolve } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
-import type { LeftOutSetting, Template } from '#cli/types/generation.ts';
-import type { ProposedConfigurations } from '#cli/types/repository.ts';
+import { statSync, readFileSync } from 'node:fs';
+import { decodeUtf8 } from '#cli/system/files/reads.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
+import { LEFT_OUT_NOTES } from '#cli/config/settings/file.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { parseTomlSyntax } from '#cli/parsers/formats/toml/syntax.ts';
+import { setKey, removeUnknownKeys } from '#cli/settings/toml/edit.ts';
+import type { ProposedConfigurations } from '#cli/types/repository.ts';
+import type { Template, LeftOutSetting } from '#cli/types/generation.ts';
+import { findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
+import { LOCAL_RECORDS, UNREAD_SETTING_NOTE } from '#cli/config/generation/setup.ts';
+import { formatSettingsIssue, formatSettingsErrors } from '#cli/settings/validation/messages.ts';
+import { listAlwaysSelected, selectConfigurations, listUnknownConfigurations } from '#cli/manifests/select.ts';
 
 function listSettingValues(table: TomlTable, prefix: string): Array<{ key: string; value: unknown }> {
     return Object.entries(table).flatMap(([name, value]) => {

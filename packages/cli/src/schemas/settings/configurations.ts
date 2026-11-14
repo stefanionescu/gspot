@@ -1,22 +1,22 @@
 import { z } from 'zod';
-
-import { TABLE_DESCRIPTIONS } from '#cli/config/settings/file.ts';
-import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/settings/tables.ts';
-import { commandSchema } from '#cli/schemas/manifests/checks.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import {
-    allowReasonedValue,
-    destinationPathSchema,
-    formatSchema,
-    nonemptyStringsSchema,
-    relativePathSchema,
-} from '#cli/schemas/settings/fields.ts';
-import { generalTableSchemas, hooksSchema } from '#cli/schemas/settings/general.ts';
 import { limitsSchema } from '#cli/schemas/settings/limits.ts';
 import { commitsSchema } from '#cli/schemas/settings/rules.ts';
-import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
-import { javascriptSchema, toolConfigurationSchemas, toolsSchema } from '#cli/schemas/settings/tools.ts';
 import type { ToolTableSchemas } from '#cli/types/settings.ts';
+import { commandSchema } from '#cli/schemas/manifests/checks.ts';
+import { TABLE_DESCRIPTIONS } from '#cli/config/settings/file.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import { hooksSchema, generalTableSchemas } from '#cli/schemas/settings/general.ts';
+import { FROZEN_ALL, FROZEN_NONE, FROZEN_VERSION } from '#cli/config/settings/tables.ts';
+import { ciFields, namingSchema, pythonSchema, ruleFilesSchema } from '#cli/schemas/settings/tables.ts';
+import { toolsSchema, javascriptSchema, toolConfigurationSchemas } from '#cli/schemas/settings/tools.ts';
+
+import {
+    formatSchema,
+    allowReasonedValue,
+    relativePathSchema,
+    destinationPathSchema,
+    nonemptyStringsSchema,
+} from '#cli/schemas/settings/fields.ts';
 
 function describeConfigurationTables<Tables extends Record<string, z.ZodOptional<z.ZodType>>>(tables: Tables): Tables {
     for (const [name, schema] of Object.entries(tables)) {

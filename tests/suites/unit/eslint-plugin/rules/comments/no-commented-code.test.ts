@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { noCommentedCode } from '#eslint-plugin/rules/comments/no-commented-code.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noCommentedCode } from '#eslint-plugin/rules/comments/no-commented-code.ts';
 
 buildRuleTester().run('no-commented-code', noCommentedCode, {
     valid: [

@@ -1,6 +1,6 @@
+import { createRule } from '../../rule.ts';
 import { S3_TRANSPORT_CHECKS } from '../../config/aws.ts';
 import { listCdkTableIssues } from '../../libraries/aws.ts';
-import { createRule } from '../../rule.ts';
 
 export const awsInsecureBucketTransport = createRule<[], 'omitted' | 'authorized'>({
     name: 'aws-insecure-bucket-transport',

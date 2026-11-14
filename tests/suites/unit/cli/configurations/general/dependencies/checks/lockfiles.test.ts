@@ -1,25 +1,24 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import {
-    ALLOWED_GITHUB_REGISTRIES,
-    HOST_LOCKFILE,
-    LOCKFILE_DOWNLOAD_CASES,
-    LOCKFILE_HOST_CASES,
-    REGISTRY_SCOPE_RESULTS,
-} from '#tests/config/configurations/dependencies.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { listFindingRows } from '#tests/setup/cli/commands.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+
+import {
+    HOST_LOCKFILE,
+    LOCKFILE_HOST_CASES,
+    REGISTRY_SCOPE_RESULTS,
+    LOCKFILE_DOWNLOAD_CASES,
+    ALLOWED_GITHUB_REGISTRIES,
+} from '#tests/config/configurations/dependencies.ts';
 
 test('dependencies/lockfiles accepts a vendored file tarball without treating it as a download', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,21 +1,19 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
-import { classifyFile } from '#cli/repository/files/classify.ts';
-import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
 import { createRunCache } from '#cli/system/cache.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { GENERATED_PATH_CASES, SHEBANGS } from '#tests/config/repository.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { classifyFile } from '#cli/repository/files/classify.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { SHEBANGS, GENERATED_PATH_CASES } from '#tests/config/repository.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
 
 test('a license text is vendored, and a source file named like one stays source', async () => {
     await using sandbox = await createGitSandbox({

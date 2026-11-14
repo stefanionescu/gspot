@@ -1,18 +1,16 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import type { z } from 'zod';
-
-import { DETECTED_SETTINGS } from '#cli/config/generation/setup.ts';
-import { compareScopeDepth, isInScope } from '#cli/repository/scopes.ts';
-import { settingsSchema } from '#cli/schemas/settings/file.ts';
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { buildSettingsFromTable } from '#cli/settings/parse.ts';
-import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
-import { findSetting, getSettingValue } from '#cli/settings/values/inherit.ts';
-import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { findValueAt, getRequired, isTable } from '#cli/system/tables.ts';
-import type { WrittenTable, WrittenTables } from '#cli/types/generation.ts';
+import { isDeepStrictEqual } from 'node:util';
 import type { TomlTable } from '#cli/types/settings.ts';
+import { stripTrailingSlashes } from '#cli/system/paths.ts';
+import { settingsSchema } from '#cli/schemas/settings/file.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
+import { DETECTED_SETTINGS } from '#cli/config/generation/setup.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { selectConfigurationsForScope } from '#cli/settings/scopes.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
+import { isTable, findValueAt, getRequired } from '#cli/system/tables.ts';
+import type { WrittenTable, WrittenTables } from '#cli/types/generation.ts';
+import { findSetting, getSettingValue } from '#cli/settings/values/inherit.ts';
 
 function isInheritedValueChanged(
     { name, key, segments }: { name: string; key: string; segments: string[] },

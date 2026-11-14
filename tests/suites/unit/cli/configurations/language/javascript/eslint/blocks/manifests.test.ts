@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings, readEslintRules } from '#tests/setup/eslint/lint.ts';
+import { buildEslint, readEslintRules, listLintFindings } from '#tests/setup/eslint/lint.ts';
 
 test('the src files of a Vite app may read only VITE_ variables, and its other files may read any', async () => {
     await using sandbox = await testdir({

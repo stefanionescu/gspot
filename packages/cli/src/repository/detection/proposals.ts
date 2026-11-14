@@ -1,23 +1,24 @@
+import { getRequired } from '#cli/system/tables.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { isInScope, listOwnFiles } from '#cli/repository/scopes.ts';
+import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
+
 import {
-    assertConfigurationsExist,
     expandSuggestions,
     listAlwaysSelected,
     selectConfigurations,
+    assertConfigurationsExist,
 } from '#cli/manifests/select.ts';
-import { detectConfigurations } from '#cli/repository/detection/configurations.ts';
-import { isInScope, listOwnFiles } from '#cli/repository/scopes.ts';
-import { getRequired } from '#cli/system/tables.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import type {
-    ConfigurationChoices,
-    ConfigurationEvidence,
-    ConfigurationOrigin,
-    ConfigurationRequest,
-    ConfigurationSelection,
-    ProposedConfigurations,
     Repository,
     ScopeFolder,
+    ConfigurationOrigin,
+    ConfigurationChoices,
+    ConfigurationRequest,
+    ConfigurationEvidence,
+    ConfigurationSelection,
+    ProposedConfigurations,
 } from '#cli/types/repository.ts';
 
 function selectRootConfigurations(

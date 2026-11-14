@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { BROKEN_TOOL_ADVICE } from '#cli/config/engine.ts';
-import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
-import { ASTRO_CHECK_OUTPUT, ASTRO_CHECK_SUMMARY, BASE_CHECK, TYPE_ERROR_MESSAGE } from '#tests/config/engine/run.ts';
 import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { parseCommandFindings } from '#cli/engine/run/tool-runs/output.ts';
+import { BASE_CHECK, ASTRO_CHECK_OUTPUT, TYPE_ERROR_MESSAGE, ASTRO_CHECK_SUMMARY } from '#tests/config/engine/run.ts';
 
 test('a crash note leads with the error output of the tool, and only --verbose adds its report', async () => {
     await using sandbox = await testdir();

@@ -1,13 +1,13 @@
-import { DROPPED_LINE_SETTINGS } from '#cli/config/generation/setup.ts';
-import { parsePrettierFile } from '#cli/generation/setup/format/prettier.ts';
-import { writePlans } from '#cli/repository/files/writes.ts';
-import { listCommittedPaths } from '#cli/repository/revisions/files.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { isSameContents } from '#cli/system/files/bounded.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import type { ConflictingConfigs, ConflictSearch, InitPlan, PrettierScripts } from '#cli/types/generation.ts';
-import type { ConflictingConfig, ManagedKeys, RepositorySetup, WritePlan } from '#cli/types/repository.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
+import { writePlans } from '#cli/repository/files/writes.ts';
+import { isSameContents } from '#cli/system/files/bounded.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
+import { DROPPED_LINE_SETTINGS } from '#cli/config/generation/setup.ts';
+import { listCommittedPaths } from '#cli/repository/revisions/files.ts';
+import { parsePrettierFile } from '#cli/generation/setup/format/prettier.ts';
+import type { WritePlan, ManagedKeys, RepositorySetup, ConflictingConfig } from '#cli/types/repository.ts';
+import type { InitPlan, ConflictSearch, PrettierScripts, ConflictingConfigs } from '#cli/types/generation.ts';
 
 function isEditedInPlace(config: ConflictingConfig, fileEdits: ManagedKeys[]): boolean {
     return fileEdits.some(

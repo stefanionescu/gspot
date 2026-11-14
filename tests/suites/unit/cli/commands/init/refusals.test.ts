@@ -1,18 +1,16 @@
-import { readdir, readFile, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, spyOn, expect } from 'bun:test';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
+import { readTree } from '#tests/setup/system/files.ts';
 import * as installers from '#cli/tools/installers/install.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { CLEAN_BASH_SCRIPT } from '#tests/config/setup/languages.ts';
 import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readdir, symlink, readFile, writeFile } from 'node:fs/promises';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 const UNCOMMITTED_FORMAT_CASES = ['unborn Git', 'untracked', 'staged changes', 'unstaged changes'].map((state) => ({
     path: '.prettierrc',

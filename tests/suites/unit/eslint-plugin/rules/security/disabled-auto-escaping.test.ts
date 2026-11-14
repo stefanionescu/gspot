@@ -1,5 +1,5 @@
-import { disabledAutoEscaping } from '#eslint-plugin/rules/security/disabled-auto-escaping.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { disabledAutoEscaping } from '#eslint-plugin/rules/security/disabled-auto-escaping.ts';
 
 buildRuleTester().run('disabled-auto-escaping', disabledAutoEscaping, {
     valid: [

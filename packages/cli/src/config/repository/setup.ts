@@ -1,6 +1,6 @@
+import { MISE_PROGRAM } from '#cli/config/system.ts';
 import { AGENTS_FILE } from '#cli/config/parsers/formats.ts';
 import { PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
-import { MISE_PROGRAM } from '#cli/config/system.ts';
 
 // config conflicts
 export const INI_EXTENSIONS: ReadonlySet<string> = new Set(['.ini', '.cfg']);

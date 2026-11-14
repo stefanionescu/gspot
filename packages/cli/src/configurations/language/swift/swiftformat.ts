@@ -1,20 +1,20 @@
 import { join } from 'node:path/posix';
+import type { RunCache } from '#cli/types/system.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { getTable, selectFormat } from '#cli/settings/tables.ts';
+import { listDisabledRules } from '#cli/configurations/rule-options.ts';
+import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
+import { PBXPROJ_FILE, PACKAGE_SWIFT } from '#cli/config/parsers/projects.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 import {
     SWIFT_FILES,
-    SWIFT_TOOLS_VERSION,
-    SWIFTFORMAT_ALL_LEVEL_ON,
     SWIFTFORMAT_COMMAS,
-    SWIFTFORMAT_OFF_REASONS,
+    SWIFT_TOOLS_VERSION,
     SWIFTFORMAT_OPTIONS,
+    SWIFTFORMAT_OFF_REASONS,
+    SWIFTFORMAT_ALL_LEVEL_ON,
 } from '#cli/config/configurations/swift.ts';
-import { PACKAGE_SWIFT, PBXPROJ_FILE } from '#cli/config/parsers/projects.ts';
-import { listDisabledRules } from '#cli/configurations/rule-options.ts';
-import { parseBuildSettings } from '#cli/parsers/projects/xcode/targets.ts';
-import { getTable, selectFormat } from '#cli/settings/tables.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
-import type { RunCache } from '#cli/types/system.ts';
 
 function readSwiftVersion(cache: RunCache, scopePath: string, projectPath: string): string | undefined {
     const packageText = findText(cache, join(scopePath, PACKAGE_SWIFT));

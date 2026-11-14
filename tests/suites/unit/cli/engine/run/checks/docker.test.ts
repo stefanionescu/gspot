@@ -1,14 +1,13 @@
-import { expect, test } from 'bun:test';
-
-import { DOCKER_DAEMON_NOTE } from '#cli/config/tools/programs.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { openFakeToolSession } from '#tests/setup/cli/checks.ts';
+import { DOCKER_DAEMON_NOTE } from '#cli/config/tools/programs.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
 
 test('Docker checks report an unavailable daemon before running', async () => {
     await using sandbox = await createGitSandbox({

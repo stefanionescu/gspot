@@ -1,9 +1,8 @@
-import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
+import { join, dirname } from 'node:path';
 import { EXECUTABLE_FILE } from '#cli/config/system.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';
 import type { CallRecord, ProgramName } from '#tests/types/setup.ts';
+import { chmod, mkdir, readFile, writeFile } from 'node:fs/promises';
 
 export function buildProgramCommand(program: ProgramName, ...programArguments: string[]): string[] {
     return [process.execPath, join(import.meta.dir, '..', 'programs', `${program}.ts`), ...programArguments];

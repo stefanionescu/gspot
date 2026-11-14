@@ -1,6 +1,5 @@
-import { createRequire } from 'node:module';
-
 import plugin from '@gspothq/eslint-plugin';
+import { createRequire } from 'node:module';
 import { ESLint, type Linter } from 'eslint';
 
 const commonjs = createRequire(import.meta.url)('@gspothq/eslint-plugin') as { default: typeof plugin };

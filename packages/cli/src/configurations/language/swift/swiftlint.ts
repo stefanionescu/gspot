@@ -1,16 +1,16 @@
+import { getLimit, getTable, selectFormat } from '#cli/settings/tables.ts';
 import { Document, type Node, type Scalar, type YAMLMap, type YAMLSeq } from 'yaml';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
 
 import {
     SWIFT_FILES,
+    SWIFTLINT_OPT_IN,
     SWIFTLINT_ANALYZER,
     SWIFTLINT_COMMENTS,
-    SWIFTLINT_FUNCTION_NESTING,
     SWIFTLINT_LEVEL_NOTE,
-    SWIFTLINT_OPT_IN,
+    SWIFTLINT_FUNCTION_NESTING,
 } from '#cli/config/configurations/swift.ts';
-import { listDisabledRules, readToolDisabledRules } from '#cli/configurations/rule-options.ts';
-import { getLimit, getTable, selectFormat } from '#cli/settings/tables.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildSeverityLimit(planned: PlannedConfig, name: string): { warning: number; error: number } {
     const limit = getLimit(planned.scope.settings, name, 'swift');

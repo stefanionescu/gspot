@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { REFUSAL_FILES } from '#tests/config/commands/edits.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test.each([
     { key: 'ignore', value: 'bash/shellcheck', named: 'gspot ignore' },

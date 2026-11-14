@@ -1,15 +1,15 @@
 import { readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
-
-import {
-    EMPTY_FOLDER_RULE,
-    NO_EMPTY_FOLDERS_FLAG,
-    PLACEHOLDER_FILES,
-    UNTRACKED_FOLDERS_ARGUMENTS,
-} from '#cli/config/configurations/structure.ts';
 import { readGitPaths } from '#cli/repository/git/run.ts';
 import { extractParentFolder, listEnclosingFolders } from '#cli/system/paths.ts';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+
+import {
+    EMPTY_FOLDER_RULE,
+    PLACEHOLDER_FILES,
+    NO_EMPTY_FOLDERS_FLAG,
+    UNTRACKED_FOLDERS_ARGUMENTS,
+} from '#cli/config/configurations/structure.ts';
 
 async function listEmptyFolders({ toolsRoot, cancelSignal }: CheckSession): Promise<CheckFinding[]> {
     const options = { cancelSignal };

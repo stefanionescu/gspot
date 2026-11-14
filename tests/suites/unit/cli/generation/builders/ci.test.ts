@@ -1,27 +1,25 @@
-import { existsSync } from 'node:fs';
-import { mkdir, writeFile } from 'node:fs/promises';
-import { delimiter, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { parse } from 'yaml';
-
-import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/builders.ts';
-import { CI_PINS } from '#cli/config/settings/tables.ts';
-import { CI_NODE } from '#cli/config/tools/installers.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/builders/ci.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { join, delimiter } from 'node:path';
 import { GspotError } from '#cli/system/errors.ts';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { openSession } from '#cli/engine/session.ts';
+import { CI_PINS } from '#cli/config/settings/tables.ts';
 import type { Pipeline } from '#cli/types/generation.ts';
-import { LINUX_PIPELINE, MISE_EXEC, SETUP_CASES } from '#tests/config/generation/builders.ts';
-import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { CI_NODE } from '#cli/config/tools/installers.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
-import type { CallRecord, GithubWorkflow, GitlabPipeline, ProcessOutput } from '#tests/types/setup.ts';
+import { MISE_EXEC, SETUP_CASES, LINUX_PIPELINE } from '#tests/config/generation/builders.ts';
+import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/builders.ts';
+import type { CallRecord, ProcessOutput, GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
+import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/builders/ci.ts';
 
 async function runPipelineScript(
     provider: 'github' | 'gitlab',

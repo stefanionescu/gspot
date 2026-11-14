@@ -1,7 +1,6 @@
-import { expect, test } from 'bun:test';
-
-import { buildGeneratedFile, getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { test, expect } from 'bun:test';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { getManifestTarget, buildGeneratedFile } from '#tests/setup/cli/generated-files.ts';
 
 test('shellcheckrc disables an ignored rule and enables nothing at basic', async () => {
     const text = await buildGeneratedFile(

@@ -1,16 +1,16 @@
 import { basename } from 'node:path/posix';
-
-import { PACKAGE_JSON_PATTERN, PRIVATE_PIN_OPTIONS } from '#cli/config/configurations/javascript/blocks.ts';
-import {
-    PACKAGE_JSON_RULES,
-    PIN_RANGES_RULE,
-    ROOT_PACKAGE_JSON_RULES,
-} from '#cli/config/configurations/javascript/rules.ts';
+import { escapeGlob } from '#cli/system/patterns.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { escapeGlob } from '#cli/system/patterns.ts';
-import type { ConfigurationBlocks, PlannedEslintFile } from '#cli/types/configurations/javascript.ts';
+import type { PlannedEslintFile, ConfigurationBlocks } from '#cli/types/configurations/javascript.ts';
+import { PRIVATE_PIN_OPTIONS, PACKAGE_JSON_PATTERN } from '#cli/config/configurations/javascript/blocks.ts';
+
+import {
+    PIN_RANGES_RULE,
+    PACKAGE_JSON_RULES,
+    ROOT_PACKAGE_JSON_RULES,
+} from '#cli/config/configurations/javascript/rules.ts';
 
 export function buildPackageJsonBlocks(planned: Pick<PlannedEslintFile, 'session'>): ConfigurationBlocks {
     const { session } = planned;

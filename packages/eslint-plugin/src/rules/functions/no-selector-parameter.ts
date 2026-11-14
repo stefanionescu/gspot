@@ -1,10 +1,9 @@
-import { AST_NODE_TYPES, ASTUtils, TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { EFFECT_CHILD_KEYS, EVENT_LISTENER_KEY, SIDE_EFFECT_NODES } from '../../config/functions.ts';
+import { createRule } from '../../rule.ts';
 import { getTypes } from '../../language/checker.ts';
 import { listChildren } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
-import type { FunctionNode, TypeReader } from '../../types/plugin.ts';
+import type { TypeReader, FunctionNode } from '../../types/plugin.ts';
+import { ASTUtils, TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { EFFECT_CHILD_KEYS, SIDE_EFFECT_NODES, EVENT_LISTENER_KEY } from '../../config/functions.ts';
 
 function isCallbackArgument(node: FunctionNode): boolean {
     const { parent } = node;

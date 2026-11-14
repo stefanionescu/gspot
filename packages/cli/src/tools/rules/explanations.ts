@@ -1,32 +1,32 @@
-import { writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-
+import { writeFileSync } from 'node:fs';
+import { runTool } from '#cli/tools/run.ts';
+import { findTool } from '#cli/manifests/tools.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { findText } from '#cli/system/files/reads.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
+import { hasValePackages } from '#cli/tools/installers/vale.ts';
+import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
+import { ruffRuleSchema, valeRuleSchema } from '#cli/schemas/tools.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
+import { findRulePage, isUnlistedRule } from '#cli/tools/rules/pages.ts';
+import { readPackageRule, readMarkdownlintRule } from '#cli/tools/rules/packages.ts';
+import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/programs/locate.ts';
+import type { RuleToolSearch, RuleExplanation, RuleExplanationOptions } from '#cli/types/tools.ts';
+import { VALE_TOOL, VALE_STYLES_PATH, VALE_RULE_IDENTIFIER, VALE_PACKAGES_MESSAGE } from '#cli/config/tools/vale.ts';
+
 import {
-    ESLINT_MANIFEST_TOOL,
     RUFF_SUMMARY_FIELD,
-    SHELLCHECK_RULE_IDENTIFIER,
+    ESLINT_MANIFEST_TOOL,
+    SWIFTLINT_UNKNOWN_RULE,
     STYLELINT_MANIFEST_TOOL,
     SWIFTLINT_RULE_ARGUMENTS,
     SWIFTLINT_RULE_IDENTIFIER,
-    SWIFTLINT_UNKNOWN_RULE,
+    SHELLCHECK_RULE_IDENTIFIER,
 } from '#cli/config/tools/rules.ts';
-import { VALE_PACKAGES_MESSAGE, VALE_RULE_IDENTIFIER, VALE_STYLES_PATH, VALE_TOOL } from '#cli/config/tools/vale.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findTool } from '#cli/manifests/tools.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { ruffRuleSchema, valeRuleSchema } from '#cli/schemas/tools.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { hasValePackages } from '#cli/tools/installers/vale.ts';
-import { listExecutablePaths, listRepositoryExecutablePaths } from '#cli/tools/programs/locate.ts';
-import { readMarkdownlintRule, readPackageRule } from '#cli/tools/rules/packages.ts';
-import { findRulePage, isUnlistedRule } from '#cli/tools/rules/pages.ts';
-import { runTool } from '#cli/tools/run.ts';
-import type { RuleExplanation, RuleExplanationOptions, RuleToolSearch } from '#cli/types/tools.ts';
 
 async function readSwiftlintRule(
     root: string,

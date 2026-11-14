@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { formatNameState } from '#cli/system/text/messages.ts';
 
 test('formatNameState writes is for one name and are for several', () => {

@@ -1,28 +1,28 @@
 import { join, posix, relative } from 'node:path';
+import type { Session } from '#cli/types/tools.ts';
+import { joinScope } from '#cli/repository/scopes.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { CheckStop, GspotError } from '#cli/system/errors.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import type { TsconfigProject } from '#cli/types/configurations/language.ts';
+import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
+import { TYPESCRIPT_TAG, PARENT_TSCONFIG_SKIP } from '#cli/config/configurations/shared.ts';
+import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
 
-import { PARENT_TSCONFIG_SKIP, TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
 import {
-    MISSING_TSCONFIG_HELP,
-    MISSING_TSCONFIG_MESSAGE,
-    MISSING_TSCONFIG_RULE,
     OPTION_HELP,
-    STRICT_FAMILY_OPTIONS,
     TSCONFIG_NAME,
+    MISSING_TSCONFIG_HELP,
+    MISSING_TSCONFIG_RULE,
+    STRICT_FAMILY_OPTIONS,
+    MISSING_TSCONFIG_MESSAGE,
     UNREADABLE_TSCONFIG_HELP,
     UNREADABLE_TSCONFIG_RULE,
 } from '#cli/config/configurations/typescript.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { TSCONFIG_EXPLANATIONS } from '#cli/configurations/language/typescript/explanations.ts';
-import { claimProjectCheck } from '#cli/configurations/tsc/compiler.ts';
-import { selectRequiredTsconfigOptions } from '#cli/configurations/tsc/scope-tsconfig.ts';
-import { readTsconfig, readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { joinScope } from '#cli/repository/scopes.ts';
-import { CheckStop, GspotError } from '#cli/system/errors.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { TsconfigProject } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function listTsconfigPaths(planned: PlannedCheck, scopeTsconfig: string): string[] {
     return [

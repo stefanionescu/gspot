@@ -1,5 +1,5 @@
-import { noFloatingPointEquality } from '#eslint-plugin/rules/logic/no-floating-point-equality.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noFloatingPointEquality } from '#eslint-plugin/rules/logic/no-floating-point-equality.ts';
 
 buildRuleTester().run('no-floating-point-equality', noFloatingPointEquality, {
     valid: [

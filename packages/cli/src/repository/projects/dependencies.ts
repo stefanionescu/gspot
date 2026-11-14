@@ -1,16 +1,15 @@
 import { posix } from 'node:path';
-
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import { GSPOT_PACKAGES, HOOK_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/projects.ts';
-import { DEPENDENCY_FILE_PARSERS, parseRequirements } from '#cli/parsers/projects/dependencies.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import type { RunCache } from '#cli/types/system.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import type { DependencyFile } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { isInInstalledFolder, listEnclosingFolders } from '#cli/system/paths.ts';
+import { parseRequirements, DEPENDENCY_FILE_PARSERS } from '#cli/parsers/projects/dependencies.ts';
+import { HOOK_PACKAGES, GSPOT_PACKAGES, REQUIREMENTS_FILE } from '#cli/config/repository/projects.ts';
 
 /**
 List the exact npm package names of the tools that the configurations declare. A package that a configuration detects

@@ -1,9 +1,8 @@
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { requireServerOnly } from '#eslint-plugin/rules/web/require-server-only.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { requireServerOnly } from '#eslint-plugin/rules/web/require-server-only.ts';
 
 buildRuleTester().run('require-server-only', requireServerOnly, {
     valid: [

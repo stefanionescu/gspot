@@ -1,6 +1,6 @@
-import { INVALID_PUSH_INPUT_MESSAGE } from '#cli/config/repository/revisions.ts';
 import { PUSH_INPUT_MESSAGE } from '#cli/config/system.ts';
 import { PROJECT_ENVIRONMENT_MESSAGE } from '#cli/config/tools/programs.ts';
+import { INVALID_PUSH_INPUT_MESSAGE } from '#cli/config/repository/revisions.ts';
 
 // check cancellation
 export const AUTHORED_SCRIPT = 'echo authored\n';

@@ -1,14 +1,13 @@
 import { z } from 'zod';
-
+import { pushSkipSchema } from '#cli/schemas/repository.ts';
 import { GROUPS, TOOL_KINDS } from '#cli/config/manifests.ts';
 import { CI_PROVIDERS } from '#cli/config/repository/setup.ts';
-import { REASON_DESCRIPTIONS, SETTING_TYPES } from '#cli/config/settings/fields.ts';
-import { checkStateSchema, findingSchema, reportedCheckSchema, runReportSchema } from '#cli/schemas/engine.ts';
-import { generatedFilesSchema, initPlanSchema } from '#cli/schemas/generation.ts';
-import { checkFieldsSchema, fileKindSchema } from '#cli/schemas/manifests/manifest.ts';
-import { pushSkipSchema } from '#cli/schemas/repository.ts';
-import { removedConfigurationSchema, settingOriginSchema } from '#cli/schemas/settings/fields.ts';
+import { initPlanSchema, generatedFilesSchema } from '#cli/schemas/generation.ts';
 import { installResultSchema, toolInspectionSchema } from '#cli/schemas/tools.ts';
+import { SETTING_TYPES, REASON_DESCRIPTIONS } from '#cli/config/settings/fields.ts';
+import { fileKindSchema, checkFieldsSchema } from '#cli/schemas/manifests/manifest.ts';
+import { settingOriginSchema, removedConfigurationSchema } from '#cli/schemas/settings/fields.ts';
+import { findingSchema, runReportSchema, checkStateSchema, reportedCheckSchema } from '#cli/schemas/engine.ts';
 
 export const installReportSchema = generatedFilesSchema.extend({
     ...installResultSchema.shape,

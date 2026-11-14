@@ -1,16 +1,14 @@
-import { posix } from 'node:path';
-
 import ignore from 'ignore';
-
-import { GIT_CHECK_IGNORE_ARGUMENTS, GITIGNORE_FILE, SKIPPED_PATTERN_STARTS } from '#cli/config/repository/files.ts';
-import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { buildGitError, runGit } from '#cli/repository/git/run.ts';
+import { posix } from 'node:path';
+import type { RunCache } from '#cli/types/system.ts';
 import { joinScope } from '#cli/repository/scopes.ts';
 import { readText } from '#cli/system/files/reads.ts';
-import { extractParentFolder, isInside } from '#cli/system/paths.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import type { GitignoreMatcher } from '#cli/types/repository.ts';
-import type { RunCache } from '#cli/types/system.ts';
+import { runGit, buildGitError } from '#cli/repository/git/run.ts';
+import { stripBlock } from '#cli/parsers/formats/managed-blocks.ts';
+import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import { GITIGNORE_FILE, SKIPPED_PATTERN_STARTS, GIT_CHECK_IGNORE_ARGUMENTS } from '#cli/config/repository/files.ts';
 
 /**
 Anchor one line of a .gitignore file at the folder of that file.

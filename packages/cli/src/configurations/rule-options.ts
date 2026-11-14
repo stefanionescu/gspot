@@ -1,7 +1,7 @@
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { findToolName, getTool } from '#cli/manifests/tools.ts';
-import { listIgnoredRules } from '#cli/settings/tables.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import { listIgnoredRules } from '#cli/settings/tables.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { getTool, findToolName } from '#cli/manifests/tools.ts';
 import type { PlannedConfig, RuleOptionsRun } from '#cli/types/configurations/shared.ts';
 
 export function assertRunningRuleOptions({ configured, running, allLevelRules, level }: RuleOptionsRun): void {

@@ -1,15 +1,14 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { buildInitSettings } from '#cli/generation/setup/settings.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { listRepositoryFiles, readRepository } from '#cli/repository/read.ts';
-import { addScopeTable, buildEditedSettings, setKey } from '#cli/settings/toml/edit.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
+import { createRunCache } from '#cli/system/cache.ts';
 import { readSettingsFile } from '#cli/settings/toml/file.ts';
 import { buildSettingsText } from '#cli/settings/toml/text.ts';
-import { createRunCache } from '#cli/system/cache.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { buildInitSettings } from '#cli/generation/setup/settings.ts';
 import { FIELD_COMMENT_CASES } from '#tests/config/settings/parse.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readRepository, listRepositoryFiles } from '#cli/repository/read.ts';
+import { setKey, addScopeTable, buildEditedSettings } from '#cli/settings/toml/edit.ts';
 
 test.each([...FIELD_COMMENT_CASES])(
     'a template keeps each comment of $name on its key',

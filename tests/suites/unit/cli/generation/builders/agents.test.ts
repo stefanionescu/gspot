@@ -1,15 +1,13 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { format } from 'prettier';
-
-import { COMMANDS_HEADING } from '#cli/config/generation/builders.ts';
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { buildAgentsBlock } from '#cli/generation/builders/agents.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { COMMANDS_HEADING } from '#cli/config/generation/builders.ts';
+import { buildAgentsBlock } from '#cli/generation/builders/agents.ts';
+import { getRuleFilePath } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 

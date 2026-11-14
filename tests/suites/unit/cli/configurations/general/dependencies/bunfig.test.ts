@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { BUN_SCANNER_KEYS } from '#tests/config/configurations/dependencies.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BUN_SCANNER_KEYS } from '#tests/config/configurations/dependencies.ts';
 
 test('a scope that uses Bun gets the scanner that gspot.toml names in its bunfig.toml', async () => {
     await using sandbox = await createGitSandbox({

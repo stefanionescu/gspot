@@ -1,12 +1,12 @@
 import { stringify as stringifyYaml } from 'yaml';
-
-import {
-    OWASP_AUTHENTICATION_GROUP,
-    OWASP_CREDENTIAL_RULES,
-    OWASP_RULESET,
-} from '#cli/config/configurations/infrastructure.ts';
 import { listDisabledRules } from '#cli/configurations/rule-options.ts';
 import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+
+import {
+    OWASP_RULESET,
+    OWASP_CREDENTIAL_RULES,
+    OWASP_AUTHENTICATION_GROUP,
+} from '#cli/config/configurations/infrastructure.ts';
 
 function buildSpectralFile(planned: PlannedConfig): string {
     const off = listDisabledRules(planned);

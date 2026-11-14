@@ -1,15 +1,13 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { LITERAL_FUNCTION_REFERENCES, UNUSED_FUNCTION_SAMPLE } from '#tests/config/configurations/bash.ts';
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { UNUSED_FUNCTION_SAMPLE, LITERAL_FUNCTION_REFERENCES } from '#tests/config/configurations/bash.ts';
 
 test('bash/unused-functions reports never-called in scripts/orphan.sh and passes after the fix', async () => {
     await using sandbox = await createSandbox(BASH_SANDBOX);

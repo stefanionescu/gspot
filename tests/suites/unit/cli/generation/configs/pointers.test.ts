@@ -1,23 +1,21 @@
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
 import { parse } from 'yaml';
-
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
+import { createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { buildPointerFiles } from '#cli/generation/configs/pointers.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
-import type { SourcedConfig } from '#cli/types/configurations/shared.ts';
-import { DEFAULT_EXPORT, MARKDOWNLINT_SCOPE_TABLES, XCTEST_LINK_FILE_CASES } from '#tests/config/generation/configs.ts';
-import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { buildPointerFiles } from '#cli/generation/configs/pointers.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import type { SourcedConfig } from '#cli/types/configurations/shared.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { DEFAULT_EXPORT, XCTEST_LINK_FILE_CASES, MARKDOWNLINT_SCOPE_TABLES } from '#tests/config/generation/configs.ts';
 
 test.each([...XCTEST_LINK_FILE_CASES])(
     'XCTest folder pointer files keep their SwiftLint overrides in scope "$scope"',

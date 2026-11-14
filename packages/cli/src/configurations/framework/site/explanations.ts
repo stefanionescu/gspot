@@ -1,5 +1,5 @@
-import { SITE_RULES, UNUSED_ASSET_RULE } from '#cli/config/configurations/site.ts';
 import type { RuleExplanations } from '#cli/types/tools.ts';
+import { SITE_RULES, UNUSED_ASSET_RULE } from '#cli/config/configurations/site.ts';
 
 export const SITEMAP_EXPLANATIONS = {
     [SITE_RULES.missingPage]: {

@@ -1,23 +1,23 @@
 import { join } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
 import { stripVTControlCharacters } from 'node:util';
+import { createRunCache } from '#cli/system/cache.ts';
+import { runTsc } from '#cli/configurations/tsc/compiler.ts';
+import { restoreCommandPaths } from '#cli/engine/results.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 import {
     CAUSE_MARKS,
-    CI_ENVIRONMENT,
-    MARKED_LINES,
-    NEXT_TYPEGEN_COMMAND,
     SHOWN_LINES,
+    MARKED_LINES,
+    CI_ENVIRONMENT,
+    NEXT_TYPEGEN_COMMAND,
 } from '#cli/config/configurations/nextjs.ts';
-import { TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
-import { runTsc } from '#cli/configurations/tsc/compiler.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
-import { restoreCommandPaths } from '#cli/engine/results.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
 
 function formatNextjsFailure(text: string): string {
     const lines = stripVTControlCharacters(text).trim().split('\n');

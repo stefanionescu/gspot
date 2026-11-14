@@ -1,21 +1,20 @@
 import { createTwoFilesPatch } from 'diff';
-
-import { DIFF_CONTEXT_LINES, ON_DISK_LABEL } from '#cli/config/generation/files.ts';
 import { OCTAL_RADIX } from '#cli/config/system.ts';
+import { openFiles } from '#cli/system/files/open.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { WritePlan } from '#cli/types/repository.ts';
+import type { Session, Generation } from '#cli/types/tools.ts';
 import { convertToGlobs } from '#cli/configurations/ignores.ts';
 import { buildConfigs } from '#cli/generation/configs/build.ts';
-import { buildGspotSection } from '#cli/generation/configs/ignores.ts';
+import type { Files, FileContents } from '#cli/types/system.ts';
 import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { planGeneratedWrites, writeEveryGeneratedFile } from '#cli/generation/write.ts';
+import { buildGspotSection } from '#cli/generation/configs/ignores.ts';
 import { findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import { compareText } from '#cli/system/text/order.ts';
 import { listStaleLockfiles } from '#cli/tools/installers/projects.ts';
-import type { CheckGeneration, StaleFile } from '#cli/types/engine/run.ts';
-import type { WritePlan } from '#cli/types/repository.ts';
-import type { FileContents, Files } from '#cli/types/system.ts';
-import type { Generation, Session } from '#cli/types/tools.ts';
+import type { StaleFile, CheckGeneration } from '#cli/types/engine/run.ts';
+import { ON_DISK_LABEL, DIFF_CONTEXT_LINES } from '#cli/config/generation/files.ts';
+import { planGeneratedWrites, writeEveryGeneratedFile } from '#cli/generation/write.ts';
 
 function buildPlanDiff({ path, after }: WritePlan, onDisk: FileContents): string | undefined {
     if (after === undefined) return undefined;

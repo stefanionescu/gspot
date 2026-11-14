@@ -1,18 +1,16 @@
+import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
-import { OS_VALUE_SOURCE, PYTHON_ENVIRONMENT_SOURCE } from '#tests/config/configurations/structure/files.ts';
-import { BASH_HEADER } from '#tests/config/setup/languages.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { BASH_HEADER } from '#tests/config/setup/languages.ts';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createSandbox } from '#tests/setup/sandboxes/create.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BASH_SANDBOX } from '#tests/config/configurations/general.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { OS_VALUE_SOURCE, PYTHON_ENVIRONMENT_SOURCE } from '#tests/config/configurations/structure/files.ts';
 
 test('Swift environment reads outside the env files are reported; comments and strings are not', async () => {
     await using sandbox = await createGitSandbox({

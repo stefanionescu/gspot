@@ -1,14 +1,13 @@
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { LICENSE_FILE_CASES } from '#tests/config/configurations/docs.ts';
-import { LICENSE, README } from '#tests/config/setup/configurations.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { README, LICENSE } from '#tests/config/setup/configurations.ts';
+import { LICENSE_FILE_CASES } from '#tests/config/configurations/docs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('required files run in root and child scopes even without any Markdown file', async () => {
     await using sandbox = await createGitSandbox({

@@ -1,7 +1,6 @@
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-
-import { COMPARISON_OPERATORS } from '../../config/logic.ts';
 import { createRule } from '../../rule.ts';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { COMPARISON_OPERATORS } from '../../config/logic.ts';
 
 export const noNegatedComparison = createRule<[], 'comparison'>({
     name: 'no-negated-comparison',

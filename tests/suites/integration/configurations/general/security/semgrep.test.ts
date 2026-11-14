@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { describe, expect, test } from 'bun:test';
-
-import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
-import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { hasToolBuild } from '#tests/setup/cli/tools.ts';
-import { applyGeneratedFiles, buildSandboxChanges, changeSandbox } from '#tests/setup/sandboxes/changes.ts';
-import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { writeFile } from 'node:fs/promises';
+import { test, expect, describe } from 'bun:test';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { hasToolBuild } from '#tests/setup/cli/tools.ts';
+import { BROKEN_IF_SCRIPT } from '#tests/config/setup/languages.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import type { Sandbox, SandboxChanges } from '#tests/types/setup.ts';
+import { SEMGREP_SANDBOX } from '#tests/config/integration/general.ts';
+import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
+import { changeSandbox, applyGeneratedFiles, buildSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 
 const REPOSITORY_RULE = `rules:
     - id: test-no-double

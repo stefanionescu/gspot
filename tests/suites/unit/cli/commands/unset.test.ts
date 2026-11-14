@@ -1,16 +1,14 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
+import { readFile } from 'node:fs/promises';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
 import { MANAGED_KEYS_NOTE } from '#cli/config/commands/edits.ts';
-import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { settingsEditOutputSchema } from '#tests/schemas/setup.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { BUN_SCANNER_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('unset of an item of a setting that is not a list or a table exits 2, names the plain unset, and writes nothing', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });

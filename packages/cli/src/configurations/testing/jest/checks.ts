@@ -1,11 +1,10 @@
 import { posix } from 'node:path';
-
+import { escapeRegExp } from '#cli/system/patterns.ts';
 import { selectCheckCommand } from '#cli/engine/plan/coverage.ts';
 import { listOwnTestScopes } from '#cli/engine/plan/test-scopes.ts';
 import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
-import { escapeRegExp } from '#cli/system/patterns.ts';
 import type { ShippedPlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckResult, CheckRunOptions, CheckSession } from '#cli/types/engine/run.ts';
+import type { CheckCode, CheckResult, CheckSession, CheckRunOptions } from '#cli/types/engine/run.ts';
 
 /**
 Leave the nested scopes that run Jest on their own out of this run, so that their tests run once. A test path pattern

@@ -1,13 +1,11 @@
 import http from 'node:http';
-
-import { expect, spyOn, test } from 'bun:test';
-
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { explainReleaseAgeHold } from '#cli/tools/installers/network/releases.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { explainReleaseAgeHold } from '#cli/tools/installers/network/releases.ts';
 
 const ESLINT_RELEASE = {
     label: 'eslint@10.13.0',

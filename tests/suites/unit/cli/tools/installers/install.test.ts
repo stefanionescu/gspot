@@ -1,21 +1,19 @@
-import { existsSync } from 'node:fs';
 import { tmpdir } from 'node:os';
+import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { join, parse } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { listHostCheckTools } from '#cli/engine/plan/tools.ts';
 import { installTools } from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildToolLockfiles, fakeNpmTool, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { getTool, listDistinctTools } from '#cli/manifests/tools.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeNpmTool, buildToolLockfiles, fakeToolExecutables } from '#tests/setup/cli/tools.ts';
 
 async function runBunInstall(root: string, installPackages: () => Promise<void>, damagedTool?: string) {
     const session = await openSession(root);

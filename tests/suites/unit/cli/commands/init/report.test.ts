@@ -1,14 +1,12 @@
-import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import * as installers from '#cli/tools/installers/install.ts';
-import { HOOK_NAMED_SOURCE, HOOKS_PATH_CASES } from '#tests/config/commands/setup.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { readFile } from 'node:fs/promises';
+import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import * as installers from '#cli/tools/installers/install.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { HOOKS_PATH_CASES, HOOK_NAMED_SOURCE } from '#tests/config/commands/setup.ts';
 
 test.each([...HOOKS_PATH_CASES])(
     'the init plan tells hook scripts in the source apart from the hooks folder Git uses ($hooksPath)',

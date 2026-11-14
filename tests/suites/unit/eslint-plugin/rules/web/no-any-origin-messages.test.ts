@@ -1,5 +1,5 @@
-import { noAnyOriginMessages } from '#eslint-plugin/rules/web/no-any-origin-messages.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noAnyOriginMessages } from '#eslint-plugin/rules/web/no-any-origin-messages.ts';
 
 buildTypedRuleTester().run('no-any-origin-messages', noAnyOriginMessages, {
     valid: [

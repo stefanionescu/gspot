@@ -1,19 +1,17 @@
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { getTable } from '#cli/settings/tables.ts';
 import { openSession } from '#cli/engine/session.ts';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
-import { assertRefusalWithoutWrites, runGspot } from '#tests/setup/cli/commands.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { INHERITED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
+import { runGspot, assertRefusalWithoutWrites } from '#tests/setup/cli/commands.ts';
 
 test('add selects a configuration whose table stops every other command', async () => {
     const text = '[licenses]\nallowed = ["MIT"]\n';

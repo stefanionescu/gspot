@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { listAlwaysSelected } from '#cli/manifests/select.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { compareText } from '#cli/system/text/order.ts';
+import { listAlwaysSelected } from '#cli/manifests/select.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
 
 test('all selects the always-selected configurations from an empty list', async () => {
     await using sandbox = await createGitSandbox({

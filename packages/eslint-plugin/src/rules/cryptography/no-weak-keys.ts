@@ -1,8 +1,7 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import { KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS, WEAK_CURVES } from '../../config/cryptography.ts';
-import { getExpressionValue, getOptionValue } from '../../language/expressions.ts';
 import { createRule } from '../../rule.ts';
+import { getOptionValue, getExpressionValue } from '../../language/expressions.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { WEAK_CURVES, KEY_PAIR_SELECTOR, MINIMUM_KEY_LENGTHS } from '../../config/cryptography.ts';
 
 export const noWeakKeys = createRule<[], 'shortKey' | 'weakCurve'>({
     name: 'no-weak-keys',

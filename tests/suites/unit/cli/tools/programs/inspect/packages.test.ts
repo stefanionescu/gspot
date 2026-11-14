@@ -1,17 +1,15 @@
-import { symlink, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
+import { testdir, createFileTree } from 'testdirs';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import * as processes from '#cli/system/processes/run.ts';
-import { inspectTool } from '#cli/tools/programs/inspect.ts';
-import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
 import { buildToolSearch } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { inspectTool } from '#cli/tools/programs/inspect.ts';
+import { unlink, symlink, writeFile } from 'node:fs/promises';
+import { SYSTEM_PLUGIN_REPORTS } from '#tests/config/tools.ts';
 import { fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 

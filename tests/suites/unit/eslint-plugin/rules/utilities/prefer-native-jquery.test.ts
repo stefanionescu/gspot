@@ -1,5 +1,5 @@
-import { preferNativeJquery } from '#eslint-plugin/rules/utilities/prefer-native-jquery.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferNativeJquery } from '#eslint-plugin/rules/utilities/prefer-native-jquery.ts';
 
 buildRuleTester().run('prefer-native-jquery', preferNativeJquery, {
     valid: ['Array.isArray(rows);', 'import $ from "./dom";\n$.trim(name);', '$.ajax(url);', '$?.isArray(rows);'],

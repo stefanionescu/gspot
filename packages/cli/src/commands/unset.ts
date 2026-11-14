@@ -1,10 +1,10 @@
-import { readSettingsEditContext, selectSettingToEdit, writeSettingsEdit } from '#cli/commands/edits.ts';
-import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
-import { removeFromList, removeKey, removeTableKeys } from '#cli/settings/toml/edit.ts';
 import { GspotError } from '#cli/system/errors.ts';
-import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
-import type { CommandDefinition, ScopeFlags, SettingsEditOptions, UnsetOptions } from '#cli/types/commands.ts';
 import type { CommandResult } from '#cli/types/system.ts';
+import { SCOPE_OPTION } from '#cli/config/commands/help.ts';
+import { formatNameList, formatNameState } from '#cli/system/text/messages.ts';
+import { removeKey, removeFromList, removeTableKeys } from '#cli/settings/toml/edit.ts';
+import { writeSettingsEdit, selectSettingToEdit, readSettingsEditContext } from '#cli/commands/edits.ts';
+import type { ScopeFlags, UnsetOptions, CommandDefinition, SettingsEditOptions } from '#cli/types/commands.ts';
 
 function formatUnsetSummary(
     key: string,

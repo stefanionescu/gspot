@@ -1,14 +1,12 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { test, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const UNCLOSED_SEQUENCE = 'invalid: [\n';
 

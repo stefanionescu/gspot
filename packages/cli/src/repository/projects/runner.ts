@@ -1,20 +1,20 @@
-import { existsSync } from 'node:fs';
 import { join } from 'node:path';
-
+import { existsSync } from 'node:fs';
 import cliPackage from '#cli-package' with { type: 'json' };
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import type { StartRunner, SetupReference } from '#cli/types/repository.ts';
+import { detectPackageManager, buildFrozenInstallArguments } from '#cli/repository/projects/package-manager.ts';
+
 import {
+    START_RUNNERS,
+    YARN_BERRY_MAJOR,
+    PNPM_WORKSPACE_FILE,
     type FROZEN_INSTALLS,
     MISE_NODE_PIN_COMMAND,
     PACKAGE_MANAGER_LABELS,
-    PNPM_WORKSPACE_FILE,
     PNPM_WORKSPACE_INSTALL,
-    START_RUNNERS,
-    YARN_BERRY_MAJOR,
 } from '#cli/config/repository/projects.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
-import { buildFrozenInstallArguments, detectPackageManager } from '#cli/repository/projects/package-manager.ts';
-import type { SetupReference, StartRunner } from '#cli/types/repository.ts';
 
 export function readCliSpecifier(root: string): string | undefined {
     const { name } = cliPackage;

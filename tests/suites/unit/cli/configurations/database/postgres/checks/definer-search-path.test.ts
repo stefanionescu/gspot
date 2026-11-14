@@ -1,13 +1,11 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { DEFINER_FUNCTION_SQL, DEFINER_REPAIRS, SECURITY_ALTERATIONS } from '#tests/config/configurations/database.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { DEFINER_REPAIRS, DEFINER_FUNCTION_SQL, SECURITY_ALTERATIONS } from '#tests/config/configurations/database.ts';
 
 test.each([...DEFINER_REPAIRS])('definer-search-path accepts a later $name migration', async ({ sql }) => {
     await using sandbox = await createGitSandbox({

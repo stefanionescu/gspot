@@ -1,13 +1,13 @@
-import { AST_NODE_TYPES, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    BOOLEAN_UNION_MEMBERS,
-    DECLARATION_FILE,
-    TYPED_VALUE_PARENTS,
-    VALUE_CONTAINERS,
-} from '../../config/functions.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
+import { type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    DECLARATION_FILE,
+    VALUE_CONTAINERS,
+    TYPED_VALUE_PARENTS,
+    BOOLEAN_UNION_MEMBERS,
+} from '../../config/functions.ts';
 
 function isBooleanType(annotation: TSESTree.TSTypeAnnotation | undefined): boolean {
     const type = annotation?.typeAnnotation;

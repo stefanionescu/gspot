@@ -1,11 +1,10 @@
-import type { Node, Scalar } from 'yaml';
 import type { z } from 'zod';
-
+import type { Node, Scalar } from 'yaml';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { CheckFinding } from '#cli/types/engine/run.ts';
+import type { composeSchema } from '#cli/schemas/configurations.ts';
 import type { SERVICE_SECURITY_RULES } from '#cli/config/configurations/docker.ts';
 import type { WORKFLOW_SHAPE_RULES } from '#cli/config/configurations/github-actions.ts';
-import type { composeSchema } from '#cli/schemas/configurations.ts';
-import type { CheckFinding } from '#cli/types/engine/run.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
 
 export type WorkflowShapeHit = { kind: keyof typeof WORKFLOW_SHAPE_RULES; node: Scalar };
 

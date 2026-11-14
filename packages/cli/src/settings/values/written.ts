@@ -1,15 +1,15 @@
 import { z } from 'zod';
-
-import { compareScopeDepth, isInScope } from '#cli/repository/scopes.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { isInScope, compareScopeDepth } from '#cli/repository/scopes.ts';
 import { findSettingSchema, unwrapSettingSchema } from '#cli/settings/lookup.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
+
 import type {
-    AvailableSettings,
-    ReasonedValue,
     Settings,
+    ReasonedValue,
     SettingsTable,
-    WrittenScopeTable,
     WrittenSetting,
+    AvailableSettings,
+    WrittenScopeTable,
 } from '#cli/types/settings.ts';
 
 function isKeyGroup(

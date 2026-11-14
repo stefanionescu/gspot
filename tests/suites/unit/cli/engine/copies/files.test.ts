@@ -1,21 +1,19 @@
 import { existsSync } from 'node:fs';
-import { cp, lstat, mkdir, readFile, realpath, symlink, writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
+import { testdir, createFileTree } from 'testdirs';
+import { openSession } from '#cli/engine/session.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
-import { openSession } from '#cli/engine/session.ts';
 import { planSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { cp, lstat, mkdir, symlink, readFile, realpath, writeFile } from 'node:fs/promises';
 
 test('a copy isolates workspace sources and links external dependencies and executable tools', async () => {
     await using sandbox = await createGitSandbox({

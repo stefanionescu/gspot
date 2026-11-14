@@ -1,20 +1,20 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    ADD_METHOD,
-    ADD_RESOURCE,
-    CDK_PROPS_POSITION,
-    METHOD_CHECKS,
-    NO_AUTHORIZATION,
-    RESOURCE_CHAIN,
-    RESOURCE_METHODS,
-    REST_API,
-    ROOT_RESOURCE,
-} from '../../config/aws.ts';
-import { getExpressionValue } from '../../language/expressions.ts';
-import { getCdkArgument, getCdkName, getCdkProperty, getCdkResult, listCdkTableIssues } from '../../libraries/aws.ts';
 import { createRule } from '../../rule.ts';
 import type { CdkIssue, CdkResult } from '../../types/aws.ts';
+import { getExpressionValue } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getCdkName, getCdkResult, getCdkArgument, getCdkProperty, listCdkTableIssues } from '../../libraries/aws.ts';
+
+import {
+    REST_API,
+    ADD_METHOD,
+    ADD_RESOURCE,
+    METHOD_CHECKS,
+    ROOT_RESOURCE,
+    RESOURCE_CHAIN,
+    NO_AUTHORIZATION,
+    RESOURCE_METHODS,
+    CDK_PROPS_POSITION,
+} from '../../config/aws.ts';
 
 function findDefaultAuthorization(
     source: Readonly<TSESLint.SourceCode>,

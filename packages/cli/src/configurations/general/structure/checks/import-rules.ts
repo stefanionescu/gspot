@@ -1,35 +1,34 @@
 import { posix } from 'node:path';
-
 import type { Node } from 'web-tree-sitter';
-
-import { ESLINT_SETTINGS_TABLE, IMPORT_RULE_CATEGORY, NODE_SHEBANG_TAG } from '#cli/config/configurations/shared.ts';
-import {
-    CONFIG_PATTERNS,
-    IMPORT_RULE_CHECK_RULES,
-    IMPORT_RULE_EXTENSIONS,
-    PYTHON_SOURCE_ROOTS,
-    UNCOVERED_FILE_MESSAGE,
-} from '#cli/config/configurations/structure.ts';
-import { PYTHON_EXTENSIONS, SWIFT_EXTENSION, SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
-import { PYTHON_CONFIGURATION, SWIFT_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
-import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
-import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
-import { formatRefusedImport, listAllowedRules } from '#cli/configurations/import-rules.ts';
-import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import type { ImportRule } from '#cli/types/settings.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import { listPythonImports } from '#cli/parsers/code/python.ts';
 import { findImportedModule } from '#cli/parsers/code/swift.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { ImportOwners, RuleLookup } from '#cli/types/configurations/structure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import type { SwiftModule, PythonSearch } from '#cli/types/parsers.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { PythonSearch, SwiftModule } from '#cli/types/parsers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { ImportRule } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { listScriptFiles } from '#cli/configurations/language/javascript/sources.ts';
+import type { RuleLookup, ImportOwners } from '#cli/types/configurations/structure.ts';
+import { IMPORT_EXPLANATIONS } from '#cli/configurations/general/structure/explanations.ts';
+import { listAllowedRules, formatRefusedImport } from '#cli/configurations/import-rules.ts';
+import { SWIFT_CONFIGURATION, PYTHON_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { listSwiftModules } from '#cli/configurations/general/structure/checks/swift-modules.ts';
+import { SWIFT_EXTENSION, PYTHON_EXTENSIONS, SWIFT_IMPORT_NODE } from '#cli/config/parsers/code.ts';
+import { listRefusedSwiftTypes } from '#cli/configurations/general/structure/checks/refused-types.ts';
+import { NODE_SHEBANG_TAG, IMPORT_RULE_CATEGORY, ESLINT_SETTINGS_TABLE } from '#cli/config/configurations/shared.ts';
+
+import {
+    CONFIG_PATTERNS,
+    PYTHON_SOURCE_ROOTS,
+    IMPORT_RULE_EXTENSIONS,
+    UNCOVERED_FILE_MESSAGE,
+    IMPORT_RULE_CHECK_RULES,
+} from '#cli/config/configurations/structure.ts';
 
 function buildRuleLookup(rules: ImportRule[]): RuleLookup {
     const matchers = rules.map((rule) => buildPathMatcher(rule.paths));

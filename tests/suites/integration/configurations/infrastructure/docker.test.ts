@@ -1,22 +1,20 @@
-import { generateKeyPair, randomUUID } from 'node:crypto';
-import { readFile, writeFile } from 'node:fs/promises';
-import { join, posix } from 'node:path';
 import { promisify } from 'node:util';
-
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
+import { join, posix } from 'node:path';
 import { createFileTree } from 'testdirs';
-
 import { LEVELS } from '#cli/config/manifests.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { randomUUID, generateKeyPair } from 'node:crypto';
 import { assertCheckSample } from '#tests/setup/cli/samples.ts';
+import { hasLinuxDocker } from '#tests/setup/system/platform.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
-import { hasLinuxDocker } from '#tests/setup/system/platform.ts';
-import { runBlockingCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const DOCKER_SANDBOX = {
     install: false,

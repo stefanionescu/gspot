@@ -1,8 +1,7 @@
 import { z } from 'zod';
-
-import { CHECK_STATUSES, COMPARED_CONTENTS, REPORTED_SKIP_CAUSES } from '#cli/config/engine.ts';
-import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
 import { ignoreSchema } from '#cli/schemas/settings/file.ts';
+import { checkStageSchema } from '#cli/schemas/manifests/checks.ts';
+import { CHECK_STATUSES, COMPARED_CONTENTS, REPORTED_SKIP_CAUSES } from '#cli/config/engine.ts';
 
 const knipSymbolSchema = z.object({
     name: z.string().min(1),

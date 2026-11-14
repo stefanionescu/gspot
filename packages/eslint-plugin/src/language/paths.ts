@@ -1,5 +1,5 @@
-import { DRIVE_LETTER, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 import type { RuleContext } from '../types/plugin.ts';
+import { DRIVE_LETTER, PLUGIN_PREFIX, TRAILING_SLASH } from '../config/plugin.ts';
 
 /**
 Find where a path sits inside a folder. Both take either separator and any drive letter case.

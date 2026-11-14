@@ -1,5 +1,5 @@
-import { noUnvalidatedJsonBody } from '#eslint-plugin/rules/servers/no-unvalidated-json-body.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnvalidatedJsonBody } from '#eslint-plugin/rules/servers/no-unvalidated-json-body.ts';
 
 buildRuleTester().run('no-unvalidated-json-body', noUnvalidatedJsonBody, {
     valid: [

@@ -1,11 +1,9 @@
-import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { Linter } from 'eslint';
-
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import plugin from '#eslint-plugin/plugin.ts';
-import { noVueClassComponents } from '#eslint-plugin/rules/vue/no-vue-class-components.ts';
 import { buildRuleTester, writePackageFolders } from '#tests/setup/eslint/rule-tester.ts';
+import { noVueClassComponents } from '#eslint-plugin/rules/vue/no-vue-class-components.ts';
 
 const root = writePackageFolders({
     three: { dependencies: { vue: '^3.4.0' } },

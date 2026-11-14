@@ -1,5 +1,4 @@
 import { fileURLToPath } from 'node:url';
-
 import type { MarkdownlintFormatterInput } from '#cli/types/configurations/language.ts';
 
 const rulesFile = fileURLToPath(new URL('markdownlint.jsonc', import.meta.url));

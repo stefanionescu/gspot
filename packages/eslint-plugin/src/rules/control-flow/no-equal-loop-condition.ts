@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { INCREMENT_OPERATORS, STEP_OPERATORS } from '../../config/control-flow.ts';
-import { EQUALITY_OPERATORS, INEQUALITY_OPERATORS } from '../../config/logic.ts';
-import { listCounterUpdates } from '../../language/syntax.ts';
 import { createRule } from '../../rule.ts';
+import { listCounterUpdates } from '../../language/syntax.ts';
+import { EQUALITY_OPERATORS, INEQUALITY_OPERATORS } from '../../config/logic.ts';
+import { STEP_OPERATORS, INCREMENT_OPERATORS } from '../../config/control-flow.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function getStep(update: TSESTree.Expression): { counter: TSESTree.Node; direction: number } | undefined {
     if (update.type === AST_NODE_TYPES.UpdateExpression)

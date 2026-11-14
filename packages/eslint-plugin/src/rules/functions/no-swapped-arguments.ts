@@ -1,19 +1,19 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import { COMPARISON_OPERATORS } from '../../config/logic.ts';
+import type { CallNode, TypeReader } from '../../types/plugin.ts';
+import type { SwappedPair, ParameterNames } from '../../types/functions.ts';
+import { getLocalFunction, findEnclosingFunction } from '../../language/functions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
+    DIRECTIONAL_KEY,
     BOXED_TYPE_NAMES,
     COMPARATOR_ARITY,
     CRYPTO_ROUND_NAME,
     CRYPTO_STATE_SIZE,
-    DIRECTIONAL_KEY,
     NAMED_ARGUMENT_MINIMUM,
 } from '../../config/functions.ts';
-import { COMPARISON_OPERATORS } from '../../config/logic.ts';
-import { getTypes } from '../../language/checker.ts';
-import { findEnclosingFunction, getLocalFunction } from '../../language/functions.ts';
-import { createRule } from '../../rule.ts';
-import type { ParameterNames, SwappedPair } from '../../types/functions.ts';
-import type { CallNode, TypeReader } from '../../types/plugin.ts';
 
 function getParameterNames(
     call: CallNode,

@@ -1,5 +1,5 @@
-import { unverifiedCertificate } from '#eslint-plugin/rules/networks/unverified-certificate.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { unverifiedCertificate } from '#eslint-plugin/rules/networks/unverified-certificate.ts';
 
 buildRuleTester().run('unverified-certificate', unverifiedCertificate, {
     valid: [

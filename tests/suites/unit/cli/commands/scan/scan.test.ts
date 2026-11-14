@@ -1,18 +1,16 @@
-import { mkdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-
-import cliPackage from '#cli-package' with { type: 'json' };
-import { SCAN_SETTINGS_MESSAGE } from '#cli/config/commands/setup.ts';
-import * as installers from '#cli/tools/installers/install.ts';
-import type { ScanReport } from '#cli/types/commands.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
-import { scanOutputSchema } from '#tests/schemas/setup.ts';
+import { test, spyOn, expect } from 'bun:test';
+import { mkdir, writeFile } from 'node:fs/promises';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readTree } from '#tests/setup/system/files.ts';
+import type { ScanReport } from '#cli/types/commands.ts';
+import { scanOutputSchema } from '#tests/schemas/setup.ts';
+import cliPackage from '#cli-package' with { type: 'json' };
+import * as installers from '#cli/tools/installers/install.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { SCAN_SETTINGS_MESSAGE } from '#cli/config/commands/setup.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 async function runScan(root: string): Promise<ScanReport> {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

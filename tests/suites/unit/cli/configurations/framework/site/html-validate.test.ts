@@ -1,15 +1,13 @@
+import { test, expect } from 'bun:test';
 import { writeFile } from 'node:fs/promises';
-
-import { expect, test } from 'bun:test';
-
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
 import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('html-validate that fails without a finding stops with an error', async () => {
     const buildCommand = buildProgramCommand('fakes/site-build', '--copy', 'index.html=dist/index.html');

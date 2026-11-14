@@ -1,16 +1,14 @@
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { readFileSync } from 'node:fs';
+import { test, expect } from 'bun:test';
 import { parseSettings } from '#cli/settings/parse.ts';
-import { EXCLUDED_CONFIGURATION_SETTINGS, SCOPE_REMOVALS } from '#tests/config/commands/edits.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import { readTree } from '#tests/setup/system/files.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { readTree } from '#tests/setup/system/files.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { SCOPE_REMOVALS, EXCLUDED_CONFIGURATION_SETTINGS } from '#tests/config/commands/edits.ts';
 
 const API_LANGUAGE_REASON = 'The API uses another language.';
 

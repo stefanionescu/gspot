@@ -1,10 +1,8 @@
-import { cp, readFile, symlink } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { BASH_MANIFEST } from '#tests/config/system.ts';
+import { cp, symlink, readFile } from 'node:fs/promises';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
 

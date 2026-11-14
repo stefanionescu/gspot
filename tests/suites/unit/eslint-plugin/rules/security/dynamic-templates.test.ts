@@ -1,5 +1,5 @@
-import { dynamicTemplates } from '#eslint-plugin/rules/security/dynamic-templates.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { dynamicTemplates } from '#eslint-plugin/rules/security/dynamic-templates.ts';
 
 buildRuleTester().run('dynamic-templates', dynamicTemplates, {
     valid: ["import ejs from 'ejs';\nconst render = ejs.compile('<p><%= name %></p>');\nrender({ name });"],

@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { initSandbox } from '#tests/setup/sandboxes/create.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { runCheckOnChanges } from '#tests/setup/cli/samples.ts';
 import { hasLinuxDocker } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const NGINX_SERVER = `server {
     listen 443 ssl;

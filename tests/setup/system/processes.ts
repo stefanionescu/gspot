@@ -1,16 +1,16 @@
 import { stat } from 'node:fs/promises';
-
-import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
-import { buildSpawnEnvironment } from '#cli/system/environment.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { runProcess } from '#cli/system/processes/run.ts';
-import type { CancelableSpawnOptions, SpawnResult } from '#cli/types/system.ts';
+import { MILLISECONDS_PER_SECOND } from '#cli/config/system.ts';
+import { buildSpawnEnvironment } from '#cli/system/environment.ts';
+import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
+import type { SpawnResult, CancelableSpawnOptions } from '#cli/types/system.ts';
+
 import {
     CHILD_WAIT_MILLISECONDS,
-    POLL_INTERVAL_MILLISECONDS,
     TEST_TIMEOUT_MILLISECONDS,
+    POLL_INTERVAL_MILLISECONDS,
 } from '#tests/config/setup/programs.ts';
-import type { ChildCapture, ProcessCapture } from '#tests/types/setup.ts';
 
 function readCommandResult(result: SpawnResult, limited: ReturnType<typeof limitCommand>): SpawnResult {
     if (result.end !== 'timed-out') return result;

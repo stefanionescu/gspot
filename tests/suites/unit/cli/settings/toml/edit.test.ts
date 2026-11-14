@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { buildAvailableSettings } from '#cli/settings/available.ts';
-import { buildSettingsFromTable } from '#cli/settings/parse.ts';
-import { addScopeTable, buildEditedSettings, removeKey, removeUnknownKeys, setKey } from '#cli/settings/toml/edit.ts';
-import { readSettingsFile } from '#cli/settings/toml/file.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
+import { matchFields } from '#tests/setup/matchers.ts';
 import type { GspotError } from '#cli/system/errors.ts';
 import type { TomlTable } from '#cli/types/settings.ts';
-import { INITIAL_SETTINGS, SCOPE_SETTING_WRITES, SEMGREP_IGNORE } from '#tests/config/settings/parse.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
+import { readSettingsFile } from '#cli/settings/toml/file.ts';
+import { buildSettingsFromTable } from '#cli/settings/parse.ts';
+import { buildAvailableSettings } from '#cli/settings/available.ts';
+import { SEMGREP_IGNORE, INITIAL_SETTINGS, SCOPE_SETTING_WRITES } from '#tests/config/settings/parse.ts';
+import { setKey, removeKey, addScopeTable, removeUnknownKeys, buildEditedSettings } from '#cli/settings/toml/edit.ts';
 
 test('an edit writes the new ignore as a table and keeps the authored comment', async () => {
     await using sandbox = await testdir();

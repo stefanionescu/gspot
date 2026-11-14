@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { MATCHING_SCOPE_SETTINGS } from '#tests/config/configurations/javascript/blocks.ts';
+import { testdir, createFileTree } from 'testdirs';
+import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import type { EslintConfiguration } from '#tests/types/setup.ts';
+import { MATCHING_SCOPE_SETTINGS } from '#tests/config/configurations/javascript/blocks.ts';
 
 const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',

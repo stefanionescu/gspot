@@ -1,14 +1,15 @@
-import {
-    BASE_RULES,
-    ENVIRONMENT_RULES,
-    IMPORT_LAYOUT_RULES,
-    JAVASCRIPT_RULES,
-    NODE_RULES,
-    PACKAGE_JSON_RULES,
-} from '#cli/config/configurations/javascript/rules.ts';
+import { GSPOT_FOLDER } from '#cli/config/system.ts';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { LOCKFILES } from '#cli/config/parsers/projects.ts';
-import { GSPOT_FOLDER } from '#cli/config/system.ts';
+
+import {
+    BASE_RULES,
+    NODE_RULES,
+    JAVASCRIPT_RULES,
+    ENVIRONMENT_RULES,
+    PACKAGE_JSON_RULES,
+    IMPORT_LAYOUT_RULES,
+} from '#cli/config/configurations/javascript/rules.ts';
 
 // conflicting-configs check
 export const GSPOT_RULES = {

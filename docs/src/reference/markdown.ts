@@ -1,19 +1,18 @@
 import { posix } from 'node:path';
-
-import { findAndReplace } from 'mdast-util-find-and-replace';
 import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { ReferencePage } from '#docs/types/pages.ts';
 import { gfmTableToMarkdown } from 'mdast-util-gfm-table';
-import { type Options, toMarkdown } from 'mdast-util-to-markdown';
+import { findAndReplace } from 'mdast-util-find-and-replace';
+import { toMarkdown, type Options } from 'mdast-util-to-markdown';
 
 import {
-    LITERAL_CONSTRUCTS,
     OPTION_FLAG,
-    REFERENCE_FOLDERS,
     REFERENCE_PATH,
     SECTION_HEADING,
+    REFERENCE_FOLDERS,
+    LITERAL_CONSTRUCTS,
     TABLE_HEADING_LEVEL,
 } from '#docs/config/reference.ts';
-import type { ReferencePage } from '#docs/types/pages.ts';
 
 const MARKDOWN_OPTIONS: Options = { bullet: '-', fences: true, extensions: [gfmTableToMarkdown()] };
 

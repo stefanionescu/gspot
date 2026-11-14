@@ -1,15 +1,14 @@
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
+import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
-import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/configurations/javascript/overrides.ts';
-import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { getManifestTarget } from '#tests/setup/cli/generated-files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { ESCAPED_SCOPE_CONFIGURATIONS } from '#tests/config/configurations/javascript/overrides.ts';
 
 async function parseScopeShape(scopePath: string): Promise<string> {
     const child = `${scopePath}/child`;

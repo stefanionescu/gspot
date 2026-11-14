@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { runCancelableCommand } from '#cli/system/processes/signals.ts';
 
 test('an aborted command returns its cancellation status and removes its signal listeners', async () => {

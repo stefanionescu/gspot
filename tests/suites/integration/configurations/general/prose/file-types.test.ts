@@ -1,14 +1,12 @@
+import { test, expect } from 'bun:test';
+import { join, dirname } from 'node:path';
 import { writeFile } from 'node:fs/promises';
-import { dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
-import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { spawnRootCheck } from '#tests/setup/cli/commands.ts';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { PROSE_SANDBOX } from '#tests/config/integration/prose.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
 
 const PROSE_COMMENT_CASES = [

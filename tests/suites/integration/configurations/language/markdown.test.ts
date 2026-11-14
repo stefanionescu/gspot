@@ -1,19 +1,17 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import { GUIDE } from '#tests/config/integration/general.ts';
-import { LICENSE, README } from '#tests/config/setup/configurations.ts';
-import { listFindingRows, parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
+import { compareText } from '#cli/system/text/order.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
+import { GUIDE } from '#tests/config/integration/general.ts';
+import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { README, LICENSE } from '#tests/config/setup/configurations.ts';
 import { writeSandboxChanges } from '#tests/setup/sandboxes/changes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
-import { runCommand } from '#tests/setup/system/processes.ts';
+import { spawnGspot, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const MARKDOWN_FILES = {
     'root.md': `# Root

@@ -1,19 +1,19 @@
-import { fromMarkdown } from 'mdast-util-from-markdown';
 import { visit } from 'unist-util-visit';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import { formatNameList } from '#cli/system/text/messages.ts';
+import { FIRST_READ } from '#cli/config/settings/validation.ts';
+import type { RuleFile, AgentsBlockContent } from '#cli/types/generation.ts';
 
 import {
     BLANK_LINE,
+    RULES_HEADING,
     COMMANDS_HEADING,
     FOLDER_RULE_LINE,
     MARKDOWN_HEADING,
     RULE_OPENING_PREFIX,
-    RULES_HEADING,
 } from '#cli/config/generation/builders.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { FIRST_READ } from '#cli/config/settings/validation.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { AgentsBlockContent, RuleFile } from '#cli/types/generation.ts';
 
 function listIndexLines(files: RuleFile[]): string[] {
     return files

@@ -1,13 +1,12 @@
 import type { z } from 'zod';
-
-import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
-import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/tables.ts';
-import type { namingExceptionSchema } from '#cli/schemas/manifests/fields.ts';
-import type { FindingPlace } from '#cli/types/configurations/general.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
 import type { SqlFile } from '#cli/types/parsers.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
 import type { TableSettings } from '#cli/types/settings.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import type { FindingPlace } from '#cli/types/configurations/general.ts';
+import type { CASE_NAMES, NAMED_CATEGORIES } from '#cli/config/manifests.ts';
+import type { namingExceptionSchema } from '#cli/schemas/manifests/fields.ts';
+import type { NAMING_LANGUAGE_CATEGORIES } from '#cli/config/settings/tables.ts';
 
 export type BannedWord = {
     word: string;

@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
-import { STANDALONE_BLOCK_FILES } from '#tests/config/configurations/javascript/base-selectors.ts';
-import { EXPRESS_SCOPE_SETTINGS, SUPABASE_FOLDER_SETTINGS } from '#tests/config/configurations/javascript/selectors.ts';
+import { testdir, createFileTree } from 'testdirs';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
+import { STANDALONE_BLOCK_FILES } from '#tests/config/configurations/javascript/base-selectors.ts';
+import { EXPRESS_SCOPE_SETTINGS, SUPABASE_FOLDER_SETTINGS } from '#tests/config/configurations/javascript/selectors.ts';
 
 test('a block that stands alone is reported at level all and not at basic', async () => {
     for (const [level, lines] of [

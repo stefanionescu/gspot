@@ -1,5 +1,5 @@
-import { awsUnblockedPublicBuckets } from '#eslint-plugin/rules/aws/aws-unblocked-public-buckets.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnblockedPublicBuckets } from '#eslint-plugin/rules/aws/aws-unblocked-public-buckets.ts';
 
 buildRuleTester().run('aws-unblocked-public-buckets', awsUnblockedPublicBuckets, {
     valid: [

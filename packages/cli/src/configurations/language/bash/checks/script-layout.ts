@@ -1,28 +1,29 @@
+import type { Session } from '#cli/types/tools.ts';
+import type { NumberedLine } from '#cli/types/parsers.ts';
+import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { formatNameList } from '#cli/system/text/messages.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
+import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
+import type { ScriptFile, LayoutFinding } from '#cli/types/configurations/language.ts';
+import { SCRIPT_LAYOUT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
+
 import {
+    MAIN_CALL,
+    STRICT_MODE,
     BASH_SHEBANGS,
-    EXECUTABLE_BIT_MESSAGE,
-    LIBRARY_COMMAND_FINDINGS,
+    MAIN_FUNCTION,
+    OPTION_COMMANDS,
+    SCRIPT_LAYOUT_RULES,
     LIBRARY_DECLARATIONS,
     LIBRARY_FLOW_MESSAGE,
     LIBRARY_MAIN_MESSAGE,
-    MAIN_CALL,
-    MAIN_FUNCTION,
     MAIN_FUNCTION_MESSAGE,
-    OPTION_COMMANDS,
-    SCRIPT_LAYOUT_RULES,
-    STRICT_MODE,
+    EXECUTABLE_BIT_MESSAGE,
+    LIBRARY_COMMAND_FINDINGS,
 } from '#cli/config/configurations/bash.ts';
-import { BASH_SOURCE_COMMANDS } from '#cli/config/configurations/shared.ts';
-import { readScripts } from '#cli/configurations/language/bash/checks/scripts.ts';
-import { SCRIPT_LAYOUT_EXPLANATIONS } from '#cli/configurations/language/bash/explanations.ts';
-import { listCodeLines } from '#cli/parsers/code/bash/script.ts';
-import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { formatNameList } from '#cli/system/text/messages.ts';
-import type { LayoutFinding, ScriptFile } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { NumberedLine } from '#cli/types/parsers.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function validateStrictMode(codeLines: NumberedLine[]): LayoutFinding[] {
     const first = codeLines.findIndex((line) => OPTION_COMMANDS.every((command) => !line.text.startsWith(command)));

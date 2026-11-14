@@ -1,17 +1,17 @@
-import { BRACKET_HELP, GSPOT_RULES, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/gspot.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
-import { readSettingsText } from '#cli/settings/toml/file.ts';
-import { findSettingLine } from '#cli/settings/toml/text.ts';
-import { joinScopeSelector, mapSettingPaths } from '#cli/settings/values/paths.ts';
-import { listSettingsTables } from '#cli/settings/values/written.ts';
-import { includeParentFolders } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
+import { includeParentFolders } from '#cli/system/paths.ts';
+import { findSettingLine } from '#cli/settings/toml/text.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { readSettingsText } from '#cli/settings/toml/file.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { listSettingsTables } from '#cli/settings/values/written.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import type { PathVisitor, SettingLocation } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
+import { mapSettingPaths, joinScopeSelector } from '#cli/settings/values/paths.ts';
+import { GSPOT_RULES, BRACKET_HELP, NEGATED_PATTERN, UNESCAPED_BRACKET } from '#cli/config/configurations/gspot.ts';
 
 /**
 Name the scope-relative form of a pattern that starts at the repository root. The pattern qualifies only when it

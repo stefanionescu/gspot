@@ -1,4 +1,4 @@
-import { GIT_METADATA_NAME, GSPOT_FOLDER, NODE_MODULES } from '#cli/config/system.ts';
+import { GSPOT_FOLDER, NODE_MODULES, GIT_METADATA_NAME } from '#cli/config/system.ts';
 
 // compose check
 export const COMPOSE_CHECK = 'docker/compose';

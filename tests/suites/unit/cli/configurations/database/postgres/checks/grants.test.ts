@@ -1,8 +1,7 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { matchFields } from '#tests/setup/matchers.ts';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('grants reports GRANT ALL in both direct and default privileges', async () => {

@@ -1,25 +1,25 @@
-import type { LimitFunction } from 'p-limit';
 import type { z } from 'zod';
-
+import type { LimitFunction } from 'p-limit';
+import type { Check } from '#cli/types/manifests.ts';
+import type { PathBytes } from '#cli/types/system.ts';
 import type { CHECK_STATUSES } from '#cli/config/engine.ts';
+import type { Session, RuleExplanations } from '#cli/types/tools.ts';
+import type { CommandLine, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
+
+import type {
+    PlanOptions,
+    StageFilter,
+    PlannedCheck,
+    RunSelection,
+    ShippedPlannedCheck,
+} from '#cli/types/engine/plan.ts';
 import type {
     findingSchema,
     fixReportSchema,
     fixResultSchema,
-    reportedCheckSchema,
     runReportSchema,
+    reportedCheckSchema,
 } from '#cli/schemas/engine.ts';
-import type {
-    PlannedCheck,
-    PlanOptions,
-    RunSelection,
-    ShippedPlannedCheck,
-    StageFilter,
-} from '#cli/types/engine/plan.ts';
-import type { CommandLine, ConfigTargets } from '#cli/types/engine/tool-runs.ts';
-import type { Check } from '#cli/types/manifests.ts';
-import type { PathBytes } from '#cli/types/system.ts';
-import type { RuleExplanations, Session } from '#cli/types/tools.ts';
 
 export type Finding = z.infer<typeof findingSchema>;
 

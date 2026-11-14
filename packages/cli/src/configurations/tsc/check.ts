@@ -1,22 +1,21 @@
-import { dirname, join, relative } from 'node:path';
-
-import { MISSING_MODULE_RULE, QUOTED_MODULE, TYPESCRIPT_TAG } from '#cli/config/configurations/shared.ts';
-import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { join, dirname, relative } from 'node:path';
+import { createRunCache } from '#cli/system/cache.ts';
+import { convertToPosixPath } from '#cli/system/paths.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
 import { runTsc } from '#cli/configurations/tsc/compiler.ts';
-import { listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/references.ts';
-import { createCheckCopy } from '#cli/engine/copies/files.ts';
 import { listCheckedFiles } from '#cli/engine/plan/files.ts';
 import { restoreCommandPaths } from '#cli/engine/results.ts';
+import { createCheckCopy } from '#cli/engine/copies/files.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
 import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { createRunCache } from '#cli/system/cache.ts';
-import { createTemporaryFolder } from '#cli/system/files/temporary.ts';
-import { convertToPosixPath } from '#cli/system/paths.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckResult, CheckSession } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { listCompilerFiles, writeReferenceProjects } from '#cli/configurations/tsc/references.ts';
+import { QUOTED_MODULE, TYPESCRIPT_TAG, MISSING_MODULE_RULE } from '#cli/config/configurations/shared.ts';
 
 function addUnbuiltPackageNote(session: CheckSession, result: CheckResult): CheckResult {
     const missing = result.findings.flatMap(({ rule, message }) =>

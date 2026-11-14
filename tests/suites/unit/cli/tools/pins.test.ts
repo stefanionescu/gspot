@@ -1,24 +1,22 @@
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { openSession } from '#cli/engine/session.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
+import { test, expect } from 'bun:test';
 import { getTool } from '#cli/manifests/tools.ts';
-import { packageJsonSchema } from '#cli/schemas/parsers.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { findMissingBuild, findPackagePin, listNpmProjectPins, listPackagePins } from '#cli/tools/pins.ts';
-import { buildToolProjects } from '#cli/tools/projects.ts';
 import type { Session } from '#cli/types/tools.ts';
-import { TOOL_PROJECT_PACKAGES, TYPESCRIPT_PIN_CASES } from '#tests/config/tools.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { buildProgramPin } from '#tests/setup/cli/tools.ts';
+import { openSession } from '#cli/engine/session.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { buildToolProjects } from '#cli/tools/projects.ts';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { packageJsonSchema } from '#cli/schemas/parsers.ts';
+import { buildProgramPin } from '#tests/setup/cli/tools.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { TYPESCRIPT_PIN_CASES, TOOL_PROJECT_PACKAGES } from '#tests/config/tools.ts';
+import { findPackagePin, listPackagePins, findMissingBuild, listNpmProjectPins } from '#cli/tools/pins.ts';
 
 function readToolDependencies(session: Session): Record<string, string> | undefined {
     const project = buildToolProjects(session).find(({ path }) => path === GSPOT_PATHS.npmProject)!;

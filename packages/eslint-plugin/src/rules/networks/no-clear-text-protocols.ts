@@ -1,29 +1,29 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import type { ClearTextReport, ClearTextListener } from '../../types/security.ts';
+import { getCdkName, listCdkIssues, listCdkTableIssues } from '../../libraries/aws.ts';
+import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    ADDRESS_LITERAL_SELECTOR,
-    AUTHORITY_END,
-    CLEAR_TEXT_CALL_CHECKS,
-    CLEAR_TEXT_CONSTRUCT_CHECKS,
-    CLEAR_TEXT_LISTENERS,
-    CLEAR_TEXT_MESSAGES,
-    EXEMPT_HOSTS,
     FTP_MODULE,
-    MAIL_SECURE_OPTIONS,
+    EXEMPT_HOSTS,
+    AUTHORITY_END,
+    TELNET_IMPORT,
     MAIL_TRANSPORT,
+    TELNET_REQUIRE,
     NAMESPACE_HOSTS,
     NAMESPACE_PATHS,
-    PROTOCOL_SEPARATOR,
     SECURE_MAIL_PORT,
+    PROTOCOL_SEPARATOR,
+    CLEAR_TEXT_MESSAGES,
+    MAIL_SECURE_OPTIONS,
+    CLEAR_TEXT_LISTENERS,
+    CLEAR_TEXT_CALL_CHECKS,
+    ADDRESS_LITERAL_SELECTOR,
+    CLEAR_TEXT_CONSTRUCT_CHECKS,
     SECURE_PROTOCOL_ALTERNATIVES,
-    TELNET_IMPORT,
-    TELNET_REQUIRE,
 } from '../../config/networks.ts';
-import { getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { getCdkName, listCdkIssues, listCdkTableIssues } from '../../libraries/aws.ts';
-import { createRule } from '../../rule.ts';
-import type { ClearTextListener, ClearTextReport } from '../../types/security.ts';
 
 function getHost(url: string): { host: string; path: string | undefined } {
     if (URL.canParse(url)) {

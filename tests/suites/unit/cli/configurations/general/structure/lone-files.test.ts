@@ -1,15 +1,14 @@
-import { expect, test } from 'bun:test';
-
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
+import { commitAll } from '#tests/setup/system/git.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
-import { ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
-import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll } from '#tests/setup/system/git.ts';
+import { ROUTE_FILE_CASES } from '#tests/config/configurations/structure/files.ts';
+import { LINGUIST_GENERATED_PATTERN } from '#tests/config/configurations/general.ts';
 
 test('lone-files and shared-prefixes check build, dist and coverage folders and skip folders marked linguist-generated', async () => {
     const authored = Object.fromEntries(

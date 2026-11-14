@@ -1,12 +1,10 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
-import { BUN_PIN_SETTINGS } from '#tests/config/configurations/dependencies.ts';
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { runSandboxCheck } from '#tests/setup/cli/checks.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BUN_PIN_SETTINGS } from '#tests/config/configurations/dependencies.ts';
 
 test('package-manager-pin reports a packageManager that differs from the bun pin of mise.toml, and passes once they match', async () => {
     const packageJson = JSON.stringify({ name: 'shop', private: true, packageManager: 'bun@0.0.0-test.1' });

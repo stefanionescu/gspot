@@ -1,5 +1,5 @@
-import { testHooksFirst } from '#eslint-plugin/rules/testing/test-hooks-first.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { testHooksFirst } from '#eslint-plugin/rules/testing/test-hooks-first.ts';
 
 buildRuleTester().run('test-hooks-first', testHooksFirst, {
     valid: [

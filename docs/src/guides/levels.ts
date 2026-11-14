@@ -1,5 +1,4 @@
 import { CLI_REFERENCE } from '@gspothq/cli/reference';
-
 import { LEVEL_ADVICE } from '#docs/config/reference.ts';
 
 export const LEVEL_ROWS: ReadonlyArray<{ level: string; description: string; tools: string }> = [

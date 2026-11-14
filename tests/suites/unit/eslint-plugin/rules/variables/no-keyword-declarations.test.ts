@@ -1,5 +1,5 @@
-import { noKeywordDeclarations } from '#eslint-plugin/rules/variables/no-keyword-declarations.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noKeywordDeclarations } from '#eslint-plugin/rules/variables/no-keyword-declarations.ts';
 
 buildRuleTester().run('no-keyword-declarations', noKeywordDeclarations, {
     valid: ['const packageName = "example";'],

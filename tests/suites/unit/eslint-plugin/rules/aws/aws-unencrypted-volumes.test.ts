@@ -1,5 +1,5 @@
-import { awsUnencryptedVolumes } from '#eslint-plugin/rules/aws/aws-unencrypted-volumes.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { awsUnencryptedVolumes } from '#eslint-plugin/rules/aws/aws-unencrypted-volumes.ts';
 
 buildRuleTester().run('aws-unencrypted-volumes', awsUnencryptedVolumes, {
     valid: [

@@ -1,22 +1,22 @@
-import semver from 'semver';
 import { z } from 'zod';
+import semver from 'semver';
+import { readConfigurations } from '#cli/manifests/read.ts';
+import { quoteArgument } from '#cli/system/text/quoting.ts';
+import { isTable, getRequired } from '#cli/system/tables.ts';
+import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
+import { allowReasonedValue, relativePathSchema, nonemptyStringsSchema } from '#cli/schemas/settings/fields.ts';
 
 import {
-    COMMITLINT_ENUM_SETTINGS,
-    ESLINT_PLUGIN_MODULE,
-    ESLINT_PLUGIN_NAME,
-    ESLINT_SEVERITIES,
-    MATCHING_PROPERTY_NAME,
-    NPM_PACKAGE_NAME,
-    PLUGIN_SOURCE_REFUSAL,
     RULE_CONDITIONS,
+    NPM_PACKAGE_NAME,
+    ESLINT_SEVERITIES,
+    ESLINT_PLUGIN_NAME,
     VENDOR_PREFIX_RULE,
+    ESLINT_PLUGIN_MODULE,
+    PLUGIN_SOURCE_REFUSAL,
+    MATCHING_PROPERTY_NAME,
+    COMMITLINT_ENUM_SETTINGS,
 } from '#cli/config/settings/tables.ts';
-import { readConfigurations } from '#cli/manifests/read.ts';
-import { nonemptyStringSchema } from '#cli/schemas/manifests/fields.ts';
-import { allowReasonedValue, nonemptyStringsSchema, relativePathSchema } from '#cli/schemas/settings/fields.ts';
-import { getRequired, isTable } from '#cli/system/tables.ts';
-import { quoteArgument } from '#cli/system/text/quoting.ts';
 
 const commitlintValuesSchema = z.record(
     z.string().superRefine((name, context) => {

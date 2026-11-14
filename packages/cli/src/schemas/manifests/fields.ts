@@ -1,8 +1,7 @@
 import { z } from 'zod';
-
-import { CASE_NAMES, LEVELS, NAMED_CATEGORIES, VALID_UNICODE_MESSAGE } from '#cli/config/manifests.ts';
-import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
 import { OPERATING_SYSTEMS } from '#cli/config/system.ts';
+import { JAVASCRIPT_RUNTIMES } from '#cli/config/parsers/projects.ts';
+import { LEVELS, CASE_NAMES, NAMED_CATEGORIES, VALID_UNICODE_MESSAGE } from '#cli/config/manifests.ts';
 
 export const nonemptyStringSchema = z.string().min(1);
 

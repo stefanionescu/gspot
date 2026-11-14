@@ -1,23 +1,21 @@
 import { join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
+import { test, expect } from 'bun:test';
 import { createFileTree } from 'testdirs';
-
-import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
-import { planChecks } from '#cli/engine/plan/checks.ts';
-import { buildCheckSession } from '#cli/engine/run/checks.ts';
-import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { planChecks } from '#cli/engine/plan/checks.ts';
 import { fakeNpmTool } from '#tests/setup/cli/tools.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildCheckSession } from '#cli/engine/run/checks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { runCommandCheck } from '#cli/engine/run/tool-runs/check.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { buildProgramCommand, readCallRecords } from '#tests/setup/system/programs.ts';
+import { UV_PROJECT_ENVIRONMENT } from '#cli/config/tools/installers.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readCallRecords, buildProgramCommand } from '#tests/setup/system/programs.ts';
 
 const PYVENV_HOME = 'home = /usr/bin\n';
 

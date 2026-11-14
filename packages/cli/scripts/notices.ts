@@ -1,7 +1,7 @@
 // Writes the license notices of the npm packages that the CLI bundle inlines, because their terms travel with each copy.
 // The build of the CLI runs it with the bundle's metafile and the file to write.
-import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 type Manifest = {
     name: string;

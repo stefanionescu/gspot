@@ -1,11 +1,10 @@
-import { expect, spyOn, test } from 'bun:test';
-
-import * as installers from '#cli/tools/installers/install.ts';
-import { LOCAL_PLUGIN_TABLES } from '#tests/config/setup/configurations.ts';
-import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
+import { test, spyOn, expect } from 'bun:test';
 import { runGspot } from '#tests/setup/cli/commands.ts';
+import * as installers from '#cli/tools/installers/install.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { EMPTY_TOOL_INSTALL } from '#tests/config/setup/sandboxes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { LOCAL_PLUGIN_TABLES } from '#tests/config/setup/configurations.ts';
 
 test('install exits 2 and prints one line for a plugin that takes the gspot rule prefix', async () => {
     using _install = spyOn(installers, 'installTools').mockResolvedValue(EMPTY_TOOL_INSTALL);

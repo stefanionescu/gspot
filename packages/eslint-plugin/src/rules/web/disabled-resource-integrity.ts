@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTypes } from '../../language/checker.ts';
+import type { ScriptSettings, IntegrityMessage } from '../../types/security.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    ALIASED_PATH,
-    CREATE_SCRIPT_SELECTOR,
-    REMOTE_PREFIXES,
     SCRIPT_TYPE,
+    ALIASED_PATH,
     VERSIONED_PATH,
+    REMOTE_PREFIXES,
+    CREATE_SCRIPT_SELECTOR,
 } from '../../config/web.ts';
-import { getTypes } from '../../language/checker.ts';
-import { createRule } from '../../rule.ts';
-import type { IntegrityMessage, ScriptSettings } from '../../types/security.ts';
 
 function isVersionedRemoteUrl(value: TSESTree.Node): boolean {
     const url = value.type === AST_NODE_TYPES.Literal && typeof value.value === 'string' ? value.value : '';

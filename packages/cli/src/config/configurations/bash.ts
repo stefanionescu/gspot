@@ -1,5 +1,5 @@
-import type { BashCommandForm } from '#cli/types/configurations/language.ts';
 import type { BashForm } from '#cli/types/parsers.ts';
+import type { BashCommandForm } from '#cli/types/configurations/language.ts';
 
 // function-size check
 export const COUNT_LIMITS = [

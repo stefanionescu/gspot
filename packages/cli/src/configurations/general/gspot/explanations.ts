@@ -1,10 +1,11 @@
+import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
+
 import {
-    GENERATED_FILE_FINDINGS,
     GSPOT_RULES,
     WEAKENING_FIXES,
     WEAKENING_RULES,
+    GENERATED_FILE_FINDINGS,
 } from '#cli/config/configurations/gspot.ts';
-import type { RuleExplanation, RuleExplanations } from '#cli/types/tools.ts';
 
 export const WEAKENING_EXPLANATIONS = {
     [WEAKENING_RULES.configuration]: {

@@ -1,18 +1,17 @@
-import { expect, test } from 'bun:test';
 import semver from 'semver';
 import { testdir } from 'testdirs';
-
-import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
+import { test, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
-import { assertPackageManagerVersion, readToolPackageManager } from '#cli/tools/installers/npm/package-manager.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildSandboxToolInstall } from '#tests/setup/cli/tools.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { RELEASE_AGE_VERSIONS } from '#cli/config/tools/installers.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { readToolPackageManager, assertPackageManagerVersion } from '#cli/tools/installers/npm/package-manager.ts';
 
 const PNPM_MINIMUM = RELEASE_AGE_VERSIONS.pnpm;
 

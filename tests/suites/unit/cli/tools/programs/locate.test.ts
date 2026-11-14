@@ -1,13 +1,11 @@
-import { rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { listExecutablePaths } from '#cli/tools/programs/locate.ts';
-import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
+import { test, expect } from 'bun:test';
+import { rm, writeFile } from 'node:fs/promises';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { listExecutablePaths } from '#cli/tools/programs/locate.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { fakeCommands, fakeExecutableLookup } from '#tests/setup/system/fakes.ts';
 
 test('project pytest is found in its virtual environment, and the global executable only without it', async () => {
     const executable = isWindows ? '.venv/Scripts/pytest.exe' : '.venv/bin/pytest';

@@ -1,23 +1,22 @@
-import { isDeepStrictEqual } from 'node:util';
-
 import { z } from 'zod';
-
+import { isDeepStrictEqual } from 'node:util';
 import { DOCS_PATHS } from '#cli/config/manifests.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import {
-    HIDDEN_FACT_KEYS,
-    JSON_SCHEMA_DIALECT,
-    SCHEMA_DESCRIPTION,
-    SETTING_NAME_PLACEHOLDER,
-} from '#cli/config/settings/file.ts';
 import { listCheckIds } from '#cli/manifests/checks.ts';
+import { compareText } from '#cli/system/text/order.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import { scopeSchema, settingsSchema } from '#cli/schemas/settings/file.ts';
 import { ROOT_SETTINGS, SETTINGS_BY_CONFIGURATION } from '#cli/settings/available.ts';
 import { extractKeyName, findSettingSchema, unwrapSchemaPipes } from '#cli/settings/lookup.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { AcceptedSettingValues, SettingReference, SettingVariant } from '#cli/types/settings.ts';
+import type { SettingVariant, SettingReference, AcceptedSettingValues } from '#cli/types/settings.ts';
+
+import {
+    HIDDEN_FACT_KEYS,
+    SCHEMA_DESCRIPTION,
+    JSON_SCHEMA_DIALECT,
+    SETTING_NAME_PLACEHOLDER,
+} from '#cli/config/settings/file.ts';
 
 function buildAcceptedAlternatives(schema: z.ZodUnion): AcceptedSettingValues {
     const alternatives = schema.options.map((option) => buildAcceptedValues(option as z.ZodType));

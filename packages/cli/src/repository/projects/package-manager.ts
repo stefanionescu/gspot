@@ -1,30 +1,29 @@
-import { existsSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-
 import semver from 'semver';
-
-import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
-import {
-    FROZEN_INSTALLS,
-    PACKAGE_MANAGER_HASH_SUFFIX,
-    PACKAGE_MANAGERS,
-    YARN_BERRY_INSTALL,
-    YARN_BERRY_MAJOR,
-} from '#cli/config/repository/projects.ts';
+import { existsSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { GspotError } from '#cli/system/errors.ts';
 import { NPM_PROGRAM } from '#cli/config/system.ts';
-import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import type { PackageJson } from '#cli/types/parsers.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { packageManagerPinSchema } from '#cli/schemas/repository.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { PackageJson } from '#cli/types/parsers.ts';
+import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
+import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
+
+import {
+    FROZEN_INSTALLS,
+    PACKAGE_MANAGERS,
+    YARN_BERRY_MAJOR,
+    YARN_BERRY_INSTALL,
+    PACKAGE_MANAGER_HASH_SUFFIX,
+} from '#cli/config/repository/projects.ts';
 import type {
-    PackageManagerCommand,
-    PackageManagerField,
     PackageManagerPin,
-    ToolPackageManagerName,
+    PackageManagerField,
+    PackageManagerCommand,
     WrittenPackageManager,
+    ToolPackageManagerName,
 } from '#cli/types/repository.ts';
 
 function buildPackageManagerField({ name, version, field, written }: WrittenPackageManager): PackageManagerField {

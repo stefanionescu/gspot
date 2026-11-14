@@ -1,5 +1,5 @@
-import { noInMisuse } from '#eslint-plugin/rules/collections/no-in-misuse.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noInMisuse } from '#eslint-plugin/rules/collections/no-in-misuse.ts';
 
 buildTypedRuleTester().run('no-in-misuse', noInMisuse, {
     valid: [

@@ -1,22 +1,23 @@
-import {
-    BINARY_ELIGIBLE_MESSAGE,
-    GENERATED_ELIGIBLE_MESSAGE,
-    IGNORED_FILE_MESSAGE,
-    MARK_GENERATED_MESSAGE,
-    MISSING_SETTINGS_MESSAGE,
-    UNCHECKED_REASON,
-    VENDORED_ELIGIBLE_MESSAGE,
-} from '#cli/config/commands/lookup.ts';
-import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
-import { buildCheckState, planChecks } from '#cli/engine/plan/checks.ts';
-import { listCheckedFiles } from '#cli/engine/plan/files.ts';
-import { formatScope, selectScope } from '#cli/repository/scopes.ts';
 import { GspotError } from '#cli/system/errors.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { buildArgumentPath } from '#cli/system/paths.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
-import type { Explanation, PathExplanation } from '#cli/types/commands.ts';
 import type { TrackedFile } from '#cli/types/repository.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { listCheckedFiles } from '#cli/engine/plan/files.ts';
+import { EVERY_CHECK } from '#cli/config/configurations/gspot.ts';
+import { formatScope, selectScope } from '#cli/repository/scopes.ts';
+import { planChecks, buildCheckState } from '#cli/engine/plan/checks.ts';
+import type { Explanation, PathExplanation } from '#cli/types/commands.ts';
+
+import {
+    UNCHECKED_REASON,
+    IGNORED_FILE_MESSAGE,
+    MARK_GENERATED_MESSAGE,
+    BINARY_ELIGIBLE_MESSAGE,
+    MISSING_SETTINGS_MESSAGE,
+    VENDORED_ELIGIBLE_MESSAGE,
+    GENERATED_ELIGIBLE_MESSAGE,
+} from '#cli/config/commands/lookup.ts';
 
 function formatUncheckedKind(file: TrackedFile): string | null {
     if (file.kind === 'binary') return BINARY_ELIGIBLE_MESSAGE;

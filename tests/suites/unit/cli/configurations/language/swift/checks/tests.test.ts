@@ -1,29 +1,28 @@
-import { existsSync } from 'node:fs';
-import { mkdir, readFile, rm, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir, type TestdirResult } from 'testdirs';
-
-import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
-import { runChecks } from '#cli/engine/run/checks.ts';
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import { openSession } from '#cli/engine/session.ts';
+import { runChecks } from '#cli/engine/run/checks.ts';
 import * as environment from '#cli/system/environment.ts';
 import type { RunResult } from '#cli/types/engine/run.ts';
+import { buildRunOptions } from '#tests/setup/cli/run.ts';
+import { fakeCommands } from '#tests/setup/system/fakes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { testdir, createFileTree, type TestdirResult } from 'testdirs';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { rm, mkdir, symlink, readFile, writeFile } from 'node:fs/promises';
+import { planSwiftBuild } from '#cli/configurations/language/swift/checks/cache.ts';
+import { XCTEST_SOURCE, SWIFT_PACKAGE_HEADER } from '#tests/config/setup/languages.ts';
+import { runSandboxCheck, planSandboxCheck, prepareSwiftCheck, redirectCacheFolder } from '#tests/setup/cli/checks.ts';
+
 import {
+    XCTEST_TABLES,
     COVERAGE_LIMIT_CASES,
     SWIFT_PACKAGE_COVERAGE_FILES,
     SWIFT_PACKAGE_COVERAGE_TARGETS,
-    XCTEST_TABLES,
 } from '#tests/config/configurations/swift.ts';
-import { SWIFT_PACKAGE_HEADER, XCTEST_SOURCE } from '#tests/config/setup/languages.ts';
-import { planSandboxCheck, prepareSwiftCheck, redirectCacheFolder, runSandboxCheck } from '#tests/setup/cli/checks.ts';
-import { buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { fakeCommands } from '#tests/setup/system/fakes.ts';
-import { buildProcessResult } from '#tests/setup/system/processes.ts';
-import { writeProgramCommand } from '#tests/setup/system/programs.ts';
 
 async function runXcodeCoverage(
     sandbox: TestdirResult,

@@ -1,34 +1,34 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import type { MemberCall, FileContext } from '../types/plugin.ts';
+import { isModuleUsed, readPackageFacts } from '../language/packages.ts';
+import { findFunction, findEnclosingFunction } from '../language/functions.ts';
+import { getRequiredModule, listImportedModules } from '../language/modules.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
+import type {
+    TestCall,
+    TableCall,
+    TestCallee,
+    TestOrigin,
+    CalleeChain,
+    FrameworkImport,
+    FrameworkDependency,
+} from '../types/testing.ts';
 import {
     CALL_STEP,
-    MARKED_TEST_MODIFIERS,
-    PLAYWRIGHT_LOCATOR,
-    PLAYWRIGHT_SUITE_MODES,
-    RUNNING_TEST_MODIFIERS,
-    TABLE_DEPENDENCIES,
+    TEST_KINDS,
+    TEST_FOLDERS,
     TABLE_MODULES,
     TABLE_ORIGINS,
     TABLE_TEST_NAMES,
-    TEST_FILE_EXTENSIONS,
     TEST_FILE_MARKERS,
-    TEST_FOLDERS,
+    PLAYWRIGHT_LOCATOR,
+    TABLE_DEPENDENCIES,
+    TEST_FILE_EXTENSIONS,
+    MARKED_TEST_MODIFIERS,
+    PLAYWRIGHT_SUITE_MODES,
+    RUNNING_TEST_MODIFIERS,
     TEST_FRAMEWORK_MODULES,
-    TEST_KINDS,
 } from '../config/testing.ts';
-import { findEnclosingFunction, findFunction } from '../language/functions.ts';
-import { getRequiredModule, listImportedModules } from '../language/modules.ts';
-import { isModuleUsed, readPackageFacts } from '../language/packages.ts';
-import type { FileContext, MemberCall } from '../types/plugin.ts';
-import type {
-    CalleeChain,
-    FrameworkDependency,
-    FrameworkImport,
-    TableCall,
-    TestCall,
-    TestCallee,
-    TestOrigin,
-} from '../types/testing.ts';
 
 function getImportedOrigin(definition: TSESLint.Scope.Definition): TestOrigin | undefined {
     const { node, parent } = definition;

@@ -1,21 +1,21 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { listChildren } from '../../language/syntax.ts';
+import type { FunctionNode } from '../../types/plugin.ts';
+import type { TrivialFunctionsOptions } from '../../types/functions.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    EXECUTABLE_DECLARATIONS,
-    EXPORT_REFERENCE_PARENTS,
-    FUNCTION_SELECTOR,
-    INLINE_VALUE_PARENTS,
-    NON_EXECUTABLE_STATEMENTS,
     ONE_STATEMENT,
-    TRANSPARENT_EXPRESSIONS,
-    TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
-    TRIVIAL_FUNCTION_STATEMENTS,
+    FUNCTION_SELECTOR,
     TYPE_DECLARATIONS,
+    INLINE_VALUE_PARENTS,
+    EXECUTABLE_DECLARATIONS,
+    TRANSPARENT_EXPRESSIONS,
+    EXPORT_REFERENCE_PARENTS,
+    NON_EXECUTABLE_STATEMENTS,
+    TRIVIAL_FUNCTION_STATEMENTS,
+    TRIVIAL_FUNCTION_OPTIONS_SCHEMA,
 } from '../../config/functions.ts';
-import { listChildren } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
-import type { TrivialFunctionsOptions } from '../../types/functions.ts';
-import type { FunctionNode } from '../../types/plugin.ts';
 
 const isTransparentExpression = ASTUtils.isNodeOfTypes(TRANSPARENT_EXPRESSIONS.map((type) => AST_NODE_TYPES[type]));
 

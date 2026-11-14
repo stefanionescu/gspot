@@ -1,18 +1,16 @@
-import { readFile, writeFile } from 'node:fs/promises';
-import { delimiter, dirname, join } from 'node:path';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import cliPackage from '#cli-package' with { type: 'json' };
+import { test, expect } from 'bun:test';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { runBlockingCommand, runCommand } from '#tests/setup/system/processes.ts';
+import { stringify } from '@decimalturn/toml-patch';
+import { join, dirname, delimiter } from 'node:path';
+import { readFile, writeFile } from 'node:fs/promises';
+import cliPackage from '#cli-package' with { type: 'json' };
 import type { GithubWorkflow } from '#tests/types/setup.ts';
+import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { spawnGspot, runGspotStep } from '#tests/setup/cli/commands.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { runCommand, runBlockingCommand } from '#tests/setup/system/processes.ts';
 
 test.each([true, false])(
     'init, install, and check keep the staged index, the unstaged edits, and HEAD (has commits: %p)',

@@ -1,13 +1,13 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESTree } from '@typescript-eslint/utils';
-
-import {
-    DEFAULT_FUNCTION_NESTING,
-    FUNCTION_NESTING_OPTIONS_SCHEMA,
-    TEST_STRUCTURE_CALLS,
-} from '../../config/functions.ts';
-import { getCalleeChain } from '../../libraries/testing.ts';
 import { createRule } from '../../rule.ts';
 import type { FunctionNode } from '../../types/plugin.ts';
+import { getCalleeChain } from '../../libraries/testing.ts';
+import { ASTUtils, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+
+import {
+    TEST_STRUCTURE_CALLS,
+    DEFAULT_FUNCTION_NESTING,
+    FUNCTION_NESTING_OPTIONS_SCHEMA,
+} from '../../config/functions.ts';
 
 /**
 Check whether a function is an argument of a call whose callee starts with a test structure name. The name decides

@@ -1,5 +1,5 @@
-import { noSelfStateUpdate } from '#eslint-plugin/rules/react/no-self-state-update.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noSelfStateUpdate } from '#eslint-plugin/rules/react/no-self-state-update.ts';
 
 buildRuleTester().run('no-self-state-update', noSelfStateUpdate, {
     valid: [

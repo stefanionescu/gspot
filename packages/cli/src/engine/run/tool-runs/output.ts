@@ -1,30 +1,30 @@
 import { statSync } from 'node:fs';
-import { isAbsolute, join, relative } from 'node:path';
-import { stripVTControlCharacters } from 'node:util';
-
-import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
-import { OUTPUT_FORMATS, parseOutput } from '#cli/engine/outputs/formats.ts';
-import { hasOnlyOutsideLinks } from '#cli/engine/outputs/text.ts';
-import { measureSpan } from '#cli/engine/results.ts';
-import {
-    buildUnexplainedFailure,
-    formatCrash,
-    formatOutputTail,
-    isReportedCrash,
-} from '#cli/engine/run/tool-runs/failures.ts';
 import { CheckStop } from '#cli/system/errors.ts';
+import { measureSpan } from '#cli/engine/results.ts';
+import { stripVTControlCharacters } from 'node:util';
+import { join, relative, isAbsolute } from 'node:path';
+import type { SpawnResult } from '#cli/types/system.ts';
+import { FILE_PLACEHOLDER } from '#cli/config/engine.ts';
 import { convertToPosixPath } from '#cli/system/paths.ts';
+import type { Tool, Check } from '#cli/types/manifests.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckResult, Finding } from '#cli/types/engine/run.ts';
+import { hasOnlyOutsideLinks } from '#cli/engine/outputs/text.ts';
+import type { Finding, CheckResult } from '#cli/types/engine/run.ts';
+import { parseOutput, OUTPUT_FORMATS } from '#cli/engine/outputs/formats.ts';
+
+import {
+    formatCrash,
+    isReportedCrash,
+    formatOutputTail,
+    buildUnexplainedFailure,
+} from '#cli/engine/run/tool-runs/failures.ts';
 import type {
-    CommandLineOutput,
     CommandRun,
     OutputCheck,
     OutputPaths,
     ParsedFindings,
+    CommandLineOutput,
 } from '#cli/types/engine/tool-runs.ts';
-import type { Check, Tool } from '#cli/types/manifests.ts';
-import type { SpawnResult } from '#cli/types/system.ts';
 
 function setFindingFiles(parsed: Finding[], file: string | undefined): void {
     if (file === undefined) return;

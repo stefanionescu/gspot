@@ -1,23 +1,21 @@
 import { existsSync } from 'node:fs';
-import { chmod, mkdir, realpath, writeFile } from 'node:fs/promises';
-import { delimiter, dirname, join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { test, expect } from 'bun:test';
+import { testdir, createFileTree } from 'testdirs';
 import { openSession } from '#cli/engine/session.ts';
-import { buildHookFiles } from '#cli/generation/builders/hooks.ts';
-import { buildGeneratedFiles } from '#cli/generation/generate.ts';
-import { selectStartRunner } from '#cli/repository/projects/runner.ts';
-import { readEnvironmentVariable } from '#cli/system/environment.ts';
-import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/builders.ts';
-import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { join, dirname, delimiter } from 'node:path';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { buildGeneratedFiles } from '#cli/generation/generate.ts';
+import { HOOKS_SETTINGS } from '#tests/config/setup/sandboxes.ts';
+import { buildHookFiles } from '#cli/generation/builders/hooks.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { readEnvironmentVariable } from '#cli/system/environment.ts';
+import { chmod, mkdir, realpath, writeFile } from 'node:fs/promises';
+import { selectStartRunner } from '#cli/repository/projects/runner.ts';
+import { HOOK_CASES, START_COMMANDS } from '#tests/config/generation/builders.ts';
 import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { createGitSandbox, createLfsRepository } from '#tests/setup/sandboxes/repositories.ts';
 
 test('gspot writes check hooks without unused Git LFS hooks', async () => {
     await using sandbox = await createGitSandbox({

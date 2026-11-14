@@ -1,16 +1,14 @@
-import { readFile, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { LEVELS } from '#cli/config/manifests.ts';
 import { GSPOT_FOLDER } from '#cli/config/system.ts';
-import { APP_SCOPE_SETTINGS } from '#tests/config/setup/sandboxes.ts';
-import { parseCheckReport, spawnGspot } from '#tests/setup/cli/commands.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { matchFields } from '#tests/setup/matchers.ts';
+import { readFile, writeFile } from 'node:fs/promises';
 import { changeSandbox } from '#tests/setup/sandboxes/changes.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
+import { APP_SCOPE_SETTINGS } from '#tests/config/setup/sandboxes.ts';
 import { shareInstalledSandbox } from '#tests/setup/sandboxes/create.ts';
+import { spawnGspot, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 const KEPT_DECLARATION_FILES = [
     'app/ambient.d.ts',

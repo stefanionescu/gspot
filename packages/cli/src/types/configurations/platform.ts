@@ -1,7 +1,6 @@
 import type { z } from 'zod';
-
-import type { supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 import type { NumberedLine } from '#cli/types/parsers.ts';
+import type { supabaseProjectFileSchema } from '#cli/schemas/configurations.ts';
 
 export type HeaderBlock = { path: string; headers: Array<{ name: string; value: string }> };
 

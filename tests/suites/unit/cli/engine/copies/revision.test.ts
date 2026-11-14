@@ -1,22 +1,20 @@
-import { copyFile, mkdir, readdir, readFile, readlink, symlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-
+import { testdir, createFileTree } from 'testdirs';
+import { captureRejection } from '#tests/setup/matchers.ts';
+import { isWindows } from '#tests/setup/system/platform.ts';
 import { copyRevision } from '#cli/engine/copies/revision.ts';
 import { rootSettingSchemas } from '#cli/schemas/settings/file.ts';
-import { GIT_HOOK_REPORT, LOWERCASE_SELECT_SQL, SELECTED_SOURCE } from '#tests/config/engine/run.ts';
 import { CHANGED_CONTEXT } from '#tests/config/setup/sandboxes.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
-import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
-import { overrideEnvironment } from '#tests/setup/system/environment.ts';
 import { commitAll, runGitStep } from '#tests/setup/system/git.ts';
-import { isWindows } from '#tests/setup/system/platform.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { runBlockingCommand } from '#tests/setup/system/processes.ts';
 import { writeProgramCommand } from '#tests/setup/system/programs.ts';
+import { overrideEnvironment } from '#tests/setup/system/environment.ts';
+import { prepareNestedRepository } from '#tests/setup/sandboxes/repositories.ts';
+import { mkdir, readdir, symlink, copyFile, readFile, readlink, writeFile } from 'node:fs/promises';
+import { GIT_HOOK_REPORT, SELECTED_SOURCE, LOWERCASE_SELECT_SQL } from '#tests/config/engine/run.ts';
 
 test('a revision copy of a nested gspot.toml keeps the repository around it', async () => {
     await using sandbox = await testdir();

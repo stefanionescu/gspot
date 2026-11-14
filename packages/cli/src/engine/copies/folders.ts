@@ -1,15 +1,14 @@
-import { mkdtempSync, readdirSync, realpathSync, rmdirSync, rmSync } from 'node:fs';
-import { dirname, join } from 'node:path';
-
-import { COPY_FOLDER_NAME, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
-import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
-import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
-import { OWNER_WRITABLE_FILE, TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system.ts';
+import { join, dirname } from 'node:path';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { isProcessRunning } from '#cli/system/processes/stop.ts';
 import { printWarning } from '#cli/system/terminal.ts';
+import { COPIES_FOLDER } from '#cli/config/repository/git.ts';
+import { GITIGNORE_FILE } from '#cli/config/repository/files.ts';
+import { isProcessRunning } from '#cli/system/processes/stop.ts';
 import type { Files, TemporaryFolder } from '#cli/types/system.ts';
+import { COPY_FOLDER_NAME, COPY_IGNORE_TEXT } from '#cli/config/engine.ts';
+import { rmSync, rmdirSync, mkdtempSync, readdirSync, realpathSync } from 'node:fs';
+import { OWNER_WRITABLE_FILE, TEMPORARY_REMOVAL_OPTIONS } from '#cli/config/system.ts';
 
 const heldRoots = new Set<string>();
 

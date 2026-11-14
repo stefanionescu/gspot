@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
-
-import { findBlockBody, findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
-import type { GspotError } from '#cli/system/errors.ts';
-import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats.ts';
+import { test, expect } from 'bun:test';
 import { matchFields } from '#tests/setup/matchers.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import type { GspotError } from '#cli/system/errors.ts';
 import { runGitStep } from '#tests/setup/system/git.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { BLOCK_FORMATS, MALFORMED_BLOCKS } from '#tests/config/parsers/formats.ts';
+import { replaceBlock, findBlockBody, findBlockSpan } from '#cli/parsers/formats/managed-blocks.ts';
 
 test('a managed block is appended and replaced without changing your own text', () => {
     const first = replaceBlock('# Mine\n\ntext\n', 'block one', 'AGENTS.md');

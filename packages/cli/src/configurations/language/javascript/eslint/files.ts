@@ -1,13 +1,14 @@
-import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/projects.ts';
-import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
 import { listTaggedExtensions } from '#cli/repository/files/tags.ts';
 import { isInScope, joinScopeGlob } from '#cli/repository/scopes.ts';
-import { buildPathMatcher, escapeGlob, includeFolderContents } from '#cli/system/patterns.ts';
+import { listCodePatterns } from '#cli/configurations/language/javascript/sources.ts';
+import { escapeGlob, buildPathMatcher, includeFolderContents } from '#cli/system/patterns.ts';
+import { CODE_LANGUAGES, COMPONENT_CONFIGURATIONS } from '#cli/config/configurations/javascript/projects.ts';
+
 import type {
-    EslintBlockFields,
-    EslintFileGroups,
     EslintFiles,
     PathExpressions,
+    EslintFileGroups,
+    EslintBlockFields,
 } from '#cli/types/configurations/javascript.ts';
 
 /**

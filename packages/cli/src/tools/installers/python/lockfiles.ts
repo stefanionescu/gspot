@@ -1,17 +1,17 @@
 import { isDeepStrictEqual } from 'node:util';
-
 import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import {
-    PYTHON_DEFAULT_INDEX_ORIGIN,
-    PYTHON_PACKAGE_ORIGINS,
-    REQUIREMENT_PACKAGE_NAME,
-} from '#cli/config/tools/installers.ts';
+import { compareText } from '#cli/system/text/order.ts';
+import { uvLockfileSchema } from '#cli/schemas/tools.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
 import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { normalizePythonName } from '#cli/parsers/projects/dependencies.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { uvLockfileSchema } from '#cli/schemas/tools.ts';
-import { compareText } from '#cli/system/text/order.ts';
-import type { PythonIndexSettings, PythonToolProject, UvLockfile } from '#cli/types/tools.ts';
+import type { UvLockfile, PythonToolProject, PythonIndexSettings } from '#cli/types/tools.ts';
+
+import {
+    PYTHON_PACKAGE_ORIGINS,
+    REQUIREMENT_PACKAGE_NAME,
+    PYTHON_DEFAULT_INDEX_ORIGIN,
+} from '#cli/config/tools/installers.ts';
 
 function parseExactRequirements(lockedPackage: UvLockfile['package'][number]): string[] | undefined {
     const requirements = lockedPackage.metadata?.['requires-dist'] ?? [];

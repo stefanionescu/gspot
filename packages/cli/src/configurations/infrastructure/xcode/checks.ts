@@ -1,48 +1,47 @@
 import { posix } from 'node:path';
-
 import { camelCase } from 'scule';
-
-import {
-    ASSET_CONTENTS,
-    ASSET_KIND_SUFFIX,
-    ASSET_REFERENCE_ENDINGS,
-    DEFAULT_SOURCE_LANGUAGE,
-    EMPTY_SET_MESSAGE,
-    ENTITLEMENTS_SUFFIX,
-    IMAGE_SET,
-    INSECURE_TRANSPORT_MESSAGE,
-    INSECURE_TRANSPORT_SETTING,
-    LINT_SCRIPT,
-    NAMED_SETS,
-    PLIST_KEY,
-    PLIST_SUFFIX,
-    UNTARGETED_FILE_MESSAGE,
-    WORD_SEPARATOR,
-    XCASSETS_FOLDER,
-    XCODE_RULES,
-    XCSTRINGS_SUFFIX,
-} from '#cli/config/configurations/xcode.ts';
+import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
+import { readText } from '#cli/system/files/reads.ts';
+import { escapeRegExp } from '#cli/system/patterns.ts';
+import { extractParentFolder } from '#cli/system/paths.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { SWIFT_EXTENSION } from '#cli/config/parsers/code.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { parseCheckedFile } from '#cli/configurations/syntax.ts';
+import { listSourcePaths } from '#cli/repository/files/selection.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
+import { parseBuildTargets } from '#cli/parsers/projects/xcode/targets.ts';
 import { PACKAGE_SWIFT, PBXPROJ_SUFFIX } from '#cli/config/parsers/projects.ts';
+import { stringsFileSchema, assetContentsSchema } from '#cli/schemas/configurations.ts';
+import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
+
 import {
     ASSET_EXPLANATIONS,
-    BUILD_SETTING_EXPLANATIONS,
     XCSTRINGS_EXPLANATIONS,
+    BUILD_SETTING_EXPLANATIONS,
 } from '#cli/configurations/infrastructure/xcode/explanations.ts';
-import { parseCheckedFile } from '#cli/configurations/syntax.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { isInTargetFolder, parseProjectSources } from '#cli/parsers/projects/xcode/sources.ts';
-import { parseBuildTargets } from '#cli/parsers/projects/xcode/targets.ts';
-import { listSourcePaths } from '#cli/repository/files/selection.ts';
-import { assetContentsSchema, stringsFileSchema } from '#cli/schemas/configurations.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import { extractParentFolder } from '#cli/system/paths.ts';
-import { escapeRegExp } from '#cli/system/patterns.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import {
+    IMAGE_SET,
+    PLIST_KEY,
+    NAMED_SETS,
+    LINT_SCRIPT,
+    XCODE_RULES,
+    PLIST_SUFFIX,
+    ASSET_CONTENTS,
+    WORD_SEPARATOR,
+    XCASSETS_FOLDER,
+    XCSTRINGS_SUFFIX,
+    ASSET_KIND_SUFFIX,
+    EMPTY_SET_MESSAGE,
+    ENTITLEMENTS_SUFFIX,
+    ASSET_REFERENCE_ENDINGS,
+    DEFAULT_SOURCE_LANGUAGE,
+    UNTARGETED_FILE_MESSAGE,
+    INSECURE_TRANSPORT_MESSAGE,
+    INSECURE_TRANSPORT_SETTING,
+} from '#cli/config/configurations/xcode.ts';
 
 function extractAssetSetName(path: string): string {
     const folder = extractParentFolder(path);

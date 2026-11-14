@@ -1,24 +1,23 @@
 import { posix } from 'node:path';
-
-import { type Alias, CST, type Document, isAlias, isNode, isScalar, type Node, type Scalar, visit } from 'yaml';
+import { readText } from '#cli/system/files/reads.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
+import { YAML_EXPLANATIONS } from '#cli/configurations/language/yaml/explanations.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import type { YamlFinding, YamlAnchorToken } from '#cli/types/configurations/language.ts';
+import { CST, visit, isNode, isAlias, isScalar, type Node, type Alias, type Scalar, type Document } from 'yaml';
 
 import {
-    YAML_COMMIT_USE,
-    YAML_GENERATED_ANCHOR,
-    YAML_LEADING_ZERO,
-    YAML_MESSAGES,
-    YAML_REQUIRED_NAMES,
     YAML_RULES,
-    YAML_TRAILING_ZERO,
     YAML_TRUTHY,
+    YAML_MESSAGES,
+    YAML_COMMIT_USE,
+    YAML_LEADING_ZERO,
+    YAML_TRAILING_ZERO,
+    YAML_REQUIRED_NAMES,
     YAML_VERSION_COMMENT,
+    YAML_GENERATED_ANCHOR,
 } from '#cli/config/configurations/language.ts';
-import { YAML_EXPLANATIONS } from '#cli/configurations/language/yaml/explanations.ts';
-import { parseYamlPositions } from '#cli/parsers/formats/yaml.ts';
-import { readText } from '#cli/system/files/reads.ts';
-import type { YamlAnchorToken, YamlFinding } from '#cli/types/configurations/language.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 function listScalarFindings(node: Scalar, { isKey }: { isKey: boolean }): YamlFinding[] {
     if (node.type !== 'PLAIN' || node.tag !== undefined) return [];

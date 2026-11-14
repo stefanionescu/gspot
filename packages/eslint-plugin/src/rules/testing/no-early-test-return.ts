@@ -1,15 +1,15 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { getTestCall, selectFramework } from '../../libraries/testing.ts';
+import type { TestCall, EarlyReturnFramework } from '../../types/testing.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    EARLY_RETURN_DEPENDENCIES,
+    PLAYWRIGHT_MODULE,
     EARLY_RETURN_GUARD,
     EARLY_RETURN_IMPORTS,
     EARLY_RETURN_MODIFIERS,
-    PLAYWRIGHT_MODULE,
+    EARLY_RETURN_DEPENDENCIES,
 } from '../../config/testing.ts';
-import { getTestCall, selectFramework } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
-import type { EarlyReturnFramework, TestCall } from '../../types/testing.ts';
 
 function getRunningTest(
     node: TSESTree.CallExpression,

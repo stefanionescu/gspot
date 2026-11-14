@@ -1,11 +1,10 @@
-import { expect, test } from 'bun:test';
 import { testdir } from 'testdirs';
-
-import { streamProcess } from '#cli/system/processes/run.ts';
-import { CHILD_TIMEOUT_SECONDS } from '#tests/config/setup/programs.ts';
+import { test, expect } from 'bun:test';
 import { captureRejection } from '#tests/setup/matchers.ts';
+import { streamProcess } from '#cli/system/processes/run.ts';
 import { waitForExit } from '#tests/setup/system/processes.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { CHILD_TIMEOUT_SECONDS } from '#tests/config/setup/programs.ts';
 
 test('stream reading keeps raw bytes and the error output', async () => {
     await using sandbox = await testdir();

@@ -1,21 +1,21 @@
 import { join } from 'node:path';
+import { CheckStop } from '#cli/system/errors.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
+import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
+import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
+import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
+import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
+import type { ImageFinding } from '#cli/types/configurations/infrastructure.ts';
+import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
+import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
 
 import {
     DOCKER_RULES,
     TRIVY_CONFIG_FILE,
-    TRIVY_FINDINGS_EXIT_CODE,
     TRIVY_IMAGE_COMMAND,
+    TRIVY_FINDINGS_EXIT_CODE,
 } from '#cli/config/configurations/docker.ts';
-import { readComposeDocuments } from '#cli/configurations/infrastructure/docker/checks/compose.ts';
-import { getConfigPath } from '#cli/engine/run/tool-runs/configs.ts';
-import { formatOutputTail } from '#cli/engine/run/tool-runs/failures.ts';
-import { runCheckTool } from '#cli/engine/run/tool-runs/tool.ts';
-import { parseToolOutput } from '#cli/parsers/formats/tool-output.ts';
-import { trivyImageOutputSchema } from '#cli/schemas/configurations.ts';
-import { CheckStop } from '#cli/system/errors.ts';
-import type { ImageFinding } from '#cli/types/configurations/infrastructure.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
 
 async function scanImage(session: CheckSession, planned: PlannedCheck, image: string): Promise<ImageFinding[]> {
     const config = join(session.root, getConfigPath(session, planned, TRIVY_CONFIG_FILE));

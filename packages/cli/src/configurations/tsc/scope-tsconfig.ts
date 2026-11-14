@@ -1,27 +1,27 @@
+import type { Session } from '#cli/types/tools.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-
-import {
-    COMPILER_OPTIONS,
-    DEFAULT_LEVEL_OPTIONS,
-    NESTJS_COMPILER_OPTIONS,
-    TSCONFIG_COPY_FOLDER,
-    TYPESCRIPT_DEFAULTS,
-    TYPESCRIPT_TAG,
-    TYPESCRIPT_TSCONFIG_CHECK,
-} from '#cli/config/configurations/shared.ts';
-import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
-import { NESTJS_CONFIGURATION } from '#cli/config/settings/detected.ts';
-import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
-import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { join, dirname, relative } from 'node:path';
 import { listOwnFiles } from '#cli/repository/scopes.ts';
 import { listIgnoredRules } from '#cli/settings/tables.ts';
-import { requireTypescript } from '#cli/system/package/typescript.ts';
-import { convertToPosixPath, extractExtension } from '#cli/system/paths.ts';
-import type { Configuration } from '#cli/types/manifests.ts';
-import type { TypeScriptProject } from '#cli/types/parsers.ts';
 import type { Level, Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
+import type { Configuration } from '#cli/types/manifests.ts';
+import { DECLARATION_EXTENSIONS } from '#cli/config/system.ts';
+import type { TypeScriptProject } from '#cli/types/parsers.ts';
+import { TSCONFIG_FILE } from '#cli/config/parsers/projects.ts';
+import { requireTypescript } from '#cli/system/package/typescript.ts';
+import { NESTJS_CONFIGURATION } from '#cli/config/settings/detected.ts';
+import { readTsconfigProject } from '#cli/parsers/projects/tsconfig.ts';
+import { extractExtension, convertToPosixPath } from '#cli/system/paths.ts';
+
+import {
+    TYPESCRIPT_TAG,
+    COMPILER_OPTIONS,
+    TYPESCRIPT_DEFAULTS,
+    TSCONFIG_COPY_FOLDER,
+    DEFAULT_LEVEL_OPTIONS,
+    NESTJS_COMPILER_OPTIONS,
+    TYPESCRIPT_TSCONFIG_CHECK,
+} from '#cli/config/configurations/shared.ts';
 
 function buildTsconfig(session: Session, scope: Scope, file: string): Record<string, unknown> {
     const ts = requireTypescript();

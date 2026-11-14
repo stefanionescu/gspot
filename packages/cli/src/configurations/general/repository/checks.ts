@@ -1,22 +1,21 @@
 import { isUtf8 } from 'node:buffer';
-import { lstatSync, readlinkSync, realpathSync } from 'node:fs';
-import { dirname, isAbsolute, join, posix, relative, resolve } from 'node:path';
-
-import { ABSOLUTE_LINK_HELP, OUTWARD_LINK_HELP, REPOSITORY_RULES } from '#cli/config/configurations/general.ts';
-import { FILTER_ATTRIBUTE, LFS_FILTER, SYMLINK_MODE } from '#cli/config/repository/files.ts';
-import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
-import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
-import { getMaxFileBytes } from '#cli/engine/plan/files.ts';
-import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
-import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
 import { getTable } from '#cli/settings/tables.ts';
+import type { Session } from '#cli/types/tools.ts';
 import { hasErrorCode } from '#cli/system/errors.ts';
 import { readBytes } from '#cli/system/files/reads.ts';
-import { extractParentFolder, isInside } from '#cli/system/paths.ts';
+import { BYTES_PER_KILOBYTE } from '#cli/config/system.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
+import { getMaxFileBytes } from '#cli/engine/plan/files.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { lstatSync, readlinkSync, realpathSync } from 'node:fs';
+import { isInside, extractParentFolder } from '#cli/system/paths.ts';
+import { listConflictMarkerLines } from '#cli/repository/git/output.ts';
+import { selectScope, selectScopePath } from '#cli/repository/scopes.ts';
+import { join, posix, dirname, resolve, relative, isAbsolute } from 'node:path';
 import type { CheckCode, CheckFinding, CheckSession } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { LFS_FILTER, SYMLINK_MODE, FILTER_ATTRIBUTE } from '#cli/config/repository/files.ts';
+import { REPOSITORY_RULES, OUTWARD_LINK_HELP, ABSOLUTE_LINK_HELP } from '#cli/config/configurations/general.ts';
+import { ENCODING_EXPLANATIONS, LOCAL_FILE_EXPLANATIONS } from '#cli/configurations/general/repository/explanations.ts';
 
 function listLinkFindings(root: string, path: string): CheckFinding[] {
     const source = join(root, path);

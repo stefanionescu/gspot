@@ -1,24 +1,25 @@
 import { RUFF_CHECK } from '#cli/config/configurations/python.ts';
-import {
-    CARRYOVER_ROW_START,
-    EMPTY_CARRYOVER,
-    IGNORE_REASON_START,
-    RUFF_ALL_SELECTOR,
-    RUFF_ANY_PREFIX,
-    RUFF_CHECK_IDS,
-    RUFF_FORMAT_KEYS,
-    RUFF_STYLE_KEYS,
-} from '#cli/config/generation/setup.ts';
-import { RUFF_IMPORT_ORDER_SELECTOR, RUFF_SELECTOR } from '#cli/config/settings/tables.ts';
-import { convertIgnorePattern } from '#cli/generation/setup/carryover/ignore-files.ts';
 import { readRuffOptions } from '#cli/generation/setup/format/overrides.ts';
+import { convertIgnorePattern } from '#cli/generation/setup/carryover/ignore-files.ts';
+import { RUFF_SELECTOR, RUFF_IMPORT_ORDER_SELECTOR } from '#cli/config/settings/tables.ts';
+
 import type {
-    CarryoverInput,
-    CarryoverRow,
-    CarryoverSection,
-    RuffRuleInput,
     RuffRules,
+    CarryoverRow,
+    RuffRuleInput,
+    CarryoverInput,
+    CarryoverSection,
 } from '#cli/types/generation.ts';
+import {
+    RUFF_CHECK_IDS,
+    EMPTY_CARRYOVER,
+    RUFF_ANY_PREFIX,
+    RUFF_STYLE_KEYS,
+    RUFF_FORMAT_KEYS,
+    RUFF_ALL_SELECTOR,
+    CARRYOVER_ROW_START,
+    IGNORE_REASON_START,
+} from '#cli/config/generation/setup.ts';
 
 /**
 Compare the selectors of a Ruff config with the selectors that gspot runs. A selector counts as covered when a selector

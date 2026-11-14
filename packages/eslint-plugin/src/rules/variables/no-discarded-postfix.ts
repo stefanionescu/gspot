@@ -1,6 +1,5 @@
-import { AST_NODE_TYPES, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
 import { createRule } from '../../rule.ts';
+import { type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function hasDiscardedUpdate(node: TSESTree.UpdateExpression, source: TSESLint.SourceCode): boolean {
     const { argument, parent } = node;

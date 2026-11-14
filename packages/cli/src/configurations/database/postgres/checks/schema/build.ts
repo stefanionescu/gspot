@@ -1,35 +1,35 @@
-import type { Constraint, Node } from '@pgsql/types';
+import type { Node, Constraint } from '@pgsql/types';
+import type { SqlStatement } from '#cli/types/parsers.ts';
+import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import type { SqlStatementVisitors } from '#cli/types/configurations/shared.ts';
+import { qualifyName } from '#cli/configurations/database/postgres/checks/schema/names.ts';
+import { applyRename, renameTable } from '#cli/configurations/database/postgres/checks/schema/renames.ts';
 
 import {
-    CONSTRAINT_SUFFIXES,
-    DISABLED_OPTION_VALUES,
-    SCHEMA_NAME_INDEX,
-    SECURITY_INVOKER_OPTION,
-} from '#cli/config/configurations/postgres.ts';
-import {
-    applyAlterFunction,
-    applyCreateFunction,
-    dropFunctions,
-} from '#cli/configurations/database/postgres/checks/schema/functions.ts';
-import { qualifyName } from '#cli/configurations/database/postgres/checks/schema/names.ts';
-import {
+    dropPolicy,
     applyAlterPolicy,
     applyCreatePolicy,
-    dropPolicy,
 } from '#cli/configurations/database/postgres/checks/schema/policies.ts';
-import { applyRename, renameTable } from '#cli/configurations/database/postgres/checks/schema/renames.ts';
-import { findNodeFields, listNodeFields } from '#cli/parsers/code/sql.ts';
+import {
+    dropFunctions,
+    applyAlterFunction,
+    applyCreateFunction,
+} from '#cli/configurations/database/postgres/checks/schema/functions.ts';
+import {
+    SCHEMA_NAME_INDEX,
+    CONSTRAINT_SUFFIXES,
+    DISABLED_OPTION_VALUES,
+    SECURITY_INVOKER_OPTION,
+} from '#cli/config/configurations/postgres.ts';
 import type {
+    Schema,
     Location,
     Migration,
-    Schema,
-    SchemaAlterations,
     SchemaState,
     SourceStatement,
     StatementApplier,
+    SchemaAlterations,
 } from '#cli/types/configurations/database.ts';
-import type { SqlStatementVisitors } from '#cli/types/configurations/shared.ts';
-import type { SqlStatement } from '#cli/types/parsers.ts';
 
 function removeTable(state: SchemaState, table: string): void {
     state.tables.delete(table);

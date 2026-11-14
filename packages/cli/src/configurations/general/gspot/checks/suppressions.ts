@@ -1,25 +1,26 @@
+import type { Session } from '#cli/types/tools.ts';
+import type { Scope } from '#cli/types/settings.ts';
+import { findToolName } from '#cli/manifests/tools.ts';
+import type { SourceComment } from '#cli/types/parsers.ts';
+import { selectScopePath } from '#cli/repository/scopes.ts';
+import { getPosition } from '#cli/system/text/positions.ts';
+import type { TrackedFile } from '#cli/types/repository.ts';
+import type { PlannedCheck } from '#cli/types/engine/plan.ts';
+import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import { findText, readText } from '#cli/system/files/reads.ts';
+import { listCoveredFiles } from '#cli/repository/files/selection.ts';
+import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
+import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
 import { MESSAGE_REFERENCES } from '#cli/config/configurations/general.ts';
+import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
+import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
+
 import {
-    FORBIDDEN_SUPPRESSION_HELP,
     REASON_ABOVE,
     SETTINGS_REASON,
     SUPPRESSION_KIND_MESSAGES,
+    FORBIDDEN_SUPPRESSION_HELP,
 } from '#cli/config/configurations/gspot.ts';
-import { SETTINGS_FILE } from '#cli/config/repository/files.ts';
-import { findToolName } from '#cli/manifests/tools.ts';
-import { parseComments, stripCommentEnd } from '#cli/parsers/code/comments.ts';
-import { listCoveredFiles } from '#cli/repository/files/selection.ts';
-import { selectScopePath } from '#cli/repository/scopes.ts';
-import { isReasonAccepted } from '#cli/settings/validation/reasons.ts';
-import { findText, readText } from '#cli/system/files/reads.ts';
-import { getPosition } from '#cli/system/text/positions.ts';
-import type { FindingPlace, SuppressionSyntax } from '#cli/types/configurations/general.ts';
-import type { PlannedCheck } from '#cli/types/engine/plan.ts';
-import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { SourceComment } from '#cli/types/parsers.ts';
-import type { TrackedFile } from '#cli/types/repository.ts';
-import type { Scope } from '#cli/types/settings.ts';
-import type { Session } from '#cli/types/tools.ts';
 
 function findReasonAbove(previous: SourceComment | undefined, comment: SourceComment): string | undefined {
     if (

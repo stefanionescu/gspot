@@ -1,15 +1,15 @@
 import { realpathSync } from 'node:fs';
-import { isAbsolute, posix, relative, resolve, sep } from 'node:path';
+import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
+import { sep, posix, resolve, relative, isAbsolute } from 'node:path';
 
 import {
-    DECLARATION_EXTENSIONS,
-    INSTALLED_DEPENDENCY_FOLDERS,
-    MISSING_PATH_CODES,
     PATH_SEPARATORS,
     RESERVED_SEGMENTS,
+    MISSING_PATH_CODES,
     UNSAFE_PATH_MESSAGE,
+    DECLARATION_EXTENSIONS,
+    INSTALLED_DEPENDENCY_FOLDERS,
 } from '#cli/config/system.ts';
-import { GspotError, hasErrorCode } from '#cli/system/errors.ts';
 
 export function convertToPosixPath(path: string): string {
     return sep === '/' ? path : path.split(sep).join('/');

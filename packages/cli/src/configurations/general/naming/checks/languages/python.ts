@@ -1,17 +1,17 @@
 import type { Node } from 'web-tree-sitter';
+import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
+import type { Identifier, NamedCategory, FileIdentifiers } from '#cli/types/configurations/naming.ts';
 
 import {
+    TYPE_NAME,
+    TYPE_FORMS,
+    SPLAT_NODES,
     CONSTANT_NAME,
     EXCEPTION_BASE,
     IMPLICIT_PARAMETERS,
-    PYTHON_PARAMETER_NODES,
-    SPLAT_NODES,
     TYPE_ALIAS_ANNOTATION,
-    TYPE_FORMS,
-    TYPE_NAME,
+    PYTHON_PARAMETER_NODES,
 } from '#cli/config/configurations/naming.ts';
-import { addIdentifier } from '#cli/configurations/general/naming/checks/languages/identifier.ts';
-import type { FileIdentifiers, Identifier, NamedCategory } from '#cli/types/configurations/naming.ts';
 
 function getHolderType(node: Node): string {
     const block = node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent;

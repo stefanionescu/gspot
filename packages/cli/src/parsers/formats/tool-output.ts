@@ -1,5 +1,4 @@
 import { z } from 'zod';
-
 import { CheckStop } from '#cli/system/errors.ts';
 
 export function parseToolOutput(tool: string, text: string): unknown;

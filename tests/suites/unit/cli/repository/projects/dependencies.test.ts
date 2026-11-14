@@ -1,17 +1,15 @@
-import { writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import { writeFile } from 'node:fs/promises';
 import { openSession } from '#cli/engine/session.ts';
-import { listProjectDependencyNames, readDependencyFiles } from '#cli/repository/projects/dependencies.ts';
 import { createRunCache } from '#cli/system/cache.ts';
 import { compareText } from '#cli/system/text/order.ts';
-import { PYTHON_DEPENDENCY_CASES, TRACKED_SOURCE } from '#tests/config/repository.ts';
+import { captureRejection } from '#tests/setup/matchers.ts';
 import { readTestRepository } from '#tests/setup/cli/repository.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { TRACKED_SOURCE, PYTHON_DEPENDENCY_CASES } from '#tests/config/repository.ts';
+import { readDependencyFiles, listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
 
 const PROJECT_DEPENDENCY_FILES = {
     'package.json': '{"dependencies":{"@nestjs/swagger":"11.2.3"}}',

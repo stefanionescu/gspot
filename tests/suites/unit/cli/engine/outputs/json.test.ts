@@ -1,20 +1,20 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
+import type { CheckStop } from '#cli/system/errors.ts';
+import { matchFields } from '#tests/setup/matchers.ts';
+import type { Finding } from '#cli/types/engine/run.ts';
 import { JSON_PREVIEW_LENGTH } from '#cli/config/engine.ts';
 import { parseOutput } from '#cli/engine/outputs/formats.ts';
 import { parseJsonFindings } from '#cli/engine/outputs/json.ts';
 import { outputSchema } from '#cli/schemas/manifests/checks.ts';
-import type { CheckStop } from '#cli/system/errors.ts';
-import type { Finding } from '#cli/types/engine/run.ts';
+
 import {
     FIX_FIELD_CASES,
+    TWO_LEVEL_FORMAT,
     FLAT_JSON_FINDINGS,
-    INVALID_FINDING_REPORTS,
     NESTED_LIST_FORMAT,
     NESTED_LIST_OUTPUT,
-    TWO_LEVEL_FORMAT,
+    INVALID_FINDING_REPORTS,
 } from '#tests/config/engine/outputs.ts';
-import { matchFields } from '#tests/setup/matchers.ts';
 
 function parseJsonReport(checkId: string, output: unknown, stdout: string): Finding[] {
     return parseJsonFindings({

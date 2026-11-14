@@ -1,25 +1,23 @@
+import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { test, expect } from 'bun:test';
+import { pathToFileURL } from 'node:url';
+import { createFileTree } from 'testdirs';
 import { symlink } from 'node:fs/promises';
 import { createRequire } from 'node:module';
-import { join } from 'node:path';
-import { pathToFileURL } from 'node:url';
-
-import { stringify } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-import { createFileTree } from 'testdirs';
-
-import { executableLayout } from '#cli/system/processes/programs.ts';
-import { findValueAt, isTable } from '#cli/system/tables.ts';
 import plugin from '#eslint-plugin/plugin.ts';
-import { RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';
+import { stringify } from '@decimalturn/toml-patch';
 import { runGspot } from '#tests/setup/cli/commands.ts';
-import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
-import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { fakeCommands } from '#tests/setup/system/fakes.ts';
 import { isWindows } from '#tests/setup/system/platform.ts';
+import { isTable, findValueAt } from '#cli/system/tables.ts';
+import { getShippedCheck } from '#tests/setup/cli/manifests.ts';
+import { executableLayout } from '#cli/system/processes/programs.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import { buildProcessResult } from '#tests/setup/system/processes.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { RULE_PAGES, UNKNOWN_RULES } from '#tests/config/commands/lookup.ts';
+import { buildReportingCheck, buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 
 async function readToolRules(name: string, specifier: string): Promise<Record<string, unknown>> {
     if (name === '@gspothq/eslint-plugin') return plugin.rules;

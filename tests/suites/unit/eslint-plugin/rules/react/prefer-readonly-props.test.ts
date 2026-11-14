@@ -1,5 +1,5 @@
-import { preferReadonlyProps } from '#eslint-plugin/rules/react/prefer-readonly-props.ts';
 import { buildTypedRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { preferReadonlyProps } from '#eslint-plugin/rules/react/prefer-readonly-props.ts';
 
 buildTypedRuleTester().run('prefer-readonly-props', preferReadonlyProps, {
     valid: [

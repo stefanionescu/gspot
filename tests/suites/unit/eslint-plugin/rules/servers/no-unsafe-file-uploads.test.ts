@@ -1,5 +1,5 @@
-import { noUnsafeFileUploads } from '#eslint-plugin/rules/servers/no-unsafe-file-uploads.ts';
 import { buildRuleTester } from '#tests/setup/eslint/rule-tester.ts';
+import { noUnsafeFileUploads } from '#eslint-plugin/rules/servers/no-unsafe-file-uploads.ts';
 
 buildRuleTester().run('no-unsafe-file-uploads', noUnsafeFileUploads, {
     valid: [

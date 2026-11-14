@@ -1,9 +1,9 @@
-import { FILE_FOLDER_CLASH_RULE, GSPOT_FIXED_NAMES } from '#cli/config/configurations/structure.ts';
-import { buildFolderTree, listCodeFiles } from '#cli/configurations/general/structure/checks/folder-tree.ts';
-import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
+import type { Session } from '#cli/types/tools.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
-import type { Session } from '#cli/types/tools.ts';
+import { extractBaseName, extractParentFolder } from '#cli/system/paths.ts';
+import { GSPOT_FIXED_NAMES, FILE_FOLDER_CLASH_RULE } from '#cli/config/configurations/structure.ts';
+import { listCodeFiles, buildFolderTree } from '#cli/configurations/general/structure/checks/folder-tree.ts';
 
 /**
 Reports each file whose name without its extension matches the name of a sibling folder. gspot fixes the name of

@@ -1,24 +1,22 @@
-import { existsSync } from 'node:fs';
-import { readFile, unlink, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
-
+import { existsSync } from 'node:fs';
+import { test, spyOn, expect } from 'bun:test';
 import { stringify } from '@decimalturn/toml-patch';
-import { expect, spyOn, test } from 'bun:test';
-
-import { selectCheckCode } from '#cli/configurations/registry.ts';
-import { buildCheckSession, runChecks } from '#cli/engine/run/checks.ts';
+import * as manifests from '#cli/manifests/read.ts';
 import { runFixers } from '#cli/engine/run/fixes.ts';
 import { openSession } from '#cli/engine/session.ts';
-import { CHECK_GENERATION } from '#cli/generation/stale.ts';
-import * as manifests from '#cli/manifests/read.ts';
-import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
 import { planFixer } from '#tests/setup/cli/checks.ts';
-import { buildFixerSettings, buildRunOptions } from '#tests/setup/cli/run.ts';
-import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
-import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { commitAll } from '#tests/setup/system/git.ts';
-import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { CHECK_GENERATION } from '#cli/generation/stale.ts';
+import { FIXER_RESULTS } from '#tests/config/engine/run.ts';
+import { unlink, readFile, writeFile } from 'node:fs/promises';
+import { selectCheckCode } from '#cli/configurations/registry.ts';
+import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildProgramCommand } from '#tests/setup/system/programs.ts';
+import { runChecks, buildCheckSession } from '#cli/engine/run/checks.ts';
+import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
+import { waitForExit, waitForFile } from '#tests/setup/system/processes.ts';
+import { buildRunOptions, buildFixerSettings } from '#tests/setup/cli/run.ts';
 
 test('the fixer tool owns crash detection when exit is 0', async () => {
     await using sandbox = await createGitSandbox({ 'gspot.toml': buildFixerSettings(), 'source.txt': 'original' });

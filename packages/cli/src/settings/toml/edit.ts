@@ -1,25 +1,25 @@
 import { isDeepStrictEqual } from 'node:util';
-
-import { ESCAPED_GLOB_CHARACTERS, SETTINGS_PAGE_SENTENCE, SETTINGS_PREFACE } from '#cli/config/settings/file.ts';
+import { GspotError } from '#cli/system/errors.ts';
 import { extractKeyName } from '#cli/settings/lookup.ts';
 import { safeParseSettings } from '#cli/settings/parse.ts';
-import { buildSettingsText } from '#cli/settings/toml/text.ts';
-import { findSetting } from '#cli/settings/values/inherit.ts';
-import { isReasonedValue, listWrittenKeys } from '#cli/settings/values/written.ts';
-import { GspotError } from '#cli/system/errors.ts';
 import { stripTrailingSlashes } from '#cli/system/paths.ts';
-import { addTable, findValueAt, isTable } from '#cli/system/tables.ts';
+import { findSetting } from '#cli/settings/values/inherit.ts';
+import { buildSettingsText } from '#cli/settings/toml/text.ts';
+import { isTable, addTable, findValueAt } from '#cli/system/tables.ts';
+import { isReasonedValue, listWrittenKeys } from '#cli/settings/values/written.ts';
+import { SETTINGS_PREFACE, SETTINGS_PAGE_SENTENCE, ESCAPED_GLOB_CHARACTERS } from '#cli/config/settings/file.ts';
+
 import type {
-    AvailableSettings,
-    EditedSettings,
-    IgnoreRecord,
-    IgnoreRemoval,
-    ParsedSettingValue,
     Setting,
-    SettingKey,
-    SettingsFile,
-    SettingsTable,
     TomlTable,
+    SettingKey,
+    IgnoreRecord,
+    SettingsFile,
+    IgnoreRemoval,
+    SettingsTable,
+    EditedSettings,
+    AvailableSettings,
+    ParsedSettingValue,
 } from '#cli/types/settings.ts';
 
 function splitKey(key: string): SettingKey {

@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { INSTALL_OUTPUT_LIMIT } from '#cli/config/tools/installers.ts';
 import { extractUrlPasswords, redactInstallOutput } from '#cli/tools/installers/credentials.ts';
 

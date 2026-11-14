@@ -1,11 +1,10 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
+import { createRule } from '../../rule.ts';
+import type { TestCall } from '../../types/testing.ts';
+import { getMarkedTestCall } from '../../libraries/testing.ts';
 import { TERMINATING_STATEMENTS } from '../../config/plugin.ts';
 import { listFunctionAncestors } from '../../language/functions.ts';
 import { listBodyNodes, listSiblingStatements } from '../../language/syntax.ts';
-import { getMarkedTestCall } from '../../libraries/testing.ts';
-import { createRule } from '../../rule.ts';
-import type { TestCall } from '../../types/testing.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 function findCodeAfter(call: TSESTree.Node, source: TSESLint.SourceCode): TSESTree.Node | undefined {
     const statements = listFunctionAncestors(call, source)

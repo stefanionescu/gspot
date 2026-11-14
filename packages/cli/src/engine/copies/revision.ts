@@ -1,54 +1,54 @@
+import type { Files } from '#cli/types/system.ts';
+import { GspotError } from '#cli/system/errors.ts';
+import { setImmediate } from 'node:timers/promises';
+import { openFiles } from '#cli/system/files/open.ts';
+import { GSPOT_PATHS } from '#cli/config/manifests.ts';
+import { preparePath } from '#cli/system/files/bounded.ts';
+import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';
+import { createCopyFolder } from '#cli/engine/copies/folders.ts';
+import { isInside, extractExtension } from '#cli/system/paths.ts';
+import type { GitFile, Revision } from '#cli/types/repository.ts';
+import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
+import { listPackageFiles } from '#cli/repository/projects/workspaces.ts';
+import { join, posix, dirname, resolve, basename, relative } from 'node:path';
+import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/revisions.ts';
+import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
+import { readHead, listRevisionFiles } from '#cli/repository/revisions/files.ts';
+import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
+import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
+import { TRAILING_NEWLINE, GIT_TOP_LEVEL_ARGUMENTS } from '#cli/config/repository/git.ts';
+import { runGit, readGitPath, readGitText, readGitSetting } from '#cli/repository/git/run.ts';
+import { copyDependencies, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
+import { LOCKFILES, PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
+
 import {
+    rmSync,
+    statSync,
     chmodSync,
-    copyFileSync,
     lstatSync,
     mkdirSync,
     readdirSync,
-    realpathSync,
-    rmSync,
-    statSync,
     symlinkSync,
+    copyFileSync,
+    realpathSync,
     writeFileSync,
 } from 'node:fs';
-import { basename, dirname, join, posix, relative, resolve } from 'node:path';
-import { setImmediate } from 'node:timers/promises';
-
 import {
-    DECLARATION_CONFIG_EXTENSIONS,
     DEPENDENCY_FILES,
-    DEPENDENCY_REVISION_NOTE,
-    GIT_ALTERNATES_PATH,
-    GIT_CHECKOUT_ARGUMENTS,
-    GIT_EMPTY_INDEX_ARGUMENTS,
-    GIT_HASH_ARGUMENTS,
-    GIT_HASH_FORMAT_ARGUMENTS,
-    GIT_INIT_ARGUMENTS,
-    GIT_RAW_ATTRIBUTES_PATH,
-    GIT_SET_HEAD_ARGUMENTS,
     GIT_SHALLOW_PATH,
-    GIT_UPDATE_INDEX_ARGUMENTS,
+    GIT_HASH_ARGUMENTS,
+    GIT_INIT_ARGUMENTS,
+    GIT_ALTERNATES_PATH,
     RAW_BLOB_ATTRIBUTES,
+    GIT_CHECKOUT_ARGUMENTS,
+    GIT_SET_HEAD_ARGUMENTS,
+    GIT_RAW_ATTRIBUTES_PATH,
+    DEPENDENCY_REVISION_NOTE,
+    GIT_EMPTY_INDEX_ARGUMENTS,
+    GIT_HASH_FORMAT_ARGUMENTS,
+    GIT_UPDATE_INDEX_ARGUMENTS,
+    DECLARATION_CONFIG_EXTENSIONS,
 } from '#cli/config/engine.ts';
-import { GSPOT_PATHS } from '#cli/config/manifests.ts';
-import { LOCKFILES, PACKAGE_JSON, PACKAGE_SWIFT, PYPROJECT_TOML } from '#cli/config/parsers/projects.ts';
-import { GIT_TOP_LEVEL_ARGUMENTS, TRAILING_NEWLINE } from '#cli/config/repository/git.ts';
-import { GIT_WRITE_TREE_ARGUMENTS } from '#cli/config/repository/revisions.ts';
-import { HOOKS_PATH_SETTING, SAMPLE_HOOK_SUFFIX } from '#cli/config/repository/setup.ts';
-import { NODE_MODULES, PYTHON_ENVIRONMENT_FOLDER } from '#cli/config/system.ts';
-import { SET_HOOKS_PATH } from '#cli/config/tools/installers.ts';
-import { copyDependencies, readDeclarationDependencies } from '#cli/engine/copies/dependencies.ts';
-import { createCopyFolder } from '#cli/engine/copies/folders.ts';
-import { readIgnoredPaths } from '#cli/repository/files/gitignore.ts';
-import { readGitPath, readGitSetting, readGitText, runGit } from '#cli/repository/git/run.ts';
-import { listPackageFiles } from '#cli/repository/projects/workspaces.ts';
-import { listRevisionFiles, readHead } from '#cli/repository/revisions/files.ts';
-import { GspotError } from '#cli/system/errors.ts';
-import { preparePath } from '#cli/system/files/bounded.ts';
-import { openFiles } from '#cli/system/files/open.ts';
-import { extractExtension, isInside } from '#cli/system/paths.ts';
-import type { RevisionCopy, RevisionDependencies } from '#cli/types/engine/tool-runs.ts';
-import type { GitFile, Revision } from '#cli/types/repository.ts';
-import type { Files } from '#cli/types/system.ts';
 
 function listDependencyFolders(installed: Files, projects: string[]): string[] {
     return projects.flatMap((path) => {

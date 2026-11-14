@@ -1,13 +1,13 @@
+import { test, expect } from 'bun:test';
 import { parse } from '@decimalturn/toml-patch';
-import { expect, test } from 'bun:test';
-
-import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
 import type { PythonToolProject } from '#cli/types/tools.ts';
+import { isPythonLockfileFresh } from '#cli/tools/installers/python/lockfiles.ts';
+
 import {
-    PYTHON_TOOL_LOCKFILE,
     PYTHON_TOOL_PROJECT,
-    UV_LOCKFILE_MISMATCHES,
     UV_LOCKFILE_ORIGINS,
+    PYTHON_TOOL_LOCKFILE,
+    UV_LOCKFILE_MISMATCHES,
 } from '#tests/config/tools.ts';
 
 const pythonProject = (parse(PYTHON_TOOL_PROJECT) as { project: PythonToolProject }).project;

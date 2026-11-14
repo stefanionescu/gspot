@@ -1,23 +1,23 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
+import { createRule } from '../../rule.ts';
+import { unwrapExpression } from '../../language/syntax.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import type { RequestDataCall, RequestDataTarget } from '../../types/security.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
 
 import {
-    COMMAND_FUNCTION,
-    COMMAND_INTERPRETERS,
-    FILE_FUNCTION,
+    SQL_METHODS,
     FILE_METHODS,
+    FILE_FUNCTION,
+    REQUEST_NAMES,
+    REQUEST_FIELDS,
+    RESPONSE_NAMES,
+    REQUEST_READERS,
+    COMMAND_FUNCTION,
+    RESPONSE_TARGETS,
     NUMBER_CONVERTERS,
     OUTBOUND_FUNCTIONS,
-    REQUEST_FIELDS,
-    REQUEST_NAMES,
-    REQUEST_READERS,
-    RESPONSE_NAMES,
-    RESPONSE_TARGETS,
-    SQL_METHODS,
+    COMMAND_INTERPRETERS,
 } from '../../config/servers.ts';
-import { getQualifiedName } from '../../language/modules.ts';
-import { unwrapExpression } from '../../language/syntax.ts';
-import { createRule } from '../../rule.ts';
-import type { RequestDataCall, RequestDataTarget } from '../../types/security.ts';
 
 function isRequestName(node: TSESTree.Node): boolean {
     return node.type === AST_NODE_TYPES.Identifier && REQUEST_NAMES.has(node.name);

@@ -1,5 +1,4 @@
-import { expect, test } from 'bun:test';
-
+import { test, expect } from 'bun:test';
 import { splitWords } from '#cli/configurations/general/naming/words.ts';
 
 test.each([

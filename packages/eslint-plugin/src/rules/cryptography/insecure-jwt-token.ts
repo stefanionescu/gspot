@@ -1,9 +1,8 @@
-import { AST_NODE_TYPES, ASTUtils, type TSESLint, type TSESTree } from '@typescript-eslint/utils';
-
-import { JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT, NO_ALGORITHM } from '../../config/cryptography.ts';
-import { getExpressionValue, getOptionProperties, getOptionValue } from '../../language/expressions.ts';
-import { getQualifiedName } from '../../language/modules.ts';
 import { createRule } from '../../rule.ts';
+import { getQualifiedName } from '../../language/modules.ts';
+import { NO_ALGORITHM, JWT_FUNCTIONS, JWT_OPTIONS_ARGUMENT } from '../../config/cryptography.ts';
+import { ASTUtils, type TSESLint, type TSESTree, AST_NODE_TYPES } from '@typescript-eslint/utils';
+import { getOptionValue, getExpressionValue, getOptionProperties } from '../../language/expressions.ts';
 
 function isUnsignedVerify(
     node: TSESTree.CallExpression,

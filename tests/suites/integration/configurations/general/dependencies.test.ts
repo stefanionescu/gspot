@@ -1,16 +1,14 @@
+import { join } from 'node:path';
+import { test, expect } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { writeFile } from 'node:fs/promises';
-import { join } from 'node:path';
-
-import { expect, test } from 'bun:test';
-
 import { CAUGHT_EXAMPLE } from '#docs/config/home.ts';
-import { SYNCPACK_PACKAGE_FILES } from '#tests/config/integration/general.ts';
-import { listFindingRows, parseCheckReport, runGspotStep, spawnGspot } from '#tests/setup/cli/commands.ts';
+import { runGitStep } from '#tests/setup/system/git.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { applyGeneratedFiles } from '#tests/setup/sandboxes/changes.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
-import { runGitStep } from '#tests/setup/system/git.ts';
+import { SYNCPACK_PACKAGE_FILES } from '#tests/config/integration/general.ts';
+import { spawnGspot, runGspotStep, listFindingRows, parseCheckReport } from '#tests/setup/cli/commands.ts';
 
 function writeKatexLockfile(root: string, version: string): void {
     const project = { name: 'katex-example', private: true, dependencies: { katex: version } };

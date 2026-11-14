@@ -1,19 +1,17 @@
-import { extname, posix } from 'node:path';
-
 import picomatch from 'picomatch';
-
-import { INI_EXTENSIONS, JSON_EXTENSION, TOML_EXTENSION, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
-import { parseJsonFile } from '#cli/parsers/formats/json.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
-import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
-import { tryParseFile } from '#cli/parsers/validation.ts';
-import { listProjectFolders } from '#cli/repository/detection/scopes.ts';
-import { isGspotPath } from '#cli/repository/files/ownership.ts';
-import { findText } from '#cli/system/files/reads.ts';
-import { buildPathMatcher, escapeRegExp } from '#cli/system/patterns.ts';
+import { posix, extname } from 'node:path';
 import { isTable } from '#cli/system/tables.ts';
+import { findText } from '#cli/system/files/reads.ts';
+import { tryParseFile } from '#cli/parsers/validation.ts';
+import { parseJsonFile } from '#cli/parsers/formats/json.ts';
+import { parseYamlFile } from '#cli/parsers/formats/yaml.ts';
 import type { Configuration } from '#cli/types/manifests.ts';
-import type { ConflictingConfig, TrackedFile } from '#cli/types/repository.ts';
+import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
+import { listProjectFolders } from '#cli/repository/detection/scopes.ts';
+import { escapeRegExp, buildPathMatcher } from '#cli/system/patterns.ts';
+import type { TrackedFile, ConflictingConfig } from '#cli/types/repository.ts';
+import { INI_EXTENSIONS, JSON_EXTENSION, TOML_EXTENSION, YAML_EXTENSIONS } from '#cli/config/repository/setup.ts';
 
 function listReplacementConflicts(root: string, paths: string[], replacement: ConflictingConfig): ConflictingConfig[] {
     return paths

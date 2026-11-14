@@ -1,20 +1,21 @@
+import { getTable } from '#cli/settings/tables.ts';
+import { isInScope } from '#cli/repository/scopes.ts';
+import { JSON_INDENT } from '#cli/config/tools/programs.ts';
+import { buildModuleSpecifier } from '#cli/system/paths.ts';
+import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
+import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
+
 import {
+    listDisabledRules,
+    readToolDisabledRules,
+    assertRunningRuleOptions,
+} from '#cli/configurations/rule-options.ts';
+import {
+    TAILWIND_AT_RULES,
     CSS_MODULES_OVERRIDE,
     STYLELINT_BASE_RULES,
     STYLELINT_COMPONENTS,
-    TAILWIND_AT_RULES,
 } from '#cli/config/configurations/language.ts';
-import { JSON_INDENT } from '#cli/config/tools/programs.ts';
-import {
-    assertRunningRuleOptions,
-    listDisabledRules,
-    readToolDisabledRules,
-} from '#cli/configurations/rule-options.ts';
-import { listProjectDependencyNames } from '#cli/repository/projects/dependencies.ts';
-import { isInScope } from '#cli/repository/scopes.ts';
-import { getTable } from '#cli/settings/tables.ts';
-import { buildModuleSpecifier } from '#cli/system/paths.ts';
-import type { ConfigBuilder, PlannedConfig } from '#cli/types/configurations/shared.ts';
 
 function buildFunctionValueRule(functions: readonly string[]): unknown {
     return [true, { ignoreProperties: { '/.*/': functions.map((name) => String.raw`/\b${name}\(/`) } }];
