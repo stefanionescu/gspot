@@ -138,6 +138,7 @@ export type * from "./private/router.js";
 `;
 
 // configuration blocks
+export const COMPONENT_LINT_TIMEOUT_MILLISECONDS = 180_000;
 export const MATCHING_SCOPE_SETTINGS = `[[scope]]
 path = "same"
 configurations = []

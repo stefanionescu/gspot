@@ -4,7 +4,11 @@ import { testdir, createFileTree } from 'testdirs';
 import type { EslintConfiguration } from '#tests/types/setup.ts';
 import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { buildEslint, listLintFindings } from '#tests/setup/eslint/lint.ts';
-import { MATCHING_SCOPE_SETTINGS } from '#tests/config/configurations/javascript/blocks.ts';
+
+import {
+    MATCHING_SCOPE_SETTINGS,
+    COMPONENT_LINT_TIMEOUT_MILLISECONDS,
+} from '#tests/config/configurations/javascript/blocks.ts';
 
 const COMPONENT_FILES = {
     'Card.vue': '<template><p>{{ count }}</p></template>\n<script setup lang="ts">const count: number = 1;</script>\n',
@@ -14,38 +18,45 @@ const COMPONENT_FILES = {
     'source.js': 'export const count = 1;\n',
 } as const;
 
-test('Vue, Svelte and Astro files parse in their scopes, and a scope without them gets none of their rules', async () => {
-    await using sandbox = await testdir({
-        'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
-            level: 'all',
-            scopes: [{ path: 'app' }, { path: 'plain' }],
-            tables: 'removed_configurations = { vue = "This scope contains plain JavaScript rather than framework components.", svelte = "This scope contains plain JavaScript rather than framework components.", astro = "This scope contains plain JavaScript rather than framework components." }\n',
-        }),
-        'package.json': '{"private":true,"type":"module"}',
-        'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
-        ...COMPONENT_FILES,
-        ...Object.fromEntries(Object.entries(COMPONENT_FILES).map(([path, text]) => [`app/${path}`, text])),
-        'plain/Card.vue': COMPONENT_FILES['Card.vue'],
-        'plain/source.js': COMPONENT_FILES['source.js'],
-    });
+// Typed ESLint with the Vue, Svelte, and Astro parsers takes 30 to 75 seconds on the shared macOS runner of CI.
+test(
+    'Vue, Svelte and Astro files parse in their scopes, and a scope without them gets none of their rules',
+    async () => {
+        await using sandbox = await testdir({
+            'gspot.toml': buildSandboxSettings(['javascript', 'typescript', 'vue', 'svelte', 'astro'], {
+                level: 'all',
+                scopes: [{ path: 'app' }, { path: 'plain' }],
+                tables: 'removed_configurations = { vue = "This scope contains plain JavaScript rather than framework components.", svelte = "This scope contains plain JavaScript rather than framework components.", astro = "This scope contains plain JavaScript rather than framework components." }\n',
+            }),
+            'package.json': '{"private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["**/*"]}',
+            ...COMPONENT_FILES,
+            ...Object.fromEntries(Object.entries(COMPONENT_FILES).map(([path, text]) => [`app/${path}`, text])),
+            'plain/Card.vue': COMPONENT_FILES['Card.vue'],
+            'plain/source.js': COMPONENT_FILES['source.js'],
+        });
 
-    const eslint = await buildEslint(sandbox.path);
-    const prefixes = ['', 'app/'];
-    const files = prefixes.flatMap((prefix) => Object.keys(COMPONENT_FILES).map((path) => `${prefix}${path}`));
-    expect(await listLintFindings(eslint, sandbox.path, files, [])).toStrictEqual([]);
-    for (const prefix of prefixes) {
-        const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as EslintConfiguration;
-        expect(vue.rules['vue/no-v-html']?.[0]).toBeGreaterThan(0);
-    }
-    const outside = (await eslint.calculateConfigForFile('plain/Card.vue')) as EslintConfiguration;
-    expect(
-        Object.entries(outside.rules).filter(([name, rule]) => name.startsWith('vue/') && rule[0] !== 0),
-    ).toStrictEqual([]);
-    const script = (await eslint.calculateConfigForFile('plain/source.js')) as EslintConfiguration;
-    expect(
-        Object.entries(script.rules).filter(([name, rule]) => /^(?:vue|svelte|astro)\//u.test(name) && rule[0] !== 0),
-    ).toStrictEqual([]);
-});
+        const eslint = await buildEslint(sandbox.path);
+        const prefixes = ['', 'app/'];
+        const files = prefixes.flatMap((prefix) => Object.keys(COMPONENT_FILES).map((path) => `${prefix}${path}`));
+        expect(await listLintFindings(eslint, sandbox.path, files, [])).toStrictEqual([]);
+        for (const prefix of prefixes) {
+            const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as EslintConfiguration;
+            expect(vue.rules['vue/no-v-html']?.[0]).toBeGreaterThan(0);
+        }
+        const outside = (await eslint.calculateConfigForFile('plain/Card.vue')) as EslintConfiguration;
+        expect(
+            Object.entries(outside.rules).filter(([name, rule]) => name.startsWith('vue/') && rule[0] !== 0),
+        ).toStrictEqual([]);
+        const script = (await eslint.calculateConfigForFile('plain/source.js')) as EslintConfiguration;
+        expect(
+            Object.entries(script.rules).filter(
+                ([name, rule]) => /^(?:vue|svelte|astro)\//u.test(name) && rule[0] !== 0,
+            ),
+        ).toStrictEqual([]);
+    },
+    COMPONENT_LINT_TIMEOUT_MILLISECONDS,
+);
 
 test("a parent's configuration block covers a matching nested scope, and a different scope keeps its test paths", async () => {
     await using sandbox = await testdir({
