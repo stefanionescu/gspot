@@ -47,9 +47,9 @@ export const wrong = twice(3);
 `;
 
 const RECEIPT_SOURCE = `// The receipt of one order.
+import { orderTotal } from './orders/total.js';
 import { twice, wrong } from './orders/double.js';
 import { receiptOptions } from './orders/receipt.js';
-import { orderTotal } from './orders/total.js';
 
 const formatter = new Intl.NumberFormat('en-US', receiptOptions);
 const total = orderTotal([{ price: 2, quantity: 3 }], 'EUR');
@@ -99,8 +99,8 @@ A total with its currency.
 export type Total = { amount: number; currency: string };
 `,
         'src/orders/total.ts': `// The total of an order.
-import type { OrderLine } from '#types/orders.js';
 import type { Total } from '#types/totals.js';
+import type { OrderLine } from '#types/orders.js';
 
 /**
 Adds up the lines of an order.
