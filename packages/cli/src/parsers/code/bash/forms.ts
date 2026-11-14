@@ -1,12 +1,15 @@
+import { posix } from 'node:path';
+
 import type { Node } from 'web-tree-sitter';
 
 import {
     BASH_TOKEN_FORMS,
+    DELEGATING_COMMANDS,
     DOWNLOAD_COMMANDS,
-    ELEVATE_COMMAND,
     IFS_VARIABLE,
     INLINE_ASSIGNMENT_NODES,
     INTERPRETER_COMMANDS,
+    PROGRAM_PREFIX_ARGUMENT,
     SAVED_IFS,
     SEQUENCE_COMMAND,
 } from '#cli/config/parsers/code.ts';
@@ -38,18 +41,34 @@ function listSequenceLoops(syntaxRoot: Node): Node[] {
     );
 }
 
+/**
+Get the program that a command starts, without its folder, so that /usr/bin/curl and /bin/sh count as curl and sh.
+*/
+function getProgramName(command: Node): string {
+    return posix.basename(command.childForFieldName('name')?.text ?? '');
+}
+
+function isDownload(command: Node): boolean {
+    return DOWNLOAD_COMMANDS.has(getProgramName(command));
+}
+
 function isInterpreterRun(command: Node): boolean {
-    const name = command.childForFieldName('name')?.text ?? '';
-    const program = name === ELEVATE_COMMAND ? (command.childrenForFieldName('argument')[0]?.text ?? '') : name;
+    const name = getProgramName(command);
+    const delegated = command
+        .childrenForFieldName('argument')
+        .find((argument) => !PROGRAM_PREFIX_ARGUMENT.test(argument.text));
+    const program = DELEGATING_COMMANDS.has(name) ? posix.basename(delegated?.text ?? '') : name;
     return INTERPRETER_COMMANDS.has(program);
 }
 
+/**
+List the commands that run a download in a shell as it arrives: a pipeline from curl or wget into a shell, and a shell
+that reads a command or process substitution of one.
+*/
 function listDownloadRuns(syntaxRoot: Node): Node[] {
     const piped = syntaxRoot.descendantsOfType('pipeline').filter((pipeline) => {
         const commands = pipeline.namedChildren.filter((node) => node.type === 'command');
-        const download = commands.findIndex((command) =>
-            DOWNLOAD_COMMANDS.has(command.childForFieldName('name')?.text ?? ''),
-        );
+        const download = commands.findIndex((command) => isDownload(command));
         return download !== -1 && commands.slice(download).some((command) => isInterpreterRun(command));
     });
     const fed = syntaxRoot.descendantsOfType('command').filter(
@@ -58,7 +77,7 @@ function listDownloadRuns(syntaxRoot: Node): Node[] {
             command
                 .childrenForFieldName('argument')
                 .flatMap((argument) => argument.descendantsOfType('command'))
-                .some((inner) => DOWNLOAD_COMMANDS.has(inner.childForFieldName('name')?.text ?? '')),
+                .some((inner) => isDownload(inner)),
     );
     return [...piped, ...fed];
 }

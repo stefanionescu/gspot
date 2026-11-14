@@ -71,6 +71,50 @@ test('package-manager-pin reports malformed mise syntax and still reads other mi
     ]);
 });
 
+test('package-manager-pin reads the devEngines.packageManager pin that CI installs, and passes once it matches mise', async () => {
+    const packageJson = JSON.stringify({
+        name: 'shop',
+        private: true,
+        devEngines: { packageManager: { name: 'pnpm', version: '10.29.0' } },
+    });
+    await using sandbox = await createGitSandbox({
+        'package.json': packageJson,
+        'pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+        'mise.toml': '[tools]\npnpm = "10.30.0"\n',
+        'gspot.toml': buildSandboxSettings(['javascript']),
+    });
+    const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin');
+    expect(findings.map(({ file, rule, message }) => ({ file, rule, message }))).toStrictEqual([
+        {
+            file: 'package.json',
+            rule: 'package-manager-pin',
+            message: expect.stringMatching(/\b10\.29\.0\b.+\b10\.30\.0\b/u) as string,
+        },
+    ]);
+    await writeFile(join(sandbox.path, 'package.json'), packageJson.replace('10.29.0', '10.30.0'));
+    expect(await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin')).toStrictEqual([]);
+});
+
+test.each(['pnpm@', 'pnpm@https://registry.npmjs.org/@pnpm/exe/-/exe-10.30.0.tgz'])(
+    'package-manager-pin asks for the mise version when a scope writes no pin that the install reads: %s',
+    async (packageManager) => {
+        await using sandbox = await createGitSandbox({
+            'package.json': JSON.stringify({ name: 'shop', private: true, packageManager: 'pnpm@10.30.0' }),
+            'web/package.json': JSON.stringify({ name: 'web', private: true, packageManager }),
+            'web/pnpm-lock.yaml': "lockfileVersion: '9.0'\n",
+            'mise.toml': '[tools]\npnpm = "10.30.0"\n',
+            'gspot.toml': buildSandboxSettings(['javascript'], { scopes: [{ path: 'web', configurations: [] }] }),
+        });
+        const findings = await runSandboxCheck(sandbox.path, 'dependencies/package-manager-pin', { scope: 'web' });
+        expect(findings.map(({ file, message }) => ({ file, message }))).toStrictEqual([
+            {
+                file: 'web/package.json',
+                message: expect.stringContaining('"packageManager": "pnpm@10.30.0"') as string,
+            },
+        ]);
+    },
+);
+
 test.each([
     { form: 'npm:<tool>', tools: '"npm:bun" = "0.0.0-test.2"' },
     { form: 'an array', tools: 'bun = ["0.0.0-test.2"]' },

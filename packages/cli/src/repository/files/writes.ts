@@ -6,7 +6,7 @@ import { openJsonFile } from '#cli/parsers/formats/json.ts';
 import { findBlockSpan, replaceBlock } from '#cli/parsers/formats/managed-blocks.ts';
 import { openTomlFile } from '#cli/parsers/formats/toml/edit.ts';
 import { isGspotOwned } from '#cli/repository/files/ownership.ts';
-import { readGeneratedPatterns } from '#cli/repository/git/attributes.ts';
+import { readGspotGeneratedPatterns } from '#cli/repository/git/attributes.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { isSameContents } from '#cli/system/files/bounded.ts';
 import { deleteEmptyFolders } from '#cli/system/files/open.ts';
@@ -70,7 +70,7 @@ export function planManagedKeys(writer: Files, path: string, keys: ManagedKeys['
 }
 
 export function planReplacements(writer: Files, requests: ReplacementRequest[]): WritePlan[] {
-    const generatedPatterns = readGeneratedPatterns(writer);
+    const generatedPatterns = readGspotGeneratedPatterns(writer);
     const ownablePaths = new Set(requests.map(({ path }) => path));
     return requests.map(({ path, next, previous }): WritePlan => {
         const onDisk = writer.read(path);
@@ -98,7 +98,7 @@ export function planBlock(writer: Files, path: string, body: string): WritePlan 
 }
 
 export function planRemovals(writer: Files, paths: string[]): WritePlan[] {
-    const generatedPatterns = readGeneratedPatterns(writer);
+    const generatedPatterns = readGspotGeneratedPatterns(writer);
     const ownablePaths = new Set(paths);
     return paths.map((path): WritePlan => {
         const onDisk = writer.readKeepingLinks(path);

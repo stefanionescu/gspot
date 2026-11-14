@@ -10,6 +10,7 @@ import { selectScopeChecks } from '#cli/generation/configs/owned.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { parseJsonFile } from '#cli/parsers/formats/json.ts';
 import { tryParseFile } from '#cli/parsers/validation.ts';
+import { listPointerPatterns } from '#cli/repository/files/classify.ts';
 import { listCoveredFiles } from '#cli/repository/files/selection.ts';
 import { isInScope, isOutsideChildScopes, joinScope, listNestedScopes, listOwnFiles } from '#cli/repository/scopes.ts';
 import { openFiles } from '#cli/system/files/open.ts';
@@ -91,14 +92,16 @@ function listPointerFieldTools(session: Session) {
     });
 }
 
+/**
+List the paths where a config file writes its pointer for a scope: the path that the file classification marks
+generated, or, for a pointer with folders, the path in each folder that matches and holds files of the configuration.
+*/
 export function listPointerPaths(owner: ConfigOwner, config: Config): string[] {
     const { scope, configuration } = owner;
     const { scopes, repository } = owner.session;
     const { pointer } = config;
-    if (pointer === undefined) return [];
     const scopePath = scope.path;
-    if (pointer.folders === undefined)
-        return [config.per_scope && pointer.overrides !== true ? joinScope(scopePath, pointer.path) : pointer.path];
+    if (pointer?.folders === undefined) return listPointerPatterns(config, scopePath);
     const isMatch = buildPathMatcher(pointer.folders);
     const owned = listOwnFiles(
         listCoveredFiles(configuration.files, repository.files, { ...scope, path: '' }),

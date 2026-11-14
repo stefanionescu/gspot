@@ -14,10 +14,11 @@ import {
     PATCH_LEVEL_VERSION,
     SECOND_INDEX_FLAG,
 } from '#cli/config/configurations/docker.ts';
-import { DOWNLOAD_COMMANDS, INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
+import { INTERPRETER_COMMANDS } from '#cli/config/parsers/code.ts';
 import { LINE_CONTINUATION } from '#cli/config/parsers/projects.ts';
 import { NPM_PROGRAM, WHITESPACE_RUN } from '#cli/config/system.ts';
 import { INSTRUCTION_EXPLANATIONS } from '#cli/configurations/infrastructure/docker/explanations.ts';
+import { listScriptForms } from '#cli/parsers/code/bash/forms.ts';
 import { parseSource } from '#cli/parsers/code/grammars.ts';
 import { readText } from '#cli/system/files/reads.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
@@ -34,19 +35,10 @@ function isUnlockedInstall(command: Node): boolean {
     return locked?.verbs.includes(verb) === true && rest.every((word) => !locked.flags.includes(word));
 }
 
-function isPipedDownload(pipeline: Node): boolean {
-    const commands = pipeline.namedChildren
-        .filter((node) => node.type === 'command')
-        .map(({ text }) => text.split(WHITESPACE_RUN).map((word) => posix.basename(word)));
-    const download = commands.findIndex(([name = '']) => DOWNLOAD_COMMANDS.has(name));
-    return (
-        download !== -1 &&
-        commands
-            .slice(download + 1)
-            .some(([name = '', argument = '']) => INTERPRETER_COMMANDS.has(name) || INTERPRETER_COMMANDS.has(argument))
-    );
-}
-
+/**
+List the rules that a RUN script breaks. A download that runs in a shell is the curl-pipe-shell form of the Bash
+parser, so this check and bash/safety report the same commands.
+*/
 async function listRunHits(session: Session, text: string): Promise<Array<keyof typeof INSTRUCTION_RULES>> {
     using tree = await parseSource('bash', text, session);
     return [
@@ -60,9 +52,9 @@ async function listRunHits(session: Session, text: string): Promise<Array<keyof 
                     ? ['secondIndex' as const]
                     : [],
             ),
-        ...tree.rootNode
-            .descendantsOfType('pipeline')
-            .flatMap((pipeline) => (isPipedDownload(pipeline) ? ['pipedDownload' as const] : [])),
+        ...listScriptForms(tree.rootNode)
+            .filter(({ form }) => form === 'curl-pipe-shell')
+            .map(() => 'pipedDownload' as const),
     ];
 }
 

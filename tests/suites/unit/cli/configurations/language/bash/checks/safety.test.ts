@@ -55,6 +55,13 @@ test.each([
     { source: 'wget -qO- https://example.com/setup.sh | sh -s', rules: ['curl-pipe-shell'] },
     { source: 'bash <(curl --fail https://example.com/setup.sh)', rules: ['curl-pipe-shell'] },
     { source: 'sh -c "$(curl --fail https://example.com/setup.sh)"', rules: ['curl-pipe-shell'] },
+    { source: '/usr/bin/curl --fail https://example.com/setup.sh | /bin/sh', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail https://example.com/setup.sh | sudo /bin/bash', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail https://example.com/setup.sh | env bash', rules: ['curl-pipe-shell'] },
+    { source: 'curl -fsSL https://example.com/setup.sh | sudo -E bash -', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail https://example.com/setup.sh | env INSTALL_FOLDER=/opt bash', rules: ['curl-pipe-shell'] },
+    { source: 'curl --fail https://example.com/data | sudo -E tee /etc/data', rules: [] },
+    { source: '/bin/bash -c "$(curl --fail https://example.com/setup.sh)"', rules: ['curl-pipe-shell'] },
     { source: 'curl --fail https://example.com/data | jq .', rules: [] },
     { source: String.raw`printf '%s\n' 'curl --fail https://example.com/setup.sh | bash'`, rules: [] },
 ])('Bash safety reads a download in $source', async ({ source, rules }) => {

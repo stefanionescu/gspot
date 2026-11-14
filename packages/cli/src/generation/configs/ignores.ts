@@ -10,7 +10,7 @@ import { listWrittenPaths } from '#cli/generation/configs/paths.ts';
 import { listGitignorePatterns } from '#cli/repository/files/gitignore.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
 import { listTrackedPaths } from '#cli/repository/files/tracked.ts';
-import { readLinguistPatterns } from '#cli/repository/git/attributes.ts';
+import { readAuthoredLinguistPatterns } from '#cli/repository/git/attributes.ts';
 import { buildPathMatcher } from '#cli/system/patterns.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import type { IgnoreSection } from '#cli/types/configurations/shared.ts';
@@ -56,7 +56,7 @@ export function buildIgnoreSections(session: Session, generated: Pick<ConfigTarg
         {
             key: 'generators',
             title: IGNORE_SECTION_TITLES.generators,
-            patterns: [...readLinguistPatterns(cache, trackedPaths), ...generatorOutputs],
+            patterns: [...readAuthoredLinguistPatterns(cache, trackedPaths), ...generatorOutputs],
         },
         {
             key: 'configurations',

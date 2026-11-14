@@ -47,6 +47,16 @@ function decodeQuotedPattern(pattern: string): string | undefined {
     return Buffer.concat(bytes).toString('utf8');
 }
 
+function listSetPatterns(text: string, folder: string, names: readonly string[]): string[] {
+    return parseAttributePatterns(text, folder)
+        .filter((rule) =>
+            Object.entries(mergeAttributes(rule.attributes)).some(
+                ([name, value]) => names.includes(name) && SET_VALUES.has(value),
+            ),
+        )
+        .map((rule) => rule.pattern);
+}
+
 function buildAttributePattern(match: RegExpExecArray, line: string, folder: string): AttributePattern[] {
     const quoted = match[1] as string;
     const pattern = quoted.startsWith('"') ? decodeQuotedPattern(quoted) : quoted;
@@ -93,37 +103,31 @@ export function parsePathAttributes(text: string): Map<string, Record<string, st
 }
 
 /**
-List the linguist-generated patterns of the block that gspot writes in the root .gitattributes.
+List the linguist-generated patterns of the block that gspot writes in the root .gitattributes. Only this block makes a
+file gspot's to replace or delete, so a line that the user wrote never does.
 */
-export function readGeneratedPatterns(files: Files): string[] {
+export function readGspotGeneratedPatterns(files: Files): string[] {
     const attributesFile = files.read(GITATTRIBUTES_FILE);
     if (attributesFile === undefined) return [];
     const block = findBlockBody(attributesFile.bytes.toString('utf8'), GITATTRIBUTES_FILE) ?? '';
-    return parseAttributePatterns(block, '.')
-        .filter(({ attributes }) => attributes.includes(GENERATED_ATTRIBUTE))
-        .map(({ pattern }) => pattern);
+    return listSetPatterns(block, '.', [GENERATED_ATTRIBUTE]);
 }
 
 /**
-List the generated and vendored patterns of each tracked .gitattributes file, outside the block that gspot writes.
+List the generated and vendored patterns that the user wrote in each tracked .gitattributes file, outside the block that
+gspot writes.
 */
-export function readLinguistPatterns(cache: RunCache, paths: string[]): string[] {
+export function readAuthoredLinguistPatterns(cache: RunCache, paths: string[]): string[] {
     return [
         ...new Set(
             paths
                 .filter((path) => posix.basename(path) === GITATTRIBUTES_FILE)
-                .flatMap((path) => {
-                    const authored = stripBlock(readText(cache, path), path);
-                    return parseAttributePatterns(authored, posix.dirname(path))
-                        .filter((rule) =>
-                            Object.entries(mergeAttributes(rule.attributes)).some(
-                                ([name, value]) =>
-                                    (name === GENERATED_ATTRIBUTE || name === VENDORED_ATTRIBUTE) &&
-                                    SET_VALUES.has(value),
-                            ),
-                        )
-                        .map((rule) => rule.pattern);
-                }),
+                .flatMap((path) =>
+                    listSetPatterns(stripBlock(readText(cache, path), path), posix.dirname(path), [
+                        GENERATED_ATTRIBUTE,
+                        VENDORED_ATTRIBUTE,
+                    ]),
+                ),
         ),
     ];
 }

@@ -37,12 +37,23 @@ export const BASH_TOKEN_FORMS: Readonly<Record<string, Readonly<Record<string, B
     pipeline: { '|&': 'combined-pipe' },
     ERROR: { for: 'brace-for' },
 };
+// Each runs the program that its first argument names, after its options and its environment assignments.
+export const DELEGATING_COMMANDS: ReadonlySet<string> = new Set([
+    'command',
+    'doas',
+    'env',
+    'exec',
+    'nice',
+    'nohup',
+    'sudo',
+    'time',
+]);
 export const DOWNLOAD_COMMANDS: ReadonlySet<string> = new Set(['curl', 'wget']);
-export const ELEVATE_COMMAND = 'sudo';
 export const FORWARDED_ARGUMENTS: ReadonlySet<string> = new Set(['"$@"', '"$*"']);
 export const IFS_VARIABLE = 'IFS';
 export const INLINE_ASSIGNMENT_NODES = ['command', 'declaration_command'] as const;
 export const INTERPRETER_COMMANDS: ReadonlySet<string> = new Set(['sh', 'bash', 'dash', 'ash', 'zsh']);
+export const PROGRAM_PREFIX_ARGUMENT = /^(?:-|[A-Za-z_]\w*=)/u;
 export const SAVED_IFS = /\$\{?IFS\}?/u;
 export const SEQUENCE_COMMAND = 'seq';
 export const STRING_EXPANSION_NODES = [...EXPANSION_NODES, 'command_substitution', 'arithmetic_expansion'];

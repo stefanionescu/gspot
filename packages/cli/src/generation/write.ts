@@ -18,7 +18,7 @@ import {
     planReplacements,
     writePlans,
 } from '#cli/repository/files/writes.ts';
-import { readGeneratedPatterns } from '#cli/repository/git/attributes.ts';
+import { readGspotGeneratedPatterns } from '#cli/repository/git/attributes.ts';
 import { isInScope } from '#cli/repository/scopes.ts';
 import { readHooks } from '#cli/repository/setup/read.ts';
 import { openFiles, walkFiles } from '#cli/system/files/open.ts';
@@ -51,7 +51,7 @@ function listStrayPaths(
         ownPaths.push(path);
         return false;
     });
-    const generatedPatterns = readGeneratedPatterns(disk);
+    const generatedPatterns = readGspotGeneratedPatterns(disk);
     const writtenPaths = new Set([
         ...ownPaths,
         ...session.repository.files.filter(({ kind }) => kind === 'generated').map(({ path }) => path),

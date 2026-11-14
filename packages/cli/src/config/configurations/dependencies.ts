@@ -22,8 +22,6 @@ export const LOCKFILE_UPDATE_COMMANDS = {
     'pnpm-lock.yaml': 'pnpm install',
 } as const;
 export const NPM_TOOL_PREFIX = 'npm:';
-export const PACKAGE_MANAGER_HASH_SEPARATOR = '+';
-export const PACKAGE_MANAGER_VERSION_SEPARATOR = '@';
 export const STALE_LOCKFILE_SECTIONS = [...DEPENDENCY_SECTIONS, 'peerDependencies'] as const;
 export const UNBUNDLED_PACKAGE_MANAGERS: readonly string[] = ['pnpm', 'yarn', 'bun'];
 

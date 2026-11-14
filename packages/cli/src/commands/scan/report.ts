@@ -22,7 +22,7 @@ import { canIgnoreRule, formatIgnoreCommand } from '#cli/engine/outputs/rules.ts
 import { formatInitPlan, listCarryoverLines } from '#cli/generation/setup/report.ts';
 import { readShippedChecks } from '#cli/manifests/checks.ts';
 import { findToolName, listDistinctTools } from '#cli/manifests/tools.ts';
-import { listPinPrerequisites } from '#cli/repository/projects/runner.ts';
+import { listPinPrerequisites } from '#cli/repository/projects/pin.ts';
 import { formatCount } from '#cli/system/text/messages.ts';
 import { compareText } from '#cli/system/text/order.ts';
 import { quoteArgument } from '#cli/system/text/quoting.ts';

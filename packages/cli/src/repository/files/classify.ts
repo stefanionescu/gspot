@@ -107,13 +107,16 @@ function classifyKind(
     return classifyManagedDocument(root, listed, prefix);
 }
 
-function listPointerFiles(path: string, files: Config[]): string[] {
-    return files.flatMap((file) => {
-        const pointer = file.pointer;
-        if (pointer === undefined) return [];
-        const scopePath = file.per_scope ? path : '';
-        return (pointer.folders ?? ['']).map((folder) => posix.join(scopePath, folder, pointer.path));
-    });
+/**
+List where a config file puts its pointer for the files of a scope. A pointer with overrides serves every scope from
+the root. A pointer with folders gives one pattern for each folder pattern, because files get their kind before gspot
+can list the folders that hold them.
+*/
+export function listPointerPatterns(config: Config, scopePath: string): string[] {
+    const { pointer } = config;
+    if (pointer === undefined) return [];
+    const folder = config.per_scope && pointer.overrides !== true ? scopePath : '';
+    return (pointer.folders ?? ['']).map((pattern) => posix.join(folder, pattern, pointer.path));
 }
 
 export function classifyFile(
@@ -140,7 +143,7 @@ export function listConfigurationGeneratedPaths(selected: Map<string, Configurat
             configurations.flatMap(({ generated, name, configs }) => {
                 const paths = [
                     ...generated.map((file) => posix.join(scopePath, file)),
-                    ...listPointerFiles(scopePath, configs),
+                    ...configs.flatMap((config) => listPointerPatterns(config, scopePath)),
                 ];
                 return paths.length === 0
                     ? []

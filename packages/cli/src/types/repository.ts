@@ -2,7 +2,7 @@ import type { Ignore } from 'ignore';
 import type { z } from 'zod';
 
 import type { FILE_KINDS } from '#cli/config/manifests.ts';
-import { type CONFIGURATION_ORIGINS, type SETTINGS_FILE } from '#cli/config/repository/files.ts';
+import type { CONFIGURATION_ORIGINS, SETTINGS_FILE } from '#cli/config/repository/files.ts';
 import type { START_RUNNERS } from '#cli/config/repository/projects.ts';
 import type {
     gitFileSchema,
@@ -117,6 +117,11 @@ export type PackageManagerPin = z.infer<typeof packageManagerPinSchema>;
 export type ToolPackageManagerName = Exclude<PackageManager['name'], 'yarn'>;
 
 export type PackageManagerField = PackageManagerPin & { written: string; field: string };
+
+export type WrittenPackageManager = Pick<PackageManagerField, 'written' | 'field'> & {
+    name: string | undefined;
+    version: string | undefined;
+};
 
 export type PackageManagerCommand = { name: string; version?: string | undefined };
 

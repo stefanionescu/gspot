@@ -2,7 +2,6 @@ import { existsSync } from 'node:fs';
 import { join } from 'node:path';
 
 import cliPackage from '#cli-package' with { type: 'json' };
-import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { LOCKFILES, PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import {
     type FROZEN_INSTALLS,
@@ -13,12 +12,8 @@ import {
     START_RUNNERS,
     YARN_BERRY_MAJOR,
 } from '#cli/config/repository/projects.ts';
-import { NODE_PROGRAM } from '#cli/config/system.ts';
-import { parseTomlFile } from '#cli/parsers/formats/toml/parse.ts';
 import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { buildFrozenInstallArguments, detectPackageManager } from '#cli/repository/projects/package-manager.ts';
-import { miseToolsSchema } from '#cli/schemas/repository.ts';
-import { findText } from '#cli/system/files/reads.ts';
 import type { SetupReference, StartRunner } from '#cli/types/repository.ts';
 
 export function readCliSpecifier(root: string): string | undefined {
@@ -44,16 +39,6 @@ export function buildStartRunner(name: StartRunner['name'], root: string): Start
 export function selectStartRunner(root: string): StartRunner {
     const name = readCliSpecifier(root) === undefined ? 'mise' : detectPackageManager(root, []).name;
     return buildStartRunner(name, root);
-}
-
-/**
-List the commands that a mise pin needs before it. Without a Node.js pin, mise starts gspot with the Node.js of the
-system, which can be too old to run it.
-*/
-export function listPinPrerequisites(root: string, runner: StartRunner['name']): string[] {
-    if (runner !== 'mise') return [];
-    const { tools } = parseTomlFile(MISE_CONFIG_FILE, findText(root, MISE_CONFIG_FILE) ?? '', miseToolsSchema);
-    return tools[NODE_PROGRAM] === undefined ? [MISE_NODE_PIN_COMMAND] : [];
 }
 
 export function buildSetupReference(): SetupReference[] {

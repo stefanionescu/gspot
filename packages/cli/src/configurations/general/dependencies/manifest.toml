@@ -86,10 +86,10 @@ why = "A frozen install in CI stops when package.json and the lockfile disagree,
 [[check]]
 example = "A `packageManager` of `bun@1.4.2` while `mise.toml` pins `bun = \"1.4.3\"` reports `package-manager-pin`. Write one version in both."
 files = { filenames = ["package.json", "pnpm-lock.yaml", "yarn.lock", "bun.lock", ".mise.local.toml", "mise.local.toml", ".mise.toml", "mise.toml", "**/mise/config.toml", "**/.mise/config.toml", "**/.config/mise.toml", "**/.config/mise/config.toml"], kinds = ["source", "generated"] }
-help = "Write the same version of the package manager in packageManager and in mise.toml, and give pnpm, Yarn, and Bun a packageManager field."
+help = "Write the same version of the package manager in package.json and in mise.toml, and name the package manager of a pnpm, Yarn, or Bun project in packageManager or devEngines.packageManager."
 name = "package-manager-pin"
 rules = ["DEPENDENCIES.md"]
 runs = "scope"
 stage = "commit"
-summary = "Checks that the `packageManager` field of `package.json` and the mise pin of that package manager name one version, and that a pnpm, Yarn, or Bun project has the field."
+summary = "Checks that the package manager that `package.json` names, in `packageManager` or `devEngines.packageManager`, and its mise pin name one version, and that a pnpm, Yarn, or Bun project names one."
 why = "Tools that read packageManager, such as Corepack, and tools that start the mise pin then run two versions of one package manager."

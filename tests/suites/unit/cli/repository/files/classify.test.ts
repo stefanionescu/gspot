@@ -211,6 +211,23 @@ test('an @generated marker in a comment line makes a file generated, and the bar
     expect(kinds).toStrictEqual({ 'marked.py': 'generated', 'marked.ts': 'generated', 'named.ts': 'source' });
 });
 
+test('css in a scope below the root marks the root Stylelint pointer generated, and leaves a config file in the scope source', async () => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([], { scopes: [{ path: 'web', configurations: ['css'] }] }),
+        '.stylelintrc.yml': 'rules: {}\n',
+        'web/.stylelintrc.yml': 'rules: {}\n',
+        'web/style.css': 'a { color: red; }\n',
+    });
+    const session = await openSession(sandbox.path);
+    const kinds = session.repository.files
+        .filter(({ path }) => path.endsWith('.stylelintrc.yml'))
+        .map(({ path, kind, kindOrigin }) => ({ path, kind, kindOrigin }));
+    expect(kinds).toStrictEqual([
+        { path: '.stylelintrc.yml', kind: 'generated', kindOrigin: 'css' },
+        { path: 'web/.stylelintrc.yml', kind: 'source', kindOrigin: 'default' },
+    ]);
+});
+
 test.each([...GENERATED_PATH_CASES])(
     'the configurations each scope selects mark their generated files: $configurations $tables',
     async ({ configurations, tables, generated }) => {

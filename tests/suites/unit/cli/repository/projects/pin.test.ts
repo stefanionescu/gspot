@@ -7,10 +7,16 @@ import { expect, test } from 'bun:test';
 import cliPackage from '#cli-package' with { type: 'json' };
 import { GSPOT_MISE_TOOL } from '#cli/config/repository/projects.ts';
 import { NODE_PROGRAM } from '#cli/config/system.ts';
-import { findGspotPinMismatch, readGspotPin, writeMisePin, writePackagePin } from '#cli/repository/projects/pin.ts';
+import {
+    findGspotPinMismatch,
+    readGspotPin,
+    readMisePin,
+    writeMisePin,
+    writePackagePin,
+} from '#cli/repository/projects/pin.ts';
 import { GspotError } from '#cli/system/errors.ts';
 import { openFiles } from '#cli/system/files/open.ts';
-import { captureRejection } from '#tests/setup/matchers.ts';
+import { captureRejection, matchFields } from '#tests/setup/matchers.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 
 test('the pin keeps the indentation of package.json', async () => {
@@ -21,7 +27,7 @@ test('the pin keeps the indentation of package.json', async () => {
     );
 });
 
-test('a mise.toml whose tools field is not a table refuses the pin and names the file', async () => {
+test('a mise.toml whose tools field is not a table refuses the pin and its comparison, and names the file', async () => {
     await using sandbox = await createGitSandbox({ 'mise.toml': 'tools = "node"\n' });
     const error = await captureRejection(
         Promise.try(() => {
@@ -31,6 +37,17 @@ test('a mise.toml whose tools field is not a table refuses the pin and names the
     expect(error).toBeInstanceOf(GspotError);
     expect(error.message).toContain('mise.toml');
     expect(await readFile(join(sandbox.path, 'mise.toml'), 'utf8')).toBe('tools = "node"\n');
+    expect(() => findGspotPinMismatch(sandbox.path)).toThrow(
+        matchFields<GspotError>({ name: 'GspotError', message: expect.stringContaining('mise.toml') as string }),
+    );
+});
+
+test('a mise pin written as a version list is its first version, the one that mise runs', async () => {
+    await using sandbox = await createGitSandbox({
+        'mise.toml': '[tools]\nnode = ["22", "20"]\n"npm:@gspothq/cli" = ["0.0.1", "0.0.2"]\n',
+    });
+    expect(readMisePin(sandbox.path, NODE_PROGRAM)).toBe('22');
+    expect(readGspotPin(sandbox.path)).toBe('0.0.1');
 });
 
 test('the mise pin is a tool beside the others and keeps their Node.js pin', async () => {

@@ -8,8 +8,6 @@ import {
     LOCKFILE_KEY_SUFFIX,
     LOCKFILE_UPDATE_COMMANDS,
     NPM_TOOL_PREFIX,
-    PACKAGE_MANAGER_HASH_SEPARATOR,
-    PACKAGE_MANAGER_VERSION_SEPARATOR,
     STALE_LOCKFILE_SECTIONS,
     UNBUNDLED_PACKAGE_MANAGERS,
 } from '#cli/config/configurations/dependencies.ts';
@@ -35,12 +33,13 @@ import {
     SPECIFIER_PARSERS,
 } from '#cli/parsers/projects/lockfiles.ts';
 import { isGspotPath } from '#cli/repository/files/ownership.ts';
+import { findWrittenPackageManager } from '#cli/repository/projects/package-manager.ts';
+import { getMiseToolVersion } from '#cli/repository/projects/pin.ts';
 import { listWorkspaceFolders } from '#cli/repository/projects/workspaces.ts';
 import { miseToolsSchema } from '#cli/schemas/repository.ts';
 import { getTable } from '#cli/settings/tables.ts';
 import { findText, readText } from '#cli/system/files/reads.ts';
 import { listEnclosingFolders } from '#cli/system/paths.ts';
-import { isTable } from '#cli/system/tables.ts';
 import { getPosition } from '#cli/system/text/positions.ts';
 import type { PlannedCheck } from '#cli/types/engine/plan.ts';
 import type { CheckCode, CheckFinding } from '#cli/types/engine/run.ts';
@@ -104,14 +103,6 @@ function listForeignLockfiles(files: PlannedCheck['files']): CheckFinding[] {
         .toArray();
 }
 
-function getExactVersion(tools: Record<string, unknown>, tool: string): string | undefined {
-    const value = tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`];
-    const first: unknown = Array.isArray(value) ? value[0] : value;
-    if (typeof first === 'string') return first;
-    const version = isTable(first) ? first['version'] : undefined;
-    return typeof version === 'string' ? version : undefined;
-}
-
 function findMiseFilePin(
     session: Session,
     folder: string,
@@ -129,16 +120,10 @@ function findMiseFilePin(
             continue;
         }
         const { tools } = parsed.value;
-        const version = getExactVersion(tools, tool);
+        const version = getMiseToolVersion(tools[tool] ?? tools[`${NPM_TOOL_PREFIX}${tool}`]);
         if (version !== undefined && pin === undefined) pin = { path, version };
     }
     return { pin, findings };
-}
-
-function splitPackageManager(field: string | undefined): { tool: string; version: string } | undefined {
-    const pin = field?.split(PACKAGE_MANAGER_HASH_SEPARATOR, 1)[0] ?? '';
-    const separator = pin.lastIndexOf(PACKAGE_MANAGER_VERSION_SEPARATOR);
-    return separator <= 0 ? undefined : { tool: pin.slice(0, separator), version: pin.slice(separator + 1) };
 }
 
 function compareSpecifiers(
@@ -195,13 +180,26 @@ function checkLockfiles(session: Session, planned: PlannedCheck): CheckFinding[]
     ];
 }
 
+/**
+Read the package manager pin of package.json where CI and the tool install read it: packageManager, else
+devEngines.packageManager. The check also compares a package manager that the install refuses, and a pin without a
+name or a version counts as no pin.
+*/
+function readComparedPin(session: Session, packageJsonPath: string): { name: string; version: string } | undefined {
+    const packageJson = readPackageJson(session.cache, packageJsonPath);
+    const written = packageJson === undefined ? undefined : findWrittenPackageManager(packageJson);
+    const name = written?.name;
+    const version = written?.version ?? '';
+    return name === undefined || version === '' ? undefined : { name, version };
+}
+
 function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckFinding[] {
     const folder = planned.scope.path;
     const packageJsonPath = posix.join(folder, PACKAGE_JSON);
-    const writtenPin = splitPackageManager(readPackageJson(session.cache, packageJsonPath)?.packageManager);
+    const writtenPin = readComparedPin(session, packageJsonPath);
     if (writtenPin === undefined) return listMissingPins(session, folder);
-    const { tool, version } = writtenPin;
-    const { pin, findings } = findMiseFilePin(session, folder, tool);
+    const { name, version } = writtenPin;
+    const { pin, findings } = findMiseFilePin(session, folder, name);
     if (pin === undefined || pin.version === version) return findings;
     return [
         ...findings,
@@ -209,7 +207,7 @@ function checkPackageManagerPin(session: Session, planned: PlannedCheck): CheckF
             file: packageJsonPath,
             line: 1,
             rule: DEPENDENCY_RULES.packageManagerPin,
-            message: `packageManager names ${tool} ${version}, but ${pin.path} pins ${tool} ${pin.version}. Write one version in both.`,
+            message: `packageManager names ${name} ${version}, but ${pin.path} pins ${name} ${pin.version}. Write one version in both.`,
         },
     ];
 }

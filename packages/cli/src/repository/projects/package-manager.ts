@@ -24,14 +24,11 @@ import type {
     PackageManagerField,
     PackageManagerPin,
     ToolPackageManagerName,
+    WrittenPackageManager,
 } from '#cli/types/repository.ts';
 
-function buildPackageManagerField(
-    pin: { name: string | undefined; version: string | undefined },
-    field: string,
-    written: string,
-): PackageManagerField {
-    const parsed = packageManagerPinSchema.safeParse(pin);
+function buildPackageManagerField({ name, version, field, written }: WrittenPackageManager): PackageManagerField {
+    const parsed = packageManagerPinSchema.safeParse({ name, version });
     if (!parsed.success)
         throw new GspotError(
             'install',
@@ -40,14 +37,14 @@ function buildPackageManagerField(
     return { ...parsed.data, written, field };
 }
 
-function parsePackageManagerField(field: string): PackageManagerField {
-    const [name, requested = '', ...verbatim] = field.split('@');
+/**
+Split a packageManager field into its name and its version without the Corepack hash. A field with a second @ gives no
+name.
+*/
+function parsePackageManagerField(written: string): WrittenPackageManager {
+    const [name, requested = '', ...verbatim] = written.split('@');
     const version = requested.split(PACKAGE_MANAGER_HASH_SUFFIX, 1)[0];
-    return buildPackageManagerField(
-        { name: verbatim.length === 0 ? name : undefined, version },
-        'packageManager',
-        field,
-    );
+    return { name: verbatim.length === 0 ? name : undefined, version, field: 'packageManager', written };
 }
 
 function readFirstPackageManager(
@@ -67,17 +64,28 @@ function readFirstPackageManager(
     return { name: NPM_PROGRAM, version: undefined };
 }
 
-export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
+/**
+Find the package manager pin of package.json as written: packageManager, else the first devEngines.packageManager
+entry. findPackageManagerPin checks the pin for the install, and dependencies/package-manager-pin compares it with the
+mise pin.
+*/
+export function findWrittenPackageManager(packageJson: PackageJson): WrittenPackageManager | undefined {
     if (packageJson.packageManager !== undefined) return parsePackageManagerField(packageJson.packageManager);
     const engines = packageJson.devEngines?.packageManager;
     const engine = Array.isArray(engines) ? engines[0] : engines;
     return engine?.name === undefined
         ? undefined
-        : buildPackageManagerField(
-              { name: engine.name, version: engine.version },
-              'devEngines.packageManager',
-              engine.version ?? engine.name,
-          );
+        : {
+              name: engine.name,
+              version: engine.version,
+              field: 'devEngines.packageManager',
+              written: engine.version ?? engine.name,
+          };
+}
+
+export function findPackageManagerPin(packageJson: PackageJson): PackageManagerField | undefined {
+    const written = findWrittenPackageManager(packageJson);
+    return written === undefined ? undefined : buildPackageManagerField(written);
 }
 
 export function detectPackageManager(root: string, trackedPaths: string[]): PackageManagerPin {
