@@ -30,15 +30,10 @@ test('Vue, Svelte and Astro files parse in their scopes, and a scope without the
     });
 
     const eslint = await buildEslint(sandbox.path);
-    for (const prefix of ['', 'app/']) {
-        expect(
-            await listLintFindings(
-                eslint,
-                sandbox.path,
-                Object.keys(COMPONENT_FILES).map((path) => `${prefix}${path}`),
-                [],
-            ),
-        ).toStrictEqual([]);
+    const prefixes = ['', 'app/'];
+    const files = prefixes.flatMap((prefix) => Object.keys(COMPONENT_FILES).map((path) => `${prefix}${path}`));
+    expect(await listLintFindings(eslint, sandbox.path, files, [])).toStrictEqual([]);
+    for (const prefix of prefixes) {
         const vue = (await eslint.calculateConfigForFile(`${prefix}Card.vue`)) as EslintConfiguration;
         expect(vue.rules['vue/no-v-html']?.[0]).toBeGreaterThan(0);
     }
