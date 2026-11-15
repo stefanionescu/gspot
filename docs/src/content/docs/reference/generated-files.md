@@ -46,8 +46,8 @@ which stay open in review.
 
 ## Do not edit generated files
 
-`gspot install` overwrites each generated file, and with it any local edit or merge conflict marker, so make the change in
-`gspot.toml` first.
+`gspot install` and `gspot check --fix` overwrite each generated file, and with it any local edit or merge conflict
+marker, so make the change in `gspot.toml` first.
 
 ## Installed tools
 

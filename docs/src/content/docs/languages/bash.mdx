@@ -17,8 +17,9 @@ Each tool reads the scripts of its own shell:
 | Zsh                              | `zsh -n`, through `bash/zsh-syntax`        |
 | Every shell script, ksh included | The built-in checks, such as `bash/safety` |
 
-ShellCheck reads a script without a shebang as Bash, and it reads each file that a script loads with `source`.
-`gspot install` does not install `zsh`, so install it yourself when your repository has Zsh scripts.
+ShellCheck reads a script without a shebang as Bash, and it reads each file that a script loads with `source`. Of the
+built-in checks, `bash/script-layout` reads only Bash scripts. `gspot install` does not install `zsh`, so install it
+yourself when your repository has Zsh scripts.
 
 ## Levels
 

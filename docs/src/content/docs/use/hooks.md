@@ -124,7 +124,8 @@ gspot check --hook commit-msg -- .git/COMMIT_EDITMSG
 
 The pre-push hook reads the remote and the list of pushed commits from Git, so test it with a real `git push`. After a
 failed push, the `rerun:` line of the report is `gspot check --only <check> --base <hash>`. `<hash>` is the commit that
-the remote had, or on the first push to an empty remote, the first commit of the branch. To see the result without
+the remote had. For a new branch, it is the newest commit that the branch shares with its upstream, or else with the
+default branch of `origin`. Without such a commit, it is the first commit of the branch. To see the result without
 pushing, run `gspot check --base origin/HEAD`.
 
 ## Large files

@@ -40,6 +40,9 @@ failed   react-dom/react-versions  1 finding
 
 ## What level `all` accepts
 
-Level `all` reports a small private function that at most one place uses, and a file that only forwards to another
-module. A short component in a `.jsx` or `.tsx` file passes both rules. The naming checks accept a file name in PascalCase
-or kebab-case in these files, and PascalCase for a component function and for a variable that holds a component.
+Level `all` reports a small private function that at most one place uses, a small exported function that one place
+calls, and a file that only forwards to another module. A short component in a `.jsx` or `.tsx` file passes these
+rules, but a small exported hook that one place calls gets a finding. The naming checks accept a file name in
+PascalCase or kebab-case in these files, and PascalCase for a component function and for a variable that holds a
+component. In every JavaScript and TypeScript file of the scope, the naming checks do not count the `set` of a state
+setter, such as `setSelectedItem`, as a word.

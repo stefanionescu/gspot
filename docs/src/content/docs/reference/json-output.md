@@ -53,7 +53,7 @@ holds paths relative to the root folder of the repository.
 | `totals`        | The counts of the run: `files`, `checks`, `findings`, `filesFlagged`, and `seconds`.                                                |
 | `categories`    | The findings by category, real problems first: `name`, `count`, the five largest `rules`, and three `examples` of the largest rule. |
 | `filesToFormat` | Number of files that differ from the format that gspot uses.                                                                        |
-| `notRun`        | One line for each check that could not run.                                                                                         |
+| `notRun`        | One line for each check that could not run, and a line that names a lockfile to stage when Git does not track it.                   |
 | `leftOut`       | The checks that a scan leaves out, because they run your code.                                                                      |
 | `cost`          | The tools, the megabytes in `.gspot/`, and the seconds in `perTool`.                                                                |
 | `plan`          | What `gspot init` will do, as in [`gspot init`](#gspot-init).                                                                       |

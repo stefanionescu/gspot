@@ -57,8 +57,9 @@ copy of the user's repository and changes no file in it.
 
 1. Tell the user that the scan downloads linters with npm, uv, and mise, and that mise installs them for the whole
    machine. The first scan downloads every tool, so it is slower than later scans.
-2. Tell the user that the scan reads only the files in the Git index: the committed files and the staged changes. It
-   leaves out untracked files and unstaged edits, and it needs a Git repository.
+2. Tell the user that the scan reads the files in the Git index, which are the committed files and the staged changes,
+   and the Git hooks that the repository runs. It leaves out other untracked files and unstaged edits, and it needs a
+   Git repository.
 3. Install the dependencies of the user's project first, so that the type checks can find its types.
 4. From the root folder of the user's repository, run \`${SCAN_COMMAND} --json > "\${TMPDIR:-/tmp}/gspot-scan.json"\`.
 5. Read \`.totals\`, \`.categories\`, \`.filesToFormat\`, \`.notRun\`, \`.leftOut\`, \`.cost\`, and \`.plan.deleted\` with

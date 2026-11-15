@@ -45,8 +45,9 @@ running them, and the lint rules and coding agent rules of `vitest` stay.
 
 The job runs `gspot check --base` with the base of the pull request or merge request, or with the previous push, so it
 checks what changed after that commit. It leaves out the manual checks. An empty base, the all-zero hash of a branch's
-first push, or a full hash that the clone lacks checks every file, and the report says why. Any other base that Git cannot
-find stops the run with exit code 2, and in a shallow clone the message says how to fetch the history.
+first push, or a full hash that the clone lacks checks every file, and the report says why. A base that shares no
+commit with `HEAD` checks every file too. Any other base that Git cannot find stops the run with exit code 2, and in a
+shallow clone the message says how to fetch the history.
 
 The job fails when `gspot install` changes a file in the clone, such as a generated file that someone edited by hand, or
 a lockfile that is missing or out of date. To fix the job, run `gspot install` on your machine and commit the changed
@@ -156,6 +157,9 @@ names the revision to compare with, so that gspot checks only the changed files,
 | [Azure Pipelines](https://learn.microsoft.com/en-us/azure/devops/pipelines/build/variables)      | `origin/${SYSTEM_PULLREQUEST_TARGETBRANCH#refs/heads/}` |
 | [Jenkins](https://www.jenkins.io/doc/book/pipeline/multibranch/)                                 | `origin/$CHANGE_TARGET`                                 |
 | Any other provider, such as CircleCI                                                             | `$(git merge-base origin/<default-branch> HEAD)`        |
+
+When a `[[command_check]]` reads the `[env]` table of your mise config, start `gspot check` under `mise exec --`, as
+the job that gspot writes does.
 
 Let the pipeline fail when gspot exits with a code other than 0. Exit code `1` means that findings remain, and `2` means
 that the run did not finish, such as when a tool is missing.

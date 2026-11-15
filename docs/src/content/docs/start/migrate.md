@@ -110,7 +110,7 @@ of either in a subfolder.
 gspot does not edit your scripts, Git hooks, or CI files. The plan and `gspot scan` list each place that still calls a
 replaced tool or repeats it:
 
-- `package.json` scripts, `lint-staged` entries, and hook lines
+- `package.json` scripts, `lint-staged` entries, mise tasks, and hook lines
 - `.pre-commit-config.yaml` entries and CI steps
 - root `devDependencies` that gspot also installs, with both versions
 - the settings of black, flake8, isort, and mypy

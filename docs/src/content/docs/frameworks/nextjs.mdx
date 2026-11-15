@@ -37,6 +37,10 @@ In `next.config.*` files, the `gspot/restricted-syntax` rule reports two pattern
 | `ignoreBuildErrors: true` or `ignoreDuringBuilds: true`                                       | This option lets next build pass with errors. Remove it.                           |
 | A key under `env` whose name holds `SECRET`, `TOKEN`, `PASSWORD`, `PRIVATE_KEY`, or `API_KEY` | A key under env is written into the client bundle. Read this secret on the server. |
 
-gspot accepts the file names, folder layouts, default exports, and export names that Next.js requires, such as
-`page.tsx`, `not-found.tsx`, and `generateMetadata`. It treats `next-env.d.ts` as a generated file, and most checks skip
-it.
+gspot accepts the file names, folder layouts, default exports, and export names of the Next.js route, metadata,
+middleware, and proxy files, such as `page.tsx`, `not-found.tsx`, and `generateMetadata`. It treats `next-env.d.ts` as
+a generated file, and most checks skip it.
+
+At level `all`, three shapes of a Next.js app still get a finding. `export const dynamicParams` reports
+`unicorn/consistent-boolean-name`, and the default export of a Cloudflare Worker entry, or of the module that
+`images.loaderFile` names, reports `import-x/no-default-export`. Ignore the rule for that file with a reason.

@@ -46,6 +46,10 @@ plugin that it adds. Until you run it, `javascript/eslint` reports `missing`, or
 rules. After a later edit of the rules, `gspot check --fix` rewrites the generated ESLint config. `gspot install`
 rewrites it too, then installs the tools.
 
+An edit that lets more imports through needs a reason. `gspot/weakenings` reports a rule that goes away, gains a path,
+or may import more rules, and a folder that leaves `javascript.import_boundaries`.
+[Changes that need a reason](/configure/gspot-toml/#changes-that-need-a-reason) shows how to give one.
+
 ## Every code file belongs to a rule
 
 Once `gspot.toml` has import rules, `structure/import-rules` reports each code file that no rule covers. These files

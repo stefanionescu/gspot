@@ -36,4 +36,4 @@ A direct `bun test` run needs `TEST_RUN_FOLDER`, a `--preload` file from `tests/
 its suite from `.mise/tasks/test`.
 
 When you add a test, follow the suite boundaries and file placement rules in [repository rules](../AGENTS.md). Shared
-setup, with the output schemas, lives in `tests/setup`.
+setup lives in `tests/setup`, and the output schemas live in `tests/schemas`.

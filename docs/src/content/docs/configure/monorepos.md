@@ -39,6 +39,7 @@ path from your current folder, and `gspot check` with no path checks the whole r
 
 A file belongs to the deepest scope that contains it, and a file outside every scope belongs to the root. Each scope runs
 its own copy of a whole-project check, such as a type check, which reads its whole project even when you name one file.
+When the tsconfig of a parent folder covers a scope, that scope skips its type check, and the parent scope checks it.
 
 To see the scope and the checks of a file, run `gspot explain` with its path. When the path is also the name of a
 configuration or a check, start it with `./`, because `gspot explain bash` describes the configuration.

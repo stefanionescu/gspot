@@ -74,9 +74,10 @@ as `gspot check`.
 
 Commit the setup files, then fix each file as you touch it. The setup commit passes once you delete what
 `gspot/conflicting-configs` reports and fix or ignore the findings of the files that it stages, such as `package.json` or
-an edited CI file. With Bun, pnpm, or Yarn, `dependencies/package-manager-pin` asks for a `packageManager` field in
-`package.json`, such as `"packageManager": "bun@<version>"`. `gspot/conflicting-configs` reports old tool settings, and
-the scripts, hook lines, and CI steps that still call the old tools. After you edit `package.json`, run the install
+an edited CI file. With Bun, pnpm, or Yarn, `dependencies/package-manager-pin` asks for the package manager and its
+version in the `packageManager` field of `package.json`, such as `"packageManager": "bun@<version>"`, or in
+`devEngines.packageManager`. `gspot/conflicting-configs` reports old tool settings, and
+the scripts, mise tasks, hook lines, and CI steps that still call the old tools. After you edit `package.json`, run the install
 command of your package manager and `gspot install`, then stage the result.
 [Files to commit](/reference/generated-files/#files-to-commit) lists the setup files.
 

@@ -15,7 +15,7 @@ gspot explain limits.max_file_lines
 ```
 
 `gspot list` prints the configurations in use and the state of each check. `gspot list settings` prints each setting,
-its value, when it needs a reason, and where the value comes from, and `--json` adds the full values.
+its whole value, when it needs a reason, and where the value comes from, and `--json` prints a row for each scope.
 `gspot explain <setting>` prints one setting, its default, and the command that changes it. The
 [settings reference](/reference/gspot-toml/) lists every key.
 
@@ -98,19 +98,26 @@ max_function_lines = { value = 80, reason = "The parser is one state machine." }
 - a lower level
 - a weaker setting, such as a raised limit
 - the Git hooks or the rule files turned off
+- an `[[import_rule]]` record that goes away, gains a path, or may import more rules
+- a folder that leaves `javascript.import_boundaries`
+- options in `tools.eslint.rules` that leave out or change a key of the options that gspot ships for the rule
 
 A change with a reason prints as a note, and a change without one fails the check. The check compares `gspot.toml` with
 its version before your change: where the pushed commits start, the revision that `--base` names, or the last commit.
-With the hooks off, only CI or a run by hand reports it.
+When that version does not fit the schema, as after an upgrade, the check reads it without the keys that the schema
+refuses. When it still does not fit, the check compares with the shipped defaults. Only CI or a run by hand reports the
+change when the hooks are off.
 
-`level`, `hooks.enabled`, and `rule_files` hold no reason, so `gspot set` refuses `--reason` on them. Give the reason
-with an ignore of the matching rule of `gspot/weakenings`, which also covers later changes of that kind:
+`level`, `hooks.enabled`, `rule_files`, `javascript.import_boundaries`, and `tools.eslint.rules` hold no reason, so
+`gspot set` refuses `--reason` on them, and an `[[import_rule]]` record holds none either. Give the reason with an
+ignore of the matching rule of `gspot/weakenings`, which also covers later changes of that kind:
 
 ```shell
 gspot ignore gspot/weakenings --rule level --reason "The team moves to level all after the release."
 ```
 
-The rules are `level`, `hooks`, and `rule-files`. gspot rejects an ignore of the whole check, so that it keeps running.
+The rules are `level`, `hooks`, `rule-files`, `import-rule`, and `rule-options`. gspot rejects an ignore of the whole
+check, so that it keeps running.
 
 ## Edit records by hand
 

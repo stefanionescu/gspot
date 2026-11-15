@@ -46,6 +46,9 @@ The table holds only options, for a rule that runs at your level. `gspot set` re
 `import-x/no-default-export`. Any other rule that your level does not run, such as `id-length`, stops the next ESLint
 run, and `javascript/eslint` reports `error`. Each message says what to do instead.
 
+`gspot/weakenings` reports options that leave out or change a key of the options that gspot ships for a rule. Give the
+reason as [Changes that need a reason](/configure/gspot-toml/#changes-that-need-a-reason) shows.
+
 ## Settings that set rule options
 
 gspot writes the options of some rules from other settings, and rejects these rules in the rule tables, so change the
