@@ -81,6 +81,7 @@ export type Pipeline = {
     packageManager?: PackageManagerPin | undefined;
     setupCommand?: NonNullable<Settings['ci']>['setup_command'];
     projectInstall: string[];
+    packageCaches: { lockfiles: string[]; variables: string[] };
     operatingSystems: NonNullable<NonNullable<Settings['ci']>['operating_systems']>;
     linuxRunner: NonNullable<Settings['ci']>['linux_runner'];
     testChecks: string[];

@@ -16,10 +16,11 @@ import { readPackageJson } from '#cli/parsers/projects/dependencies.ts';
 import { quoteCommand, quoteArgument } from '#cli/system/text/quoting.ts';
 import { WORKFLOW_EXPRESSION } from '#cli/config/configurations/github-actions.ts';
 import type { Pipeline, ActionPin, FrozenLockfile } from '#cli/types/generation.ts';
-import { FROZEN_INSTALLS, PACKAGE_MANAGERS } from '#cli/config/repository/projects.ts';
 import { Scalar, Document, type Node, stringify, type YAMLMap, type YAMLSeq } from 'yaml';
+import { FROZEN_INSTALLS, PACKAGE_MANAGERS, PACKAGE_CACHE_VARIABLES } from '#cli/config/repository/projects.ts';
 
 import {
+    isYarnBerry,
     findPackageManagerPin,
     buildPackageManagerCommand,
     buildFrozenInstallArguments,
@@ -38,12 +39,15 @@ import {
     CI_CHECK_COMMAND,
     GITLAB_BASE_LINE,
     GITLAB_VARIABLES,
+    GITLAB_KEY_FILES,
     CI_PACKAGE_RUNNER,
     CI_TESTS_JOB_NAME,
     GITLAB_MISE_IMAGE,
+    CI_PACKAGE_FOLDER,
     CI_TIMEOUT_MINUTES,
     GITHUB_CONCURRENCY,
     GITHUB_MISE_CACHE_KEY,
+    GITLAB_PACKAGE_FOLDER,
     GITHUB_PUSH_CONDITION,
     GITHUB_BASE_EXPRESSION,
     GITHUB_EXPRESSION_MESSAGE,
@@ -71,6 +75,31 @@ function buildCheckLine(tools: string, checkCommand: string): string {
     return `mise exec ${tools} -- ${checkCommand}`;
 }
 
+/**
+Point each package manager at one folder under the runner temp folder, and restore that folder from the cache of the
+lockfiles. The key also hashes the workflow, which pins the runtimes.
+*/
+function buildPackageCacheSteps({ lockfiles, variables }: Pipeline['packageCaches']): Array<Record<string, unknown>> {
+    if (lockfiles.length === 0) return [];
+    const hashed = [GITHUB_WORKFLOW, ...lockfiles].map((path) => `'${path.replaceAll("'", "''")}'`).join(', ');
+    return [
+        {
+            name: CI_STEP_NAMES.packageFolders,
+            run: variables
+                .map((variable) => `echo "${variable}=$RUNNER_TEMP/${CI_PACKAGE_FOLDER}/${variable}" >> "$GITHUB_ENV"`)
+                .join('\n'),
+        },
+        {
+            name: CI_STEP_NAMES.packageCache,
+            uses: buildActionPin(CI_PINS.actions.cache),
+            with: {
+                path: `\${{ runner.temp }}/${CI_PACKAGE_FOLDER}`,
+                key: `${CI_PACKAGE_FOLDER}-\${{ runner.os }}-\${{ hashFiles(${hashed}) }}`,
+            },
+        },
+    ];
+}
+
 function buildJob(
     pipeline: Pipeline,
     platform: Pipeline['operatingSystems'][number],
@@ -94,6 +123,7 @@ function buildJob(
                 name: CI_STEP_NAMES.gspot,
                 run: `mise install ${tools}\nmise bin-paths ${tools} >> "$GITHUB_PATH"`,
             },
+            ...buildPackageCacheSteps(pipeline.packageCaches),
             ...(pipeline.setupCommand === undefined
                 ? []
                 : [{ name: CI_STEP_NAMES.setup, run: quoteCommand(pipeline.setupCommand) }]),
@@ -201,13 +231,22 @@ export function buildGitlabWorkflow(pipeline: Pipeline): GeneratedFile {
         'export PATH',
     ];
     const check = [GITLAB_BASE_LINE, buildCheckLine(tools, CI_CHECK_COMMAND)].join('\n');
+    const { lockfiles, variables } = pipeline.packageCaches;
+    const packageVariables = Object.fromEntries(
+        variables.map((variable) => [variable, `$CI_PROJECT_DIR/${GITLAB_PACKAGE_FOLDER}/${variable}`]),
+    );
+    // The package caches hold each download under its checksum, so a key that leaves out a lockfile only costs downloads.
+    const packageCache = {
+        key: { files: [GITLAB_WORKFLOW, ...lockfiles].slice(0, GITLAB_KEY_FILES), prefix: CI_PACKAGE_FOLDER },
+        paths: [`${GITLAB_PACKAGE_FOLDER}/`],
+    };
     const content = stringify({
         gspot: {
             image: `${GITLAB_MISE_IMAGE}:${CI_PINS.mise.version}-debian`,
             stage: '.pre',
             timeout: `${String(CI_TIMEOUT_MINUTES)}m`,
-            variables: GITLAB_VARIABLES,
-            cache: GITLAB_CACHE,
+            variables: { ...GITLAB_VARIABLES, ...packageVariables },
+            cache: lockfiles.length === 0 ? GITLAB_CACHE : [GITLAB_CACHE, packageCache],
             rules: GITLAB_RULES,
             script: [STRICT_MODE, ...install, ...setup, GSPOT_INSTALL, ...CI_DIFF_LINES.gitlab, check],
         },
@@ -220,6 +259,28 @@ export function listTestChecks(session: Session): string[] {
         .filter(({ configuration }) => configuration?.group === 'testing')
         .map(({ check }) => check.id);
     return [...new Set(checks)];
+}
+
+/**
+List the tracked lockfiles of each scope and the variables that point their package managers at one cache folder. Yarn 2
+and later get none: they write the cache path into `.pnp.cjs`, so a moved cache changes a tracked file.
+*/
+export function listPackageCaches(session: Session): Pipeline['packageCaches'] {
+    const tracked = new Set(session.repository.files.map((file) => file.path));
+    const found = session.scopes.flatMap(({ path: scopePath }) =>
+        (Object.keys(PACKAGE_CACHE_VARIABLES) as FrozenLockfile[])
+            .filter((lockfile) => tracked.has(joinScope(scopePath, lockfile)))
+            .filter(
+                (lockfile) =>
+                    lockfile !== 'yarn.lock' ||
+                    !isYarnBerry(readProjectPackageManager(session, scopePath, 'yarn').version),
+            )
+            .map((lockfile) => ({ path: joinScope(scopePath, lockfile), variable: PACKAGE_CACHE_VARIABLES[lockfile] })),
+    );
+    return {
+        lockfiles: found.map(({ path }) => path),
+        variables: [...new Set(found.map(({ variable }) => variable))],
+    };
 }
 
 export function listProjectInstallLines(session: Session): string[] {

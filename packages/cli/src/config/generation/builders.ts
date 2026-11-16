@@ -40,6 +40,7 @@ export const CI_FILES = { github: GITHUB_WORKFLOW, gitlab: GITLAB_WORKFLOW } as 
     string
 >;
 export const CI_JOB_NAME = 'lint';
+export const CI_PACKAGE_FOLDER = 'packages';
 export const CI_PACKAGE_RUNNER = 'npx --no --';
 export const CI_STEP_NAMES = {
     checkout: 'Check out source',
@@ -49,6 +50,8 @@ export const CI_STEP_NAMES = {
     install: 'Install gspot tools',
     check: 'Lint',
     gspot: 'Install gspot',
+    packageFolders: 'Point package caches at one folder',
+    packageCache: 'Restore package caches',
 } as const;
 export const CI_SYSTEMS_SETTING = 'ci.operating_systems';
 export const CI_TESTS_JOB_NAME = 'tests';
@@ -71,7 +74,10 @@ export const GITLAB_CACHE = {
     key: { files: [GSPOT_PATHS.miseProject, GSPOT_PATHS.miseLockfile] },
     paths: [`${GITLAB_MISE_FOLDER}/`],
 } as const;
+// GitLab hashes at most this many files for a cache key.
+export const GITLAB_KEY_FILES = 2;
 export const GITLAB_MISE_IMAGE = 'ghcr.io/jdx/mise';
+export const GITLAB_PACKAGE_FOLDER = `${GITLAB_CACHE_FOLDER}/${CI_PACKAGE_FOLDER}`;
 export const GITLAB_RULES = [
     { if: '$CI_PIPELINE_SOURCE == "merge_request_event"', interruptible: true },
     { if: '$CI_COMMIT_BRANCH == $CI_DEFAULT_BRANCH', interruptible: false },
