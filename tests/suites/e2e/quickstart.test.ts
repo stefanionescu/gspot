@@ -82,11 +82,15 @@ function assertCommitRejected(root: string, rule: string, environment: Record<st
     expect(refused.stdout + refused.stderr).toContain(rule);
 }
 
-test('a Python project reports its finding through the installed hook and passes after the fix', async () => {
-    await runQuickstart(PYTHON_TUTORIAL);
-});
+// Each quickstart works in its own folders and mise store, so the two run at once and the shard waits for the slower.
+test.concurrent(
+    'a Python project reports its finding through the installed hook and passes after the fix',
+    async () => {
+        await runQuickstart(PYTHON_TUTORIAL);
+    },
+);
 
-test.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
+test.concurrent.skipIf(!hasToolBuild('swiftlint') || Bun.which('swift') === null)(
     'a Swift project reports its finding through the installed hook and passes after the fix',
     async () => {
         await runQuickstart(SWIFT_TUTORIAL);
