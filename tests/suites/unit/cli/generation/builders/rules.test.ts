@@ -9,7 +9,7 @@ import { buildSandboxSettings } from '#tests/setup/cli/settings.ts';
 import { SETTING_PLACEHOLDER } from '#cli/config/repository/files.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { listRuleFiles, readConfigurations } from '#cli/manifests/read.ts';
-import { RUNTIME_RULE_CASES, PLAYWRIGHT_RULE_CASES } from '#tests/config/generation/builders.ts';
+import { CI_RULE_CASES, RUNTIME_RULE_CASES, PLAYWRIGHT_RULE_CASES } from '#tests/config/generation/builders.ts';
 
 /**
 Select the rule files of a sandbox whose one configuration ships the given text as its one rule file.
@@ -42,6 +42,16 @@ test.each([...RUNTIME_RULE_CASES])('$name selects the runtime rules $rules', asy
     const session = await openSession(sandbox.path);
     const paths = selectRuleFiles(session).map((file) => file.path);
     expect(paths.filter((path) => /^DENO\.md$/u.test(path))).toStrictEqual([...rules]);
+});
+
+test.each([...CI_RULE_CASES])('$name', async ({ files, rules }) => {
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings(['markdown'], { rules: true }),
+        ...files,
+    });
+    const session = await openSession(sandbox.path);
+    const paths = selectRuleFiles(session).map((file) => file.path);
+    expect(paths.filter((path) => path === 'CI.md')).toStrictEqual([...rules]);
 });
 
 test.each([...PLAYWRIGHT_RULE_CASES])('$name', async ({ files, rules }) => {

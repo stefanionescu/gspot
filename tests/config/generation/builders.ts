@@ -47,6 +47,23 @@ export const START_COMMANDS = [
 ] as const;
 
 // rule files
+export const CI_RULE_CASES = [
+    {
+        name: 'a GitHub workflow selects CI.md',
+        files: { '.github/workflows/test.yml': 'on: push\n' },
+        rules: ['CI.md'],
+    },
+    {
+        name: 'a GitLab pipeline selects CI.md',
+        files: { '.gitlab-ci.yml': 'test:\n    script: make test\n' },
+        rules: ['CI.md'],
+    },
+    {
+        name: 'a repository without a pipeline gets no CI.md',
+        files: { 'README.md': '# Notes\n' },
+        rules: [],
+    },
+] as const;
 export const PLAYWRIGHT_RULE_CASES = [
     {
         name: 'a scope that depends on playwright without the test runner gets no PLAYWRIGHT.md',
