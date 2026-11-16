@@ -22,8 +22,10 @@ test.skipIf(isWindows)('an install step that a signal stops names the signal in 
 });
 
 test('an install step past tool_timeout_seconds stops and names the setting', async () => {
+    // The pinned npm version spares the install a real npm --version, which can pass the one-second limit on a busy runner.
     await using sandbox = await createGitSandbox({
         'gspot.toml': buildSandboxSettings([], { tables: 'tool_timeout_seconds = 1\n' }),
+        'package.json': '{"private":true,"packageManager":"npm@11.10.1"}',
     });
     const install = await buildSandboxToolInstall(await openSession(sandbox.path));
     using _slow = fakeCommands('slow-tool', () => Promise.resolve(buildProcessResult({ end: 'timed-out', code: 1 })));
