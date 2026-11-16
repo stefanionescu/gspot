@@ -178,6 +178,22 @@ Use TODO to label work.
         findings: [{ line: 3, rule: 'gspot.future' }],
     },
     {
+        rule: 'hedging',
+        path: 'hedging.md',
+        source: `# Guide
+
+The parser is partly done.
+
+The parser is sort of done.
+
+The parser reads each file.
+`,
+        findings: [
+            { line: 3, rule: 'gspot.hedging' },
+            { line: 5, rule: 'gspot.hedging' },
+        ],
+    },
+    {
         rule: 'placeholders',
         path: 'parameters.md',
         source: `# Guide
