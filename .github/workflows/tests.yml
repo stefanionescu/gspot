@@ -34,8 +34,7 @@ jobs:
               with:
                   version: '2026.10.7'
                   install_args: bun node npm@11.19.0
-                  # The Node floor job installs another Node.js, so it keeps a cache of its own.
-                  cache_key_prefix: mise-${{ matrix.node || 'pinned' }}
+                  cache: false
             - if: matrix.node == 'minimum'
               run: mise exec -- npm install --global npm@11.19.0
             - if: runner.os == 'Windows'
@@ -54,11 +53,6 @@ jobs:
                   mkdir -p "$HOME/.docker/cli-plugins"
                   ln -s "$(brew --prefix)/lib/docker/cli-plugins/docker-compose" "$HOME/.docker/cli-plugins/docker-compose"
                   docker compose version
-            - run: echo "BUN_INSTALL_CACHE_DIR=${RUNNER_TEMP}/bun-cache" >>"${GITHUB_ENV}"
-            - uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-              with:
-                  path: ${{ runner.temp }}/bun-cache
-                  key: bun-${{ runner.os }}-${{ hashFiles('mise.toml', 'bun.lock', 'tests/setup/runner/test-tools.lock') }}
             - run: mise run setup
             - run: |
                   read -ra suite <<<"${SUITE}"
