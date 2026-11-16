@@ -38,7 +38,7 @@ main() {
     export TEST_RUN_FOLDER
 
     if [[ ${usage_suite} == unit ]]; then
-        bun test --timeout=60000 --parallel --no-isolate ${shard:+"--shard=${shard}"} \
+        bun test --timeout=60000 --parallel --no-isolate --randomize ${shard:+"--shard=${shard}"} \
             --preload ./tests/setup/runner/unit.ts "$@" "${paths[@]}"
     else
         bun tests/setup/runner/prepare.ts "${usage_suite}"
