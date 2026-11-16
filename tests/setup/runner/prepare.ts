@@ -1,7 +1,6 @@
 import { join } from 'node:path';
 import { findMisePin } from '#cli/tools/pins.ts';
 import { LINE_BREAK } from '#cli/config/system.ts';
-import { mkdir, writeFile } from 'node:fs/promises';
 import { hasToolBuild } from '#tests/setup/cli/tools.ts';
 import { buildMiseInstall } from '#cli/tools/projects.ts';
 import cliPackage from '#cli-package' with { type: 'json' };
@@ -9,8 +8,11 @@ import { MISE_CONFIG_FILE } from '#cli/config/manifests.ts';
 import { readConfigurations } from '#cli/manifests/read.ts';
 import { listDistinctTools } from '#cli/manifests/tools.ts';
 import { runCommand } from '#tests/setup/system/processes.ts';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { PACKAGE_JSON } from '#cli/config/parsers/projects.ts';
 import { writeLauncher } from '#tests/setup/system/programs.ts';
 import { runNpmPack } from '#tests/setup/runner/npm-registry.ts';
+import { toolModules } from '#tests/setup/sandboxes/node-modules.ts';
 import eslintPluginPackage from '#eslint-plugin-package' with { type: 'json' };
 import { REPOSITORY_ROOT, TEST_RUN_FOLDER } from '#tests/setup/runner/run-folder.ts';
 import { MISE_INSTALL_ARGUMENTS, MISE_BIN_PATHS_ARGUMENTS } from '#cli/config/tools/mise.ts';
@@ -47,11 +49,13 @@ async function installTestTools(): Promise<string[]> {
     const names = listDistinctTools(configurations)
         .filter((tool) => tool.system !== true && hasToolBuild(tool.name))
         .flatMap((tool) => findMisePin(tool)?.name ?? []);
+    // The npm installer tests pin the pnpm of the test tools, and gspot runs that pin through mise exec.
+    const pnpm = JSON.parse(await readFile(join(toolModules, 'pnpm', PACKAGE_JSON), 'utf8')) as { version: string };
     await mkdir(folder);
     await writeFile(config, buildMiseInstall(configurations).content);
     for (const commandArguments of [
         [...MISE_TRUST, config],
-        [...MISE_INSTALL_ARGUMENTS, ...names],
+        [...MISE_INSTALL_ARGUMENTS, ...names, `pnpm@${pnpm.version}`],
     ]) {
         const result = await runCommand(commandArguments, {
             cwd: folder,
