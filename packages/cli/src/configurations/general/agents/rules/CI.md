@@ -33,9 +33,17 @@ Apply a fix only to the part that the measurement names.
   paid runner only when the user agrees to its cost.
 - Setup: cache tool installs and package downloads. Key each cache on the lockfile and on the runtime version, so that
   a pull request reads the cache that the default branch saved.
-- Setup: install a system package through a cache or a container image, not with a fresh package index in every job.
+- Setup: keep a cache only when its restore step takes less time than it saves in the install. A cache of hundreds of
+  megabytes can restore slower than its download.
+- Setup: install every tool before the tests start, so that no test downloads a tool while it runs.
+- Setup: install a system package from a cache or a container image, not from the package mirror in every job. A mirror
+  can send a package at a few kilobytes per second.
+- Setup: on a Windows runner, keep the package manager caches in the runner temp folder, which sits on the drive of the
+  checkout.
 - Running: split a suite into shards of similar duration, and match test workers to the cores of the runner. Run lint,
   type check, build, and tests as separate jobs, unless one needs the output of another.
+- Running: a shard takes at least as long as its slowest test file. When one file holds the slowest tests, run them
+  concurrently or split the file.
 - When test files share one process to save setup time, run them in random order, so that a leak between files fails
   the run.
 
@@ -43,6 +51,8 @@ Apply a fix only to the part that the measurement names.
 
 - Make one change per commit, and give its numbers before and after from real runs. Revert a change that does not
   shrink its part.
+- Compare the steps that a change touches, not the totals of the job. The speed of a runner moves those totals between
+  runs.
 - Set the time limit of each job from its measured ninety-fifth percentile, with a margin. A limit at the target fails
   healthy runs.
 - Ask the user before a change that needs an account, a secret, or a larger bill. Name its expected monthly cost.
