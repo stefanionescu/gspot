@@ -19,7 +19,7 @@ Read this rule when you write or change a Playwright test.
 
 - Use the configuration files declared by the repository. Name projects so failures identify their browser, viewport, or
   other relevant execution context.
-- Declare the retry policy in the project configuration. Report retried passes apart from first-attempt ones.
+- Set `retries` to 0 in the project configuration. A test that passes only on a retry has a bug: fix it.
 - Configure trace, screenshot, and video retention for the failure evidence the project needs. Upload failure artifacts,
   restrict access, and avoid capturing credentials or unrelated private data.
 - Enable parallel execution only when each test has its own accounts and mutable resources. Document any scenario that
