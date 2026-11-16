@@ -43,6 +43,7 @@ import {
     GITLAB_MISE_IMAGE,
     CI_TIMEOUT_MINUTES,
     GITHUB_CONCURRENCY,
+    GITHUB_MISE_CACHE_KEY,
     GITHUB_PUSH_CONDITION,
     GITHUB_BASE_EXPRESSION,
     GITHUB_EXPRESSION_MESSAGE,
@@ -87,7 +88,7 @@ function buildJob(
             {
                 name: CI_STEP_NAMES.mise,
                 uses: buildActionPin(CI_PINS.actions.mise),
-                with: { version: CI_PINS.mise.version, cache: false },
+                with: { version: CI_PINS.mise.version, cache_save_post: true, cache_key: GITHUB_MISE_CACHE_KEY },
             },
             {
                 name: CI_STEP_NAMES.gspot,

@@ -18,6 +18,7 @@ type WorkflowStep = {
     uses?: string;
     if?: string;
     env?: Record<string, string>;
+    with?: Record<string, unknown>;
 };
 
 export type GithubWorkflow = {

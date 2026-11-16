@@ -17,9 +17,9 @@ import { EMPTY_DEFAULT_SOURCE } from '#tests/config/setup/languages.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
 import { MISE_EXEC, SETUP_CASES, LINUX_PIPELINE } from '#tests/config/generation/builders.ts';
-import { CI_CHECK_COMMAND, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/builders.ts';
 import type { CallRecord, ProcessOutput, GithubWorkflow, GitlabPipeline } from '#tests/types/setup.ts';
 import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } from '#cli/generation/builders/ci.ts';
+import { CI_CHECK_COMMAND, GITHUB_MISE_CACHE_KEY, GITHUB_EXPRESSION_MESSAGE } from '#cli/config/generation/builders.ts';
 
 async function runPipelineScript(
     provider: 'github' | 'gitlab',
@@ -184,6 +184,16 @@ test('the GitLab job compares with the merge request base, or else with the comm
     });
     expect(merged.code).toBe(0);
     expect(merged.calls.map((call) => call.arguments)).toStrictEqual([['install'], ['check', '--base', 'target']]);
+});
+
+test('the GitHub job caches its mise tools, keyed on the workflow and the gspot mise files', () => {
+    const { jobs } = parse(buildGithubWorkflow(LINUX_PIPELINE).content) as GithubWorkflow;
+    const mise = jobs['lint']!.steps.find((step) => step.uses?.startsWith(`${CI_PINS.actions.mise.name}@`) === true);
+    expect(mise?.with).toStrictEqual({
+        version: CI_PINS.mise.version,
+        cache_save_post: true,
+        cache_key: GITHUB_MISE_CACHE_KEY,
+    });
 });
 
 test('the GitLab job keeps its untracked cache folder out of the install check', async () => {
