@@ -24,9 +24,14 @@ export const CHECKOUT_OPTIONS = { 'fetch-depth': 0, 'persist-credentials': false
 export const CI_BASE_VARIABLE = 'GSPOT_CI_BASE';
 export const CI_CHECK_COMMAND = `${GSPOT_CHECK} ${BASE_FLAG} "\${${CI_BASE_VARIABLE}}"`;
 const CI_DIFF_MESSAGE = 'gspot install changed files. Run gspot install, then commit the files that it changed.';
+// GitLab caches only paths inside the project folder, so the job keeps its caches there and leaves them out of the diff.
+const GITLAB_CACHE_FOLDER = '.cache';
 export const CI_DIFF_LINES = {
     github: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "::error::${CI_DIFF_MESSAGE}"; exit 1; }`],
-    gitlab: ['git add --intent-to-add -- .', `git diff --exit-code || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`],
+    gitlab: [
+        `git add --intent-to-add -- . ':(exclude)${GITLAB_CACHE_FOLDER}/'`,
+        `git diff --exit-code || { echo "${CI_DIFF_MESSAGE}"; exit 1; }`,
+    ],
 } as const;
 export const GITHUB_WORKFLOW = `${GITHUB_WORKFLOWS_FOLDER}gspot.yml`;
 export const GITLAB_WORKFLOW = `${GITLAB_CI_FOLDER}gspot.yml`;
@@ -59,7 +64,7 @@ export const GITHUB_EXPRESSION_MESSAGE =
 export const GITHUB_PUSH_CONDITION =
     "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
 export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
-const GITLAB_MISE_FOLDER = '.cache/mise';
+const GITLAB_MISE_FOLDER = `${GITLAB_CACHE_FOLDER}/mise`;
 export const GITLAB_CACHE = {
     key: { files: [GSPOT_PATHS.miseProject, GSPOT_PATHS.miseLockfile] },
     paths: [`${GITLAB_MISE_FOLDER}/`],

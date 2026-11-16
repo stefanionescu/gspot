@@ -23,9 +23,13 @@ import { buildGithubWorkflow, buildGitlabWorkflow, listProjectInstallLines } fro
 
 async function runPipelineScript(
     provider: 'github' | 'gitlab',
-    options: { mise: string; env?: Record<string, string>; setupExit?: number },
+    options: { mise: string; env?: Record<string, string>; setupExit?: number; untracked?: string },
 ): Promise<ProcessOutput & { calls: CallRecord[] }> {
     await using sandbox = await createGitSandbox({});
+    if (options.untracked !== undefined) {
+        await mkdir(join(sandbox.path, options.untracked, '..'), { recursive: true });
+        await writeFile(join(sandbox.path, options.untracked), 'cached\n');
+    }
     await using programs = await createGitSandbox({});
     const commands = join(programs.path, 'commands.log');
     const bin = join(programs.path, 'bin');
@@ -180,6 +184,15 @@ test('the GitLab job compares with the merge request base, or else with the comm
     });
     expect(merged.code).toBe(0);
     expect(merged.calls.map((call) => call.arguments)).toStrictEqual([['install'], ['check', '--base', 'target']]);
+});
+
+test('the GitLab job keeps its untracked cache folder out of the install check', async () => {
+    const result = await runPipelineScript('gitlab', {
+        mise: MISE_EXEC,
+        env: { CI_MERGE_REQUEST_DIFF_BASE_SHA: '', CI_COMMIT_BEFORE_SHA: '' },
+        untracked: '.cache/mise/data/tool',
+    });
+    expect(result.code, result.stdout + result.stderr).toBe(0);
 });
 
 test.each(['github', 'gitlab'] as const)(
