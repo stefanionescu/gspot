@@ -51,17 +51,6 @@ summary = "Checks that documented paths point to tracked files, and that each do
 why = "A stale path in the docs sends the reader to a deleted file."
 
 [[check]]
-example = "A scope without `README.md` reports the missing file. Add one that explains what the scope does and how to start."
-help = "Add a README.md that says what the scope does and how to use it, and a LICENSE file at the root."
-level = "all"
-name = "required-files"
-rules = ["DOCS.md"]
-stage = "commit"
-summary = "Checks that every scope has a README.md and the root has a LICENSE."
-why = "A scope with no README leaves readers to guess what it does."
-runs = "scope"
-
-[[check]]
 example = "`npm install example@1.2.3` in a README of a package at version 1.2.3 reports `version-string`. Write `npm install example`."
 files = { paths = ["**"] }
 help = "Delete the version, or read it from the package manifest."

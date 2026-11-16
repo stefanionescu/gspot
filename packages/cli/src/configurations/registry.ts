@@ -85,7 +85,6 @@ import { SWIFT_SKIP_REASONS_CHECKS } from '#cli/configurations/language/swift/ch
 import { SITE_HTML_VALIDATE_CHECKS } from '#cli/configurations/framework/site/checks/html-validate.ts';
 import { SITE_UNUSED_ASSETS_CHECKS } from '#cli/configurations/framework/site/checks/unused-assets.ts';
 import { DEPENDENCIES_CONFIG_BUILDERS } from '#cli/configurations/general/dependencies/osv-scanner.ts';
-import { DOCS_REQUIRED_FILES_CHECKS } from '#cli/configurations/general/docs/checks/required-files.ts';
 import { BASH_INLINE_SCRIPTS_CHECKS } from '#cli/configurations/language/bash/checks/inline-scripts.ts';
 import { PYTHON_PIP_INSTALLS_CHECKS } from '#cli/configurations/language/python/checks/pip-installs.ts';
 import { DOCS_VERSION_STRINGS_CHECKS } from '#cli/configurations/general/docs/checks/version-strings.ts';
@@ -140,7 +139,6 @@ export const CHECK_CODE = joinTables<CheckCode>([
     DOCKER_SERVICE_SECURITY_CHECKS,
     DOCKER_TRIVY_IMAGE_CHECKS,
     DOCS_MISSING_PATHS_CHECKS,
-    DOCS_REQUIRED_FILES_CHECKS,
     DOCS_VERSION_STRINGS_CHECKS,
     EXPO_CHECKS,
     GITHUB_ACTIONS_CHECKS,

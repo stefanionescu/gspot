@@ -18,8 +18,6 @@ export const COMMAND_FENCES = new Set(['sh', 'bash', 'console', 'shell', 'zsh', 
 export const DOCS_RULES = {
     versionString: 'version-string',
     missingTask: 'missing-task',
-    missingReadme: 'missing-readme',
-    missingLicense: 'missing-license',
     missingPath: 'missing-path',
 } as const;
 export const FILE_EXTENSION = /\.[a-z0-9]+$/iu;
@@ -40,11 +38,6 @@ export const TASK_FILE = /(?:^|\/)(?:package\.json|\.?mise(?:\.local)?\.toml)$|(
 export const TITLE_ATTRIBUTE = 'title=';
 export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|]+/u;
 export const TRAILING_PUNCTUATION = '.,;:';
-
-// required-files check
-export const LICENSE_PATH = 'LICENSE';
-export const MISSING_LICENSE_MESSAGE = 'The root has no LICENSE file.';
-export const README_FILE = 'README.md';
 
 // version-strings check
 export const VERSION_STRING_MESSAGE = 'This copy of the package version goes stale. Read it from the manifest.';

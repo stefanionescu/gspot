@@ -14,10 +14,7 @@ configuration tables. When behavior changes, update the reference and examples.
 <!-- level: all -->
 
 Give each page one purpose and a title that names its task or subject. Explain its purpose before its sections. Keep the
-shortest successful path in the README and link to specialist guides. Document real subprojects. Mention a path only
-when the reader must use it.
-
-Give each scope a `README.md` that says what it does, and the repository a license file.
+shortest successful path in the README and link to specialist guides. Mention a path only when the reader must use it.
 
 Use the renderer's Markdown. Keep routine pages free of custom layout HTML or CSS. A component that some viewers cannot
 show needs a text alternative.

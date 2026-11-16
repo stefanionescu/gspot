@@ -37,15 +37,19 @@ test('check warns once for missing hooks, skips the warning for pre-push, and st
 });
 
 test('--only runs a check that the level turns off and notes that it stays off in hooks', async () => {
-    await using sandbox = await createGitSandbox({ 'gspot.toml': buildSandboxSettings([]) });
+    await using sandbox = await createGitSandbox({
+        'gspot.toml': buildSandboxSettings([]),
+        'package.json': JSON.stringify({ name: 'example', version: '1.2.3' }),
+        'README.md': '# Example\n\nRun `npm install example@1.2.3`.\n',
+    });
     const checked = parseCheckReport(
-        await runGspot(sandbox.path, ['check', '--only', 'docs/required-files', '--json']),
+        await runGspot(sandbox.path, ['check', '--only', 'docs/version-strings', '--json']),
     );
     expect(checked.code, checked.stdout + checked.stderr).toBe(1);
     expect(checked.report.checks.map(({ check, status }) => ({ check, status }))).toStrictEqual([
-        { check: 'docs/required-files', status: 'failed' },
+        { check: 'docs/version-strings', status: 'failed' },
     ]);
     expect(checked.report.notes).toStrictEqual([
-        'docs/required-files: --only allows this check to run here; it stays off in hooks at level basic.',
+        'docs/version-strings: --only allows this check to run here; it stays off in hooks at level basic.',
     ]);
 });

@@ -107,10 +107,3 @@ export const RELATIVE_PATH_FILES = {
     'docs/examples/good.ts': '',
     'src/here.ts': '',
 } as const;
-
-// required files
-export const LICENSE_FILE_CASES = [
-    { name: 'COPYING', findings: [] },
-    { name: 'LICENSE-MIT', findings: [] },
-    { name: 'NOTICE', findings: [{ file: 'LICENSE', rule: 'missing-license' }] },
-] as const;
