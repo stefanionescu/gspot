@@ -25,19 +25,18 @@ import { hasTopHeading, buildAgentsBlock } from '#cli/generation/builders/agents
 import { buildBunScannerEdits } from '#cli/configurations/general/dependencies/bunfig.ts';
 
 import {
+    readCiNode,
+    listTestChecks,
+    buildGithubWorkflow,
+    buildGitlabWorkflow,
+    listProjectInstallLines,
+} from '#cli/generation/builders/ci.ts';
+import {
     GIT_ATTRIBUTES_BLOCK,
     INSTALLED_TOOL_FOLDERS,
     ATTRIBUTE_GLOB_CHARACTERS,
     ATTRIBUTE_QUOTED_CHARACTERS,
 } from '#cli/config/generation/files.ts';
-import {
-    readCiNode,
-    listTestChecks,
-    listPackageCaches,
-    buildGithubWorkflow,
-    buildGitlabWorkflow,
-    listProjectInstallLines,
-} from '#cli/generation/builders/ci.ts';
 
 function addWorkflow(session: Session, generated: Generation): void {
     const { settings, scopes } = session;
@@ -53,7 +52,6 @@ function addWorkflow(session: Session, generated: Generation): void {
             packageManager: session.packageManager,
             setupCommand: settings.ci.setup_command,
             projectInstall: settings.ci.setup_command === undefined ? listProjectInstallLines(session) : [],
-            packageCaches: listPackageCaches(session),
             operatingSystems,
             linuxRunner: settings.ci.linux_runner,
             testChecks: listTestChecks(session),

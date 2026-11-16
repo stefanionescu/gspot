@@ -7,11 +7,6 @@ export const CI_PINS = {
             sha: '3d3c42e5aac5ba805825da76410c181273ba90b1',
             version: 'v7.0.1',
         },
-        cache: {
-            name: 'actions/cache',
-            sha: '55cc8345863c7cc4c66a329aec7e433d2d1c52a9',
-            version: 'v6.1.0',
-        },
         mise: {
             name: 'jdx/mise-action',
             sha: '2d8d4cafcbd33be2ea37d2b6f5ad595363d1f1ca',

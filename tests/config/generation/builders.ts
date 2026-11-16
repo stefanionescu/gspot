@@ -6,7 +6,6 @@ export const LINUX_PIPELINE = {
     operatingSystems: ['linux' as const],
     linuxRunner: 'ubuntu-24.04' as const,
     projectInstall: [],
-    packageCaches: { lockfiles: [], variables: [] },
     testChecks: [],
 };
 /**

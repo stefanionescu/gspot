@@ -25,7 +25,7 @@ export type GithubWorkflow = {
     jobs: Record<string, { name?: string; 'runs-on': string; steps: WorkflowStep[] }>;
 };
 
-export type GitlabPipeline = { gspot: { script: string[]; variables: Record<string, string>; cache: unknown } };
+export type GitlabPipeline = { gspot: { script: string[] } };
 
 export type GspotProject = AsyncDisposable & {
     root: string;

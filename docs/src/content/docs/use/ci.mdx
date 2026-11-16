@@ -119,11 +119,6 @@ machine runs. Without a Node.js pin in `mise.toml`, the job uses the version tha
 The job runs `gspot check` under `mise exec`, so a `[[command_check]]` reads the variables that the `[env]` table of your
 mise config sets.
 
-The job caches the tools that mise installs and the downloads of each package manager. On GitHub, a new gspot version, a
-new tool, or a changed lockfile starts a new cache. GitLab hashes at most two files for a key, so its package cache
-follows the pipeline file and the first lockfile. Yarn 2 and later get no package cache, because Yarn writes the cache
-path into `.pnp.cjs`.
-
 To run your own install command instead, set `ci.setup_command`. The job runs it before `gspot install`, and stops if it
 fails:
 

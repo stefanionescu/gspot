@@ -21,15 +21,6 @@ export const FROZEN_INSTALLS = {
     'bun.lockb': ['bun', 'install', '--frozen-lockfile'],
     'uv.lock': ['uv', 'sync', '--locked'],
 } as const satisfies Partial<Record<(typeof LOCKFILES)[number]['file'], readonly string[]>>;
-// Yarn 2 and later write the cache path into .pnp.cjs, so a moved cache changes a tracked file: only Yarn 1 gets one.
-export const PACKAGE_CACHE_VARIABLES = {
-    'package-lock.json': 'npm_config_cache',
-    'pnpm-lock.yaml': 'npm_config_store_dir',
-    'yarn.lock': 'YARN_CACHE_FOLDER',
-    'bun.lock': 'BUN_INSTALL_CACHE_DIR',
-    'bun.lockb': 'BUN_INSTALL_CACHE_DIR',
-    'uv.lock': 'UV_CACHE_DIR',
-} as const satisfies Record<keyof typeof FROZEN_INSTALLS, string>;
 export const PACKAGE_MANAGERS = ['npm', 'bun', 'pnpm', 'yarn'] as const;
 export const PACKAGE_MANAGER_HASH_SUFFIX = '+sha';
 export const YARN_BERRY_INSTALL = ['yarn', 'install', '--immutable'] as const;

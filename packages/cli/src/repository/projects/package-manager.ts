@@ -125,18 +125,11 @@ export function buildPackageManagerCommand(
         : ['mise', 'exec', node, `${packageManager.name}@${packageManager.version}`, '--', ...command];
 }
 
-/**
-Tell whether a Yarn version is Yarn 2 or later. A Yarn with no pinned version counts as Yarn 1, as its install command
-does.
-*/
-export function isYarnBerry(version: string | undefined): boolean {
-    return version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
-}
-
 export function buildFrozenInstallArguments(
     lockfile: keyof typeof FROZEN_INSTALLS,
     version: string | undefined,
 ): readonly string[] {
     const command = FROZEN_INSTALLS[lockfile];
-    return (command[0] === 'yarn' && isYarnBerry(version) ? YARN_BERRY_INSTALL : command).slice(1);
+    const isYarnBerry = command[0] === 'yarn' && version !== undefined && semver.major(version) >= YARN_BERRY_MAJOR;
+    return (isYarnBerry ? YARN_BERRY_INSTALL : command).slice(1);
 }
