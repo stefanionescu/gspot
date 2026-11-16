@@ -8,6 +8,16 @@ export const PULL_REQUEST_TRIGGERS: ReadonlySet<string> = new Set(['pull_request
 export const SECRET_EXPRESSION = /\$\{\{[^}]*\bsecrets\./u;
 export const SELF_REFERENCE_PREFIX = '$/';
 export const SELF_REPOSITORY_MARKER = /^(\s*["']?)(\$|\\x24|\\u0024|\\U00000024)/u;
+export const TEST_RETRY_ACTIONS = ['nick-fields/retry', 'Wandalen/wretry.action'];
+export const TEST_RETRY_FLAGS = {
+    bun: ['--retry'],
+    gotestsum: ['--rerun-fails'],
+    mocha: ['--retries'],
+    nextest: ['--retries'],
+    playwright: ['--retries'],
+    pytest: ['--reruns'],
+    vitest: ['--retry'],
+} as const;
 export const UPLOAD_ARTIFACT_ACTION = 'actions/upload-artifact@';
 export const WORKFLOW_EXPRESSION = '${{';
 export const WORKFLOW_SHAPE_MESSAGES = {
@@ -18,6 +28,7 @@ export const WORKFLOW_SHAPE_MESSAGES = {
     pullRequestConcurrency: 'This workflow runs for pull requests. Add a `concurrency` group keyed by the ref.',
     cancelOutsidePullRequests: `This workflow also runs outside pull requests, so \`cancel-in-progress: true\` cancels those runs. Set it to \`${WORKFLOW_EXPRESSION} github.event_name == 'pull_request' }}\`.`,
     retention: 'Set `retention-days` on this `upload-artifact` step.',
+    testRetry: 'A test that passes only on a retry has a bug. Remove the retry and fix the test.',
     downloadRun: BASH_FORM_MESSAGES['curl-pipe-shell'],
     workflowSecret: 'Move this secret into the `env` of the step that needs it.',
 } as const;
@@ -29,6 +40,7 @@ export const WORKFLOW_SHAPE_RULES = {
     pullRequestConcurrency: 'pull-request-concurrency',
     cancelOutsidePullRequests: 'cancel-outside-pull-requests',
     retention: 'artifact-retention',
+    testRetry: 'test-retry',
     downloadRun: 'curl-pipe-shell',
     workflowSecret: 'workflow-secret-env',
 } as const;

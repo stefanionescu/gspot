@@ -19,7 +19,9 @@ import {
     ACTION_FILES,
     GITHUB_FOLDER,
     FLOATING_RUNNER,
+    TEST_RETRY_FLAGS,
     SECRET_EXPRESSION,
+    TEST_RETRY_ACTIONS,
     WORKFLOW_EXPRESSION,
     WORKFLOW_SHAPE_RULES,
     ENCODED_DOLLAR_SUFFIX,
@@ -111,6 +113,9 @@ function listStepHits(step: YAMLMap): WorkflowShapeHit[] {
         ...(isScalar(run) && String(run.value).includes(WORKFLOW_EXPRESSION)
             ? [{ kind: 'runExpression' as const, node: run }]
             : []),
+        ...(typeof uses === 'string' && TEST_RETRY_ACTIONS.some((action) => uses.startsWith(`${action}@`))
+            ? [{ kind: 'testRetry' as const, node: findKey(step, 'uses') as Scalar }]
+            : []),
         ...(typeof uses === 'string' &&
         uses.startsWith(UPLOAD_ARTIFACT_ACTION) &&
         !step.hasIn(['with', 'retention-days'])
@@ -154,28 +159,46 @@ function listRunScripts(jobs: unknown): Scalar[] {
     });
 }
 
+function isTestRetry(tokens: Array<string | undefined>): boolean {
+    const words = tokens.filter((token) => token !== undefined);
+    return words.some((word, index) => {
+        const runner = posix.basename(word);
+        if (!Object.hasOwn(TEST_RETRY_FLAGS, runner)) return false;
+        const flags: readonly string[] = TEST_RETRY_FLAGS[runner as keyof typeof TEST_RETRY_FLAGS];
+        return words
+            .slice(index + 1)
+            .some((argument) => flags.some((flag) => argument === flag || argument.startsWith(`${flag}=`)));
+    });
+}
+
 /**
-Report each `run:` script that pipes a download into a shell, with the Bash parser of bash/safety. A block scalar starts
-its script on the line after `run:`.
+Report each `run:` script that pipes a download into a shell or runs a test runner with its retry flag, with the Bash
+parser of bash/safety. A block scalar starts its script on the line after `run:`.
 */
-async function listDownloadRuns(
+async function listRunFindings(
     path: string,
     runs: Scalar[],
     findPosition: PositionedYaml['findPosition'],
 ): Promise<CheckFinding[]> {
     const found = await Promise.all(
         runs.map(async (run) => {
-            const { forms } = await parseBashScript(String(run.value));
+            const { forms, commands } = await parseBashScript(String(run.value));
             const { line } = findPosition(run.range?.[0]);
-            const isBlock = run.type === 'BLOCK_LITERAL' || run.type === 'BLOCK_FOLDED';
-            return forms
-                .filter(({ form }) => form === 'curl-pipe-shell')
-                .map((form) => ({
-                    file: path,
-                    line: line + form.line - (isBlock ? 0 : 1),
-                    rule: WORKFLOW_SHAPE_RULES.downloadRun,
-                    message: WORKFLOW_SHAPE_MESSAGES.downloadRun,
-                }));
+            const start = line - (run.type === 'BLOCK_LITERAL' || run.type === 'BLOCK_FOLDED' ? 0 : 1);
+            const hits = [
+                ...forms
+                    .filter(({ form }) => form === 'curl-pipe-shell')
+                    .map((form) => ({ kind: 'downloadRun' as const, line: form.line })),
+                ...commands
+                    .filter((command) => isTestRetry([command.name, ...command.arguments]))
+                    .map((command) => ({ kind: 'testRetry' as const, line: command.line })),
+            ];
+            return hits.map((hit) => ({
+                file: path,
+                line: start + hit.line,
+                rule: WORKFLOW_SHAPE_RULES[hit.kind],
+                message: WORKFLOW_SHAPE_MESSAGES[hit.kind],
+            }));
         }),
     );
     return found.flat();
@@ -257,7 +280,7 @@ async function checkWorkflowShape(session: Session, planned: PlannedCheck): Prom
                 ? jobs.items.flatMap(({ key, value }) => (isScalar(key) && isMap(value) ? listJobHits(key, value) : []))
                 : [];
             const workflow = document as Document & { contents: YAMLMap };
-            const downloadRuns = await listDownloadRuns(path, listRunScripts(jobs), findPosition);
+            const runFindings = await listRunFindings(path, listRunScripts(jobs), findPosition);
             const shapeFindings = [...listConcurrencyHits(workflow), ...listSecretHits(workflow), ...jobHits].flatMap(
                 ({ kind, node }) => {
                     const { line } = findPosition(node.range?.[0]);
@@ -273,7 +296,7 @@ async function checkWorkflowShape(session: Session, planned: PlannedCheck): Prom
                     ];
                 },
             );
-            return [...shapeFindings, ...downloadRuns];
+            return [...shapeFindings, ...runFindings];
         }),
     );
     return findings.flat();

@@ -76,6 +76,44 @@ jobs:
 `,
         findings: [[8, 'cancel-outside-pull-requests']],
     },
+    {
+        name: 'test runners with a retry flag and a retry action',
+        workflow: `on: push
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - run: npx vitest run --retry 2
+            - run: bun test --retry=1
+            - run: |
+                  uv sync
+                  uv run pytest --reruns 3
+            - uses: nick-fields/retry@ce71cc2ab81d554ebbe88c79ab5975992d79ba08
+              with:
+                  command: make test
+`,
+        findings: [
+            [12, 'test-retry'],
+            [7, 'test-retry'],
+            [8, 'test-retry'],
+            [11, 'test-retry'],
+        ],
+    },
+    {
+        name: 'commands that retry no test',
+        workflow: `on: push
+jobs:
+    build:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - run: curl --retry 3 --output tool.tar.gz https://example.com/tool.tar.gz
+            - run: bun install
+            - run: uv run pytest -q
+`,
+        findings: [],
+    },
 ];
 export const WORKFLOW_TEXT_CASES = [
     ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => ({

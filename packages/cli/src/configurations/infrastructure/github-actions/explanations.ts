@@ -44,6 +44,12 @@ export const WORKFLOW_SHAPE_EXPLANATIONS = {
         fix: WORKFLOW_SHAPE_MESSAGES.retention,
         example: 'An `upload-artifact` step with only `name` and `path` reports `artifact-retention`.',
     },
+    [WORKFLOW_SHAPE_RULES.testRetry]: {
+        description: 'No step retries a test, through a test runner flag or a retry action.',
+        why: 'A retry turns a flaky test into a pass, so the bug behind it stays in the code.',
+        fix: WORKFLOW_SHAPE_MESSAGES.testRetry,
+        example: 'A `run:` line `npx vitest run --retry 2` reports `test-retry`.',
+    },
     [WORKFLOW_SHAPE_RULES.downloadRun]: {
         description: 'No `run:` script pipes a download into a shell.',
         why: 'The runner holds the secrets of the job, and nobody can read a script that runs as it downloads.',
