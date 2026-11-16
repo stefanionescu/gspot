@@ -43,6 +43,7 @@ jobs:
                   "TEMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "TMP=$env:RUNNER_TEMP" >> $env:GITHUB_ENV
                   "npm_config_cache=$env:RUNNER_TEMP\npm-cache" >> $env:GITHUB_ENV
+                  "BUN_INSTALL_CACHE_DIR=$env:RUNNER_TEMP\bun-cache" >> $env:GITHUB_ENV
             - if: startsWith(matrix.suite, 'integration') && runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils zsh
             - if: runner.os == 'macOS'
