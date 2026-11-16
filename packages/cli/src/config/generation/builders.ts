@@ -61,8 +61,6 @@ export const GITHUB_CONCURRENCY = {
 export const GITHUB_EVENTS = { push: { branches: ['**'] }, pull_request: {}, merge_group: {} } as const;
 export const GITHUB_EXPRESSION_MESSAGE =
     'GitHub expands "${{" in a workflow command before the shell runs it. Remove "${{" from ci.setup_command and from the scope paths.';
-// The workflow holds the pinned tool versions, and the .gspot mise files pin the tools that gspot install adds.
-export const GITHUB_MISE_CACHE_KEY = `{{default}}-\${{ hashFiles('${GITHUB_WORKFLOW}', '${GSPOT_PATHS.miseProject}', '${GSPOT_PATHS.miseLockfile}') }}`;
 export const GITHUB_PUSH_CONDITION =
     "github.event_name != 'push' || github.ref_name == github.event.repository.default_branch";
 export const GITLAB_BASE_LINE = `${CI_BASE_VARIABLE}="\${CI_MERGE_REQUEST_DIFF_BASE_SHA:-\${CI_COMMIT_BEFORE_SHA:-}}"`;
