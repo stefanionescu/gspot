@@ -15,6 +15,68 @@ const CALLED_WORKFLOW_REFERENCES = [
     [`|- # $comment\n          $/${CALLED_WORKFLOW}`, `|- # $comment\n          ./${CALLED_WORKFLOW}`],
     ['$/.github/workflows/$called.yml', './.github/workflows/$called.yml'],
 ] as const;
+export const WORKFLOW_SHAPE_CASES = [
+    {
+        name: 'a literal cancel in a workflow that also runs on push',
+        workflow: `on: [push, pull_request]
+concurrency:
+    group: \${{ github.ref }}
+    cancel-in-progress: true
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - run: make test
+`,
+        findings: [[4, 'cancel-outside-pull-requests']],
+    },
+    {
+        name: 'a cancel limited to pull requests by an expression',
+        workflow: `on: [push, pull_request]
+concurrency:
+    group: \${{ github.ref }}
+    cancel-in-progress: \${{ github.event_name == 'pull_request' }}
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - run: make test
+`,
+        findings: [],
+    },
+    {
+        name: 'a literal cancel in a pull request workflow',
+        workflow: `on: pull_request
+concurrency:
+    group: \${{ github.ref }}
+    cancel-in-progress: true
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        steps:
+            - run: make test
+`,
+        findings: [],
+    },
+    {
+        name: 'a literal cancel in a job of a push workflow',
+        workflow: `on: push
+jobs:
+    test:
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        concurrency:
+            group: test
+            cancel-in-progress: true
+        steps:
+            - run: make test
+`,
+        findings: [[8, 'cancel-outside-pull-requests']],
+    },
+];
 export const WORKFLOW_TEXT_CASES = [
     ...CALLED_WORKFLOW_REFERENCES.map(([reference, expected]) => ({
         name: `uses ${reference}`,

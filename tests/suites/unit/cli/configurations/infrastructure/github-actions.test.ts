@@ -19,7 +19,12 @@ import { CALLER_WORKFLOW } from '#tests/config/setup/configurations.ts';
 import { createGitSandbox } from '#tests/setup/sandboxes/repositories.ts';
 import { runCheckCode, buildCheckSession } from '#cli/engine/run/checks.ts';
 import { readCallRecords, writeProgramCommand } from '#tests/setup/system/programs.ts';
-import { ACTIONLINT_EXITS, WORKFLOW_TEXT_CASES } from '#tests/config/configurations/infrastructure.ts';
+
+import {
+    ACTIONLINT_EXITS,
+    WORKFLOW_TEXT_CASES,
+    WORKFLOW_SHAPE_CASES,
+} from '#tests/config/configurations/infrastructure.ts';
 
 const ACTIONLINT_TOOLS = ['actionlint', 'shellcheck'];
 
@@ -166,6 +171,18 @@ jobs:
     );
     expect(await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape')).toStrictEqual([]);
 });
+
+test.each(WORKFLOW_SHAPE_CASES)(
+    'workflow-shape reports the expected lines of $name',
+    async ({ workflow, findings }) => {
+        await using sandbox = await createGitSandbox({
+            'gspot.toml': buildSandboxSettings(['github-actions']),
+            '.github/workflows/check.yml': workflow,
+        });
+        const reported = await runSandboxCheck(sandbox.path, 'github-actions/workflow-shape');
+        expect(reported.map(({ line, rule }) => [line, rule])).toStrictEqual(findings);
+    },
+);
 
 test('a job that calls a reusable workflow needs no timeout', async () => {
     await using sandbox = await createGitSandbox({

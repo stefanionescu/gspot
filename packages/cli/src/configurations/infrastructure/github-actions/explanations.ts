@@ -32,6 +32,12 @@ export const WORKFLOW_SHAPE_EXPLANATIONS = {
         fix: 'Add a top-level `concurrency` group whose key includes the ref.',
         example: 'A workflow `on: pull_request` without `concurrency` reports `pull-request-concurrency`.',
     },
+    [WORKFLOW_SHAPE_RULES.cancelOutsidePullRequests]: {
+        description: 'A workflow that also runs outside pull requests cancels only its pull request runs.',
+        why: 'A cancelled run of the default branch leaves its commit without a result, so nobody sees which commit failed.',
+        fix: WORKFLOW_SHAPE_MESSAGES.cancelOutsidePullRequests,
+        example: '`on: [push, pull_request]` with `cancel-in-progress: true` reports `cancel-outside-pull-requests`.',
+    },
     [WORKFLOW_SHAPE_RULES.retention]: {
         description: 'Each `actions/upload-artifact` step sets `retention-days`.',
         why: 'Artifacts otherwise stay for the default of the repository and use its storage.',

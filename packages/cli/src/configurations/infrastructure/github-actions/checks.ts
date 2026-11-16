@@ -181,12 +181,34 @@ async function listDownloadRuns(
     return found.flat();
 }
 
+function listCancelHits(concurrency: unknown): WorkflowShapeHit[] {
+    if (!isMap(concurrency)) return [];
+    const cancel = concurrency.get('cancel-in-progress', true);
+    return isScalar(cancel) && cancel.value === true ? [{ kind: 'cancelOutsidePullRequests', node: cancel }] : [];
+}
+
+/**
+Report a pull request workflow with no `concurrency` group, and a literal `cancel-in-progress: true`, at the top or in a
+job, in a workflow that also runs outside pull requests. An expression can limit the cancel to pull requests, so it
+passes.
+*/
 function listConcurrencyHits(document: Document & { contents: YAMLMap }): WorkflowShapeHit[] {
     const triggers = listTriggers(document);
     const group = findKey(document.contents, 'concurrency');
     const anchor = findKey(document.contents, 'on') ?? (document.contents.items[0]?.key as Scalar);
     const isPullRequestRun = triggers.some((trigger) => PULL_REQUEST_TRIGGERS.has(trigger));
-    return isPullRequestRun && group === undefined ? [{ kind: 'pullRequestConcurrency', node: anchor }] : [];
+    const isOtherRun = triggers.some((trigger) => !PULL_REQUEST_TRIGGERS.has(trigger));
+    const jobs = document.get('jobs', true);
+    const groups = [
+        document.contents.get('concurrency', true),
+        ...(isMap(jobs)
+            ? jobs.items.map(({ value }) => (isMap(value) ? value.get('concurrency', true) : undefined))
+            : []),
+    ];
+    return [
+        ...(isPullRequestRun && group === undefined ? [{ kind: 'pullRequestConcurrency' as const, node: anchor }] : []),
+        ...(isOtherRun ? groups.flatMap((concurrency) => listCancelHits(concurrency)) : []),
+    ];
 }
 
 /**
