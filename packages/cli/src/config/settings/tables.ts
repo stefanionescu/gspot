@@ -1,6 +1,6 @@
 // ci
 export const CI_PINS = {
-    mise: { version: '2026.10.7' },
+    mise: { version: '2026.10.25' },
     actions: {
         checkout: {
             name: 'actions/checkout',
