@@ -1,8 +1,5 @@
 import { DOCS_PATHS } from '@gspothq/cli/reference';
 
-// changelog page
-export const CHANGELOG_TITLE = '# Changelog\n';
-
 // check pages
 export const CHECKS_OPENING = `The [stage](${DOCS_PATHS.stage}) says when a check runs, and the [level](${
     DOCS_PATHS.levels
@@ -70,7 +67,6 @@ export const SETS_HEADING = 'What it sets';
 export const TOOLS_VERSIONS_HEADING = 'Tools and versions';
 
 // content collections
-export const CHANGELOG_PATH = 'changelog';
 export const DOCS_SOURCE_NAME = 'gspot-docs';
 export const PAGES_FOLDER = 'src/content/docs';
 export const REFERENCE_IDS_KEY = 'reference-ids';

@@ -100,7 +100,6 @@ export const SIDEBAR = [
             { slug: 'reference/eslint-plugin/index', label: 'ESLint plugin' },
             { slug: 'reference/json-output' },
             { slug: 'reference/generated-files' },
-            { slug: 'reference/changelog' },
         ],
     },
 ];
