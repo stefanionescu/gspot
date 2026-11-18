@@ -11,6 +11,9 @@ import { type HastNode, defineHastPlugin, type HastPluginEntry } from 'satteri';
 import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
 const FAVICON = '/favicon.ico';
+// A stylesheet up to this size goes into the page, so the first paint does not wait for it. The home page styles fit,
+// and the shared Starlight and code block styles stay files that the browser caches.
+const INLINE_STYLESHEET_BYTES = 12_288;
 const ICONS = [
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     { rel: 'manifest', href: '/manifest.webmanifest' },
@@ -156,6 +159,10 @@ export default defineConfig({
     image: { service: passthroughImageService() },
     prefetch: { prefetchAll: true, defaultStrategy: 'hover' },
     vite: {
+        build: {
+            assetsInlineLimit: (filePath, content) =>
+                filePath.endsWith('.css') ? content.length <= INLINE_STYLESHEET_BYTES : undefined,
+        },
         define: { 'import.meta.env.PUBLIC_GSPOT_README_OPENING': JSON.stringify(README_OPENING) },
         resolve: {
             tsconfigPaths: true,
