@@ -10,6 +10,7 @@ A more specific rule wins over a general one.
 - `.gspot/rules/ACCESSIBILITY.md`: when you change a user interface.
 - `.gspot/rules/ASTRO.md` in `docs/`: when you change Astro components, pages, or content collections.
 - `.gspot/rules/BASH.md`: when you write or change a shell script.
+- `.gspot/rules/CI.md`: when you change a CI pipeline or make one faster.
 - `.gspot/rules/CLI.md`: when you change a command-line program that the project ships.
 - `.gspot/rules/CLOUDFLARE.md` in `docs/`: when code runs on Cloudflare Workers or Pages, or when you change a Wrangler file, `_headers`, or `_redirects`.
 - `.gspot/rules/COMMENTS.md`: when you write or change a comment.

@@ -4,8 +4,10 @@ Read this rule when you change a GitHub Actions workflow or action.
 
 ## Workflow shape
 
-- A workflow that runs only on the default branch or a tag has no `concurrency` group: its result records that commit.
 - A workflow that runs for pull requests has a `concurrency` group keyed by the ref.
+- Cancel a run in progress only for a pull request, such as with
+  `cancel-in-progress: ${{ github.event_name == 'pull_request' }}`. A run on the default branch, a merge queue, or a
+  tag records its commit.
 - Give each job a `timeout-minutes`, run it on a pinned runner image such as `ubuntu-24.04`, and give each artifact
   upload `retention-days`.
 - Let a failing required step fail the job.

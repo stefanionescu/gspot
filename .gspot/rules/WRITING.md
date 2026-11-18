@@ -28,6 +28,10 @@ it serves. A reference page that reads the value from its source can show it.
 Before you tell the user that the code does or lacks something, read that code again, even when you read it earlier in
 the session, and cite its `file:line`. Keep line numbers out of documentation, comments, and commit messages.
 
+Answer a yes-or-no question with yes or no. When parts of the answer differ, give each part its own yes or no, such as
+`Parsing: yes. Autofix: no.` Write no `partly`, `mostly`, `maybe`, `possibly`, or `sort of`. When a part needs a check
+that you did not run, name that part and the missing check.
+
 Preserve exact API identifiers, public messages, official product names, and legal license text. Keep private reasoning
 and temporary notes out of shipped content.
 
