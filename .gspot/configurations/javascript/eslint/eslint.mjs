@@ -2506,22 +2506,6 @@ export default setRuleOptions(defineConfig([
         "import-x/no-default-export": "off"
     },
     "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "tests/**/*", "**/*.d.ts"], ["**/*.astro", "tests/**/*", "**/*.d.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts/**"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts"], ["**/*.astro", "**/*", "packages/eslint-plugin/src/plugin.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/markdown/files/markdownlint-cli2.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts"], ["**/*.astro", "**/*", "packages/cli/src/configurations/language/javascript/files/eslint-import-cycles.ts/**"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
-        "unicorn/prefer-await": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts"], ["**/*.astro", "**/*", "packages/cli/src/parsers/code/grammars.ts/**"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
-        "no-template-curly-in-string": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/**"], ["**/*.astro", "**/*", "tests/**"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
-        "unicorn/no-incorrect-template-string-interpolation": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "tests/**"], ["**/*.astro", "**/*", "tests/**"]]}, gspothqEslintPlugin, "all"),
-    setLevelRules({"rules": {
-        "unicorn/no-top-level-side-effects": "off"
-    },
-    "files": [["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "docs/astro.config.ts"], ["**/*.{js,mjs,cjs,jsx,ts,mts,cts,tsx}", "**/*", "docs/astro.config.ts/**"], ["**/*.astro", "**/*", "docs/astro.config.ts"], ["**/*.astro", "**/*", "docs/astro.config.ts/**"]]}, gspothqEslintPlugin, "all"),
 ]), [
     {
         "paths": [

@@ -222,7 +222,7 @@ reason = "As checked on 2026-10-31, only minimatch 11.0.1 fixes the globparts de
 
 [[ignore]]
 check = "docs/missing-paths"
-paths = ["packages/cli/src/configurations/infrastructure/docker/rules/DOCKER.md", "packages/cli/src/configurations/language/html/rules/HTML.md", "packages/cli/src/configurations/platform/supabase/rules/SUPABASE.md"]
+paths = ["packages/cli/src/configurations/language/html/rules/HTML.md"]
 reason = "Paths in shipped rules are examples for user projects."
 
 [[ignore]]
@@ -312,30 +312,6 @@ reason = "Astro fixes this name beside the content folder."
 check = "structure/shared-prefixes"
 paths = ["packages/eslint-plugin/src/rules/**", "tests/suites/unit/eslint-plugin/rules/**"]
 reason = "ESLint rule IDs are the file names, and they share their first word by convention."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "unicorn/prefer-await"
-paths = ["packages/cli/src/parsers/code/grammars.ts"]
-reason = "With no-floating-promises, no-misused-promises, and no-void, a synchronous callback that starts async work has no form that this rule accepts."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "no-template-curly-in-string"
-paths = ["tests/**"]
-reason = "Test samples quote template literal code as text."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "unicorn/no-incorrect-template-string-interpolation"
-paths = ["tests/**"]
-reason = "Test samples quote template syntax of other languages as text."
-
-[[ignore]]
-check = "javascript/eslint"
-rule = "unicorn/no-top-level-side-effects"
-paths = ["docs/astro.config.ts"]
-reason = "A tool reads the default export of its config file, which the file builds when it loads."
 
 [[ignore]]
 check = "prose/vale"
