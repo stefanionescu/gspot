@@ -10,9 +10,8 @@ import { defineConfig, passthroughImageService } from 'astro/config';
 import { type HastNode, defineHastPlugin, type HastPluginEntry } from 'satteri';
 import { SIDEBAR, EDIT_URL, SITE_TITLE, REPOSITORY_URL, README_OPENING_BLOCKS } from '#docs/config/site.ts';
 
-const FAVICON = '/favicon.png';
+const FAVICON = '/favicon.ico';
 const ICONS = [
-    { rel: 'icon', href: '/favicon.ico', sizes: '16x16 32x32 48x48' },
     { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
     { rel: 'manifest', href: '/manifest.webmanifest' },
 ] as const;
