@@ -1,5 +1,70 @@
 # Changelog
 
+## 0.4.5
+
+gspot 0.4.5 removes `docs/required-files`, so a scope no longer needs a `README.md` of its own. A new rule tells coding
+agents how to make a CI pipeline faster from measured runs, and `github-actions/workflow-shape` reports test retries
+and cancelled runs outside pull requests. Vale reports more hedges. The generated CI runs mise 2026.10.25, and the
+GitLab job no longer fails on its own cache folder. `@gspothq/eslint-plugin` is 0.3.2, whose code changes only in the
+order of its imports.
+
+### Breaking changes
+
+Checks and settings:
+
+- `docs/required-files` is gone, with its rules `missing-readme` and `missing-license`. A `gspot.toml` with an
+  `[[ignore]]` record for it stops every command with "There is no check called docs/required-files", and so does
+  `--only docs/required-files`. Delete the record and the option. (6250ed0)
+
+Checks that newly fail:
+
+- `github-actions/workflow-shape` reports the rule `cancel-outside-pull-requests` when a workflow that also runs outside
+  pull requests sets `cancel-in-progress: true`, at the top level or in a job. Set it to
+  `${{ github.event_name == 'pull_request' }}`. (34dba60)
+- `github-actions/workflow-shape` reports the rule `test-retry` for a `run:` command that retries tests, such as
+  `vitest --retry`, `bun test --retry`, `pytest --reruns`, `playwright test --retries`, `mocha --retries`,
+  `nextest --retries`, or `gotestsum --rerun-fails`, and for a step that uses `nick-fields/retry` or
+  `Wandalen/wretry.action`. Remove the retry and fix the test. (8128c50)
+- `prose/vale` and `prose/commit-message` report the hedges `maybe`, `perhaps`, `possibly`, `mostly`, `partly`,
+  `partially`, `sort of`, and `more or less`. Rewrite the sentence as a claim you checked. (c099e26)
+
+### Highlights
+
+#### Rules for coding agents
+
+- The new `CI.md` reaches a repository with a GitHub workflow or a `.gitlab-ci.yml`. Before an agent changes a pipeline
+  for speed, it splits each job of recent runs into waiting, setup, and running time, and fixes only the part that the
+  numbers name. It keeps a cache only when the restore saves time, proves each change with runs before and after, and
+  keeps every result of the default branch: no retries, skipped tests, or cancelled runs there. (6f214a9, fa461a5)
+- `WRITING.md` asks for a yes or no for each part of an answer, with no `partly` or `maybe`. (fe0b0ee)
+- `PLAYWRIGHT.md` sets `retries` to 0, and `GITHUB-ACTIONS.md` cancels only the runs of a pull request. (81314d0,
+  e6ed2a7)
+- `DOCS.md` no longer asks for a `README.md` in each scope or for documented subprojects. (6250ed0)
+- `SUPPRESSIONS.md` names `biome-ignore` among the comments that level `all` refuses. (419d981)
+
+#### Generated CI
+
+- The generated GitHub workflow and GitLab job run mise 2026.10.25. Through 2026.10.8, mise tried a download only once
+  when it installed a tool for `mise exec`, so one dropped connection failed the job. Run `gspot install` to rewrite the
+  generated files. (e1b638e)
+- The generated GitLab job keeps its mise tools in `.cache/`, and its install check now leaves that folder out. In a
+  repository that did not ignore `.cache/`, the check failed every run. (a55f635)
+
+#### Docs
+
+- The pages cover what 0.4.3 and 0.4.4 changed, such as the `import-rule` and `rule-options` rules of
+  `gspot/weakenings`, `gspot check --fix` over an edited generated file, the push base of a new branch, and `mise exec`
+  in a pipeline of your own. (7892c10)
+
+### Development
+
+The tests workflow keeps every run of `main` and splits each suite into shards of about 90 seconds: two for unit tests,
+six for integration tests, and two for end-to-end tests. A push run takes about 150 seconds, down from 236, and a run
+on three systems about 550, down from 684. Unit tests run in random order. The Windows jobs keep the bun cache on the
+drive of the checkout, and the Ubuntu jobs take zsh and xmllint from a cache. This repository runs gspot 0.4.4.
+(8573294, e702b7b, f9901a3, 08f78eb, 6c50e9a, fbe2465, f22607c, 55e2bab, 704e7fa, c284db9, 4f53413, 2a25b91, 585c802,
+4dbda96)
+
 ## 0.4.4
 
 gspot 0.4.4 sorts imports by line length again, as it did before 0.3.9. It fixes checks that missed a download piped
