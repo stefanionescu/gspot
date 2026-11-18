@@ -3,8 +3,9 @@ title: Coding agents
 ---
 
 gspot writes Markdown files in `.gspot/rules/` that tell a coding agent how to write code that passes the checks of one
-language, framework, or topic. Your configurations and your level decide which rule files gspot writes, and level `all`
-adds sections to some of them.
+language, framework, or topic. Your configurations, your level, and the files of your repository decide which rule files
+gspot writes, and level `all` adds sections to some of them. A GitHub workflow or a `.gitlab-ci.yml`, for example, adds
+`CI.md`, the rule for making a pipeline faster from its measured runs.
 
 ## The `AGENTS.md` block
 

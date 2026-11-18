@@ -13,6 +13,7 @@ gspot reports ambiguous dates in every repository, and checks your writing style
 ## Style
 
 At level `all`, Vale checks Markdown and code comments against the gspot writing style: short sentences, active voice,
-and no filler words such as `simply`. `.gspot/rules/WRITING.md` holds the full style, and `prose/commit-message` checks
-each new commit message. The [prose limits](/reference/gspot-toml/#prose), such as the longest sentence, are settings,
-and raising one needs a reason. The [`prose` configuration reference](/reference/configurations/prose/) lists every rule.
+no filler words such as `simply`, and no hedges such as `maybe` or `partly`. `.gspot/rules/WRITING.md` holds the full
+style, and `prose/commit-message` checks each new commit message. The [prose limits](/reference/gspot-toml/#prose), such
+as the longest sentence, are settings, and raising one needs a reason. The
+[`prose` configuration reference](/reference/configurations/prose/) lists every rule.

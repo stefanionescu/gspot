@@ -33,6 +33,13 @@ Swift target.
 The `jest` and `vitest` configurations also report tests marked `.only` and skipped tests at both levels, and `jest`
 reports broken test calls, also when a file imports `test` and `expect` from `@jest/globals`.
 
+## Retries
+
+A test that passes only on a retry has a bug, so gspot reports retries. The ESLint rule `gspot/no-test-retries` reports
+`jest.retryTimes()` and a Mocha `this.retries()`. `github-actions/workflow-shape` reports a workflow command that
+retries tests, such as `vitest --retry` or `pytest --reruns`, and a step that uses a retry action, such as
+`nick-fields/retry`.
+
 ## pytest
 
 Install pytest in the `.venv` of your project. An unregistered marker or an unknown pytest setting fails the check, and
