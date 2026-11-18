@@ -1,8 +1,8 @@
 ---
-import { Image } from 'astro:assets';
 import hero from '#docs/assets/hero.avif';
 import { DOCS_PATH } from '#docs/config/site.ts';
 import { HOME_TITLE } from '#docs/config/home.ts';
+import heroSmall from '#docs/assets/hero-384.avif';
 import cliPackage from '#cli-package' with { type: 'json' };
 import Setup from '#docs/components/home/setup/Setup.astro';
 ---
@@ -17,6 +17,16 @@ import Setup from '#docs/components/home/setup/Setup.astro';
         </a>
     </div>
     <div class="hero-visual" aria-hidden="true">
-        <Image src={hero} alt="" width={400} height={400} loading="eager" decoding="async" fetchpriority="high" />
+        <img
+            src={hero.src}
+            srcset={`${heroSmall.src} 384w, ${hero.src} 640w`}
+            sizes="(min-width: 50rem) 400px, 128px"
+            alt=""
+            width="400"
+            height="400"
+            loading="eager"
+            decoding="async"
+            fetchpriority="high"
+        />
     </div>
 </section>

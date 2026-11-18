@@ -1,7 +1,7 @@
 ---
-import { Image } from 'astro:assets';
 import hero from '#docs/assets/hero.avif';
 import { DOCS_PATH } from '#docs/config/site.ts';
+import heroSmall from '#docs/assets/hero-384.avif';
 import cliPackage from '#cli-package' with { type: 'json' };
 import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 
@@ -26,7 +26,16 @@ const url = `${cliPackage.homepage}/404`;
         <div class="not-found-body">
             <p class="not-found-code" aria-hidden="true">
                 <span>4</span>
-                <Image src={hero} alt="" width={160} height={160} loading="eager" decoding="async" />
+                <img
+                    src={hero.src}
+                    srcset={`${heroSmall.src} 384w, ${hero.src} 640w`}
+                    sizes="148px"
+                    alt=""
+                    width="160"
+                    height="160"
+                    loading="eager"
+                    decoding="async"
+                />
                 <span>4</span>
             </p>
             <h1 id="_top">Page not found</h1>
